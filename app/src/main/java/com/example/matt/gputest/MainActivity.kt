@@ -48,6 +48,8 @@ class Fractal(ctx: Context) {
     // num coord values * 2 bytes/short
     private val dlb : ByteBuffer = allocateDirect(drawOrder.size * 2)
 
+    private val emulateDouble : Int = 1
+
 
     init {
         bb.order(ByteOrder.nativeOrder())
@@ -77,19 +79,46 @@ class Fractal(ctx: Context) {
         GLES32.glLinkProgram(program)                      // create OpenGL program executables
     }
 
-    fun draw(scale: FloatArray, offset: FloatArray, maxIter: Int, lightPos: FloatArray) {
+    fun draw(doubleScale: DoubleArray, doubleOffset: DoubleArray, maxIter: Int, lightPos: FloatArray,
+             screenRes: FloatArray) {
+
+        val floatScale = floatArrayOf(doubleScale[0].toFloat(), doubleScale[1].toFloat())
+        val floatOffset = floatArrayOf(doubleOffset[0].toFloat(), doubleOffset[1].toFloat())
+        
+        val xScale = floatArrayOf(floatScale[0], 0.0f)
+        val yScale = floatArrayOf(floatScale[1], 0.0f)
+
+        val xOffset = floatArrayOf(floatOffset[0], 0.0f)
+        val yOffset = floatArrayOf(floatOffset[1], 0.0f)
+
+        if (emulateDouble == 1) {
+
+            xScale[1] = (doubleScale[0]-floatScale[0].toDouble()).toFloat()
+            yScale[1] = (doubleScale[1]-floatScale[1].toDouble()).toFloat()
+            xOffset[1] = (doubleOffset[0]-floatOffset[0].toDouble()).toFloat()
+            yOffset[1] = (doubleOffset[1]-floatOffset[1].toDouble()).toFloat()
+
+        }
 
         GLES32.glUseProgram(program)        // add program to OpenGL environment
 
-        val posHandle = GLES32.glGetAttribLocation(program, "vPosition")
-        val scaleHandle = GLES32.glGetUniformLocation(program, "scale")
-        val offsetHandle = GLES32.glGetUniformLocation(program, "offset")
+        val posHandle = GLES32.glGetAttribLocation(program, "vPos")
+        val xScaleHandle = GLES32.glGetUniformLocation(program, "xScale")
+        val yScaleHandle = GLES32.glGetUniformLocation(program, "yScale")
+        val xOffsetHandle = GLES32.glGetUniformLocation(program, "xOffset")
+        val yOffsetHandle = GLES32.glGetUniformLocation(program, "yOffset")
+        val emulateHandle = GLES32.glGetUniformLocation(program, "emulateDouble")
+        val resHandle = GLES32.glGetUniformLocation(program, "screenRes")
         val iterHandle = GLES32.glGetUniformLocation(program, "maxIter")
         val lightHandle = GLES32.glGetUniformLocation(program, "lightPos")
 
         // pass uniform scale, offset, and maxIter to shader
-        GLES32.glUniform2fv(scaleHandle, 1, scale, 0)
-        GLES32.glUniform2fv(offsetHandle, 1, offset, 0)
+        GLES32.glUniform2fv(xScaleHandle, 1, xScale, 0)
+        GLES32.glUniform2fv(yScaleHandle, 1, yScale, 0)
+        GLES32.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
+        GLES32.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
+        GLES32.glUniform1i(emulateHandle, emulateDouble)
+        GLES32.glUniform2fv(resHandle, 1, screenRes, 0)
         GLES32.glUniform1i(iterHandle, maxIter)
         GLES32.glUniform2fv(lightHandle, 1, lightPos, 0)
 
@@ -135,10 +164,10 @@ class MainActivity : AppCompatActivity() {
     fun MotionEvent.dFocus() : PointF {
         if (this.pointerCount == 1) return this.dPointerPos(0)
         else {
-            var sumX: Float = 0.0f
-            var sumY: Float = 0.0f
+            var sumX = 0.0f
+            var sumY = 0.0f
             var dPos: PointF
-            for (i in 0..this.pointerCount - 1) {
+            for (i in 0 until this.pointerCount) {
                 dPos = this.dPointerPos(i)
                 sumX += dPos.x
                 sumY += dPos.y
@@ -158,8 +187,8 @@ class MainActivity : AppCompatActivity() {
     fun MotionEvent.focus() : PointF {
         return if (this.pointerCount == 1) PointF(this.x, this.y)
         else {
-            var sumX: Float = 0.0f
-            var sumY: Float = 0.0f
+            var sumX = 0.0f
+            var sumY = 0.0f
             for (i in 0 until this.pointerCount) {
                 sumX += this.getX(i)
                 sumY += this.getY(i)
@@ -254,12 +283,14 @@ class MainActivity : AppCompatActivity() {
 
         val screenWidth : Int
         val screenHeight : Int
+        val screenRes : FloatArray
+
+        private val offset : DoubleArray
+        private val scale : DoubleArray
 
         private val imWidth : Int
         private val imHeight : Int
         private val ratio : Float
-        private val offset : FloatArray
-        private val scale : FloatArray
 
         var lightPos : FloatArray
         var maxIter : Int = 63
@@ -271,22 +302,25 @@ class MainActivity : AppCompatActivity() {
             windowManager.defaultDisplay.getMetrics(displayMetrics)
             screenWidth = displayMetrics.widthPixels
             screenHeight = displayMetrics.heightPixels
+            screenRes = floatArrayOf(screenWidth.toFloat(), screenHeight.toFloat())
+            Log.d("WIDTH", "$screenWidth")
+            Log.d("HEIGHT", "$screenHeight")
             imWidth = Math.round(screenWidth/1.0f)
             imHeight = Math.round(screenHeight/1.0f)
             ratio = imWidth/imHeight.toFloat()
-            scale = floatArrayOf(1.75f, 1.75f/ratio)
-            offset = floatArrayOf(-0.75f, 0.0f)
+            scale = doubleArrayOf(1.75, 1.75/ratio)
+            offset = doubleArrayOf(-0.75, 0.0)
             lightPos = floatArrayOf(1.0f/sqrt(2.0f), 1.0f/sqrt(2.0f))
         }
 
         fun translate(dPos: PointF) {
-            offset[0] -= dPos.x / screenWidth * 2.0f * scale[0]
-            offset[1] += dPos.y / screenHeight * 2.0f * scale[1]
+            offset[0] -= dPos.x / screenWidth * 2.0 * scale[0]
+            offset[1] += dPos.y / screenHeight * 2.0 * scale[1]
             Log.d("TRANSLATE", "dPos: (${dPos.x}, ${dPos.y}),  offset: (${offset[0]}, ${offset[1]})")
         }
         fun scale(dScale: Float) {
-            scale[0] /= dScale
-            scale[1] /= dScale
+            scale[0] /= dScale.toDouble()
+            scale[1] /= dScale.toDouble()
             Log.d("SCALE", "dScale: $dScale,  scale: (${scale[0]}, ${scale[1]})")
         }
 
@@ -309,7 +343,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDrawFrame(unused: GL10) {
             GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT)      // redraw background color
-            f.draw(scale, offset, maxIter, lightPos)
+            f.draw(scale, offset, maxIter, lightPos, screenRes)
         }
 
         override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
