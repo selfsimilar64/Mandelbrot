@@ -1,11 +1,16 @@
 #version 320 es
 
-uniform vec2 scale;
-uniform vec2 offset;
-in vec4 vPosition;
-out vec2 C;
+in vec4 vPos;
 
 void main() {
-    C = scale*vPosition.xy + offset;
-    gl_Position = vPosition;
+
+    // vec2 xPos = vec2(vPos.x, 0.0);
+    // vec2 yPos = vec2(vPos.y, 0.0);
+
+    // C = scale*vPosition.xy + offset;
+
+    // xC = ds_add(ds_mul(xScale, xPos), xOffset);
+    // yC = ds_add(ds_mul(yScale, yPos), yOffset);
+
+    gl_Position = vPos;
 }
