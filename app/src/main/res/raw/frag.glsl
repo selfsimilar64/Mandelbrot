@@ -11,87 +11,9 @@ uniform vec2 screenRes;
 out vec4 fragmentColor;
 
 
-vec2 ds_add (vec2 dsa, vec2 dsb) {
-    vec2 dsc;
-    float t1, t2, e;
-
-    t1 = dsa.x + dsb.x;
-    e = t1 - dsa.x;
-    t2 = ((dsb.x - e) + (dsa.x - (t1 - e))) + dsa.y + dsb.y;
-
-    dsc.x = t1 + t2;
-    dsc.y = t2 - (dsc.x - t1);
-    return dsc;
+vec2 mandelbrot(vec2 z, vec2 C) {
+    return vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + C;
 }
-
-vec2 ds_sub (vec2 dsa, vec2 dsb) {
-    vec2 dsc;
-    float e, t1, t2;
-
-    t1 = dsa.x - dsb.x;
-    e = t1 - dsa.x;
-    t2 = ((-dsb.x - e) + (dsa.x - (t1 - e))) + dsa.y - dsb.y;
-
-    dsc.x = t1 + t2;
-    dsc.y = t2 - (dsc.x - t1);
-    return dsc;
-}
-
-vec2 ds_mul (vec2 dsa, vec2 dsb) {
-    vec2 dsc;
-    float c11, c21, c2, e, t1, t2;
-    float a1, a2, b1, b2, cona, conb, split = 8193.;
-
-    cona = dsa.x * split;
-    conb = dsb.x * split;
-    a1 = cona - (cona - dsa.x);
-    b1 = conb - (conb - dsb.x);
-    a2 = dsa.x - a1;
-    b2 = dsb.x - b1;
-
-    c11 = dsa.x * dsb.x;
-    c21 = a2 * b2 + (a2 * b1 + (a1 * b2 + (a1 * b1 - c11)));
-
-    c2 = dsa.x * dsb.y + dsa.y * dsb.x;
-
-    t1 = c11 + c2;
-    e = t1 - c11;
-    t2 = dsa.y * dsb.y + ((c2 - e) + (c11 - (t1 - e))) + c21;
-
-    dsc.x = t1 + t2;
-    dsc.y = t2 - (dsc.x - t1);
-
-    return dsc;
-}
-
-float ds_compare(vec2 dsa, vec2 dsb) {
-    if (dsa.x < dsb.x) return -1.;
-    else if (dsa.x == dsb.x) {
-        if (dsa.y < dsb.y) return -1.;
-        else if (dsa.y == dsb.y) return 0.;
-        else return 1.;
-        }
-    else return 1.;
-}
-
-
-vec4 ds_mandelbrot(vec4 Z, vec2 xC, vec2 yC) {
-    vec2 X = Z.xy;
-    vec2 Y = Z.zw;
-    vec2 U = ds_add(ds_mul(ds_add(X, Y), ds_sub(X, Y)), xC);
-    vec2 V = ds_add(ds_mul(vec2(2.0, 0.0), ds_mul(X, Y)), yC);
-    return vec4(U.x, U.y, V.x, V.y);
-}
-
-vec2 ds_mod2(vec4 Z) {
-    vec2 X = Z.xy;
-    vec2 Y = Z.zw;
-    return ds_add(ds_mul(X, X), ds_mul(Y, Y));
-}
-
-// vec2 mandelbrot(vec2 z) {
-//     return vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + C;
-// }
 
 vec2 mult(vec2 w1, vec2 w2) {
     return vec2(w1.x*w2.x - w1.y*w2.y, w1.x*w2.y + w2.x*w1.y);
@@ -140,21 +62,20 @@ float atan2(vec2 w) {
 void main() {
 
     vec2 screenPos = 2.0*(gl_FragCoord.xy / screenRes) - vec2(1.0, 1.0);
-    vec2 xC = ds_add(ds_mul(xScale, vec2(screenPos.x, 0.0)), xOffset);
-    vec2 yC = ds_add(ds_mul(yScale, vec2(screenPos.y, 0.0)), yOffset);
+    float xC = xScale.x*screenPos.x + xOffset.x;
+    float yC = yScale.x*screenPos.y + yOffset.x;
+    vec2 C = vec2(xC, yC);
 
     float num_colors = 4.0;
     float cmap_cycles = 2.0;
-    vec2 MOD2 = vec2(0.0);
-    //float MOD2 = 0.0;
+    float MOD2 = 0.0;
 
     float height = 1.25;
 
-    vec4 Z = vec4(0.0);
-    // vec2 Z = vec2(0.0, 0.0);
-    // vec2 a = vec2(0.0, 0.0);
-    // vec2 b = vec2(0.0, 0.0);
-    // vec2 u = vec2(0.0, 0.0);
+    vec2 Z = vec2(0.0, 0.0);
+    vec2 a = vec2(0.0, 0.0);
+    vec2 b = vec2(0.0, 0.0);
+    vec2 u = vec2(0.0, 0.0);
     float pi = 3.141593;
 
     vec3 color    =  vec3(0.0, 0.0, 0.0);
@@ -169,7 +90,7 @@ void main() {
 
     vec3 c1 = darkblue;
     vec3 c2 = white;
-    vec3 c3 = orange;
+    vec3 c3 = vec3(0.8, 0.2, 0.2);
     vec3 c4 = purple;
 
     for (int i = 0; i < maxIter; i++) {
@@ -186,11 +107,10 @@ void main() {
         // a.x = a.x + 1.0;
 
         // iterate z
-        Z = ds_mandelbrot(Z, xC, yC);
+        Z = mandelbrot(Z, C);
 
-        // MOD2 = dot(Z, Z);
-        MOD2 = ds_mod2(Z);
-        if (ds_compare(MOD2, vec2(4.0, 0.0)) == 1.0) {
+        MOD2 = dot(Z, Z);
+        if (MOD2 > 4.0) {
 
 
 //             float lo = 0.5*log(MOD2);
@@ -205,7 +125,7 @@ void main() {
 //             }
 //             color = t*white;
 
-            float m = cmap_cycles*num_colors*(float(i)-log(0.5*log(MOD2.x))/log(2.0))/float(maxIter);
+            float m = cmap_cycles*num_colors*(float(i)-log(log(sqrt(MOD2)))/log(2.0))/float(maxIter);
             float n = m - (num_colors * floor(m/num_colors));
             if      (n >= 0.0 && n < 1.0) {  color = (1.0-n) * c1   +   (n)     * c2;  }
             else if (n >= 1.0 && n < 2.0) {  color = (2.0-n) * c2   +   (n-1.0) * c3;  }
@@ -224,5 +144,4 @@ void main() {
 
     fragmentColor.rgb = color;
     fragmentColor.a = 1.0;
-
 }
