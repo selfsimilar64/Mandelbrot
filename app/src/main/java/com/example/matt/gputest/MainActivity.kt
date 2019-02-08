@@ -13,7 +13,6 @@ import android.util.Log
 import android.view.*
 import android.widget.FrameLayout.LayoutParams as LP
 import android.widget.LinearLayout.LayoutParams as LP2
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import java.nio.ByteBuffer
@@ -157,43 +156,43 @@ class MainActivity : AppCompatActivity() {
 
     /* MotionEvent extension functions ------ */
     fun MotionEvent.dPointerPos(i: Int) : PointF {
-        return PointF(if (this.historySize > 0) this.getX(i) - this.getHistoricalX(i,0) else 0.0f,
-                if (this.historySize > 0) this.getY(i) - this.getHistoricalY(i,0) else 0.0f)
+        return PointF(if (historySize > 0) getX(i) - getHistoricalX(i,0) else 0.0f,
+                if (historySize > 0) getY(i) - getHistoricalY(i,0) else 0.0f)
     }
 
     fun MotionEvent.dFocus() : PointF {
-        if (this.pointerCount == 1) return this.dPointerPos(0)
+        if (pointerCount == 1) return dPointerPos(0)
         else {
             var sumX = 0.0f
             var sumY = 0.0f
             var dPos: PointF
-            for (i in 0 until this.pointerCount) {
-                dPos = this.dPointerPos(i)
+            for (i in 0 until pointerCount) {
+                dPos = dPointerPos(i)
                 sumX += dPos.x
                 sumY += dPos.y
             }
-            return PointF(sumX / this.pointerCount, sumY / this.pointerCount)
+            return PointF(sumX / pointerCount, sumY / pointerCount)
         }
     }
 
     fun MotionEvent.focalLength() : Float {
-        val f = this.focus()
-        val pos = PointF(this.x,this.y)
+        val f = focus()
+        val pos = PointF(x,y)
         val dist = Pair(pos.x - f.x,pos.y - f.y)
         return Math.sqrt(Math.pow(dist.first.toDouble(),2.0) +
                 Math.pow(dist.second.toDouble(),2.0)).toFloat()
     }
 
     fun MotionEvent.focus() : PointF {
-        return if (this.pointerCount == 1) PointF(this.x, this.y)
+        return if (pointerCount == 1) PointF(x, y)
         else {
             var sumX = 0.0f
             var sumY = 0.0f
-            for (i in 0 until this.pointerCount) {
-                sumX += this.getX(i)
-                sumY += this.getY(i)
+            for (i in 0 until pointerCount) {
+                sumX += getX(i)
+                sumY += getY(i)
             }
-            PointF(sumX / this.pointerCount, sumY / this.pointerCount)
+            PointF(sumX / pointerCount, sumY / pointerCount)
         }
     }
     /* -------------------------------------- */
@@ -267,6 +266,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     requestRender()
+                    invalidate()
                     return true
                 }
                 MotionEvent.ACTION_UP -> {
