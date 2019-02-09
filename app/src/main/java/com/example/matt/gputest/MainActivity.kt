@@ -61,17 +61,25 @@ class Fractal(ctx: Context) {
         drawListBuffer.put(drawOrder)
         drawListBuffer.position(0)
 
-        val stream1 = ctx.resources.openRawResource(R.raw.vert)
-        val vertexShaderCode = Scanner(stream1).useDelimiter("\\Z").next()
-        stream1.close()
+        val vertFloatStream = ctx.resources.openRawResource(R.raw.vert)
+        val vertFloatShaderCode = Scanner(vertFloatStream).useDelimiter("\\Z").next()
+        vertFloatStream.close()
 
-        val stream2 = ctx.resources.openRawResource(R.raw.frag)
-        val fragmentShaderCode = Scanner(stream2).useDelimiter("\\Z").next()
-        stream2.close()
+        val vertDoubleStream = ctx.resources.openRawResource(R.raw.vert_df64)
+        val vertDoubleShaderCode = Scanner(vertDoubleStream).useDelimiter("\\Z").next()
+        vertDoubleStream.close()
+
+        val fragFloatStream = ctx.resources.openRawResource(R.raw.frag)
+        val fragFloatShaderCode = Scanner(fragFloatStream).useDelimiter("\\Z").next()
+        fragFloatStream.close()
+
+        val fragDoubleStream = ctx.resources.openRawResource(R.raw.frag_df64)
+        val fragDoubleShaderCode = Scanner(fragDoubleStream).useDelimiter("\\Z").next()
+        fragDoubleStream.close()
 
         // prepare shaders
-        val vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertexShaderCode)
-        val fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragmentShaderCode)
+        val vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertFloatShaderCode)
+        val fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragFloatShaderCode)
 
         GLES32.glAttachShader(program, vertexShader)       // add vertex shader
         GLES32.glAttachShader(program, fragmentShader)     // add fragment shader
