@@ -78,8 +78,8 @@ class Fractal(ctx: Context) {
         fragDoubleStream.close()
 
         // prepare shaders
-        val vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertFloatShaderCode)
-        val fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragFloatShaderCode)
+        val vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertDoubleShaderCode)
+        val fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragDoubleShaderCode)
 
         GLES32.glAttachShader(program, vertexShader)       // add vertex shader
         GLES32.glAttachShader(program, fragmentShader)     // add fragment shader
@@ -211,7 +211,8 @@ class MainActivity : AppCompatActivity() {
     inner class FractalSurfaceView(ctx : Context) : GLSurfaceView(ctx) {
 
         val renderer : FractalRenderer
-        var reactionType : Int
+        var reactionType : Int = 0
+        val continuousRender : Boolean = false
         private var prevFocalLen : Float
 
         init {
@@ -220,69 +221,97 @@ class MainActivity : AppCompatActivity() {
             setRenderer(renderer)                   // set renderer
             renderMode = RENDERMODE_WHEN_DIRTY      // only render on init and explicitly
             prevFocalLen = 1.0f
-            reactionType = 0
         }
 
         @SuppressLint("ClickableViewAccessibility")
         override fun onTouchEvent(e: MotionEvent?): Boolean {
 
-            when (e?.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                    if (reactionType == 1) {
-                        val u : Float = e.x - renderer.screenWidth
-                        val v : Float = e.y - renderer.screenHeight
-                        val r : Float = sqrt(u.pow(2) + v.pow(2))
-                        renderer.lightPos = floatArrayOf(u/r, v/r)
-                        Log.d("LIGHTPOS", "u: ${u/r}, v: ${v/r}")
-                        requestRender()
+            if (reactionType == 0) {
+                // actions change fractal
+
+                when (e?.actionMasked) {
+
+                    MotionEvent.ACTION_DOWN -> {
+                        Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        return true
                     }
-                    return true
-                }
-                MotionEvent.ACTION_POINTER_DOWN -> {
-                    if (reactionType == 0) {
+                    MotionEvent.ACTION_UP -> {
+                        Log.d("UP", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        if (!continuousRender) {
+                            requestRender()
+                            invalidate()
+                        }
+                        return true
+                    }
+                    MotionEvent.ACTION_POINTER_DOWN -> {
                         val focus = e.focus()
                         prevFocalLen = e.focalLength()
                         Log.d("POINTER DOWN", "focus: $focus, focalLen: $prevFocalLen")
+                        return true
                     }
-                    return true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    //Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                    if (reactionType == 0) {
+                    MotionEvent.ACTION_MOVE -> {
+
+                        Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
                         val dPos = e.dFocus()
                         renderer.translate(dPos)
-                        //Log.d("TRANSLATE", "dPos: $dPos")
+                        Log.d("TRANSLATE", "dPos: $dPos")
+
+                        if (e.pointerCount > 1) {   // MULTI-TOUCH
+                            val focalLen = e.focalLength()
+                            val dScale = focalLen / prevFocalLen
+                            prevFocalLen = focalLen
+                            renderer.scale(dScale)
+                            Log.d("SCALE", "$dScale")
+                        }
+
+                        if (continuousRender) { requestRender() }
+
+                        return true
+
                     }
-                    else if (reactionType == 1) {
+                }
+
+            }
+            else if (reactionType == 1) {
+                // actions change light position
+
+                when (e?.actionMasked) {
+
+                    MotionEvent.ACTION_DOWN -> {
+                        Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        val u : Float = e.x - renderer.screenWidth
+                        val v : Float = e.y - renderer.screenHeight
+                        val r : Float = sqrt(u*u + v*v)
+                        renderer.lightPos = floatArrayOf(u/r, v/r)
+                        Log.d("LIGHTPOS", "u: ${u/r}, v: ${v/r}")
+                        if (continuousRender) { requestRender() }
+                        return true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        Log.d("UP", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        if (!continuousRender) {
+                            requestRender()
+                            invalidate()
+                        }
+                        return true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
                         val u : Float = e.x - renderer.screenWidth/2.0f
                         val v : Float = e.y - renderer.screenHeight/2.0f
                         val r : Float = sqrt(u.pow(2) + v.pow(2))
                         renderer.lightPos = floatArrayOf(u/r, -v/r)
                         Log.d("LIGHTPOS", "u: ${u/r}, v: ${-v/r}")
-                        requestRender()
-                    }
+                        if (continuousRender) { requestRender() }
+                        return true
 
-                    if (e.pointerCount > 1) {   // MULTI-TOUCH
-                        if (reactionType == 0) {
-                            val focalLen = e.focalLength()
-                            val dScale = focalLen / prevFocalLen
-                            prevFocalLen = focalLen
-                            renderer.scale(dScale)
-                            //Log.d("SCALE", "$dScale")
-                        }
                     }
+                }
 
-                    requestRender()
-                    invalidate()
-                    return true
-                }
-                MotionEvent.ACTION_UP -> {
-                    Log.d("UP", "")
-                    return false
-                }
-                else -> return false
             }
+
+            return false
+
         }
 
     }
