@@ -25,7 +25,7 @@ import java.nio.IntBuffer
 import kotlin.math.*
 
 
-class Fractal(ctx: Context) {
+class Fractal(ctx: Context, private val emulateDouble: Boolean) {
 
     private val squareCoords = floatArrayOf(
             -1.0f,  1.0f,  0.0f,    // top left
@@ -38,6 +38,8 @@ class Fractal(ctx: Context) {
     private val coordsPerVertex = 3
     private val vertexStride = coordsPerVertex * 4            // 4 bytes/float
     private val vertexBuffer : FloatBuffer
+    private val vertexShader : Int
+    private val fragmentShader : Int
 
     // initialize vertex byte buffer for shape coordinates
     // num coord values * 4 bytes/float
@@ -46,8 +48,6 @@ class Fractal(ctx: Context) {
     // initialize byte buffer for the draw list
     // num coord values * 2 bytes/short
     private val dlb : ByteBuffer = allocateDirect(drawOrder.size * 2)
-
-    private val emulateDouble : Int = 1
 
 
     init {
@@ -78,8 +78,14 @@ class Fractal(ctx: Context) {
         fragDoubleStream.close()
 
         // prepare shaders
-        val vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertDoubleShaderCode)
-        val fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragDoubleShaderCode)
+        if (emulateDouble) {
+            vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertDoubleShaderCode)
+            fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragDoubleShaderCode)
+        }
+        else {
+            vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertFloatShaderCode)
+            fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragFloatShaderCode)
+        }
 
         GLES32.glAttachShader(program, vertexShader)       // add vertex shader
         GLES32.glAttachShader(program, fragmentShader)     // add fragment shader
@@ -98,7 +104,7 @@ class Fractal(ctx: Context) {
         val xOffset = floatArrayOf(floatOffset[0], 0.0f)
         val yOffset = floatArrayOf(floatOffset[1], 0.0f)
 
-        if (emulateDouble == 1) {
+        if (emulateDouble) {
 
             xScale[1] = (doubleScale[0]-floatScale[0].toDouble()).toFloat()
             yScale[1] = (doubleScale[1]-floatScale[1].toDouble()).toFloat()
@@ -124,7 +130,6 @@ class Fractal(ctx: Context) {
         GLES32.glUniform2fv(yScaleHandle, 1, yScale, 0)
         GLES32.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
         GLES32.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
-        GLES32.glUniform1i(emulateHandle, emulateDouble)
         GLES32.glUniform2fv(resHandle, 1, screenRes, 0)
         GLES32.glUniform1i(iterHandle, maxIter)
         GLES32.glUniform2fv(lightHandle, 1, lightPos, 0)
@@ -212,14 +217,17 @@ class MainActivity : AppCompatActivity() {
 
         val renderer : FractalRenderer
         var reactionType : Int = 0
-        val continuousRender : Boolean = false
+        val continuousRender : Boolean
+        val emulateDouble : Boolean = false
         private var prevFocalLen : Float
 
+
         init {
-            setEGLContextClientVersion(3)           // create OpenGL ES 3.0 context
-            renderer = FractalRenderer(ctx)         // create renderer
-            setRenderer(renderer)                   // set renderer
-            renderMode = RENDERMODE_WHEN_DIRTY      // only render on init and explicitly
+            setEGLContextClientVersion(3)                   // create OpenGL ES 3.0 context
+            renderer = FractalRenderer(ctx, emulateDouble)  // create renderer
+            setRenderer(renderer)                           // set renderer
+            renderMode = RENDERMODE_WHEN_DIRTY              // only render on init and explicitly
+            continuousRender = !emulateDouble
             prevFocalLen = 1.0f
         }
 
@@ -228,7 +236,6 @@ class MainActivity : AppCompatActivity() {
 
             if (reactionType == 0) {
                 // actions change fractal
-
                 when (e?.actionMasked) {
 
                     MotionEvent.ACTION_DOWN -> {
@@ -251,10 +258,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     MotionEvent.ACTION_MOVE -> {
 
-                        Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
                         val dPos = e.dFocus()
                         renderer.translate(dPos)
-                        Log.d("TRANSLATE", "dPos: $dPos")
 
                         if (e.pointerCount > 1) {   // MULTI-TOUCH
                             val focalLen = e.focalLength()
@@ -264,17 +269,20 @@ class MainActivity : AppCompatActivity() {
                             Log.d("SCALE", "$dScale")
                         }
 
-                        if (continuousRender) { requestRender() }
+                        if (continuousRender) {
+                            Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                            Log.d("TRANSLATE", "dPos: $dPos")
+                            requestRender()
+                        }
 
                         return true
 
                     }
-                }
 
+                }
             }
             else if (reactionType == 1) {
                 // actions change light position
-
                 when (e?.actionMasked) {
 
                     MotionEvent.ACTION_DOWN -> {
@@ -290,6 +298,7 @@ class MainActivity : AppCompatActivity() {
                     MotionEvent.ACTION_UP -> {
                         Log.d("UP", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
                         if (!continuousRender) {
+                            Log.d("LIGHTPOS", "u: ${renderer.lightPos[0]}, v: ${renderer.lightPos[1]}")
                             requestRender()
                             invalidate()
                         }
@@ -301,13 +310,15 @@ class MainActivity : AppCompatActivity() {
                         val v : Float = e.y - renderer.screenHeight/2.0f
                         val r : Float = sqrt(u.pow(2) + v.pow(2))
                         renderer.lightPos = floatArrayOf(u/r, -v/r)
-                        Log.d("LIGHTPOS", "u: ${u/r}, v: ${-v/r}")
-                        if (continuousRender) { requestRender() }
+                        if (continuousRender) {
+                            Log.d("LIGHTPOS", "u: ${u/r}, v: ${-v/r}")
+                            requestRender()
+                        }
                         return true
 
                     }
-                }
 
+                }
             }
 
             return false
@@ -316,7 +327,8 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    inner class FractalRenderer(private val ctx: Context) : GLSurfaceView.Renderer {
+    inner class FractalRenderer(private val ctx: Context,
+                                private val emulateDouble: Boolean) : GLSurfaceView.Renderer {
 
         val screenWidth : Int
         val screenHeight : Int
@@ -332,7 +344,7 @@ class MainActivity : AppCompatActivity() {
         var lightPos : FloatArray
         var maxIter : Int = 63
 
-        private lateinit var f : Fractal
+        lateinit var f : Fractal
 
         init {
             val displayMetrics = DisplayMetrics()
@@ -375,7 +387,9 @@ class MainActivity : AppCompatActivity() {
             GLES32.glGetShaderPrecisionFormat(GLES32.GL_FRAGMENT_SHADER, GLES32.GL_HIGH_FLOAT, a, b)
             Log.d("PRECISION", b[0].toString())
 
-            f = Fractal(ctx)
+            f = Fractal(ctx, emulateDouble)
+
+
         }
 
         override fun onDrawFrame(unused: GL10) {
@@ -408,11 +422,14 @@ class MainActivity : AppCompatActivity() {
         // create SeekBar and add to frame
         val maxIterBar = SeekBar(this)
         maxIterBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
             override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
-                val p : Float = i.toFloat()/100.0f
+                val p: Float = i.toFloat() / 100.0f
                 fractalView.renderer.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(10) - 1)*p).toInt()
-                fractalView.requestRender()
-                Log.d("SEEKBAR", i.toString())
+                if (fractalView.continuousRender) {
+                    Log.d("SEEKBAR", i.toString())
+                    fractalView.requestRender()
+                }
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -420,7 +437,10 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
-
+                if (!fractalView.continuousRender) {
+                    Log.d("SEEKBAR", seekBar.progress.toString())
+                    fractalView.requestRender()
+                }
             }
         })
         maxIterBar.layoutParams = LP(LP.MATCH_PARENT, LP.WRAP_CONTENT, Gravity.BOTTOM)
