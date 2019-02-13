@@ -1,5 +1,6 @@
 #version 320 es
 #define SPLIT 8193.
+#define R 10000.
 
 precision highp float;
 uniform int maxIter;
@@ -152,7 +153,7 @@ void main() {
     vec2 xC = df64_add(df64_mult(xScale, vec2(screenPos.x, 0.0)), xOffset);
     vec2 yC = df64_add(df64_mult(yScale, vec2(screenPos.y, 0.0)), yOffset);
 
-    float num_colors = 4.0;
+    float num_colors = 5.0;
     float cmap_cycles = 2.0;
     vec2 MOD2 = vec2(0.0);
     //float MOD2 = 0.0;
@@ -181,10 +182,11 @@ void main() {
 
     // darkblue, white, orange, purple
 
-    vec3 c1 = darkblue;
-    vec3 c2 = white;
-    vec3 c3 = vec3(0.8, 0.2, 0.2);
-    vec3 c4 = purple;
+    vec3 c1 = vec3(0.0, 0.1, 0.2);
+    vec3 c2 = darkblue;
+    vec3 c3 = white;
+    vec3 c4 = vec3(0.9, 0.4, 0.2);
+    vec3 c5 = purple * 0.5;
 
     for (int i = 0; i < maxIter; i++) {
         if (i == maxIter - 1) {
@@ -206,7 +208,7 @@ void main() {
 
         // MOD2 = dot(Z, Z);
         MOD2 = df64_mod2(X, Y);
-        if (MOD2.x > 4.0) {
+        if (MOD2.x > R) {
 
 
 //             float lo = 0.5*log(MOD2);
@@ -226,7 +228,8 @@ void main() {
             if      (n >= 0.0 && n < 1.0) {  color = (1.0-n) * c1   +   (n)     * c2;  }
             else if (n >= 1.0 && n < 2.0) {  color = (2.0-n) * c2   +   (n-1.0) * c3;  }
             else if (n >= 2.0 && n < 3.0) {  color = (3.0-n) * c3   +   (n-2.0) * c4;  }
-            else if (n >= 3.0 && n < 4.0) {  color = (4.0-n) * c4   +   (n-3.0) * c1;  }
+            else if (n >= 3.0 && n < 4.0) {  color = (4.0-n) * c4   +   (n-3.0) * c5;  }
+            else if (n >= 4.0 && n < 5.0) {  color = (5.0-n) * c5   +   (n-4.0) * c1;  }
 
 
 //            float n = float(i)/float(maxIter);

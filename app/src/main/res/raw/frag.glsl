@@ -1,4 +1,5 @@
 #version 320 es
+#define R 10000.
 
 precision highp float;
 uniform int maxIter;
@@ -110,7 +111,7 @@ void main() {
         Z = mandelbrot(Z, C);
 
         MOD2 = dot(Z, Z);
-        if (MOD2 > 4.0) {
+        if (MOD2 > R) {
 
 
 //             float lo = 0.5*log(MOD2);

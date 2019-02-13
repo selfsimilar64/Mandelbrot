@@ -120,7 +120,6 @@ class Fractal(ctx: Context, private val emulateDouble: Boolean) {
         val yScaleHandle = GLES32.glGetUniformLocation(program, "yScale")
         val xOffsetHandle = GLES32.glGetUniformLocation(program, "xOffset")
         val yOffsetHandle = GLES32.glGetUniformLocation(program, "yOffset")
-        val emulateHandle = GLES32.glGetUniformLocation(program, "emulateDouble")
         val resHandle = GLES32.glGetUniformLocation(program, "screenRes")
         val iterHandle = GLES32.glGetUniformLocation(program, "maxIter")
         val lightHandle = GLES32.glGetUniformLocation(program, "lightPos")
