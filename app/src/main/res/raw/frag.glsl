@@ -1,5 +1,5 @@
 #version 320 es
-#define R 10000.
+#define R 1000.
 
 precision highp float;
 uniform int maxIter;
@@ -8,7 +8,7 @@ uniform vec2 xScale;
 uniform vec2 yScale;
 uniform vec2 xOffset;
 uniform vec2 yOffset;
-uniform vec2 screenRes;
+uniform vec2 texRes;
 out vec4 fragmentColor;
 
 
@@ -59,10 +59,16 @@ float atan2(vec2 w) {
     }
 }
 
+vec2 sine(vec2 z) {
+    float u = 0.5*(exp(z.y)+exp(-z.y))*sin(z.x);
+    float v = 0.5*(exp(z.y)-exp(-z.y))*cos(z.x);
+    return vec2(u, v);
+}
+
 
 void main() {
 
-    vec2 screenPos = 2.0*(gl_FragCoord.xy / screenRes) - vec2(1.0, 1.0);
+    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);    // range [-1, 1]
     float xC = xScale.x*screenPos.x + xOffset.x;
     float yC = yScale.x*screenPos.y + yOffset.x;
     vec2 C = vec2(xC, yC);
@@ -108,6 +114,7 @@ void main() {
         // a.x = a.x + 1.0;
 
         // iterate z
+        // Z = sine(mult(Z, C))+C;
         Z = mandelbrot(Z, C);
 
         MOD2 = dot(Z, Z);
@@ -133,16 +140,15 @@ void main() {
             else if (n >= 2.0 && n < 3.0) {  color = (3.0-n) * c3   +   (n-2.0) * c4;  }
             else if (n >= 3.0 && n < 4.0) {  color = (4.0-n) * c4   +   (n-3.0) * c1;  }
 
-
 //            float n = float(i)/float(maxIter);
 //            color = vec3(1.0-n, 1.0-n, 1.0-n);
-
 
             break;
         }
 
     }
 
+    // fragmentColor.rgb = vec3(gl_FragCoord.x/texRes.x, 0.0, gl_FragCoord.y/texRes.y);
     fragmentColor.rgb = color;
     fragmentColor.a = 1.0;
 }

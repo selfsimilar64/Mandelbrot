@@ -9,7 +9,7 @@ uniform vec2 xScale;
 uniform vec2 yScale;
 uniform vec2 xOffset;
 uniform vec2 yOffset;
-uniform vec2 screenRes;
+uniform vec2 texRes;
 out vec4 fragmentColor;
 
 
@@ -149,7 +149,7 @@ float atan2(vec2 w) {
 
 void main() {
 
-    vec2 screenPos = 2.0*(gl_FragCoord.xy / screenRes) - vec2(1.0, 1.0);
+    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);
     vec2 xC = df64_add(df64_mult(xScale, vec2(screenPos.x, 0.0)), xOffset);
     vec2 yC = df64_add(df64_mult(yScale, vec2(screenPos.y, 0.0)), yOffset);
 
