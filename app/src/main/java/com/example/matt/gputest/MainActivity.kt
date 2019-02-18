@@ -7,7 +7,7 @@ import android.graphics.PointF
 import javax.microedition.khronos.egl.EGLConfig
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.opengl.GLES32
+import android.opengl.GLES32 as GL
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
@@ -25,7 +25,9 @@ import java.nio.IntBuffer
 import kotlin.math.*
 
 
-class Fractal(ctx: Context, private val emulateDouble: Boolean) {
+
+class Fractal(ctx: Context, private val emulateDouble: Boolean,
+              private val screenRes: FloatArray) {
 
     private val squareCoords = floatArrayOf(
             -1.0f,  1.0f,  0.0f,    // top left
@@ -34,12 +36,27 @@ class Fractal(ctx: Context, private val emulateDouble: Boolean) {
             1.0f,  1.0f,  0.0f )    // top right
 
     private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)      // order to draw vertices
-    private val program = GLES32.glCreateProgram()              // create empty OpenGL program
+    private val program = GL.glCreateProgram()              // create empty OpenGL program
+    private val texProgram = GL.glCreateProgram()
     private val coordsPerVertex = 3
     private val vertexStride = coordsPerVertex * 4            // 4 bytes/float
     private val vertexBuffer : FloatBuffer
     private val vertexShader : Int
     private val fragmentShader : Int
+    private val vertexTexShader : Int
+    private val fragmentTexShader : Int
+
+
+
+    private val texWidth = 1440
+    private val texHeight = 2392
+    private val texRes = floatArrayOf(texWidth.toFloat(), texHeight.toFloat())
+
+    // create variables to store texture and fbo IDs
+    private val texID : IntBuffer = IntBuffer.allocate(1)
+    private val fboID : IntBuffer = IntBuffer.allocate(1)
+
+
 
     // initialize vertex byte buffer for shape coordinates
     // num coord values * 4 bytes/float
@@ -77,33 +94,80 @@ class Fractal(ctx: Context, private val emulateDouble: Boolean) {
         val fragDoubleShaderCode = Scanner(fragDoubleStream).useDelimiter("\\Z").next()
         fragDoubleStream.close()
 
+        val fragTexStream = ctx.resources.openRawResource(R.raw.frag_tex)
+        val fragTexShaderCode = Scanner(fragTexStream).useDelimiter("\\Z").next()
+        fragTexStream.close()
+
+        val vertTexStream = ctx.resources.openRawResource(R.raw.vert_tex)
+        val vertTexShaderCode = Scanner(vertTexStream).useDelimiter("\\Z").next()
+        vertTexStream.close()
+
         // prepare shaders
         if (emulateDouble) {
-            vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertDoubleShaderCode)
-            fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragDoubleShaderCode)
+            vertexShader = loadShader(GL.GL_VERTEX_SHADER, vertDoubleShaderCode)
+            fragmentShader = loadShader(GL.GL_FRAGMENT_SHADER, fragDoubleShaderCode)
         }
         else {
-            vertexShader = loadShader(GLES32.GL_VERTEX_SHADER, vertFloatShaderCode)
-            fragmentShader = loadShader(GLES32.GL_FRAGMENT_SHADER, fragFloatShaderCode)
+            vertexShader = loadShader(GL.GL_VERTEX_SHADER, vertFloatShaderCode)
+            fragmentShader = loadShader(GL.GL_FRAGMENT_SHADER, fragFloatShaderCode)
         }
 
-        GLES32.glAttachShader(program, vertexShader)       // add vertex shader
-        GLES32.glAttachShader(program, fragmentShader)     // add fragment shader
-        GLES32.glLinkProgram(program)                      // create OpenGL program executables
+        vertexTexShader = loadShader(GL.GL_VERTEX_SHADER, vertTexShaderCode)
+        fragmentTexShader = loadShader(GL.GL_FRAGMENT_SHADER, fragTexShaderCode)
+
+
+        // genereate texture and fbo
+        GL.glGenFramebuffers(1, fboID)
+        GL.glGenTextures(1, texID)
+        // GLES20.glGenRenderbuffers(1, depthRb, 0); // the depth buffer
+
+        // bind texture and set parameters
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texID[0])
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT)
+
+        val texByteBuf : ByteBuffer = allocateDirect(texWidth * texHeight * 4)
+        texByteBuf.order(ByteOrder.nativeOrder())
+
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA8, texWidth, texHeight, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, texByteBuf)
+
+        // GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, depthRb[0]);
+        // GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER, GLES20.GL_DEPTH_COMPONENT16, texW, texH);
+
+
+
+
+
+        GL.glAttachShader(program, vertexShader)        // add vertex shader
+        GL.glAttachShader(program, fragmentShader)      // add fragment shader
+        GL.glLinkProgram(program)                       // create OpenGL program executables
+
+        GL.glAttachShader(texProgram, vertexTexShader)
+        GL.glAttachShader(texProgram, fragmentTexShader)
+        GL.glLinkProgram(texProgram)
+
     }
 
-    fun draw(doubleScale: DoubleArray, doubleOffset: DoubleArray, maxIter: Int, lightPos: FloatArray,
-             screenRes: FloatArray) {
+    fun renderToTexture(
+            doubleScale:   DoubleArray,
+            doubleOffset:  DoubleArray,
+            maxIter:       Int,
+            lightPos:      FloatArray
+    ) {
 
+
+        GL.glUseProgram(program)        // add program to OpenGL environment
+
+
+        // split parameter doubles into dual-floats
         val floatScale = floatArrayOf(doubleScale[0].toFloat(), doubleScale[1].toFloat())
         val floatOffset = floatArrayOf(doubleOffset[0].toFloat(), doubleOffset[1].toFloat())
-        
         val xScale = floatArrayOf(floatScale[0], 0.0f)
         val yScale = floatArrayOf(floatScale[1], 0.0f)
-
         val xOffset = floatArrayOf(floatOffset[0], 0.0f)
         val yOffset = floatArrayOf(floatOffset[1], 0.0f)
-
         if (emulateDouble) {
 
             xScale[1] = (doubleScale[0]-floatScale[0].toDouble()).toFloat()
@@ -113,36 +177,115 @@ class Fractal(ctx: Context, private val emulateDouble: Boolean) {
 
         }
 
-        GLES32.glUseProgram(program)        // add program to OpenGL environment
 
-        val posHandle = GLES32.glGetAttribLocation(program, "vPos")
-        val xScaleHandle = GLES32.glGetUniformLocation(program, "xScale")
-        val yScaleHandle = GLES32.glGetUniformLocation(program, "yScale")
-        val xOffsetHandle = GLES32.glGetUniformLocation(program, "xOffset")
-        val yOffsetHandle = GLES32.glGetUniformLocation(program, "yOffset")
-        val resHandle = GLES32.glGetUniformLocation(program, "screenRes")
-        val iterHandle = GLES32.glGetUniformLocation(program, "maxIter")
-        val lightHandle = GLES32.glGetUniformLocation(program, "lightPos")
+        val posHandle = GL.glGetAttribLocation(program, "vPos")
+        val xScaleHandle = GL.glGetUniformLocation(program, "xScale")
+        val yScaleHandle = GL.glGetUniformLocation(program, "yScale")
+        val xOffsetHandle = GL.glGetUniformLocation(program, "xOffset")
+        val yOffsetHandle = GL.glGetUniformLocation(program, "yOffset")
+        val texResHandle = GL.glGetUniformLocation(program, "texRes")
+        val iterHandle = GL.glGetUniformLocation(program, "maxIter")
+        val lightHandle = GL.glGetUniformLocation(program, "lightPos")
+
 
         // pass uniform scale, offset, and maxIter to shader
-        GLES32.glUniform2fv(xScaleHandle, 1, xScale, 0)
-        GLES32.glUniform2fv(yScaleHandle, 1, yScale, 0)
-        GLES32.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
-        GLES32.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
-        GLES32.glUniform2fv(resHandle, 1, screenRes, 0)
-        GLES32.glUniform1i(iterHandle, maxIter)
-        GLES32.glUniform2fv(lightHandle, 1, lightPos, 0)
+        GL.glUniform2fv(xScaleHandle, 1, xScale, 0)
+        GL.glUniform2fv(yScaleHandle, 1, yScale, 0)
+        GL.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
+        GL.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
+        GL.glUniform2fv(texResHandle, 1, texRes, 0)
+        GL.glUniform1i(iterHandle, maxIter)
+        GL.glUniform2fv(lightHandle, 1, lightPos, 0)
 
         // add attribute array of vertices
-        GLES32.glEnableVertexAttribArray(posHandle)
-        GLES32.glVertexAttribPointer(posHandle, coordsPerVertex,
-                                     GLES32.GL_FLOAT, false,
-                                     vertexStride, vertexBuffer)
+        GL.glEnableVertexAttribArray(posHandle)
+        GL.glVertexAttribPointer(posHandle, coordsPerVertex,
+                GL.GL_FLOAT, false,
+                vertexStride, vertexBuffer)
+
+
+        GL.glViewport(0, 0, texWidth, texHeight)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboID[0])
+        GL.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0, GL.GL_TEXTURE_2D, texID[0], 0)
+        // GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_RENDERBUFFER, depthRb[0])
+
+        val status = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
+        if (status != GL.GL_FRAMEBUFFER_COMPLETE) {
+            Log.d("FRAMEBUFFER", "STATUS == NOT COMPLETE")
+        }
+
+        GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         // Draw the square
-        GLES32.glDrawElements(GLES32.GL_TRIANGLES, drawOrder.size, GLES32.GL_UNSIGNED_SHORT, dlb)
+        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, dlb)
+        GL.glDisableVertexAttribArray(posHandle)        // disable vertex array
 
-        GLES32.glDisableVertexAttribArray(posHandle)        // disable vertex array
+    }
+
+    fun renderFromTexture(
+            doubleScale:    DoubleArray,
+            doubleOffset:   DoubleArray,
+            screenRes:      FloatArray,
+            m:              FloatArray
+    ) {
+
+        GL.glUseProgram(texProgram)
+
+        // split parameter doubles into dual-floats
+        val floatScale = floatArrayOf(doubleScale[0].toFloat(), doubleScale[1].toFloat())
+        val floatOffset = floatArrayOf(doubleOffset[0].toFloat(), doubleOffset[1].toFloat())
+        val xScale = floatArrayOf(floatScale[0], 0.0f)
+        val yScale = floatArrayOf(floatScale[1], 0.0f)
+        val xOffset = floatArrayOf(floatOffset[0], 0.0f)
+        val yOffset = floatArrayOf(floatOffset[1], 0.0f)
+        if (emulateDouble) {
+
+            xScale[1] = (doubleScale[0]-floatScale[0].toDouble()).toFloat()
+            yScale[1] = (doubleScale[1]-floatScale[1].toDouble()).toFloat()
+            xOffset[1] = (doubleOffset[0]-floatOffset[0].toDouble()).toFloat()
+            yOffset[1] = (doubleOffset[1]-floatOffset[1].toDouble()).toFloat()
+
+        }
+
+        val posTexHandle = GL.glGetAttribLocation(texProgram, "vPos")
+        val xScaleHandle = GL.glGetUniformLocation(program, "xScale")
+        val yScaleHandle = GL.glGetUniformLocation(program, "yScale")
+        val xOffsetHandle = GL.glGetUniformLocation(program, "xOffset")
+        val yOffsetHandle = GL.glGetUniformLocation(program, "yOffset")
+        val texHandle = GL.glGetUniformLocation(texProgram, "tex")
+        val resTexHandle = GL.glGetUniformLocation(texProgram, "screenRes")
+        val mHandle = GL.glGetUniformLocation(texProgram, "m")
+
+        GL.glUniform1i(texHandle, 0)    // use GL_TEXTURE0 ?
+        GL.glUniform2fv(xScaleHandle, 1, xScale, 0)
+        GL.glUniform2fv(yScaleHandle, 1, yScale, 0)
+        GL.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
+        GL.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
+        GL.glUniform2fv(resTexHandle, 1, screenRes, 0)
+        GL.glUniformMatrix4fv(mHandle, 1, true, m, 0)
+
+        // add attribute array of vertices
+        GL.glEnableVertexAttribArray(posTexHandle)
+        GL.glVertexAttribPointer(posTexHandle, coordsPerVertex,
+                GL.GL_FLOAT, false,
+                vertexStride, vertexBuffer)
+
+
+        // change framebuffer back to screen window
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+        GL.glViewport(0, 0, screenRes[0].toInt(), screenRes[1].toInt())
+
+        GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texID[0])
+
+
+        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, dlb)
+        GL.glDisableVertexAttribArray(posTexHandle)        // disable vertex array
+
     }
 
 }
@@ -150,13 +293,13 @@ class Fractal(ctx: Context, private val emulateDouble: Boolean) {
 
 fun loadShader(type: Int, shaderCode: String): Int {
 
-    // create a vertex shader type (GLES32.GL_VERTEX_SHADER)
-    // or a fragment shader type (GLES32.GL_FRAGMENT_SHADER)
-    val shader = GLES32.glCreateShader(type)
+    // create a vertex shader type (GL.GL_VERTEX_SHADER)
+    // or a fragment shader type (GL.GL_FRAGMENT_SHADER)
+    val shader = GL.glCreateShader(type)
 
     // add the source code to the shader and compile it
-    GLES32.glShaderSource(shader, shaderCode)
-    GLES32.glCompileShader(shader)
+    GL.glShaderSource(shader, shaderCode)
+    GL.glCompileShader(shader)
 
     return shader
 }
@@ -167,36 +310,17 @@ class MainActivity : AppCompatActivity() {
 
 
     /* MotionEvent extension functions ------ */
-    fun MotionEvent.dPointerPos(i: Int) : PointF {
-        return PointF(if (historySize > 0) getX(i) - getHistoricalX(i,0) else 0.0f,
-                if (historySize > 0) getY(i) - getHistoricalY(i,0) else 0.0f)
-    }
-
-    fun MotionEvent.dFocus() : PointF {
-        if (pointerCount == 1) return dPointerPos(0)
-        else {
-            var sumX = 0.0f
-            var sumY = 0.0f
-            var dPos: PointF
-            for (i in 0 until pointerCount) {
-                dPos = dPointerPos(i)
-                sumX += dPos.x
-                sumY += dPos.y
-            }
-            return PointF(sumX / pointerCount, sumY / pointerCount)
-        }
-    }
 
     fun MotionEvent.focalLength() : Float {
         val f = focus()
-        val pos = PointF(x,y)
-        val dist = Pair(pos.x - f.x,pos.y - f.y)
-        return Math.sqrt(Math.pow(dist.first.toDouble(),2.0) +
-                Math.pow(dist.second.toDouble(),2.0)).toFloat()
+        val pos = floatArrayOf(x, y)
+        val dist = floatArrayOf(pos[0] - f[0], pos[1] - f[1])
+        return Math.sqrt(Math.pow(dist[0].toDouble(), 2.0) +
+                Math.pow(dist[1].toDouble(), 2.0)).toFloat()
     }
 
-    fun MotionEvent.focus() : PointF {
-        return if (pointerCount == 1) PointF(x, y)
+    fun MotionEvent.focus() : FloatArray {
+        return if (pointerCount == 1) floatArrayOf(x, y)
         else {
             var sumX = 0.0f
             var sumY = 0.0f
@@ -204,9 +328,10 @@ class MainActivity : AppCompatActivity() {
                 sumX += getX(i)
                 sumY += getY(i)
             }
-            PointF(sumX / pointerCount, sumY / pointerCount)
+            floatArrayOf(sumX/pointerCount, sumY/pointerCount)
         }
     }
+
     /* -------------------------------------- */
 
 
@@ -217,8 +342,10 @@ class MainActivity : AppCompatActivity() {
         val renderer : FractalRenderer
         var reactionType : Int = 0
         val continuousRender : Boolean
-        val emulateDouble : Boolean = false
-        private var prevFocalLen : Float
+        val emulateDouble : Boolean = true
+
+        private val prevFocus = floatArrayOf(0.0f, 0.0f)
+        private var prevFocalLen = 1.0f
 
 
         init {
@@ -227,7 +354,6 @@ class MainActivity : AppCompatActivity() {
             setRenderer(renderer)                           // set renderer
             renderMode = RENDERMODE_WHEN_DIRTY              // only render on init and explicitly
             continuousRender = !emulateDouble
-            prevFocalLen = 1.0f
         }
 
         @SuppressLint("ClickableViewAccessibility")
@@ -238,44 +364,61 @@ class MainActivity : AppCompatActivity() {
                 when (e?.actionMasked) {
 
                     MotionEvent.ACTION_DOWN -> {
+                        val focus = e.focus()
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
                         Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                        return true
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        Log.d("UP", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                        if (!continuousRender) {
-                            requestRender()
-                            invalidate()
-                        }
                         return true
                     }
                     MotionEvent.ACTION_POINTER_DOWN -> {
                         val focus = e.focus()
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
                         prevFocalLen = e.focalLength()
                         Log.d("POINTER DOWN", "focus: $focus, focalLen: $prevFocalLen")
                         return true
                     }
                     MotionEvent.ACTION_MOVE -> {
-
-                        val dPos = e.dFocus()
-                        renderer.translate(dPos)
-
+                        val focus = e.focus()
+                        val dx : Float = focus[0] - prevFocus[0]
+                        val dy : Float = focus[1] - prevFocus[1]
+                        renderer.translate(floatArrayOf(dx, dy))
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
                         if (e.pointerCount > 1) {   // MULTI-TOUCH
                             val focalLen = e.focalLength()
-                            val dScale = focalLen / prevFocalLen
+                            val dFocalLen = focalLen / prevFocalLen
+                            renderer.scale(dFocalLen)
                             prevFocalLen = focalLen
-                            renderer.scale(dScale)
-                            Log.d("SCALE", "$dScale")
+                            // Log.d("SCALE", "$dScale")
                         }
 
-                        if (continuousRender) {
-                            Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                            Log.d("TRANSLATE", "dPos: $dPos")
-                            requestRender()
-                        }
+                        // Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        Log.d("TRANSLATE", "dx: $dx, dy: $dy")
+                        requestRender()
 
                         return true
-
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        Log.d("UP", "x: ${e.x}, y: ${e.y}, count: ${e.pointerCount}")
+                        if (emulateDouble) {
+                            renderer.renderToTex()
+                        }
+                        requestRender()
+                        invalidate()
+                        return true
+                    }
+                    MotionEvent.ACTION_POINTER_UP -> {
+                        Log.d("POINTER UP", "x: ${e.x}, y: ${e.y}, count: ${e.pointerCount}")
+                        if (e.getPointerId(e.actionIndex) == 0) {
+                            prevFocus[0] = e.getX(1)
+                            prevFocus[1] = e.getY(1)
+                        }
+                        else if (e.getPointerId(e.actionIndex) == 1) {
+                            prevFocus[0] = e.getX(0)
+                            prevFocus[1] = e.getY(0)
+                        }
+                        return true
                     }
 
                 }
@@ -331,17 +474,21 @@ class MainActivity : AppCompatActivity() {
 
         val screenWidth : Int
         val screenHeight : Int
-        val screenRes : FloatArray
-
-        private val offset : DoubleArray
-        private val scale : DoubleArray
-
-        private val imWidth : Int
-        private val imHeight : Int
         private val ratio : Float
+        private val screenRes : FloatArray
+
+        private val T : DoubleArray
+        private val S : DoubleArray
 
         var lightPos : FloatArray
         var maxIter : Int = 63
+
+        var renderToTex = false
+        private val i = floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f,
+                                     0.0f, 1.0f, 0.0f, 0.0f,
+                                     0.0f, 0.0f, 1.0f, 0.0f,
+                                     0.0f, 0.0f, 0.0f, 1.0f)
+        private var m = i.clone()
 
         lateinit var f : Fractal
 
@@ -353,29 +500,36 @@ class MainActivity : AppCompatActivity() {
             screenRes = floatArrayOf(screenWidth.toFloat(), screenHeight.toFloat())
             Log.d("WIDTH", "$screenWidth")
             Log.d("HEIGHT", "$screenHeight")
-            imWidth = Math.round(screenWidth/1.0f)
-            imHeight = Math.round(screenHeight/1.0f)
-            ratio = imWidth/imHeight.toFloat()
-            scale = doubleArrayOf(1.75, 1.75/ratio)
-            offset = doubleArrayOf(-0.75, 0.0)
+            ratio = screenWidth.toFloat()/screenHeight.toFloat()
+            S = doubleArrayOf(1.75, 1.75/ratio)
+            T = doubleArrayOf(-0.75, 0.0)
             lightPos = floatArrayOf(1.0f/sqrt(2.0f), 1.0f/sqrt(2.0f))
         }
 
-        fun translate(dPos: PointF) {
-            offset[0] -= dPos.x / screenWidth * 2.0 * scale[0]
-            offset[1] += dPos.y / screenHeight * 2.0 * scale[1]
-            Log.d("TRANSLATE", "dPos: (${dPos.x}, ${dPos.y}),  offset: (${offset[0]}, ${offset[1]})")
+        fun translate(dPos: FloatArray) {
+            T[0] -= (dPos[0] / screenWidth).toDouble() * 2.0 * S[0]
+            T[1] += (dPos[1] / screenHeight).toDouble() * 2.0 * S[1]
+            m[3] += 2.0f * dPos[0] / screenWidth.toFloat()
+            m[7] -= 2.0f * dPos[1] / screenHeight.toFloat()
+            // Log.d("TRANSLATE", "dPos: (${dPos.x}, ${dPos.y}),  offset: (${offset[0]}, ${offset[1]})")
         }
         fun scale(dScale: Float) {
-            scale[0] /= dScale.toDouble()
-            scale[1] /= dScale.toDouble()
-            Log.d("SCALE", "dScale: $dScale,  scale: (${scale[0]}, ${scale[1]})")
+            Log.d("SCALE", "$dScale")
+            S[0] /= dScale.toDouble()
+            S[1] /= dScale.toDouble()
+            m[0] *= dScale
+            m[5] *= dScale
+            // Log.d("SCALE", "dScale: $dScale,  scale: (${scale[0]}, ${scale[1]})")
+        }
+        fun renderToTex() {
+            renderToTex = true
+            m = i.clone()
         }
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
 
             // set background color to black
-            GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f )
+            GL.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f )
 
             // get OpenGL ES version
             Log.d("VERSION", unused.glGetString(GL10.GL_VERSION))
@@ -383,21 +537,25 @@ class MainActivity : AppCompatActivity() {
             // get fragment shader precision
             val a : IntBuffer = IntBuffer.allocate(2)
             val b : IntBuffer = IntBuffer.allocate(1)
-            GLES32.glGetShaderPrecisionFormat(GLES32.GL_FRAGMENT_SHADER, GLES32.GL_HIGH_FLOAT, a, b)
+            GL.glGetShaderPrecisionFormat(GL.GL_FRAGMENT_SHADER, GL.GL_HIGH_FLOAT, a, b)
             Log.d("PRECISION", b[0].toString())
 
-            f = Fractal(ctx, emulateDouble)
+            f = Fractal(ctx, emulateDouble, screenRes)
+            f.renderToTexture(S, T, maxIter, lightPos)
 
 
         }
 
         override fun onDrawFrame(unused: GL10) {
-            GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT)      // redraw background color
-            f.draw(scale, offset, maxIter, lightPos, screenRes)
+            if (renderToTex) {
+                f.renderToTexture(S, T, maxIter, lightPos)
+                renderToTex = false
+            }
+            f.renderFromTexture(S, T, screenRes, m)
         }
 
         override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
-            GLES32.glViewport(0, 0, width, height)
+            GL.glViewport(0, 0, width, height)
         }
 
     }
@@ -427,6 +585,7 @@ class MainActivity : AppCompatActivity() {
                 fractalView.renderer.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(10) - 1)*p).toInt()
                 if (fractalView.continuousRender) {
                     Log.d("SEEKBAR", i.toString())
+                    fractalView.renderer.renderToTex = true
                     fractalView.requestRender()
                 }
             }
@@ -438,6 +597,7 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 if (!fractalView.continuousRender) {
                     Log.d("SEEKBAR", seekBar.progress.toString())
+                    fractalView.renderer.renderToTex = true
                     fractalView.requestRender()
                 }
             }
