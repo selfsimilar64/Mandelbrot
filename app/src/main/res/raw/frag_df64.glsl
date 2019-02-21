@@ -235,7 +235,6 @@ void main() {
 //            float n = float(i)/float(maxIter);
 //            color = vec3(1.0-n, 1.0-n, 1.0-n);
 
-
             break;
         }
 
