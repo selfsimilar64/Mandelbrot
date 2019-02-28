@@ -2,8 +2,6 @@
 
 in vec4 viewCoords;
 in vec4 quadCoords;
-uniform vec2 scale;
-uniform vec2 offset;
 out vec2 texCoord;
 
 void main() {
