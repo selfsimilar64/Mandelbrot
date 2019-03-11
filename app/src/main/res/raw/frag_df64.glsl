@@ -1,6 +1,6 @@
 #version 320 es
 #define SPLIT 8193.
-#define R 1000.
+#define R 10000.
 
 precision highp float;
 uniform int maxIter;
@@ -10,7 +10,6 @@ uniform vec2 xScale;
 uniform vec2 yScale;
 uniform vec2 xOffset;
 uniform vec2 yOffset;
-uniform vec2 texRes;
 
 in vec4 viewPos;
 out vec4 fragmentColor;
@@ -87,16 +86,20 @@ bool df64_gt(vec2 a, vec2 b) {
 }
 
 vec2 df64_mandelbrot_x(vec2 X, vec2 Y, vec2 xC) {
-    // return df64_add(df64_mult(df64_add(X, Y), df64_add(X, -Y)), xC);
     return df64_add(df64_add(df64_sqr(X), -df64_sqr(Y)), xC);
 }
 
 vec2 df64_mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
-    return df64_add(df64_mult(vec2(2.0, 0.0), df64_mult(X, Y)), yC);
+    vec2 T = df64_mult(X, Y);
+    return df64_add(df64_add(T, T), yC);
+}
+
+vec2 df64_perp_mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
+    vec2 T = df64_mult(vec2(abs(X.x), abs(X.y)), Y);
+    return df64_add(-df64_add(T, T), yC);
 }
 
 vec2 df64_mod2(vec2 X, vec2 Y) {
-    // return df64_add(df64_mult(X, X), df64_mult(Y, Y));
     return df64_add(df64_sqr(X), df64_sqr(Y));
 }
 
@@ -113,6 +116,27 @@ vec4 df64_complex_mult(vec2 X, vec2 Y, vec2 A, vec2 B) {
 
 
 
+vec2 conj(vec2 p) {
+    return vec2(p.x, -p.y);
+}
+
+float mod2(vec2 p) {
+    return p.x*p.x + p.y*p.y;
+}
+
+vec2 mult(vec2 p, vec2 q) {
+    return vec2(p.x*q.x - p.y*q.y, p.y*q.x + p.x*q.y);
+}
+
+vec2 div(vec2 p, vec2 q) {
+    return mult(p, conj(q)) / mod2(q);
+}
+
+float modulus(vec2 p) {
+    return sqrt(p.x*p.x + p.y*p.y);
+}
+
+
 
 void main() {
 
@@ -126,54 +150,40 @@ void main() {
 //    vec2 xC = xTouchPos;
 //    vec2 yC = yTouchPos;
 
-    float num_colors = 5.0;
-    float cmap_cycles = 3.0;
-    vec2 MOD2 = vec2(0.0);
-
-    float height = 1.25;
+    // use mandelbrot Z components
+    vec2 X = vec2(0.0);
+    vec2 Y = vec2(0.0);
+    vec2 Y_temp;
 
     // use julia Z components
 //    vec2 X = df64_add(df64_mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
 //    vec2 Y = df64_add(df64_mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
 
-    // use mandelbrot Z components
-    vec2 X = vec2(0.0);
-    vec2 Y = vec2(0.0);
 
-    vec2 Y_temp;
 
-//    vec2 X1 = vec2(0.0);
-//    vec2 Y1 = vec2(0.0);
-//
-//    vec2 X2 = vec2(0.0);
-//    vec2 Y2 = vec2(0.0);
-//
-//    vec2 X3 = vec2(0.0);
-//    vec2 Y3 = vec2(0.0);
-//
-//    vec2 X4 = vec2(0.0);
-//    vec2 Y4 = vec2(0.0);
-//
-//    vec2 X5 = vec2(0.0);
-//    vec2 Y5 = vec2(0.0);
-//
-//    vec2 X6 = vec2(0.0);
-//    vec2 Y6 = vec2(0.0);
-//
-//    vec2 X7 = vec2(0.0);
-//    vec2 Y7 = vec2(0.0);
-//
-//    vec2 X8 = vec2(0.0);
-//    vec2 Y8 = vec2(0.0);
-//
-//    float eps = 0.0001;
-//    bool repeat = false;
-//    int period = 0;
+    float num_colors = 5.0;
+    float cmap_cycles = 3.0;
+    vec2 MOD2 = vec2(0.0);
+    vec2 lightPos = vec2(1.0);
+    float height = 1.25;
+
+
+
+    vec2 X1, X2, X3, X4, X5, X6, X7, X8 = vec2(0.0);
+    vec2 Y1, Y2, Y3, Y4, Y5, Y6, Y7, Y8 = vec2(0.0);
+
+    float XY1e, XY2e, XY3e, XY4e, XY5e, XY6e, XY7e, XY8e;
+
+    float eps = 0.005 * xScale.x;
+    bool repeat = false;
+    int period = 0;
+
+
 
     // vec2 Z = vec2(0.0, 0.0);
-    // vec2 a = vec2(0.0, 0.0);
-    // vec2 b = vec2(0.0, 0.0);
-    // vec2 u = vec2(0.0, 0.0);
+    vec2 a = vec2(0.0, 0.0);
+    vec2 b = vec2(0.0, 0.0);
+    vec2 u = vec2(0.0, 0.0);
     float pi = 3.141593;
 
     vec3 color    =  vec3(0.0, 0.0, 0.0);
@@ -191,107 +201,137 @@ void main() {
 
     vec3 c1 = vec3(0.0, 0.1, 0.2);
     vec3 c2 = darkblue;
-    vec3 c3 = white;
+    vec3 c3 = vec3(0.7);
     vec3 c4 = vec3(0.9, 0.4, 0.2);
     vec3 c5 = purple * 0.5;
-    vec3 c6 = black;
+    vec3 c6 = vec3(0.8, 0.2, 0.2);
 
     for (int i = 0; i < maxIter; i++) {
 
         // iterate second derivative
-        // b = 2.0*(mult(b, Z) + mult(a, a));
+        b = 2.0*(mult(b, vec2(X.x, Y.x)) + mult(a, a));
 
         // iterate derivative
-        // a = 2.0*mult(a, Z);
-        // a.x = a.x + 1.0;
+        a = 2.0*mult(a, vec2(X.x, Y.x));
+        a.x = a.x + 1.0;
+
+
+
 
         // cycle previous values
-//        X8 = X7;
-//        Y8 = Y7;
-//
-//        X7 = X6;
-//        Y7 = Y6;
-//
-//        X6 = X5;
-//        Y6 = Y5;
-//
-//        X5 = X4;
-//        Y5 = Y4;
-//
-//        X4 = X3;
-//        Y4 = Y3;
-//
-//        X3 = X2;
-//        Y3 = Y2;
-//
-//        X2 = X1;
-//        Y2 = Y1;
-//
-//        X1 = X;
-//        Y1 = Y;
+        X8 = X7;
+        Y8 = Y7;
+
+        X7 = X6;
+        Y7 = Y6;
+
+        X6 = X5;
+        Y6 = Y5;
+
+        X5 = X4;
+        Y5 = Y4;
+
+        X4 = X3;
+        Y4 = Y3;
+
+        X3 = X2;
+        Y3 = Y2;
+
+        X2 = X1;
+        Y2 = Y1;
+
+        X1 = X;
+        Y1 = Y;
+
+
+
 
         // iterate z
         Y_temp = df64_mandelbrot_y(X, Y, yC);
         X = df64_mandelbrot_x(X, Y, xC);
         Y = Y_temp;
-
-//        if (i > 8) {
-            // check for periodicity
-//            if (abs(X.x - X1.x) < eps && abs(X.y - X1.y) < eps && abs(Y.x - Y1.x) < eps && abs(Y.y - Y1.y) < eps) {
-//                period = 1;
-//                repeat = true;
-//            }
-//            if (abs(X.x - X2.x) < eps && abs(X.y - X2.y) < eps && abs(Y.x - Y2.x) < eps && abs(Y.y - Y2.y) < eps) {
-//                period = 2;
-//                repeat = true;
-//            }
-//            if (abs(X.x - X3.x) < eps && abs(X.y - X3.y) < eps && abs(Y.x - Y3.x) < eps && abs(Y.y - Y3.y) < eps) {
-//                period = 3;
-//                repeat = true;
-//            }
-//            if (abs(X.x - X4.x) < eps && abs(X.y - X4.y) < eps && abs(Y.x - Y4.x) < eps && abs(Y.y - Y4.y) < eps) {
-//                period = 4;
-//                repeat = true;
-//            }
-//            if (abs(X.x - X5.x) < eps && abs(X.y - X5.y) < eps && abs(Y.x - Y5.x) < eps && abs(Y.y - Y5.y) < eps) {
-//                period = 5;
-//                repeat = true;
-//            }
-//            if (abs(X.x - X6.x) < eps && abs(X.y - X6.y) < eps && abs(Y.x - Y6.x) < eps && abs(Y.y - Y6.y) < eps) {
-//                period = 6;
-//                repeat = true;
-//            }
-//            if (abs(X.x - X7.x) < eps && abs(X.y - X7.y) < eps && abs(Y.x - Y7.x) < eps && abs(Y.y - Y7.y) < eps) {
-//                period = 7;
-//                repeat = true;
-//            }
-//            if (abs(X.x - X8.x) < eps && abs(X.y - X8.y) < eps && abs(Y.x - Y8.x) < eps && abs(Y.y - Y8.y) < eps) {
-//                period = 8;
-//                repeat = true;
-//            }
-//        }
         
-//        if (repeat) {
-//            color = vec3(0.0);
-//            break;
-//        }
+        
+        
+        XY1e = abs(X.x - X1.x) + abs(X.y - X1.y) + abs(Y.x - Y1.x) + abs(Y.y - Y1.y);
+        XY2e = abs(X.x - X2.x) + abs(X.y - X2.y) + abs(Y.x - Y2.x) + abs(Y.y - Y2.y);
+        XY3e = abs(X.x - X3.x) + abs(X.y - X3.y) + abs(Y.x - Y3.x) + abs(Y.y - Y3.y);
+        XY4e = abs(X.x - X4.x) + abs(X.y - X4.y) + abs(Y.x - Y4.x) + abs(Y.y - Y4.y);
+        XY5e = abs(X.x - X5.x) + abs(X.y - X5.y) + abs(Y.x - Y5.x) + abs(Y.y - Y5.y);
+        XY6e = abs(X.x - X6.x) + abs(X.y - X6.y) + abs(Y.x - Y6.x) + abs(Y.y - Y6.y);
+        XY7e = abs(X.x - X7.x) + abs(X.y - X7.y) + abs(Y.x - Y7.x) + abs(Y.y - Y7.y);
+        XY8e = abs(X.x - X8.x) + abs(X.y - X8.y) + abs(Y.x - Y8.x) + abs(Y.y - Y8.y);
+
+        if (i > 8) {
+        // check for periodicity
+            if (XY1e < eps) {
+                period = 1;
+                repeat = true;
+            }
+            if (XY2e < eps) {
+                period = 2;
+                repeat = true;
+            }
+            if (XY3e < eps) {
+                period = 3;
+                repeat = true;
+            }
+            if (XY4e < eps) {
+                period = 4;
+                repeat = true;
+            }
+            if (XY5e < eps) {
+                period = 5;
+                repeat = true;
+            }
+            if (XY6e < eps) {
+                period = 6;
+                repeat = true;
+            }
+            if (XY7e < eps) {
+                period = 7;
+                repeat = true;
+            }
+            if (XY8e < eps) {
+                period = 8;
+                repeat = true;
+            }
+        }
+
+        if (repeat) {
+            // color = vec3(float(i)/float(maxIter));
+            color = vec3(1.0, 0.0, 1.0);
+            break;
+        }
+
+
+
 
         // check for escape
         MOD2 = df64_mod2(X, Y);
-        if (MOD2.x > R) {
+        if (df64_gt(MOD2, vec2(R, 0.0))) {
 
-            // lighting calculation
-            // float lo = 0.5*log(MOD2);
-            // u = mult(  mult(Z, a), (1.0 + lo)*conj(mult(a, a)) - lo*conj(mult(Z, b))  );
-            // u = div(Z, a);
-            // u = u/modulus(u);
+            // normal calculation
+            float lo = 0.5*log(MOD2.x);
+            vec2 Zf = vec2(X.x, Y.x);
+            u = mult(  mult(Zf, a), (1.0 + lo)*conj(mult(a, a)) - lo*conj(mult(Zf, b))  );
+            u = div(Zf, a);
+            u = u/modulus(u);
 
-            // float t = u.x*lightPos.x + u.y*lightPos.y + height;
-            // t = t/(1.0 + height);
-            // if (t < 0.0) {
-            //     t = 0.0;
-            // }
-            // color = t*white;
+            // calculate rays for lighting calculations
+            vec3 normRay = vec3(u.x, u.y, 1.0);
+            normRay = normRay / sqrt(u.x*u.x + u.y*u.y + 1.0);
+            vec3 lightRay = vec3(lightPos.x, lightPos.y, height);
+            lightRay = lightRay / sqrt(lightPos.x*lightPos.x + lightPos.y*lightPos.y + height*height);
+            vec3 viewRay = vec3(0.0, 0.0, 1.0);
+            vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
+
+            // calculate lighting components
+            float diffuse = dot(normRay, lightRay);
+            diffuse = diffuse/(1.0 + height);
+            if (diffuse < 0.0) { diffuse = 0.0; }
+            float specular = pow(dot(reflectRay, viewRay), 1.5);
+            if (specular < 0.0) { specular = 0.0; }
 
 
             // normalized values -- finite cycles
@@ -299,17 +339,22 @@ void main() {
 //             float n = m - (num_colors * floor(m/num_colors));
 
             // unnormalized values -- infinite cycles
-            float m = num_colors*(float(i)-log(0.5*log(MOD2.x))/log(2.0));
-            float n = float(num_colors)/2.0*(cos(m/80.0) + 1.0);
+            float m = float(i)-log(0.5*log(MOD2.x))/log(2.0);
+//            float n = float(num_colors)/2.0*(cos(m/14.0) + 1.0);
+            float n = float(num_colors)/2.0*(cos(2.0*pow(m + 5.0, 0.4) -  0.3) + 1.0);
 
             if      (n >= 0.0 && n < 1.0) {  color = (1.0-n) * c1   +   (n)     * c2;  }
             else if (n >= 1.0 && n < 2.0) {  color = (2.0-n) * c2   +   (n-1.0) * c3;  }
             else if (n >= 2.0 && n < 3.0) {  color = (3.0-n) * c3   +   (n-2.0) * c4;  }
             else if (n >= 3.0 && n < 4.0) {  color = (4.0-n) * c4   +   (n-3.0) * c5;  }
             else if (n >= 4.0 && n < 5.0) {  color = (5.0-n) * c5   +   (n-4.0) * c1;  }
-            // else if (n >= 5.0 && n < 6.0) {  color = (6.0-n) * c6   +   (n-5.0) * c1;  }
+//            else if (n >= 5.0 && n < 6.0) {  color = (6.0-n) * c6   +   (n-5.0) * c1;  }
 
 //            color = vec3(0.0);
+
+//            color = 2.5*(diffuse + 0.2)*color;
+            color = 1.75*(diffuse + 0.2)*color + 0.75*vec3(specular + 0.01);
+//            color = vec3(specular);
 
             // float a = 0.45;
             // float b = 0.8;
@@ -322,7 +367,7 @@ void main() {
 
     }
 
-    fragmentColor.rgb = color;
-    fragmentColor.a = 1.0;
+    fragmentColor = vec4(color, 1.0);
+    gl_FragDepth = 0.0;
 
 }
