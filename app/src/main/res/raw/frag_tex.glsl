@@ -8,6 +8,5 @@ out vec4 fragmentColor;
 void main() {
 
     fragmentColor = texture(tex, texCoord);         // sample texture
-    fragmentColor.a = 1.0;
 
 }
