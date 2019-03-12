@@ -300,7 +300,8 @@ void main() {
 
         if (repeat) {
             // color = vec3(float(i)/float(maxIter));
-            color = vec3(1.0, 0.0, 1.0);
+            // color = vec3(1.0, 0.0, 1.0);
+            color = vec3(0.0);
             break;
         }
 
@@ -320,9 +321,9 @@ void main() {
 
             // calculate rays for lighting calculations
             vec3 normRay = vec3(u.x, u.y, 1.0);
-            normRay = normRay / sqrt(u.x*u.x + u.y*u.y + 1.0);
+            normRay = normRay / length(normRay);
             vec3 lightRay = vec3(lightPos.x, lightPos.y, height);
-            lightRay = lightRay / sqrt(lightPos.x*lightPos.x + lightPos.y*lightPos.y + height*height);
+            lightRay = lightRay / length(lightRay);
             vec3 viewRay = vec3(0.0, 0.0, 1.0);
             vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
 

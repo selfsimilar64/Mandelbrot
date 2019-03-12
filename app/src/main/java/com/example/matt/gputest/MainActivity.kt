@@ -48,7 +48,7 @@ class Fractal(
         private val emulateDouble : Boolean
 ) {
 
-    private val numRootChunks = 4   // total chunks == numRootChunks**2
+    private val numRootChunks = 3   // total chunks == numRootChunks**2
     private val chunkInc : Float = 2.0f / numRootChunks
 
     // coordinates of default view boundaries
@@ -160,6 +160,15 @@ class Fractal(
         GL.glGenTextures(2, texIDs)
 
 
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+
         // allocate memory for textures
         texByteBuf1 = allocateDirect(texWidth * texHeight * 4)
         texByteBuf1.order(ByteOrder.nativeOrder())
@@ -243,13 +252,13 @@ class Fractal(
 
 
         // pass values to shaders
-        GL.glUniform2fv(xScaleHandle, 1, xScale, 0)
-        GL.glUniform2fv(yScaleHandle, 1, yScale, 0)
-        GL.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
-        GL.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
-        GL.glUniform1i(iterHandle, maxIter)
-        GL.glUniform2fv(xTouchHandle, 1, xTouchPos, 0)
-        GL.glUniform2fv(yTouchHandle, 1, yTouchPos, 0)
+        GL.glUniform1i( iterHandle, maxIter )
+        GL.glUniform2fv( xScaleHandle,  1,  xScale,    0 )
+        GL.glUniform2fv( yScaleHandle,  1,  yScale,    0 )
+        GL.glUniform2fv( xOffsetHandle, 1,  xOffset,   0 )
+        GL.glUniform2fv( yOffsetHandle, 1,  yOffset,   0 )
+        GL.glUniform2fv( xTouchHandle,  1,  xTouchPos, 0 )
+        GL.glUniform2fv( yTouchHandle,  1,  yTouchPos, 0 )
 
 
 
@@ -258,8 +267,6 @@ class Fractal(
         // RENDER LOW-RES
 
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
 
         GL.glTexImage2D(
                 GL.GL_TEXTURE_2D,           // target
@@ -320,13 +327,8 @@ class Fractal(
 
         // RENDER HIGH-RES
 
-        // set viewport to texture resolution
-        GL.glViewport(0, 0, texWidth, texHeight)
-
-        // bind texture and set parameters
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+        GL.glViewport(0, 0, texWidth, texHeight)            // set viewport to texture resolution
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])       // bind texture
 
         GL.glTexImage2D(
                 GL.GL_TEXTURE_2D,           // target
@@ -618,8 +620,8 @@ class MainActivity : AppCompatActivity() {
 
         val r : FractalRenderer
         var reactionType : Int = 0
-        val continuousRender : Boolean
-        val emulateDouble : Boolean = true
+        val continuousRender = false
+        val emulateDouble = true
 
         private val prevFocus = floatArrayOf(0.0f, 0.0f)
         private var prevFocalLen = 1.0f
@@ -630,7 +632,7 @@ class MainActivity : AppCompatActivity() {
             r = FractalRenderer(ctx, emulateDouble)         // create renderer
             setRenderer(r)                                  // set renderer
             renderMode = RENDERMODE_WHEN_DIRTY              // only render on init and explicitly
-            continuousRender = !emulateDouble
+//            continuousRender = !emulateDouble
         }
 
         @SuppressLint("ClickableViewAccessibility")
@@ -673,17 +675,15 @@ class MainActivity : AppCompatActivity() {
 
                         //// Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
                         //// Log.d("TRANSLATE", "dx: $dx, dy: $dy")
+                        if (continuousRender) { r.renderToTex = true }
                         requestRender()
 
                         return true
                     }
                     MotionEvent.ACTION_UP -> {
                         //// Log.d("UP", "x: ${e.x}, y: ${e.y}, count: ${e.pointerCount}")
-                        if (emulateDouble) {
-                            r.renderToTex = true
-                            // r.renderFromTex = false
-
-                        }
+                        r.renderToTex = true
+                        // r.renderFromTex = true
                         requestRender()
                         return true
                     }
@@ -1030,6 +1030,10 @@ class MainActivity : AppCompatActivity() {
             override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
                 val p: Float = i.toFloat() / 100.0f
                 fractalView.r.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(11) - 1)*p).toInt()
+                if (fractalView.continuousRender) {
+                    fractalView.r.renderToTex = true
+                    fractalView.requestRender()
+                }
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {
