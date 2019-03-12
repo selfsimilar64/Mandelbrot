@@ -1,14 +1,16 @@
 #version 320 es
-#define R 1000.
+#define R 10000.
 
 precision highp float;
 uniform int maxIter;
-uniform vec2 lightPos;
+uniform vec2 xTouchPos;
+uniform vec2 yTouchPos;
 uniform vec2 xScale;
 uniform vec2 yScale;
 uniform vec2 xOffset;
 uniform vec2 yOffset;
-uniform vec2 texRes;
+
+in vec4 viewPos;
 out vec4 fragmentColor;
 
 
@@ -68,15 +70,18 @@ vec2 sine(vec2 z) {
 
 void main() {
 
-    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);    // range [-1, 1]
-    float xC = xScale.x*screenPos.x + xOffset.x;
-    float yC = yScale.x*screenPos.y + yOffset.x;
+//    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);    // range [-1, 1]
+
+    float xC = xScale.x * viewPos.x + xOffset.x;
+    float yC = yScale.x * viewPos.y + yOffset.x;
+
     vec2 C = vec2(xC, yC);
 
     float num_colors = 4.0;
     float cmap_cycles = 2.0;
     float MOD2 = 0.0;
 
+    vec2 lightPos = vec2(1.0);
     float height = 1.25;
 
     vec2 Z = vec2(0.0, 0.0);
@@ -95,10 +100,12 @@ void main() {
     vec3 darkblue =  vec3(0.0, 0.15, 0.25);
     vec3 orange   =  vec3(1.0, 0.6, 0.0);
 
-    vec3 c1 = darkblue;
-    vec3 c2 = white;
-    vec3 c3 = vec3(0.8, 0.2, 0.2);
-    vec3 c4 = purple;
+    vec3 c1 = vec3(0.0, 0.1, 0.2);
+    vec3 c2 = darkblue;
+    vec3 c3 = vec3(0.7);
+    vec3 c4 = vec3(0.9, 0.4, 0.2);
+    vec3 c5 = purple * 0.5;
+    vec3 c6 = vec3(0.8, 0.2, 0.2);
 
     for (int i = 0; i < maxIter; i++) {
         if (i == maxIter - 1) {
@@ -107,11 +114,11 @@ void main() {
         }
 
         // iterate second derivative
-        // b = 2.0*(mult(b, Z) + mult(a, a));
+        b = 2.0*(mult(b, Z) + mult(a, a));
 
         // iterate derivative
-        // a = 2.0*mult(a, Z);
-        // a.x = a.x + 1.0;
+        a = 2.0*mult(a, Z);
+        a.x = a.x + 1.0;
 
         // iterate z
         // Z = sine(mult(Z, C))+C;
@@ -120,30 +127,57 @@ void main() {
         MOD2 = dot(Z, Z);
         if (MOD2 > R) {
 
+            // normal calculation
+            float lo = 0.5*log(MOD2);
+            u = mult(  mult(Z, a), (1.0 + lo)*conj(mult(a, a)) - lo*conj(mult(Z, b))  );
+            u = div(Z, a);
+            u = u/modulus(u);
 
-//             float lo = 0.5*log(MOD2);
-//             u = mult(  mult(Z, a), (1.0 + lo)*conj(mult(a, a)) - lo*conj(mult(Z, b))  );
-//             u = div(Z, a);
-//             u = u/modulus(u);
+            // calculate rays for lighting calculations
+            vec3 normRay = vec3(u.x, u.y, 1.0);
+            normRay = normRay / sqrt(u.x*u.x + u.y*u.y + 1.0);
+            vec3 lightRay = vec3(lightPos.x, lightPos.y, height);
+            lightRay = lightRay / sqrt(lightPos.x*lightPos.x + lightPos.y*lightPos.y + height*height);
+            vec3 viewRay = vec3(0.0, 0.0, 1.0);
+            vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
 
-//             float t = u.x*lightPos.x + u.y*lightPos.y + height;
-//             t = t/(1.0 + height);
-//             if (t < 0.0) {
-//                 t = 0.0;
-//             }
-//             color = t*white;
+            // calculate lighting components
+            float diffuse = dot(normRay, lightRay);
+            diffuse = diffuse/(1.0 + height);
+            if (diffuse < 0.0) { diffuse = 0.0; }
+            float specular = pow(dot(reflectRay, viewRay), 1.5);
+            if (specular < 0.0) { specular = 0.0; }
 
-            float m = cmap_cycles*num_colors*(float(i)-log(log(sqrt(MOD2)))/log(2.0))/float(maxIter);
-            float n = m - (num_colors * floor(m/num_colors));
+
+            // normalized values -- finite cycles
+//             float m = cmap_cycles*num_colors*(float(i)-log(0.5*log(MOD2.x))/log(2.0))/float(maxIter);
+//             float n = m - (num_colors * floor(m/num_colors));
+
+            // unnormalized values -- infinite cycles
+            float m = float(i)-log(0.5*log(MOD2))/log(2.0);
+//            float n = float(num_colors)/2.0*(cos(m/14.0) + 1.0);
+            float n = float(num_colors)/2.0*(cos(2.0*pow(m + 5.0, 0.4) -  0.3) + 1.0);
+
             if      (n >= 0.0 && n < 1.0) {  color = (1.0-n) * c1   +   (n)     * c2;  }
             else if (n >= 1.0 && n < 2.0) {  color = (2.0-n) * c2   +   (n-1.0) * c3;  }
             else if (n >= 2.0 && n < 3.0) {  color = (3.0-n) * c3   +   (n-2.0) * c4;  }
-            else if (n >= 3.0 && n < 4.0) {  color = (4.0-n) * c4   +   (n-3.0) * c1;  }
+            else if (n >= 3.0 && n < 4.0) {  color = (4.0-n) * c4   +   (n-3.0) * c5;  }
+            else if (n >= 4.0 && n < 5.0) {  color = (5.0-n) * c5   +   (n-4.0) * c1;  }
+//            else if (n >= 5.0 && n < 6.0) {  color = (6.0-n) * c6   +   (n-5.0) * c1;  }
 
-//            float n = float(i)/float(maxIter);
-//            color = vec3(1.0-n, 1.0-n, 1.0-n);
+//            color = vec3(0.0);
+
+//            color = 2.5*(diffuse + 0.2)*color;
+            color = 1.75*(diffuse + 0.2)*color + 0.75*vec3(specular + 0.01);
+//            color = vec3(specular);
+
+            // float a = 0.45;
+            // float b = 0.8;
+            // float c = 0.3;
+            // color = vec3((1.0-cos(a*float(i)))/2.0, (1.0-cos(b*float(i)))/2.0, (1.0-cos(c*float(i)))/2.0);
 
             break;
+
         }
 
     }
