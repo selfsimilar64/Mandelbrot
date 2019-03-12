@@ -160,21 +160,46 @@ class Fractal(
         GL.glGenTextures(2, texIDs)
 
 
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-
 
         // allocate memory for textures
         texByteBuf1 = allocateDirect(texWidth * texHeight * 4)
         texByteBuf1.order(ByteOrder.nativeOrder())
 
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+        GL.glTexImage2D(
+                GL.GL_TEXTURE_2D,           // target
+                0,                          // mipmap level
+                GL.GL_RGBA8,                // internal format
+                texWidth, texHeight,        // texture resolution
+                0,                          // border
+                GL.GL_RGBA,                 // format
+                GL.GL_UNSIGNED_BYTE,        // type
+                texByteBuf1                 // texture
+        )
+
+
+
         texByteBuf2 = allocateDirect(bgTexWidth * bgTexHeight * 4)
         texByteBuf2.order(ByteOrder.nativeOrder())
+
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+        GL.glTexImage2D(
+                GL.GL_TEXTURE_2D,           // target
+                0,                          // mipmap level
+                GL.GL_RGBA8,                // internal format
+                bgTexWidth, bgTexHeight,    // texture resolution
+                0,                          // border
+                GL.GL_RGBA,                 // format
+                GL.GL_UNSIGNED_BYTE,        // type
+                texByteBuf2                 // texture
+        )
+
 
 
         // attach shaders and create program executables
@@ -268,17 +293,6 @@ class Fractal(
 
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
 
-        GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                GL.GL_RGBA8,                // internal format
-                bgTexWidth, bgTexHeight,    // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                GL.GL_UNSIGNED_BYTE,        // type
-                texByteBuf2                 // texture
-        )
-
         GL.glEnableVertexAttribArray(viewCoordsHandle)
         GL.glVertexAttribPointer(
                 viewCoordsHandle,       // index
@@ -329,17 +343,6 @@ class Fractal(
 
         GL.glViewport(0, 0, texWidth, texHeight)            // set viewport to texture resolution
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])       // bind texture
-
-        GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                GL.GL_RGBA8,                // internal format
-                texWidth, texHeight,        // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                GL.GL_UNSIGNED_BYTE,        // type
-                texByteBuf1                 // texture
-        )
 
         GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
 
