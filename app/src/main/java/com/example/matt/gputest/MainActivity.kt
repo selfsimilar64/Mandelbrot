@@ -43,20 +43,20 @@ fun loadShader(type: Int, shaderCode: String): Int {
 
 class Fractal(
         ctx: Context,
-        screenWidth : Int,
-        screenHeight : Int,
+        private val screenWidth : Int,
+        private val screenHeight : Int,
         private val emulateDouble : Boolean
 ) {
 
-    private val numRootChunks = 3   // total chunks == numRootChunks**2
-    private val chunkInc : Float = 2.0f / numRootChunks
+    private val numChunks = 6
+    private val chunkInc : Float = 2.0f / numChunks
 
     // coordinates of default view boundaries
     private val viewCoords = floatArrayOf(
-            -1.0f,  1.0f,  0.0f,    // top left
-            -1.0f, -1.0f,  0.0f,    // bottom left
-            1.0f, -1.0f,  0.0f,     // bottom right
-            1.0f,  1.0f,  0.0f )    // top right
+            -1.0f,   1.0f,   0.0f,     // top left
+            -1.0f,  -1.0f,   0.0f,     // bottom left
+             1.0f,  -1.0f,   0.0f,     // bottom right
+             1.0f,   1.0f,   0.0f )    // top right
 
 
     private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)     // order to draw vertices
@@ -64,56 +64,61 @@ class Fractal(
     private val program = GL.glCreateProgram()                 // program for rendering to texture
     private val texProgram = GL.glCreateProgram()              // program for rendering from texture
 
-    private val viewBuffer : FloatBuffer
-    private val viewChunkBuffer : FloatBuffer
-
-    private val texByteBuf1 : ByteBuffer
-    private val texByteBuf2 : ByteBuffer
-
-
     private val vertexShader : Int
     private val fragmentShader : Int
     private val vertexTexShader : Int
     private val fragmentTexShader : Int
 
-    // define texture resolution
+    // define texture resolutions
     private val texWidth = screenWidth
     private val texHeight = screenHeight
     private val bgTexWidth = screenWidth/8
     private val bgTexHeight = screenHeight/8
-    private val bgTexRes = floatArrayOf(bgTexWidth.toFloat(), bgTexHeight.toFloat())
+
+    // allocate memory for textures
+    private val texHighResBuffer = 
+            allocateDirect(texWidth * texHeight * 4)
+            .order(ByteOrder.nativeOrder())
+    private val texLowResBuffer =
+            allocateDirect(bgTexWidth * bgTexHeight * 4)
+            .order(ByteOrder.nativeOrder())
+    private val quadBuffer =
+            allocateDirect(viewCoords.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+    private val bgQuadBuffer =
+            allocateDirect(viewCoords.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
 
     // create variables to store texture and fbo IDs
     private val texIDs : IntBuffer = IntBuffer.allocate(2)
     private val fboIDs : IntBuffer = IntBuffer.allocate(1)
 
+    // initialize byte buffer for the draw list
+    // num coord values * 2 bytes/short
+    private val drawListBuffer = 
+            allocateDirect(drawOrder.size * 2)
+            .order(ByteOrder.nativeOrder())
+            .asShortBuffer()
+            .put(drawOrder)
+            .position(0)
 
     // initialize byte buffer for view coordinates
     // num coord values * 4 bytes/float
-    private val bbView : ByteBuffer = allocateDirect(viewCoords.size * 4)
-    private val bbChunkView : ByteBuffer = allocateDirect(viewCoords.size * 4)
-
-    // initialize byte buffer for the draw list
-    // num coord values * 2 bytes/short
-    private val dlb : ByteBuffer = allocateDirect(drawOrder.size * 2)
+    private val viewBuffer =
+            allocateDirect(viewCoords.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+            .put(viewCoords)
+            .position(0)
+    private val viewChunkBuffer =
+            allocateDirect(viewCoords.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
 
 
     init {
-
-        // create float buffer of view coordinates
-        bbView.order(ByteOrder.nativeOrder())
-        viewBuffer = bbView.asFloatBuffer()
-        viewBuffer.put(viewCoords)
-        viewBuffer.position(0)
-
-        bbChunkView.order(ByteOrder.nativeOrder())
-        viewChunkBuffer = bbChunkView.asFloatBuffer()
-
-        // create short buffer of draw order
-        dlb.order(ByteOrder.nativeOrder())
-        val drawListBuffer = dlb.asShortBuffer()
-        drawListBuffer.put(drawOrder)
-        drawListBuffer.position(0)
 
         // load all vertex and fragment shader code
         val vertFloatStream = ctx.resources.openRawResource(R.raw.vert)
@@ -155,20 +160,21 @@ class Fractal(
         fragmentTexShader = loadShader(GL.GL_FRAGMENT_SHADER, fragTexShaderCode)
 
 
+        GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+
         // generate texture and framebuffer objects
         GL.glGenFramebuffers(1, fboIDs)
         GL.glGenTextures(2, texIDs)
 
 
 
-        // allocate memory for textures
-        texByteBuf1 = allocateDirect(texWidth * texHeight * 4)
-        texByteBuf1.order(ByteOrder.nativeOrder())
-
+        // initialize high-res texture
+        // bind and set texture parameters
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
 
+        // define texture specs
         GL.glTexImage2D(
                 GL.GL_TEXTURE_2D,           // target
                 0,                          // mipmap level
@@ -177,18 +183,17 @@ class Fractal(
                 0,                          // border
                 GL.GL_RGBA,                 // format
                 GL.GL_UNSIGNED_BYTE,        // type
-                texByteBuf1                 // texture
+                texHighResBuffer            // texture
         )
 
 
-
-        texByteBuf2 = allocateDirect(bgTexWidth * bgTexHeight * 4)
-        texByteBuf2.order(ByteOrder.nativeOrder())
-
+        // initialize low-res texture
+        // bind and set texture parameters
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
 
+        // define texture specs
         GL.glTexImage2D(
                 GL.GL_TEXTURE_2D,           // target
                 0,                          // mipmap level
@@ -197,7 +202,7 @@ class Fractal(
                 0,                          // border
                 GL.GL_RGBA,                 // format
                 GL.GL_UNSIGNED_BYTE,        // type
-                texByteBuf2                 // texture
+                texLowResBuffer             // texture
         )
 
 
@@ -228,7 +233,10 @@ class Fractal(
         Log.d("RENDER", "render to texture -- start")
 
 
+
+
         GL.glUseProgram(program)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
 
         // derive scale and offset from complex space coordinates
@@ -241,19 +249,21 @@ class Fractal(
                 (yCoords[1] / doubleScale[1] - 1.0) * doubleScale[1]
         )
 
-        // split parameter doubles into dual-floats
+        // create parameter floats from doubles
         val floatScale = floatArrayOf(doubleScale[0].toFloat(), doubleScale[1].toFloat())
         val floatOffset = floatArrayOf(doubleOffset[0].toFloat(), doubleOffset[1].toFloat())
         val floatTouchPos = floatArrayOf(touchPos[0].toFloat(), touchPos[1].toFloat())
-        
+
+        // split parameters into dual-floats
         val xScale = floatArrayOf(floatScale[0], 0.0f)
         val yScale = floatArrayOf(floatScale[1], 0.0f)
         val xOffset = floatArrayOf(floatOffset[0], 0.0f)
         val yOffset = floatArrayOf(floatOffset[1], 0.0f)
         val xTouchPos = floatArrayOf(floatTouchPos[0], 0.0f)
         val yTouchPos = floatArrayOf(floatTouchPos[1], 0.0f)
-        
+
         if (emulateDouble) {
+            // generate low component of dual-floats
             xScale[1] = (doubleScale[0]-floatScale[0].toDouble()).toFloat()
             yScale[1] = (doubleScale[1]-floatScale[1].toDouble()).toFloat()
             xOffset[1] = (doubleOffset[0]-floatOffset[0].toDouble()).toFloat()
@@ -265,18 +275,16 @@ class Fractal(
 
         // create handles for shader uniforms
         val viewCoordsHandle =  GL.glGetAttribLocation(   program, "viewCoords"  )
+        val iterHandle       =  GL.glGetUniformLocation(  program, "maxIter"     )
         val xScaleHandle     =  GL.glGetUniformLocation(  program, "xScale"      )
         val yScaleHandle     =  GL.glGetUniformLocation(  program, "yScale"      )
         val xOffsetHandle    =  GL.glGetUniformLocation(  program, "xOffset"     )
         val yOffsetHandle    =  GL.glGetUniformLocation(  program, "yOffset"     )
-        val texResHandle     =  GL.glGetUniformLocation(  program, "texRes"      )
-        val iterHandle       =  GL.glGetUniformLocation(  program, "maxIter"     )
         val xTouchHandle     =  GL.glGetUniformLocation(  program, "xTouchPos"   )
         val yTouchHandle     =  GL.glGetUniformLocation(  program, "yTouchPos"   )
         val bgScaleHandle    =  GL.glGetUniformLocation(  program, "bgScale"     )
 
-
-        // pass values to shaders
+        // pass parameters to shaders
         GL.glUniform1i( iterHandle, maxIter )
         GL.glUniform2fv( xScaleHandle,  1,  xScale,    0 )
         GL.glUniform2fv( yScaleHandle,  1,  yScale,    0 )
@@ -285,14 +293,7 @@ class Fractal(
         GL.glUniform2fv( xTouchHandle,  1,  xTouchPos, 0 )
         GL.glUniform2fv( yTouchHandle,  1,  yTouchPos, 0 )
 
-
-
-
-
-        // RENDER LOW-RES
-
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
-
+        // pass view coordinates to shaders
         GL.glEnableVertexAttribArray(viewCoordsHandle)
         GL.glVertexAttribPointer(
                 viewCoordsHandle,       // index
@@ -303,14 +304,15 @@ class Fractal(
                 viewBuffer              // coordinates
         )
 
-        GL.glUniform1fv(bgScaleHandle, 1, bgScale, 0)
-        GL.glUniform2fv(texResHandle, 1, bgTexRes, 0)
 
-        // set viewport to texture resolution
+
+
+
+        // RENDER LOW-RES
+
         GL.glViewport(0, 0, bgTexWidth, bgTexHeight)
-
-        // use external framebuffer
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
+        GL.glUniform1fv(bgScaleHandle, 1, bgScale, 0)
         GL.glFramebufferTexture2D(
                 GL.GL_FRAMEBUFFER,              // target
                 GL.GL_COLOR_ATTACHMENT0,        // attachment
@@ -321,19 +323,10 @@ class Fractal(
 
         // check framebuffer status
         val status2 = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
-        if (status2 != GL.GL_FRAMEBUFFER_COMPLETE) {
-            // Log.d("FRAMEBUFFER", "STATUS == NOT COMPLETE")
-        }
+        if (status2 != GL.GL_FRAMEBUFFER_COMPLETE) { Log.d("FRAMEBUFFER", "$status2") }
 
-        // set background color to black
-        GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-
-        // render to texture
-        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, dlb)
-
-        // disable view coordinates array
-        GL.glDisableVertexAttribArray(viewCoordsHandle)
+        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
 
 
 
@@ -341,13 +334,9 @@ class Fractal(
 
         // RENDER HIGH-RES
 
-        GL.glViewport(0, 0, texWidth, texHeight)            // set viewport to texture resolution
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])       // bind texture
-
+        GL.glViewport(0, 0, texWidth, texHeight)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
         GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
-
-
-        // attach texture0 to current framebuffer
         GL.glFramebufferTexture2D(
                 GL.GL_FRAMEBUFFER,              // target
                 GL.GL_COLOR_ATTACHMENT0,        // attachment
@@ -358,47 +347,11 @@ class Fractal(
 
         // check framebuffer status
         val status = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
-        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) {
-            Log.d("FRAMEBUFFER", "$status")
-        }
+        if (status != GL.GL_FRAMEBUFFER_COMPLETE) { Log.d("FRAMEBUFFER", "$status") }
 
-        // set background color to black
-        GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
-        GL.glEnableVertexAttribArray(viewCoordsHandle)
-
-//        for (i in 0..(numRootChunks-1)) {
-//            for (j in 0..(numRootChunks-1)) {
-//
-//                val viewChunkCoords = floatArrayOf(
-//                        -1.0f + i*chunkInc,     -1.0f + (j+1)*chunkInc,  0.0f,    // top left
-//                        -1.0f + i*chunkInc,     -1.0f + j*chunkInc,      0.0f,    // bottom left
-//                        -1.0f + (i+1)*chunkInc, -1.0f + j*chunkInc,      0.0f,    // bottom right
-//                        -1.0f + (i+1)*chunkInc, -1.0f + (j+1)*chunkInc,  0.0f     // top right
-//                )
-//                viewChunkBuffer.put(viewChunkCoords)
-//                viewChunkBuffer.position(0)
-//
-//                GL.glVertexAttribPointer(
-//                        viewCoordsHandle,           // index
-//                        3,                          // coordinates per vertex
-//                        GL.GL_FLOAT,                // type
-//                        false,                      // normalized
-//                        12,                         // coordinates per vertex * bytes per float
-//                        viewChunkBuffer             // coordinates
-//                )
-//
-//                // render to texture
-//                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, dlb)
-//
-//                // wait for chunk to finish rendering before rendering next chunk
-//                GL.glFinish()
-//
-//            }
-//        }
-
-        for (i in 0..(numRootChunks-1)) {
+        for (i in 0..(numChunks-1)) {
 
             val viewChunkCoords = floatArrayOf(
                     -1.0f + i*chunkInc,      1.0f,  0.0f,    // top left
@@ -418,20 +371,21 @@ class Fractal(
                     viewChunkBuffer             // coordinates
             )
 
-            // render to texture
-            GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, dlb)
-
-            // wait for chunk to finish rendering before rendering next chunk
-            GL.glFinish()
+            GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+            GL.glFinish()   // force chunk to finish rendering before continuing
 
         }
 
-        // disable view coordinates array
+
+
+
         GL.glDisableVertexAttribArray(viewCoordsHandle)
 
 
+
+
         Log.d("RENDER", "render to texture -- end")
-        
+
 
     }
 
@@ -439,13 +393,16 @@ class Fractal(
             xQuadCoords:    DoubleArray,
             yQuadCoords:    DoubleArray,
             xQuadCoords2:   DoubleArray,
-            yQuadCoords2:   DoubleArray,
-            screenRes:      FloatArray
+            yQuadCoords2:   DoubleArray
     ) {
 
         Log.d("RENDER", "render from texture -- start")
-        GL.glUseProgram(texProgram)
 
+
+
+
+        GL.glUseProgram(texProgram)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
 
         // create float array of quad coordinates
@@ -456,32 +413,22 @@ class Fractal(
                 xQuadCoords[1].toFloat(),  yQuadCoords[1].toFloat(),  0.0f )    // top right
 
         // create float array of background quad coordinates
-        val quadCoords2 = floatArrayOf(
+        val bgQuadCoords = floatArrayOf(
                 xQuadCoords2[0].toFloat(),  yQuadCoords2[1].toFloat(),  0.0f,     // top left
                 xQuadCoords2[0].toFloat(),  yQuadCoords2[0].toFloat(),  0.0f,     // bottom left
                 xQuadCoords2[1].toFloat(),  yQuadCoords2[0].toFloat(),  0.0f,     // bottom right
                 xQuadCoords2[1].toFloat(),  yQuadCoords2[1].toFloat(),  0.0f )    // top right
 
-        // initialize byte buffer for quad coordinates
-        // 4 bytes per float
-        val bbQuad : ByteBuffer = allocateDirect(quadCoords.size * 4)
-        val bbQuad2 : ByteBuffer = allocateDirect(quadCoords2.size * 4)
-
-        // create float buffer of quad coordinates
-        bbQuad.order(ByteOrder.nativeOrder())
-        val quadBuffer = bbQuad.asFloatBuffer()
-        quadBuffer.put(quadCoords)
-        quadBuffer.position(0)
-
-        bbQuad2.order(ByteOrder.nativeOrder())
-        val quadBuffer2 = bbQuad2.asFloatBuffer()
-        quadBuffer2.put(quadCoords2)
-        quadBuffer2.position(0)
+        quadBuffer.put(quadCoords).position(0)
+        bgQuadBuffer.put(bgQuadCoords).position(0)
 
         // create handles for shader uniforms
         val viewCoordsTexHandle = GL.glGetAttribLocation(texProgram, "viewCoords")
         val quadCoordsTexHandle = GL.glGetAttribLocation(texProgram, "quadCoords")
         val textureTexHandle = GL.glGetUniformLocation(texProgram, "tex")
+
+        GL.glEnableVertexAttribArray(viewCoordsTexHandle)
+        GL.glEnableVertexAttribArray(quadCoordsTexHandle)
 
 
 
@@ -489,10 +436,9 @@ class Fractal(
 
         // RENDER LOW-RES
 
+        // set viewport size to screen resolution
+        GL.glViewport(0, 0, screenWidth, screenHeight)
         GL.glUniform1i(textureTexHandle, 1)    // use GL_TEXTURE1
-
-        // add view coordinates array
-        GL.glEnableVertexAttribArray(viewCoordsTexHandle)
         GL.glVertexAttribPointer(
                 viewCoordsTexHandle,        // index
                 3,                          // coordinates per vertex
@@ -501,45 +447,27 @@ class Fractal(
                 12,                         // coordinates per vertex * bytes per float
                 viewBuffer                  // coordinates
         )
-
-        // add quad coordinates array
-        GL.glEnableVertexAttribArray(quadCoordsTexHandle)
         GL.glVertexAttribPointer(
                 quadCoordsTexHandle,        // index
                 3,                          // coordinates per vertex
                 GL.GL_FLOAT,                // type
                 false,                      // normalized
                 12,                         // coordinates per vertex * bytes per float
-                quadBuffer2                 // coordinates
+                bgQuadBuffer                // coordinates
         )
-
-        // change framebuffer back to screen window
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-
-        // set viewport size to screen resolution
-        GL.glViewport(0, 0, screenRes[0].toInt(), screenRes[1].toInt())
-
-        GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)         // set background color to black
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT)              // clear screen
 
         GL.glActiveTexture(GL.GL_TEXTURE1)              // set active texture
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])   // bind texture
 
-        // render from texture
-        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, dlb)
-
-        GL.glDisableVertexAttribArray(viewCoordsTexHandle)      // disable view coordinates array
-        GL.glDisableVertexAttribArray(quadCoordsTexHandle)      // disable quad coordinates array
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
 
 
 
 
         // RENDER HIGH-RES
 
-        GL.glUniform1i(textureTexHandle, 0)                 // use GL_TEXTURE0
-
-        // add view coordinates array
-        GL.glEnableVertexAttribArray(viewCoordsTexHandle)
+        GL.glUniform1i(textureTexHandle, 0)     // use GL_TEXTURE0
         GL.glVertexAttribPointer(
                 viewCoordsTexHandle,        // index
                 3,                          // coordinates per vertex
@@ -548,9 +476,6 @@ class Fractal(
                 12,                         // coordinates per vertex * bytes per float
                 viewBuffer                  // coordinates
         )
-
-        // add quad coordinates array
-        GL.glEnableVertexAttribArray(quadCoordsTexHandle)
         GL.glVertexAttribPointer(
                 quadCoordsTexHandle,        // index
                 3,                          // coordinates per vertex
@@ -561,24 +486,19 @@ class Fractal(
         )
 
 
-        // change framebuffer back to screen window
-//        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-
-        // set viewport size to screen resolution
-        GL.glViewport(0, 0, screenRes[0].toInt(), screenRes[1].toInt())
-
-//        GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)         // set background color to black
-//        GL.glClear(GL.GL_COLOR_BUFFER_BIT)              // clear screen
-
         GL.glActiveTexture(GL.GL_TEXTURE0)              // set active texture
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])   // bind texture
 
-        // render from texture
-        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, dlb)
+        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+
+
+
 
         GL.glDisableVertexAttribArray(viewCoordsTexHandle)      // disable view coordinates array
         GL.glDisableVertexAttribArray(quadCoordsTexHandle)      // disable quad coordinates array
         
+
+
 
         Log.d("RENDER", "render from texture -- end")
 
@@ -1000,7 +920,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // render from texture
-            f.renderFromTexture(xQuadCoords, yQuadCoords, xQuadCoords2, yQuadCoords2, screenRes)
+            f.renderFromTexture(xQuadCoords, yQuadCoords, xQuadCoords2, yQuadCoords2)
 
         }
 
