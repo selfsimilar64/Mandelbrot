@@ -59,10 +59,23 @@ class Fractal(
              1.0f,   1.0f,   0.0f )    // top right
 
 
-    private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)     // order to draw vertices
+    private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
 
-    private val program = GL.glCreateProgram()                 // program for rendering to texture
-    private val texProgram = GL.glCreateProgram()              // program for rendering from texture
+    private val program = GL.glCreateProgram()
+    private val viewCoordsHandle : Int
+    private val iterHandle : Int
+    private val xScaleHandle : Int
+    private val yScaleHandle : Int
+    private val xOffsetHandle : Int
+    private val yOffsetHandle : Int
+    private val xTouchHandle : Int
+    private val yTouchHandle : Int
+    private val bgScaleHandle : Int
+
+    private val texProgram = GL.glCreateProgram()
+    private val viewCoordsTexHandle : Int
+    private val quadCoordsTexHandle : Int
+    private val textureTexHandle : Int
 
     private val vertexShader : Int
     private val fragmentShader : Int
@@ -170,6 +183,7 @@ class Fractal(
 
         // initialize high-res texture
         // bind and set texture parameters
+        GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
@@ -189,6 +203,7 @@ class Fractal(
 
         // initialize low-res texture
         // bind and set texture parameters
+        GL.glActiveTexture(GL.GL_TEXTURE1)
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
@@ -213,10 +228,24 @@ class Fractal(
         GL.glAttachShader(program, fragmentShader)
         GL.glLinkProgram(program)
 
+        viewCoordsHandle =  GL.glGetAttribLocation(   program, "viewCoords"  )
+        iterHandle       =  GL.glGetUniformLocation(  program, "maxIter"     )
+        xScaleHandle     =  GL.glGetUniformLocation(  program, "xScale"      )
+        yScaleHandle     =  GL.glGetUniformLocation(  program, "yScale"      )
+        xOffsetHandle    =  GL.glGetUniformLocation(  program, "xOffset"     )
+        yOffsetHandle    =  GL.glGetUniformLocation(  program, "yOffset"     )
+        xTouchHandle     =  GL.glGetUniformLocation(  program, "xTouchPos"   )
+        yTouchHandle     =  GL.glGetUniformLocation(  program, "yTouchPos"   )
+        bgScaleHandle    =  GL.glGetUniformLocation(  program, "bgScale"     )
+
         // render from texture program
         GL.glAttachShader(texProgram, vertexTexShader)
         GL.glAttachShader(texProgram, fragmentTexShader)
         GL.glLinkProgram(texProgram)
+
+        viewCoordsTexHandle = GL.glGetAttribLocation(  texProgram, "viewCoords"  )
+        quadCoordsTexHandle = GL.glGetAttribLocation(  texProgram, "quadCoords"  )
+        textureTexHandle    = GL.glGetUniformLocation( texProgram, "tex"         )
 
     }
 
@@ -231,10 +260,6 @@ class Fractal(
     ) {
 
         Log.d("RENDER", "render to texture -- start")
-
-
-
-
         GL.glUseProgram(program)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
@@ -272,18 +297,6 @@ class Fractal(
             yTouchPos[1] = (touchPos[1]-floatTouchPos[1].toDouble()).toFloat()
         }
 
-
-        // create handles for shader uniforms
-        val viewCoordsHandle =  GL.glGetAttribLocation(   program, "viewCoords"  )
-        val iterHandle       =  GL.glGetUniformLocation(  program, "maxIter"     )
-        val xScaleHandle     =  GL.glGetUniformLocation(  program, "xScale"      )
-        val yScaleHandle     =  GL.glGetUniformLocation(  program, "yScale"      )
-        val xOffsetHandle    =  GL.glGetUniformLocation(  program, "xOffset"     )
-        val yOffsetHandle    =  GL.glGetUniformLocation(  program, "yOffset"     )
-        val xTouchHandle     =  GL.glGetUniformLocation(  program, "xTouchPos"   )
-        val yTouchHandle     =  GL.glGetUniformLocation(  program, "yTouchPos"   )
-        val bgScaleHandle    =  GL.glGetUniformLocation(  program, "bgScale"     )
-
         // pass parameters to shaders
         GL.glUniform1i( iterHandle, maxIter )
         GL.glUniform2fv( xScaleHandle,  1,  xScale,    0 )
@@ -311,7 +324,6 @@ class Fractal(
         // RENDER LOW-RES
 
         GL.glViewport(0, 0, bgTexWidth, bgTexHeight)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
         GL.glUniform1fv(bgScaleHandle, 1, bgScale, 0)
         GL.glFramebufferTexture2D(
                 GL.GL_FRAMEBUFFER,              // target
@@ -335,7 +347,6 @@ class Fractal(
         // RENDER HIGH-RES
 
         GL.glViewport(0, 0, texWidth, texHeight)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
         GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
         GL.glFramebufferTexture2D(
                 GL.GL_FRAMEBUFFER,              // target
@@ -380,10 +391,6 @@ class Fractal(
 
 
         GL.glDisableVertexAttribArray(viewCoordsHandle)
-
-
-
-
         Log.d("RENDER", "render to texture -- end")
 
 
@@ -397,13 +404,9 @@ class Fractal(
     ) {
 
         Log.d("RENDER", "render from texture -- start")
-
-
-
-
         GL.glUseProgram(texProgram)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-
+        GL.glViewport(0, 0, screenWidth, screenHeight)
 
         // create float array of quad coordinates
         val quadCoords = floatArrayOf(
@@ -422,11 +425,6 @@ class Fractal(
         quadBuffer.put(quadCoords).position(0)
         bgQuadBuffer.put(bgQuadCoords).position(0)
 
-        // create handles for shader uniforms
-        val viewCoordsTexHandle = GL.glGetAttribLocation(texProgram, "viewCoords")
-        val quadCoordsTexHandle = GL.glGetAttribLocation(texProgram, "quadCoords")
-        val textureTexHandle = GL.glGetUniformLocation(texProgram, "tex")
-
         GL.glEnableVertexAttribArray(viewCoordsTexHandle)
         GL.glEnableVertexAttribArray(quadCoordsTexHandle)
 
@@ -436,8 +434,6 @@ class Fractal(
 
         // RENDER LOW-RES
 
-        // set viewport size to screen resolution
-        GL.glViewport(0, 0, screenWidth, screenHeight)
         GL.glUniform1i(textureTexHandle, 1)    // use GL_TEXTURE1
         GL.glVertexAttribPointer(
                 viewCoordsTexHandle,        // index
@@ -455,9 +451,6 @@ class Fractal(
                 12,                         // coordinates per vertex * bytes per float
                 bgQuadBuffer                // coordinates
         )
-
-        GL.glActiveTexture(GL.GL_TEXTURE1)              // set active texture
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])   // bind texture
 
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
@@ -485,21 +478,13 @@ class Fractal(
                 quadBuffer                  // coordinates
         )
 
-
-        GL.glActiveTexture(GL.GL_TEXTURE0)              // set active texture
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])   // bind texture
-
         GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
 
 
 
 
-        GL.glDisableVertexAttribArray(viewCoordsTexHandle)      // disable view coordinates array
-        GL.glDisableVertexAttribArray(quadCoordsTexHandle)      // disable quad coordinates array
-        
-
-
-
+        GL.glDisableVertexAttribArray(viewCoordsTexHandle)
+        GL.glDisableVertexAttribArray(quadCoordsTexHandle)
         Log.d("RENDER", "render from texture -- end")
 
     }
