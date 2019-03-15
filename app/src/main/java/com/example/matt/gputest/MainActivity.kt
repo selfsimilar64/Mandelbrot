@@ -48,7 +48,7 @@ class Fractal(
         private val emulateDouble : Boolean
 ) {
 
-    private val numChunks = 6
+    private val numChunks = 5
     private val chunkInc : Float = 2.0f / numChunks
 
     // coordinates of default view boundaries
@@ -57,43 +57,44 @@ class Fractal(
             -1.0f,  -1.0f,   0.0f,     // bottom left
              1.0f,  -1.0f,   0.0f,     // bottom right
              1.0f,   1.0f,   0.0f )    // top right
-
-
     private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
 
     private val program = GL.glCreateProgram()
     private val viewCoordsHandle : Int
-    private val iterHandle : Int
-    private val xScaleHandle : Int
-    private val yScaleHandle : Int
-    private val xOffsetHandle : Int
-    private val yOffsetHandle : Int
-    private val xTouchHandle : Int
-    private val yTouchHandle : Int
-    private val bgScaleHandle : Int
+    private val iterHandle       : Int
+    private val xScaleHandle     : Int
+    private val yScaleHandle     : Int
+    private val xOffsetHandle    : Int
+    private val yOffsetHandle    : Int
+    private val xTouchHandle     : Int
+    private val yTouchHandle     : Int
+    private val bgScaleHandle    : Int
 
     private val texProgram = GL.glCreateProgram()
     private val viewCoordsTexHandle : Int
     private val quadCoordsTexHandle : Int
-    private val textureTexHandle : Int
+    private val textureTexHandle    : Int
 
-    private val vertexShader : Int
-    private val fragmentShader : Int
-    private val vertexTexShader : Int
+    private val vertexShader      : Int
+    private val fragmentShader    : Int
+    private val vertexTexShader   : Int
     private val fragmentTexShader : Int
 
     // define texture resolutions
     private val texWidth = screenWidth
     private val texHeight = screenHeight
-    private val bgTexWidth = screenWidth/8
-    private val bgTexHeight = screenHeight/8
+    private val bgTexWidth = screenWidth/6
+    private val bgTexHeight = screenHeight/6
 
     // allocate memory for textures
-    private val texHighResBuffer = 
-            allocateDirect(texWidth * texHeight * 4)
-            .order(ByteOrder.nativeOrder())
     private val texLowResBuffer =
             allocateDirect(bgTexWidth * bgTexHeight * 4)
+            .order(ByteOrder.nativeOrder())
+    private val texHighResBuffer1 =
+            allocateDirect(texWidth * texHeight * 4)
+            .order(ByteOrder.nativeOrder())
+    private val texHighResBuffer2 =
+            allocateDirect(texWidth * texHeight * 4)
             .order(ByteOrder.nativeOrder())
     private val quadBuffer =
             allocateDirect(viewCoords.size * 4)
@@ -105,8 +106,10 @@ class Fractal(
             .asFloatBuffer()
 
     // create variables to store texture and fbo IDs
-    private val texIDs : IntBuffer = IntBuffer.allocate(2)
+    private val texIDs : IntBuffer = IntBuffer.allocate(3)
     private val fboIDs : IntBuffer = IntBuffer.allocate(1)
+    private var currHighResIndex = 1      // current high-res texture ID index
+    private var intHighResIndex = 2       // intermediate high-res texture ID index
 
     // initialize byte buffer for the draw list
     // num coord values * 2 bytes/short
@@ -177,34 +180,13 @@ class Fractal(
 
         // generate texture and framebuffer objects
         GL.glGenFramebuffers(1, fboIDs)
-        GL.glGenTextures(2, texIDs)
-
-
-
-        // initialize high-res texture
-        // bind and set texture parameters
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-
-        // define texture specs
-        GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                GL.GL_RGBA8,                // internal format
-                texWidth, texHeight,        // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                GL.GL_UNSIGNED_BYTE,        // type
-                texHighResBuffer            // texture
-        )
+        GL.glGenTextures(3, texIDs)
 
 
         // initialize low-res texture
         // bind and set texture parameters
-        GL.glActiveTexture(GL.GL_TEXTURE1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
 
@@ -219,6 +201,47 @@ class Fractal(
                 GL.GL_UNSIGNED_BYTE,        // type
                 texLowResBuffer             // texture
         )
+
+
+        // initialize high-res texture 1
+        // bind and set texture parameters
+        GL.glActiveTexture(GL.GL_TEXTURE1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+        // define texture specs
+        GL.glTexImage2D(
+                GL.GL_TEXTURE_2D,           // target
+                0,                          // mipmap level
+                GL.GL_RGBA8,                // internal format
+                texWidth, texHeight,        // texture resolution
+                0,                          // border
+                GL.GL_RGBA,                 // format
+                GL.GL_UNSIGNED_BYTE,        // type
+                texHighResBuffer1           // texture
+        )
+
+
+        // initialize high-res texture 2
+        // bind and set texture parameters
+        GL.glActiveTexture(GL.GL_TEXTURE2)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[2])
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+        // define texture specs
+        GL.glTexImage2D(
+                GL.GL_TEXTURE_2D,           // target
+                0,                          // mipmap level
+                GL.GL_RGBA8,                // internal format
+                texWidth, texHeight,        // texture resolution
+                0,                          // border
+                GL.GL_RGBA,                 // format
+                GL.GL_UNSIGNED_BYTE,        // type
+                texHighResBuffer2           // texture
+        )
+
 
 
 
@@ -252,17 +275,22 @@ class Fractal(
 
 
     fun renderToTexture(
-            xCoords:    DoubleArray,
-            yCoords:    DoubleArray,
-            maxIter:    Int,
-            touchPos:   DoubleArray,
-            bgScale:    FloatArray
+            strictTranslate:    Boolean,
+            xCoords:            DoubleArray,
+            yCoords:            DoubleArray,
+            xQuadCoords:        DoubleArray,
+            yQuadCoords:        DoubleArray,
+            maxIter:            Int,
+            touchPos:           DoubleArray,
+            bgScale:            FloatArray
     ) {
 
         Log.d("RENDER", "render to texture -- start")
-        GL.glUseProgram(program)
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
+
+        //======================================================================================
+        // PRE-RENDER PROCESSING
+        //======================================================================================
 
         // derive scale and offset from complex space coordinates
         val doubleScale = doubleArrayOf(
@@ -289,25 +317,35 @@ class Fractal(
 
         if (emulateDouble) {
             // generate low component of dual-floats
-            xScale[1] = (doubleScale[0]-floatScale[0].toDouble()).toFloat()
-            yScale[1] = (doubleScale[1]-floatScale[1].toDouble()).toFloat()
-            xOffset[1] = (doubleOffset[0]-floatOffset[0].toDouble()).toFloat()
-            yOffset[1] = (doubleOffset[1]-floatOffset[1].toDouble()).toFloat()
-            xTouchPos[1] = (touchPos[0]-floatTouchPos[0].toDouble()).toFloat()
-            yTouchPos[1] = (touchPos[1]-floatTouchPos[1].toDouble()).toFloat()
+            xScale[1] = (doubleScale[0] - floatScale[0].toDouble()).toFloat()
+            yScale[1] = (doubleScale[1] - floatScale[1].toDouble()).toFloat()
+            xOffset[1] = (doubleOffset[0] - floatOffset[0].toDouble()).toFloat()
+            yOffset[1] = (doubleOffset[1] - floatOffset[1].toDouble()).toFloat()
+            xTouchPos[1] = (touchPos[0] - floatTouchPos[0].toDouble()).toFloat()
+            yTouchPos[1] = (touchPos[1] - floatTouchPos[1].toDouble()).toFloat()
         }
 
-        // pass parameters to shaders
-        GL.glUniform1i( iterHandle, maxIter )
-        GL.glUniform2fv( xScaleHandle,  1,  xScale,    0 )
-        GL.glUniform2fv( yScaleHandle,  1,  yScale,    0 )
-        GL.glUniform2fv( xOffsetHandle, 1,  xOffset,   0 )
-        GL.glUniform2fv( yOffsetHandle, 1,  yOffset,   0 )
-        GL.glUniform2fv( xTouchHandle,  1,  xTouchPos, 0 )
-        GL.glUniform2fv( yTouchHandle,  1,  yTouchPos, 0 )
+        GL.glUseProgram(program)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
-        // pass view coordinates to shaders
         GL.glEnableVertexAttribArray(viewCoordsHandle)
+        GL.glUniform1i(iterHandle, maxIter)
+        GL.glUniform2fv(xScaleHandle, 1, xScale, 0)
+        GL.glUniform2fv(yScaleHandle, 1, yScale, 0)
+        GL.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
+        GL.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
+        GL.glUniform2fv(xTouchHandle, 1, xTouchPos, 0)
+        GL.glUniform2fv(yTouchHandle, 1, yTouchPos, 0)
+
+
+
+
+        //======================================================================================
+        // RENDER LOW-RES
+        //======================================================================================
+
+        GL.glViewport(0, 0, bgTexWidth, bgTexHeight)
+        GL.glUniform1fv(bgScaleHandle, 1, bgScale, 0)
         GL.glVertexAttribPointer(
                 viewCoordsHandle,       // index
                 3,                      // coordinates per vertex
@@ -316,38 +354,6 @@ class Fractal(
                 12,                     // coordinates per vertex * bytes per float
                 viewBuffer              // coordinates
         )
-
-
-
-
-
-        // RENDER LOW-RES
-
-        GL.glViewport(0, 0, bgTexWidth, bgTexHeight)
-        GL.glUniform1fv(bgScaleHandle, 1, bgScale, 0)
-        GL.glFramebufferTexture2D(
-                GL.GL_FRAMEBUFFER,              // target
-                GL.GL_COLOR_ATTACHMENT0,        // attachment
-                GL.GL_TEXTURE_2D,               // texture target
-                texIDs[1],                      // texture
-                0                               // level
-        )
-
-        // check framebuffer status
-        val status2 = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
-        if (status2 != GL.GL_FRAMEBUFFER_COMPLETE) { Log.d("FRAMEBUFFER", "$status2") }
-
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-
-
-
-
-
-        // RENDER HIGH-RES
-
-        GL.glViewport(0, 0, texWidth, texHeight)
-        GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
         GL.glFramebufferTexture2D(
                 GL.GL_FRAMEBUFFER,              // target
                 GL.GL_COLOR_ATTACHMENT0,        // attachment
@@ -356,23 +362,93 @@ class Fractal(
                 0                               // level
         )
 
-        // check framebuffer status
-        val status = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
-        if (status != GL.GL_FRAMEBUFFER_COMPLETE) { Log.d("FRAMEBUFFER", "$status") }
+        val status2 = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
+        if (status2 != GL.GL_FRAMEBUFFER_COMPLETE) {
+            Log.d("FRAMEBUFFER", "$status2")
+        }
 
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
 
-        for (i in 0..(numChunks-1)) {
 
-            val viewChunkCoords = floatArrayOf(
-                    -1.0f + i*chunkInc,      1.0f,  0.0f,    // top left
-                    -1.0f + i*chunkInc,     -1.0f,  0.0f,    // bottom left
-                    -1.0f + (i+1)*chunkInc, -1.0f,  0.0f,    // bottom right
-                    -1.0f + (i+1)*chunkInc,  1.0f,  0.0f     // top right
-            )
-            viewChunkBuffer.put(viewChunkCoords)
-            viewChunkBuffer.position(0)
 
+
+        //======================================================================================
+        // RENDER HIGH-RES
+        //======================================================================================
+
+        if (strictTranslate) {
+
+            //===================================================================================
+            // PRE-RENDER PROCESSING
+            //===================================================================================
+
+            val xIntersectQuadCoords : DoubleArray
+            val yIntersectQuadCoords : DoubleArray
+            val xIntersectViewCoords : DoubleArray
+            val yIntersectViewCoords : DoubleArray
+
+            val xComplementViewCoordsA : DoubleArray
+            val yComplementViewCoordsA : DoubleArray
+
+            val xComplementViewCoordsB = doubleArrayOf(-1.0, 1.0)
+            val yComplementViewCoordsB : DoubleArray
+
+
+            if (xQuadCoords[0] > -1.0) {
+                xIntersectQuadCoords = doubleArrayOf(xQuadCoords[0], 1.0)
+                xIntersectViewCoords = doubleArrayOf(-1.0, -xQuadCoords[0])
+                xComplementViewCoordsA = doubleArrayOf(-1.0, xQuadCoords[0])
+                Log.d("QUADCOORDS", "xA: ${xComplementViewCoordsA[0]}, ${xComplementViewCoordsA[1]}")
+            }
+            else {
+                xIntersectQuadCoords = doubleArrayOf(-1.0, xQuadCoords[1])
+                xIntersectViewCoords = doubleArrayOf(-xQuadCoords[1], 1.0)
+                xComplementViewCoordsA = doubleArrayOf(xQuadCoords[1], 1.0)
+                Log.d("QUADCOORDS", "xA: ${xComplementViewCoordsA[0]}, ${xComplementViewCoordsA[1]}")
+            }
+
+
+            if (yQuadCoords[0] > -1.0) {
+                yIntersectQuadCoords = doubleArrayOf(yQuadCoords[0], 1.0)
+                yIntersectViewCoords = doubleArrayOf(-1.0, -yQuadCoords[0])
+                yComplementViewCoordsA = doubleArrayOf(yQuadCoords[0], 1.0)
+                yComplementViewCoordsB = doubleArrayOf(-1.0, yQuadCoords[0])
+                Log.d("QUADCOORDS", "yA: ${yComplementViewCoordsA[0]}, ${yComplementViewCoordsA[1]}")
+                Log.d("QUADCOORDS", "yB: ${yComplementViewCoordsB[0]}, ${yComplementViewCoordsB[1]}")
+            }
+            else {
+                yIntersectQuadCoords = doubleArrayOf(-1.0, yQuadCoords[1])
+                yIntersectViewCoords = doubleArrayOf(-yQuadCoords[1], 1.0)
+                yComplementViewCoordsA = doubleArrayOf(-1.0, yQuadCoords[1])
+                yComplementViewCoordsB = doubleArrayOf(yQuadCoords[1], 1.0)
+                Log.d("QUADCOORDS", "yA: ${yComplementViewCoordsA[0]}, ${yComplementViewCoordsA[1]}")
+                Log.d("QUADCOORDS", "yB: ${yComplementViewCoordsB[0]}, ${yComplementViewCoordsB[1]}")
+            }
+
+            val complementViewCoordsA = floatArrayOf(
+                    xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f,     // top left
+                    xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom left
+                    xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom right
+                    xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f )    // top right
+            val complementViewCoordsB = floatArrayOf(
+                    xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f,     // top left
+                    xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom left
+                    xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom right
+                    xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f )    // top right
+
+
+
+
+            //===================================================================================
+            // NOVEL RENDER -- TRANSLATION COMPLEMENT
+            //===================================================================================
+
+            GL.glViewport(0, 0, texWidth, texHeight)
+            GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
+            viewChunkBuffer
+                    .put(complementViewCoordsA)
+                    .position(0)
             GL.glVertexAttribPointer(
                     viewCoordsHandle,           // index
                     3,                          // coordinates per vertex
@@ -381,16 +457,149 @@ class Fractal(
                     12,                         // coordinates per vertex * bytes per float
                     viewChunkBuffer             // coordinates
             )
+            GL.glFramebufferTexture2D(
+                    GL.GL_FRAMEBUFFER,              // target
+                    GL.GL_COLOR_ATTACHMENT0,        // attachment
+                    GL.GL_TEXTURE_2D,               // texture target
+                    texIDs[intHighResIndex],        // texture
+                    0                               // level
+            )
+
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+            GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+
+            viewChunkBuffer
+                    .put(complementViewCoordsB)
+                    .position(0)
 
             GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-            GL.glFinish()   // force chunk to finish rendering before continuing
+
+
+
+
+
+            //===================================================================================
+            // SAMPLE -- TRANSLATION INTERSECTION
+            //===================================================================================
+
+            GL.glUseProgram(texProgram)
+            GL.glViewport(0, 0, texWidth, texHeight)
+
+            val intersectQuadCoords = floatArrayOf(
+                    xIntersectQuadCoords[0].toFloat(),  yIntersectQuadCoords[1].toFloat(),  0.0f,     // top left
+                    xIntersectQuadCoords[0].toFloat(),  yIntersectQuadCoords[0].toFloat(),  0.0f,     // bottom left
+                    xIntersectQuadCoords[1].toFloat(),  yIntersectQuadCoords[0].toFloat(),  0.0f,     // bottom right
+                    xIntersectQuadCoords[1].toFloat(),  yIntersectQuadCoords[1].toFloat(),  0.0f )    // top right
+            quadBuffer
+                    .put(intersectQuadCoords)
+                    .position(0)
+
+            val intersectViewCoords = floatArrayOf(
+                    xIntersectViewCoords[0].toFloat(),  yIntersectViewCoords[1].toFloat(),  0.0f,     // top left
+                    xIntersectViewCoords[0].toFloat(),  yIntersectViewCoords[0].toFloat(),  0.0f,     // bottom left
+                    xIntersectViewCoords[1].toFloat(),  yIntersectViewCoords[0].toFloat(),  0.0f,     // bottom right
+                    xIntersectViewCoords[1].toFloat(),  yIntersectViewCoords[1].toFloat(),  0.0f )    // top right
+            viewChunkBuffer
+                    .put(intersectViewCoords)
+                    .position(0)
+
+
+            GL.glEnableVertexAttribArray(viewCoordsTexHandle)
+            GL.glEnableVertexAttribArray(quadCoordsTexHandle)
+            GL.glUniform1i(textureTexHandle, currHighResIndex)
+            GL.glVertexAttribPointer(
+                    viewCoordsTexHandle,        // index
+                    3,                          // coordinates per vertex
+                    GL.GL_FLOAT,                // type
+                    false,                      // normalized
+                    12,                         // coordinates per vertex * bytes per float
+                    viewChunkBuffer             // coordinates
+            )
+            GL.glVertexAttribPointer(
+                    quadCoordsTexHandle,        // index
+                    3,                          // coordinates per vertex
+                    GL.GL_FLOAT,                // type
+                    false,                      // normalized
+                    12,                         // coordinates per vertex * bytes per float
+                    quadBuffer                  // coordinates
+            )
+
+
+            GL.glFramebufferTexture2D(
+                    GL.GL_FRAMEBUFFER,              // target
+                    GL.GL_COLOR_ATTACHMENT0,        // attachment
+                    GL.GL_TEXTURE_2D,               // texture target
+                    texIDs[intHighResIndex],        // texture
+                    0                               // level
+            )
+
+            GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+
+            GL.glDisableVertexAttribArray(viewCoordsTexHandle)
+            GL.glDisableVertexAttribArray(quadCoordsTexHandle)
+
+
+            // swap intermediate and current texture indices
+            val temp = intHighResIndex
+            intHighResIndex = currHighResIndex
+            currHighResIndex = temp
+
+
+        }
+        else {
+
+            //===================================================================================
+            // NOVEL RENDER -- ENTIRE TEXTURE
+            //===================================================================================
+
+            GL.glViewport(0, 0, texWidth, texHeight)
+            GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
+            GL.glFramebufferTexture2D(
+                    GL.GL_FRAMEBUFFER,              // target
+                    GL.GL_COLOR_ATTACHMENT0,        // attachment
+                    GL.GL_TEXTURE_2D,               // texture target
+                    texIDs[currHighResIndex],       // texture
+                    0                               // level
+            )
+
+            // check framebuffer status
+            val status = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
+            if (status != GL.GL_FRAMEBUFFER_COMPLETE) {
+                Log.d("FRAMEBUFFER", "$status")
+            }
+
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+
+            for (i in 0..(numChunks - 1)) {
+
+                val viewChunkCoords = floatArrayOf(
+                        -1.0f + i * chunkInc, 1.0f, 0.0f,    // top left
+                        -1.0f + i * chunkInc, -1.0f, 0.0f,    // bottom left
+                        -1.0f + (i + 1) * chunkInc, -1.0f, 0.0f,    // bottom right
+                        -1.0f + (i + 1) * chunkInc, 1.0f, 0.0f     // top right
+                )
+                viewChunkBuffer.put(viewChunkCoords)
+                viewChunkBuffer.position(0)
+
+                GL.glVertexAttribPointer(
+                        viewCoordsHandle,           // index
+                        3,                          // coordinates per vertex
+                        GL.GL_FLOAT,                // type
+                        false,                      // normalized
+                        12,                         // coordinates per vertex * bytes per float
+                        viewChunkBuffer             // coordinates
+                )
+
+                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                GL.glFinish()   // force chunk to finish rendering before continuing
+
+            }
+
+            GL.glDisableVertexAttribArray(viewCoordsHandle)
 
         }
 
 
-
-
-        GL.glDisableVertexAttribArray(viewCoordsHandle)
         Log.d("RENDER", "render to texture -- end")
 
 
@@ -404,6 +613,12 @@ class Fractal(
     ) {
 
         Log.d("RENDER", "render from texture -- start")
+
+
+        //======================================================================================
+        // PRE-RENDER PROCESSING
+        //======================================================================================
+
         GL.glUseProgram(texProgram)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         GL.glViewport(0, 0, screenWidth, screenHeight)
@@ -414,6 +629,9 @@ class Fractal(
                 xQuadCoords[0].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom left
                 xQuadCoords[1].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom right
                 xQuadCoords[1].toFloat(),  yQuadCoords[1].toFloat(),  0.0f )    // top right
+        quadBuffer
+                .put(quadCoords)
+                .position(0)
 
         // create float array of background quad coordinates
         val bgQuadCoords = floatArrayOf(
@@ -421,9 +639,9 @@ class Fractal(
                 xQuadCoords2[0].toFloat(),  yQuadCoords2[0].toFloat(),  0.0f,     // bottom left
                 xQuadCoords2[1].toFloat(),  yQuadCoords2[0].toFloat(),  0.0f,     // bottom right
                 xQuadCoords2[1].toFloat(),  yQuadCoords2[1].toFloat(),  0.0f )    // top right
-
-        quadBuffer.put(quadCoords).position(0)
-        bgQuadBuffer.put(bgQuadCoords).position(0)
+        bgQuadBuffer
+                .put(bgQuadCoords)
+                .position(0)
 
         GL.glEnableVertexAttribArray(viewCoordsTexHandle)
         GL.glEnableVertexAttribArray(quadCoordsTexHandle)
@@ -431,10 +649,11 @@ class Fractal(
 
 
 
-
+        //======================================================================================
         // RENDER LOW-RES
+        //======================================================================================
 
-        GL.glUniform1i(textureTexHandle, 1)    // use GL_TEXTURE1
+        GL.glUniform1i(textureTexHandle, 0)    // use GL_TEXTURE0
         GL.glVertexAttribPointer(
                 viewCoordsTexHandle,        // index
                 3,                          // coordinates per vertex
@@ -458,9 +677,11 @@ class Fractal(
 
 
 
+        //======================================================================================
         // RENDER HIGH-RES
+        //======================================================================================
 
-        GL.glUniform1i(textureTexHandle, 0)     // use GL_TEXTURE0
+        GL.glUniform1i(textureTexHandle, currHighResIndex)
         GL.glVertexAttribPointer(
                 viewCoordsTexHandle,        // index
                 3,                          // coordinates per vertex
@@ -485,6 +706,7 @@ class Fractal(
 
         GL.glDisableVertexAttribArray(viewCoordsTexHandle)
         GL.glDisableVertexAttribArray(quadCoordsTexHandle)
+
         Log.d("RENDER", "render from texture -- end")
 
     }
@@ -681,6 +903,8 @@ class MainActivity : AppCompatActivity() {
         var maxIter : Int = 63
 
         var renderToTex = false
+        var hasTranslated = false
+        var hasScaled = false
         // var renderFromTex = true
 
         val xCoords : DoubleArray
@@ -702,7 +926,7 @@ class MainActivity : AppCompatActivity() {
         lateinit var f : Fractal
 
         init {
-            
+
             val displayMetrics = DisplayMetrics()
             windowManager.defaultDisplay.getMetrics(displayMetrics)
             screenWidth = displayMetrics.widthPixels
@@ -717,7 +941,7 @@ class MainActivity : AppCompatActivity() {
             yCoords = doubleArrayOf(-1.75/ratio, 1.75/ratio)
 
 //            lightPos = floatArrayOf(1.0f/sqrt(2.0f), 1.0f/sqrt(2.0f))
-            
+
         }
 
         fun translate(dScreenPos: FloatArray) {
@@ -738,7 +962,7 @@ class MainActivity : AppCompatActivity() {
                     (dScreenPos[0] / screenRes[0]).toDouble() * 2.0,
                     (dScreenPos[1] / screenRes[1]).toDouble() * 2.0
             )
-            
+
             xQuadCoords[0] += dPos[0]
             xQuadCoords[1] += dPos[0]
             yQuadCoords[0] -= dPos[1]
@@ -752,6 +976,8 @@ class MainActivity : AppCompatActivity() {
             // magic
             quadFocus[0] += dPos[0]
             quadFocus[1] -= dPos[1]
+
+            hasTranslated = true
 
 
             //// Log.d("TRANSLATE", "dPos: (${dPos[0]}, ${dPos[1]})")
@@ -848,7 +1074,8 @@ class MainActivity : AppCompatActivity() {
             xQuadCoords2[1] += quadFocus[0]
             yQuadCoords2[0] += quadFocus[1]
             yQuadCoords2[1] += quadFocus[1]
-            
+
+            hasScaled = true
 
             //// Log.d("COORDS", "xCoords: (${xCoords[0]}, ${xCoords[1]}), yCoords: (${yCoords[0]}, ${yCoords[1]})")
             // Log.d("COORDS", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
@@ -887,7 +1114,15 @@ class MainActivity : AppCompatActivity() {
             Log.d("OPENGL ES", "FLOAT PRECISION == ${b[0]}")
 
             f = Fractal(ctx, screenWidth, screenHeight, emulateDouble)
-            f.renderToTexture(xCoords, yCoords, maxIter, touchPos, bgScaleFloat)
+
+            f.renderToTexture(
+                    false,
+                    xCoords, yCoords,
+                    xQuadCoords, yQuadCoords,
+                    maxIter,
+                    touchPos,
+                    bgScaleFloat
+            )
 
         }
 
@@ -898,8 +1133,23 @@ class MainActivity : AppCompatActivity() {
             // render to texture on ACTION_UP
             if (renderToTex) {
 
-                f.renderToTexture(xCoords, yCoords, maxIter, touchPos, bgScaleFloat)
+                val strictTranslate = hasTranslated && !hasScaled
+                Log.d("HEY", "hasTranslated == $hasTranslated")
+                Log.d("HEY", "hasScaled == $hasScaled")
+                Log.d("HEY", "$strictTranslate")
+
+                f.renderToTexture(
+                        strictTranslate,
+                        xCoords, yCoords,
+                        xQuadCoords, yQuadCoords,
+                        maxIter,
+                        touchPos,
+                        bgScaleFloat
+                )
+
                 renderToTex = false
+                hasTranslated = false
+                hasScaled = false
                 resetQuadCoords()
 
             }
