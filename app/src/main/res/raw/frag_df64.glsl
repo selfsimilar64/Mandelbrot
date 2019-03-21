@@ -30,7 +30,7 @@ vec2 twoSum(float a, float b) {
     return vec2(s, e);
 }
 
-vec2 df64_add(vec2 a, vec2 b) {
+vec2 add(vec2 a, vec2 b) {
     vec2 s;
     vec2 t;
     s = twoSum(a.x, b.x);
@@ -57,7 +57,7 @@ vec2 twoProd(float a, float b) {
     return vec2(p, err);
 }
 
-vec2 df64_mult(vec2 a, vec2 b) {
+vec2 mult(vec2 a, vec2 b) {
     vec2 p;
     p = twoProd(a.x, b.x);
     p.y += a.x * b.y;
@@ -73,7 +73,7 @@ vec2 twoSqr(float a) {
     return vec2(p, e);
 }
 
-vec2 df64_sqr(vec2 a) {
+vec2 sqr(vec2 a) {
     vec2 p;
     p = twoSqr(a.x);
     p.y += 2.0*a.x*a.y;
@@ -81,35 +81,35 @@ vec2 df64_sqr(vec2 a) {
     return p;
 }
 
-bool df64_gt(vec2 a, vec2 b) {
+bool gt(vec2 a, vec2 b) {
     return (a.x > b.x || (a.x == b.x && a.y > b.y));
 }
 
-vec2 df64_mandelbrot_x(vec2 X, vec2 Y, vec2 xC) {
-    return df64_add(df64_add(df64_sqr(X), -df64_sqr(Y)), xC);
+vec2 mandelbrot_x(vec2 X, vec2 Y, vec2 xC) {
+    return add(add(sqr(X), -sqr(Y)), xC);
 }
 
-vec2 df64_mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
-    vec2 T = df64_mult(X, Y);
-    return df64_add(df64_add(T, T), yC);
+vec2 mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
+    vec2 T = mult(X, Y);
+    return add(add(T, T), yC);
 }
 
-vec2 df64_perp_mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
-    vec2 T = df64_mult(vec2(abs(X.x), abs(X.y)), Y);
-    return df64_add(-df64_add(T, T), yC);
+vec2 perp_mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
+    vec2 T = mult(vec2(abs(X.x), abs(X.y)), Y);
+    return add(-add(T, T), yC);
 }
 
-vec2 df64_mod2(vec2 X, vec2 Y) {
-    return df64_add(df64_sqr(X), df64_sqr(Y));
+vec2 modSqrDF(vec2 X, vec2 Y) {
+    return add(sqr(X), sqr(Y));
 }
 
-vec4 df64_complex_mult(vec2 X, vec2 Y, vec2 A, vec2 B) {
+vec4 cMultDF(vec2 X, vec2 Y, vec2 A, vec2 B) {
 
-    vec2 k1 = df64_mult(A, df64_add(X, Y));
-    vec2 k2 = df64_mult(X, df64_add(B, -A));
-    vec2 k3 = df64_mult(Y, df64_add(A, B));
-    vec2 U = df64_add(k1, -k3);
-    vec2 V = df64_add(k1, k2);
+    vec2 k1 = mult(A, add(X, Y));
+    vec2 k2 = mult(X, add(B, -A));
+    vec2 k3 = mult(Y, add(A, B));
+    vec2 U = add(k1, -k3);
+    vec2 V = add(k1, k2);
     return vec4(U, V);
 
 }
@@ -120,16 +120,16 @@ vec2 conj(vec2 p) {
     return vec2(p.x, -p.y);
 }
 
-float mod2(vec2 p) {
+float modSqrSF(vec2 p) {
     return p.x*p.x + p.y*p.y;
 }
 
-vec2 mult(vec2 p, vec2 q) {
+vec2 cMultSF(vec2 p, vec2 q) {
     return vec2(p.x*q.x - p.y*q.y, p.y*q.x + p.x*q.y);
 }
 
 vec2 div(vec2 p, vec2 q) {
-    return mult(p, conj(q)) / mod2(q);
+    return cMultSF(p, conj(q)) / modSqrSF(q);
 }
 
 float modulus(vec2 p) {
@@ -143,8 +143,8 @@ void main() {
 //    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);
 
     // use mandelbrot C components
-    vec2 xC = df64_add(df64_mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
-    vec2 yC = df64_add(df64_mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
+    vec2 xC = add(mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
+    vec2 yC = add(mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
 
     // use julia C components
 //    vec2 xC = xTouchPos;
@@ -156,8 +156,8 @@ void main() {
     vec2 Y_temp;
 
     // use julia Z components
-//    vec2 X = df64_add(df64_mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
-//    vec2 Y = df64_add(df64_mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
+//    vec2 X = add(mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
+//    vec2 Y = add(mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
 
 
 
@@ -174,7 +174,7 @@ void main() {
 
     float XY1e, XY2e, XY3e, XY4e, XY5e, XY6e, XY7e, XY8e;
 
-    float eps = 0.005 * xScale.x;
+    float eps = 0.001 * xScale.x;
     bool repeat = false;
     int period = 0;
 
@@ -209,10 +209,10 @@ void main() {
     for (int i = 0; i < maxIter; i++) {
 
         // iterate second derivative
-        b = 2.0*(mult(b, vec2(X.x, Y.x)) + mult(a, a));
+        b = 2.0*(cMultSF(b, vec2(X.x, Y.x)) + cMultSF(a, a));
 
         // iterate derivative
-        a = 2.0*mult(a, vec2(X.x, Y.x));
+        a = 2.0*cMultSF(a, vec2(X.x, Y.x));
         a.x = a.x + 1.0;
 
 
@@ -247,12 +247,12 @@ void main() {
 
 
         // iterate z
-        Y_temp = df64_mandelbrot_y(X, Y, yC);
-        X = df64_mandelbrot_x(X, Y, xC);
+        Y_temp = mandelbrot_y(X, Y, yC);
+        X = mandelbrot_x(X, Y, xC);
         Y = Y_temp;
-        
-        
-        
+
+
+
         XY1e = abs(X.x - X1.x) + abs(X.y - X1.y) + abs(Y.x - Y1.x) + abs(Y.y - Y1.y);
         XY2e = abs(X.x - X2.x) + abs(X.y - X2.y) + abs(Y.x - Y2.x) + abs(Y.y - Y2.y);
         XY3e = abs(X.x - X3.x) + abs(X.y - X3.y) + abs(Y.x - Y3.x) + abs(Y.y - Y3.y);
@@ -309,13 +309,13 @@ void main() {
 
 
         // check for escape
-        MOD2 = df64_mod2(X, Y);
-        if (df64_gt(MOD2, vec2(R, 0.0))) {
+        MOD2 = modSqrDF(X, Y);
+        if (gt(MOD2, vec2(R, 0.0))) {
 
             // normal calculation
             float lo = 0.5*log(MOD2.x);
             vec2 Zf = vec2(X.x, Y.x);
-            u = mult(  mult(Zf, a), (1.0 + lo)*conj(mult(a, a)) - lo*conj(mult(Zf, b))  );
+            u = cMultSF(  cMultSF(Zf, a), (1.0 + lo)*conj(cMultSF(a, a)) - lo*conj(cMultSF(Zf, b))  );
             u = div(Zf, a);
             u = u/modulus(u);
 
