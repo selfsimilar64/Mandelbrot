@@ -3,12 +3,12 @@
 
 precision highp float;
 uniform int maxIter;
-uniform vec2 xTouchPos;
-uniform vec2 yTouchPos;
-uniform vec2 xScale;
-uniform vec2 yScale;
-uniform vec2 xOffset;
-uniform vec2 yOffset;
+uniform float xTouchPos;
+uniform float yTouchPos;
+uniform float xScale;
+uniform float yScale;
+uniform float xOffset;
+uniform float yOffset;
 
 in vec4 viewPos;
 out vec4 fragmentColor;
@@ -72,8 +72,8 @@ void main() {
 
 //    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);    // range [-1, 1]
 
-    float xC = xScale.x * viewPos.x + xOffset.x;
-    float yC = yScale.x * viewPos.y + yOffset.x;
+    float xC = xScale * viewPos.x + xOffset;
+    float yC = yScale * viewPos.y + yOffset;
 
     vec2 C = vec2(xC, yC);
 
