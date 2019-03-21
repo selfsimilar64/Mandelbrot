@@ -15,15 +15,13 @@ import android.widget.FrameLayout.LayoutParams as LP
 import android.widget.LinearLayout.LayoutParams as LP2
 import android.widget.FrameLayout
 import android.widget.SeekBar
-import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.FloatBuffer
 import java.nio.ByteBuffer.allocateDirect
 import java.util.*
 import javax.microedition.khronos.opengles.GL10
 import java.nio.IntBuffer
 import kotlin.math.*
-
+const val SPLIT = 8193.0
 
 
 fun loadShader(type: Int, shaderCode: String): Int {
@@ -44,11 +42,13 @@ fun loadShader(type: Int, shaderCode: String): Int {
 class Fractal(
         ctx: Context,
         private val screenWidth : Int,
-        private val screenHeight : Int,
-        private val emulateDouble : Boolean
+        private val screenHeight : Int
 ) {
+    
+    val emulateDouble = false
+    val emulateQuad = false
 
-    private val numChunks = 5
+    private val numChunks = 10
     private val chunkInc : Float = 2.0f / numChunks
 
     // coordinates of default view boundaries
@@ -81,10 +81,10 @@ class Fractal(
     private val fragmentTexShader : Int
 
     // define texture resolutions
-    private val texWidth = screenWidth
-    private val texHeight = screenHeight
-    private val bgTexWidth = screenWidth/6
-    private val bgTexHeight = screenHeight/6
+    private val texWidth = screenWidth/4
+    private val texHeight = screenHeight/4
+    private val bgTexWidth = screenWidth/16
+    private val bgTexHeight = screenHeight/16
 
     // allocate memory for textures
     private val texLowResBuffer =
@@ -137,41 +137,42 @@ class Fractal(
     init {
 
         // load all vertex and fragment shader code
-        val vertFloatStream = ctx.resources.openRawResource(R.raw.vert)
-        val vertFloatShaderCode = Scanner(vertFloatStream).useDelimiter("\\Z").next()
-        vertFloatStream.close()
+        val vertStream = ctx.resources.openRawResource(R.raw.vert)
+        val vertShaderCode = Scanner(vertStream).useDelimiter("\\Z").next()
+        vertStream.close()
 
-        val vertDoubleStream = ctx.resources.openRawResource(R.raw.vert_df64)
-        val vertDoubleShaderCode = Scanner(vertDoubleStream).useDelimiter("\\Z").next()
-        vertDoubleStream.close()
+        val fragSFStream = ctx.resources.openRawResource(R.raw.frag)
+        val fragSFShaderCode = Scanner(fragSFStream).useDelimiter("\\Z").next()
+        fragSFStream.close()
 
-        val fragFloatStream = ctx.resources.openRawResource(R.raw.frag)
-        val fragFloatShaderCode = Scanner(fragFloatStream).useDelimiter("\\Z").next()
-        fragFloatStream.close()
+        val fragDFStream = ctx.resources.openRawResource(R.raw.frag_df64)
+        val fragDFShaderCode = Scanner(fragDFStream).useDelimiter("\\Z").next()
+        fragDFStream.close()
 
-        val fragDoubleStream = ctx.resources.openRawResource(R.raw.frag_df64)
-        val fragDoubleShaderCode = Scanner(fragDoubleStream).useDelimiter("\\Z").next()
-        fragDoubleStream.close()
-
-        val fragTexStream = ctx.resources.openRawResource(R.raw.frag_tex)
-        val fragTexShaderCode = Scanner(fragTexStream).useDelimiter("\\Z").next()
-        fragTexStream.close()
+        val fragQFStream = ctx.resources.openRawResource(R.raw.frag_qf128)
+        val fragQFShaderCode = Scanner(fragQFStream).useDelimiter("\\Z").next()
+        fragQFStream.close()
 
         val vertTexStream = ctx.resources.openRawResource(R.raw.vert_tex)
         val vertTexShaderCode = Scanner(vertTexStream).useDelimiter("\\Z").next()
         vertTexStream.close()
 
+        val fragTexStream = ctx.resources.openRawResource(R.raw.frag_tex)
+        val fragTexShaderCode = Scanner(fragTexStream).useDelimiter("\\Z").next()
+        fragTexStream.close()
+
 
         // create and compile shaders
-        if (emulateDouble) {
-            vertexShader = loadShader(GL.GL_VERTEX_SHADER, vertDoubleShaderCode)
-            fragmentShader = loadShader(GL.GL_FRAGMENT_SHADER, fragDoubleShaderCode)
+        vertexShader = loadShader(GL.GL_VERTEX_SHADER, vertShaderCode)
+        fragmentShader = if (emulateQuad) {
+            loadShader(GL.GL_FRAGMENT_SHADER, fragQFShaderCode)
+        }
+        else if (emulateDouble) {
+            loadShader(GL.GL_FRAGMENT_SHADER, fragDFShaderCode)
         }
         else {
-            vertexShader = loadShader(GL.GL_VERTEX_SHADER, vertFloatShaderCode)
-            fragmentShader = loadShader(GL.GL_FRAGMENT_SHADER, fragFloatShaderCode)
+            loadShader(GL.GL_FRAGMENT_SHADER, fragSFShaderCode)
         }
-
         vertexTexShader = loadShader(GL.GL_VERTEX_SHADER, vertTexShaderCode)
         fragmentTexShader = loadShader(GL.GL_FRAGMENT_SHADER, fragTexShaderCode)
 
@@ -183,7 +184,11 @@ class Fractal(
         GL.glGenTextures(3, texIDs)
 
 
-        // initialize low-res texture
+        
+        //======================================================================================
+        // INITIALIZE LOW-RES TEXTURE
+        //======================================================================================
+
         // bind and set texture parameters
         GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
@@ -203,7 +208,11 @@ class Fractal(
         )
 
 
-        // initialize high-res texture 1
+
+        //======================================================================================
+        // INITIALIZE HIGH-RES TEXTURE 1
+        //======================================================================================
+
         // bind and set texture parameters
         GL.glActiveTexture(GL.GL_TEXTURE1)
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
@@ -223,7 +232,11 @@ class Fractal(
         )
 
 
-        // initialize high-res texture 2
+
+        //======================================================================================
+        // INITIALIZE HIGH-RES TEXTURE 2
+        //======================================================================================
+
         // bind and set texture parameters
         GL.glActiveTexture(GL.GL_TEXTURE2)
         GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[2])
@@ -272,12 +285,32 @@ class Fractal(
 
     }
 
+    fun splitSD(a: Double) : FloatArray {
 
+        val b = FloatArray(2)
+        b[0] = a.toFloat()
+        b[1] = (a - b[0].toDouble()).toFloat()
+        return b
+
+    }
+
+    fun splitDD(a: DualDouble) : FloatArray {
+
+        val b = FloatArray(4)
+        b[0] = a.hi.toFloat()
+        b[1] = (a.hi - b[0].toDouble()).toFloat()
+        b[2] = a.lo.toFloat()
+        b[3] = (a.lo - b[2].toDouble()).toFloat()
+        return b
+
+    }
 
     fun renderToTexture(
             strictTranslate:    Boolean,
             xCoords:            DoubleArray,
             yCoords:            DoubleArray,
+            xCoordsDD:          Array<DualDouble>,
+            yCoordsDD:          Array<DualDouble>,
             xQuadCoords:        DoubleArray,
             yQuadCoords:        DoubleArray,
             maxIter:            Int,
@@ -285,57 +318,93 @@ class Fractal(
             bgScale:            FloatArray
     ) {
 
-        Log.d("RENDER", "render to texture -- start")
+//        Log.d("RENDER", "render to texture -- start")
 
 
         //======================================================================================
         // PRE-RENDER PROCESSING
         //======================================================================================
 
-        // derive scale and offset from complex space coordinates
-        val doubleScale = doubleArrayOf(
-                (xCoords[1] - xCoords[0]) / 2.0,
-                (yCoords[1] - yCoords[0]) / 2.0
-        )
-        val doubleOffset = doubleArrayOf(
-                (xCoords[1] / doubleScale[0] - 1.0) * doubleScale[0],
-                (yCoords[1] / doubleScale[1] - 1.0) * doubleScale[1]
-        )
-
-        // create parameter floats from doubles
-        val floatScale = floatArrayOf(doubleScale[0].toFloat(), doubleScale[1].toFloat())
-        val floatOffset = floatArrayOf(doubleOffset[0].toFloat(), doubleOffset[1].toFloat())
-        val floatTouchPos = floatArrayOf(touchPos[0].toFloat(), touchPos[1].toFloat())
-
-        // split parameters into dual-floats
-        val xScale = floatArrayOf(floatScale[0], 0.0f)
-        val yScale = floatArrayOf(floatScale[1], 0.0f)
-        val xOffset = floatArrayOf(floatOffset[0], 0.0f)
-        val yOffset = floatArrayOf(floatOffset[1], 0.0f)
-        val xTouchPos = floatArrayOf(floatTouchPos[0], 0.0f)
-        val yTouchPos = floatArrayOf(floatTouchPos[1], 0.0f)
-
-        if (emulateDouble) {
-            // generate low component of dual-floats
-            xScale[1] = (doubleScale[0] - floatScale[0].toDouble()).toFloat()
-            yScale[1] = (doubleScale[1] - floatScale[1].toDouble()).toFloat()
-            xOffset[1] = (doubleOffset[0] - floatOffset[0].toDouble()).toFloat()
-            yOffset[1] = (doubleOffset[1] - floatOffset[1].toDouble()).toFloat()
-            xTouchPos[1] = (touchPos[0] - floatTouchPos[0].toDouble()).toFloat()
-            yTouchPos[1] = (touchPos[1] - floatTouchPos[1].toDouble()).toFloat()
-        }
-
         GL.glUseProgram(program)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
+        
+        val floatTouchPos = floatArrayOf( touchPos[0].toFloat(),     touchPos[1].toFloat()     )
+        val xTouchPos = floatArrayOf( floatTouchPos[0], 0.0f )
+        val yTouchPos = floatArrayOf( floatTouchPos[1], 0.0f )
+
+        if (emulateQuad) {
+            
+            val xScaleDD = (xCoordsDD[1] - xCoordsDD[0]) * DualDouble(0.5, 0.0)
+            val yScaleDD = (yCoordsDD[1] - yCoordsDD[0]) * DualDouble(0.5, 0.0)
+            val xOffsetDD = xCoordsDD[1] - xScaleDD
+            val yOffsetDD = yCoordsDD[1] - yScaleDD
+
+            Log.d("TEST", "xScaleDD : $xScaleDD")
+//            Log.d("TEST", "$yScaleDD")
+//            Log.d("TEST", "$xOffsetDD")
+//            Log.d("TEST", "$yOffsetDD")
+            
+            val xScaleQF = splitDD(xScaleDD)
+            val yScaleQF = splitDD(yScaleDD)
+            val xOffsetQF = splitDD(xOffsetDD)
+            val yOffsetQF = splitDD(yOffsetDD)
+
+            Log.d("TEST", "xScaleQF : (${xScaleQF[0]}, ${xScaleQF[1]}, ${xScaleQF[2]}, ${xScaleQF[3]})")
+            Log.d("TEST", "${Float.MIN_VALUE}")
+//            Log.d("TEST", "${yScaleQF[0]}")
+//            Log.d("TEST", "${xOffsetQF[0]}")
+//            Log.d("TEST", "${yOffsetQF[0]}")
+
+            GL.glUniform4fv(xScaleHandle,  1,  xScaleQF,   0)
+            GL.glUniform4fv(yScaleHandle,  1,  yScaleQF,   0)
+            GL.glUniform4fv(xOffsetHandle, 1,  xOffsetQF,  0)
+            GL.glUniform4fv(yOffsetHandle, 1,  yOffsetQF,  0)
+            
+        }
+        else {
+
+            val xScaleSD = (xCoords[1] - xCoords[0]) / 2.0
+            val yScaleSD = (yCoords[1] - yCoords[0]) / 2.0
+            val xOffsetSD = xCoords[1] - xScaleSD
+            val yOffsetSD = yCoords[1] - yScaleSD
+
+            if (emulateDouble) {
+                
+                val xScaleDF = splitSD(xScaleSD)
+                val yScaleDF = splitSD(yScaleSD)
+                val xOffsetDF = splitSD(xOffsetSD)
+                val yOffsetDF = splitSD(yOffsetSD)
+
+                Log.d("TEST", "xScaleDF: (${xScaleDF[0]}, ${xScaleDF[1]})")
+
+                GL.glUniform2fv(xScaleHandle,  1,  xScaleDF,   0)
+                GL.glUniform2fv(yScaleHandle,  1,  yScaleDF,   0)
+                GL.glUniform2fv(xOffsetHandle, 1,  xOffsetDF,  0)
+                GL.glUniform2fv(yOffsetHandle, 1,  yOffsetDF,  0)
+                
+            }
+            else {
+                
+                val xScaleSF = floatArrayOf(xScaleSD.toFloat())
+                val yScaleSF = floatArrayOf(yScaleSD.toFloat())
+                val xOffsetSF = floatArrayOf(xOffsetSD.toFloat())
+                val yOffsetSF = floatArrayOf(yOffsetSD.toFloat())
+
+                Log.d("TEST", "xScaleSF: ${xScaleSF[0]}")
+
+                GL.glUniform1fv(xScaleHandle,  1,  xScaleSF,   0)
+                GL.glUniform1fv(yScaleHandle,  1,  yScaleSF,   0)
+                GL.glUniform1fv(xOffsetHandle, 1,  xOffsetSF,  0)
+                GL.glUniform1fv(yOffsetHandle, 1,  yOffsetSF,  0)
+                
+            }
+
+        }
 
         GL.glEnableVertexAttribArray(viewCoordsHandle)
         GL.glUniform1i(iterHandle, maxIter)
-        GL.glUniform2fv(xScaleHandle, 1, xScale, 0)
-        GL.glUniform2fv(yScaleHandle, 1, yScale, 0)
-        GL.glUniform2fv(xOffsetHandle, 1, xOffset, 0)
-        GL.glUniform2fv(yOffsetHandle, 1, yOffset, 0)
-        GL.glUniform2fv(xTouchHandle, 1, xTouchPos, 0)
-        GL.glUniform2fv(yTouchHandle, 1, yTouchPos, 0)
+        GL.glUniform2fv(xTouchHandle,  1,  xTouchPos, 0)
+        GL.glUniform2fv(yTouchHandle,  1,  yTouchPos, 0)
 
 
 
@@ -399,13 +468,13 @@ class Fractal(
                 xIntersectQuadCoords = doubleArrayOf(xQuadCoords[0], 1.0)
                 xIntersectViewCoords = doubleArrayOf(-1.0, -xQuadCoords[0])
                 xComplementViewCoordsA = doubleArrayOf(-1.0, xQuadCoords[0])
-                Log.d("QUADCOORDS", "xA: ${xComplementViewCoordsA[0]}, ${xComplementViewCoordsA[1]}")
+//                Log.d("QUADCOORDS", "xA: ${xComplementViewCoordsA[0]}, ${xComplementViewCoordsA[1]}")
             }
             else {
                 xIntersectQuadCoords = doubleArrayOf(-1.0, xQuadCoords[1])
                 xIntersectViewCoords = doubleArrayOf(-xQuadCoords[1], 1.0)
                 xComplementViewCoordsA = doubleArrayOf(xQuadCoords[1], 1.0)
-                Log.d("QUADCOORDS", "xA: ${xComplementViewCoordsA[0]}, ${xComplementViewCoordsA[1]}")
+//                Log.d("QUADCOORDS", "xA: ${xComplementViewCoordsA[0]}, ${xComplementViewCoordsA[1]}")
             }
 
 
@@ -414,16 +483,16 @@ class Fractal(
                 yIntersectViewCoords = doubleArrayOf(-1.0, -yQuadCoords[0])
                 yComplementViewCoordsA = doubleArrayOf(yQuadCoords[0], 1.0)
                 yComplementViewCoordsB = doubleArrayOf(-1.0, yQuadCoords[0])
-                Log.d("QUADCOORDS", "yA: ${yComplementViewCoordsA[0]}, ${yComplementViewCoordsA[1]}")
-                Log.d("QUADCOORDS", "yB: ${yComplementViewCoordsB[0]}, ${yComplementViewCoordsB[1]}")
+//                Log.d("QUADCOORDS", "yA: ${yComplementViewCoordsA[0]}, ${yComplementViewCoordsA[1]}")
+//                Log.d("QUADCOORDS", "yB: ${yComplementViewCoordsB[0]}, ${yComplementViewCoordsB[1]}")
             }
             else {
                 yIntersectQuadCoords = doubleArrayOf(-1.0, yQuadCoords[1])
                 yIntersectViewCoords = doubleArrayOf(-yQuadCoords[1], 1.0)
                 yComplementViewCoordsA = doubleArrayOf(-1.0, yQuadCoords[1])
                 yComplementViewCoordsB = doubleArrayOf(yQuadCoords[1], 1.0)
-                Log.d("QUADCOORDS", "yA: ${yComplementViewCoordsA[0]}, ${yComplementViewCoordsA[1]}")
-                Log.d("QUADCOORDS", "yB: ${yComplementViewCoordsB[0]}, ${yComplementViewCoordsB[1]}")
+//                Log.d("QUADCOORDS", "yA: ${yComplementViewCoordsA[0]}, ${yComplementViewCoordsA[1]}")
+//                Log.d("QUADCOORDS", "yB: ${yComplementViewCoordsB[0]}, ${yComplementViewCoordsB[1]}")
             }
 
             val complementViewCoordsA = floatArrayOf(
@@ -600,7 +669,7 @@ class Fractal(
         }
 
 
-        Log.d("RENDER", "render to texture -- end")
+//        Log.d("RENDER", "render to texture -- end")
 
 
     }
@@ -612,7 +681,7 @@ class Fractal(
             yQuadCoords2:   DoubleArray
     ) {
 
-        Log.d("RENDER", "render from texture -- start")
+//        Log.d("RENDER", "render from texture -- start")
 
 
         //======================================================================================
@@ -707,8 +776,71 @@ class Fractal(
         GL.glDisableVertexAttribArray(viewCoordsTexHandle)
         GL.glDisableVertexAttribArray(quadCoordsTexHandle)
 
-        Log.d("RENDER", "render from texture -- end")
+//        Log.d("RENDER", "render from texture -- end")
 
+    }
+
+}
+
+
+
+data class DualDouble(
+        var hi : Double,
+        var lo : Double
+) {
+
+    private fun quickTwoSum(a: Double, b: Double) : DualDouble {
+        val s = a + b
+        val e = b - (s - a)
+        return DualDouble(s, e)
+    }
+
+    private fun twoSum(a: Double, b: Double) : DualDouble {
+        val s = a + b
+        val v = s - a
+        val e = a - (s - v) + (b - v)
+        return DualDouble(s, e)
+    }
+
+    private fun split(a: Double): DualDouble {
+        val t = a * SPLIT
+        val aHi = t - (t - a)
+        val aLo = a - aHi
+        return DualDouble(aHi, aLo)
+    }
+
+    private fun twoProd(a: Double, b: Double) : DualDouble {
+        val p = a * b
+        val aS = split(a)
+        val bS = split(b)
+        val err = aS.hi * bS.hi - p + aS.hi * bS.lo + aS.lo * bS.hi + aS.lo * bS.lo
+        return DualDouble(p, err)
+    }
+
+    operator fun unaryMinus() : DualDouble {
+        return DualDouble(-hi, -lo)
+    }
+
+    operator fun plus(b: DualDouble) : DualDouble {
+        var s = twoSum(hi, b.hi)
+        val t = twoSum(lo, b.lo)
+        s.lo += t.hi
+        s = quickTwoSum(s.hi, s.lo)
+        s.lo += t.lo
+        s = quickTwoSum(s.hi, s.lo)
+        return s
+    }
+
+    operator fun minus(b: DualDouble) : DualDouble {
+        return plus(b.unaryMinus())
+    }
+
+    operator fun times(b: DualDouble): DualDouble {
+        var p = twoProd(hi, b.hi)
+        p.lo += hi * b.lo
+        p.lo += lo * b.hi
+        p = quickTwoSum(p.hi, p.lo)
+        return p
     }
 
 }
@@ -745,13 +877,11 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
     inner class FractalSurfaceView(ctx : Context) : GLSurfaceView(ctx) {
 
         val r : FractalRenderer
         var reactionType : Int = 0
         val continuousRender = false
-        val emulateDouble = true
 
         private val prevFocus = floatArrayOf(0.0f, 0.0f)
         private var prevFocalLen = 1.0f
@@ -759,7 +889,7 @@ class MainActivity : AppCompatActivity() {
 
         init {
             setEGLContextClientVersion(3)                   // create OpenGL ES 3.0 context
-            r = FractalRenderer(ctx, emulateDouble)         // create renderer
+            r = FractalRenderer(ctx)         // create renderer
             setRenderer(r)                                  // set renderer
             renderMode = RENDERMODE_WHEN_DIRTY              // only render on init and explicitly
 //            continuousRender = !emulateDouble
@@ -848,8 +978,7 @@ class MainActivity : AppCompatActivity() {
                                 e.x.toDouble()/r.screenWidth.toDouble(),
                                 e.y.toDouble()/r.screenHeight.toDouble()
                         )
-                        r.touchPos[0] = r.xCoords[0] + screenPos[0]*(r.xCoords[1] - r.xCoords[0])
-                        r.touchPos[1] = r.yCoords[1] - screenPos[1]*(r.yCoords[1] - r.yCoords[0])
+                        r.setTouchPos(screenPos)
                         r.renderToTex = true
                         requestRender()
                         return true
@@ -873,8 +1002,7 @@ class MainActivity : AppCompatActivity() {
                                 e.x.toDouble()/r.screenWidth.toDouble(),
                                 e.y.toDouble()/r.screenHeight.toDouble()
                         )
-                        r.touchPos[0] = r.xCoords[0] + screenPos[0]*(r.xCoords[1] - r.xCoords[0])
-                        r.touchPos[1] = r.yCoords[1] - screenPos[1]*(r.yCoords[1] - r.yCoords[0])
+                        r.setTouchPos(screenPos)
                         r.renderToTex = true
 
                         requestRender()
@@ -891,24 +1019,29 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    inner class FractalRenderer(private val ctx: Context,
-                                private val emulateDouble: Boolean) : GLSurfaceView.Renderer {
+
+
+    inner class FractalRenderer(private val ctx: Context) : GLSurfaceView.Renderer {
 
         val screenWidth : Int
         val screenHeight : Int
         private val ratio : Float
         private val screenRes : FloatArray
 
-        val touchPos = doubleArrayOf(0.0, 0.0)
         var maxIter : Int = 63
-
         var renderToTex = false
-        var hasTranslated = false
-        var hasScaled = false
         // var renderFromTex = true
 
-        val xCoords : DoubleArray
-        val yCoords : DoubleArray
+        private var hasTranslated = false
+        private var hasScaled = false
+
+        // complex coordinate arrays for 32/64-bit precision
+        private val xCoords : DoubleArray
+        private val yCoords : DoubleArray
+
+        // complex coordinate arrays for 128-bit precision
+        private val xCoordsDD : Array<DualDouble>
+        private val yCoordsDD : Array<DualDouble>
 
         private val xQuadCoords = doubleArrayOf(-1.0, 1.0)
         private val yQuadCoords = doubleArrayOf(-1.0, 1.0)
@@ -920,10 +1053,11 @@ class MainActivity : AppCompatActivity() {
         private val yQuadCoords2 = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
 
         private var quadFocus = doubleArrayOf(0.0, 0.0)
+        private val touchPos = doubleArrayOf(0.0, 0.0)
 
         var newQuadFocus = false
 
-        lateinit var f : Fractal
+        private lateinit var f : Fractal
 
         init {
 
@@ -937,24 +1071,39 @@ class MainActivity : AppCompatActivity() {
             ratio = screenWidth.toFloat()/screenHeight.toFloat()
 
             xCoords = doubleArrayOf(-2.5, 1.0)
-//            xCoords = doubleArrayOf(-1.75, 1.75)
             yCoords = doubleArrayOf(-1.75/ratio, 1.75/ratio)
-
-//            lightPos = floatArrayOf(1.0f/sqrt(2.0f), 1.0f/sqrt(2.0f))
+            xCoordsDD = arrayOf(DualDouble(-2.5, 0.0), DualDouble(1.0, 0.0))
+            yCoordsDD = arrayOf(DualDouble(-1.75/ratio, 0.0), DualDouble(1.75/ratio, 0.0))
+//            xCoords = doubleArrayOf(-1.75, 1.75)
 
         }
 
         fun translate(dScreenPos: FloatArray) {
 
             // update complex coordinates
-            var dPos = doubleArrayOf(
-                    (dScreenPos[0] / screenRes[0]).toDouble() * (xCoords[1] - xCoords[0]),
-                    (dScreenPos[1] / screenRes[1]).toDouble() * (yCoords[1] - yCoords[0])
-            )
-            xCoords[0] -= dPos[0]
-            xCoords[1] -= dPos[0]
-            yCoords[0] += dPos[1]
-            yCoords[1] += dPos[1]
+            var dPos : DoubleArray
+
+            if (f.emulateQuad) {
+                dPos = doubleArrayOf(
+                        (dScreenPos[0] / screenRes[0]).toDouble() * (xCoordsDD[1].hi - xCoordsDD[0].hi),
+                        (dScreenPos[1] / screenRes[1]).toDouble() * (yCoordsDD[1].hi - yCoordsDD[0].hi)
+                )
+                val dPosDD = arrayOf(DualDouble(dPos[0], 0.0), DualDouble(dPos[1], 0.0))
+                xCoordsDD[0] -= dPosDD[0]
+                xCoordsDD[1] -= dPosDD[0]
+                yCoordsDD[0] += dPosDD[1]
+                yCoordsDD[1] += dPosDD[1]
+            }
+            else {
+                dPos = doubleArrayOf(
+                        (dScreenPos[0] / screenRes[0]).toDouble() * (xCoords[1] - xCoords[0]),
+                        (dScreenPos[1] / screenRes[1]).toDouble() * (yCoords[1] - yCoords[0])
+                )
+                xCoords[0] -= dPos[0]
+                xCoords[1] -= dPos[0]
+                yCoords[0] += dPos[1]
+                yCoords[1] += dPos[1]
+            }
 
 
             // update texture quad coordinates
@@ -994,30 +1143,60 @@ class MainActivity : AppCompatActivity() {
                     (screenFocus[0] / screenRes[0]).toDouble(),
                     (screenFocus[1] / screenRes[1]).toDouble()
             )
-            val focus = doubleArrayOf(
-                    xCoords[0]*(1 - prop[0]) + prop[0]*xCoords[1],
-                    yCoords[1]*(1 - prop[1]) + prop[1]*yCoords[0]
-            )
+            val focus : DoubleArray
 
             //// Log.d("SCALE", "dScale: $dScale,  focus: (${focus[0]}, ${focus[1]})")
 
-            // translate focus to origin in complex coordinates
-            xCoords[0] -= focus[0]
-            xCoords[1] -= focus[0]
-            yCoords[0] -= focus[1]
-            yCoords[1] -= focus[1]
+            if (f.emulateQuad) {
+                focus = doubleArrayOf(
+                        xCoordsDD[0].hi*(1 - prop[0]) + prop[0]*xCoordsDD[1].hi,
+                        yCoordsDD[1].hi*(1 - prop[1]) + prop[1]*yCoordsDD[0].hi
+                )
+                val focusDD = arrayOf(DualDouble(focus[0], 0.0), DualDouble(focus[1], 0.0))
+                val dScaleDD = DualDouble(1.0/dScale, 0.0)
+                
+                // translate focus to origin in complex coordinates
+                xCoordsDD[0] -= focusDD[0]
+                xCoordsDD[1] -= focusDD[0]
+                yCoordsDD[0] -= focusDD[1]
+                yCoordsDD[1] -= focusDD[1]
 
-            // scale complex coordinates
-            xCoords[0] = xCoords[0]/dScale
-            xCoords[1] = xCoords[1]/dScale
-            yCoords[0] = yCoords[0]/dScale
-            yCoords[1] = yCoords[1]/dScale
+                // scale complex coordinates
+                xCoordsDD[0] *= dScaleDD
+                xCoordsDD[1] *= dScaleDD
+                yCoordsDD[0] *= dScaleDD
+                yCoordsDD[1] *= dScaleDD
 
-            // translate origin back to focus in complex coordinates
-            xCoords[0] += focus[0]
-            xCoords[1] += focus[0]
-            yCoords[0] += focus[1]
-            yCoords[1] += focus[1]
+                // translate origin back to focusDD in complex coordinates
+                xCoordsDD[0] += focusDD[0]
+                xCoordsDD[1] += focusDD[0]
+                yCoordsDD[0] += focusDD[1]
+                yCoordsDD[1] += focusDD[1]
+            }
+            else {
+                focus = doubleArrayOf(
+                        xCoords[0]*(1 - prop[0]) + prop[0]*xCoords[1],
+                        yCoords[1]*(1 - prop[1]) + prop[1]*yCoords[0]
+                )
+
+                // translate focus to origin in complex coordinates
+                xCoords[0] -= focus[0]
+                xCoords[1] -= focus[0]
+                yCoords[0] -= focus[1]
+                yCoords[1] -= focus[1]
+
+                // scale complex coordinates
+                xCoords[0] = xCoords[0] / dScale
+                xCoords[1] = xCoords[1] / dScale
+                yCoords[0] = yCoords[0] / dScale
+                yCoords[1] = yCoords[1] / dScale
+
+                // translate origin back to focus in complex coordinates
+                xCoords[0] += focus[0]
+                xCoords[1] += focus[0]
+                yCoords[0] += focus[1]
+                yCoords[1] += focus[1]
+            }
 
 
             // update texture quad coordinates
@@ -1082,6 +1261,13 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        fun setTouchPos(screenPos : DoubleArray) {
+
+            touchPos[0] = xCoords[0] + screenPos[0]*(xCoords[1] - xCoords[0])
+            touchPos[1] = yCoords[1] - screenPos[1]*(yCoords[1] - yCoords[0])
+
+        }
+
         private fun resetQuadCoords() {
 
             xQuadCoords[0] = -1.0
@@ -1101,9 +1287,6 @@ class MainActivity : AppCompatActivity() {
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
 
-            // set background color to black
-            GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-
             // get OpenGL ES version
             Log.d("OPENGL ES", "VERSION == ${unused.glGetString(GL10.GL_VERSION)}")
 
@@ -1113,11 +1296,12 @@ class MainActivity : AppCompatActivity() {
             GL.glGetShaderPrecisionFormat(GL.GL_FRAGMENT_SHADER, GL.GL_HIGH_FLOAT, a, b)
             Log.d("OPENGL ES", "FLOAT PRECISION == ${b[0]}")
 
-            f = Fractal(ctx, screenWidth, screenHeight, emulateDouble)
+            f = Fractal(ctx, screenWidth, screenHeight)
 
             f.renderToTexture(
                     false,
                     xCoords, yCoords,
+                    xCoordsDD, yCoordsDD,
                     xQuadCoords, yQuadCoords,
                     maxIter,
                     touchPos,
@@ -1134,13 +1318,14 @@ class MainActivity : AppCompatActivity() {
             if (renderToTex) {
 
                 val strictTranslate = hasTranslated && !hasScaled
-                Log.d("HEY", "hasTranslated == $hasTranslated")
-                Log.d("HEY", "hasScaled == $hasScaled")
-                Log.d("HEY", "$strictTranslate")
+//                Log.d("HEY", "hasTranslated == $hasTranslated")
+//                Log.d("HEY", "hasScaled == $hasScaled")
+//                Log.d("HEY", "$strictTranslate")
 
                 f.renderToTexture(
                         strictTranslate,
                         xCoords, yCoords,
+                        xCoordsDD, yCoordsDD,
                         xQuadCoords, yQuadCoords,
                         maxIter,
                         touchPos,
