@@ -1,9 +1,9 @@
 #version 320 es
 #define SPLIT 8193.
 #define R 10000.
-#define Sp 1e8
-#define Sn 1e-8
-#define Sh 1e-4
+#define Sp 1e34
+#define Sn 1e-34
+#define Sh 1e-17
 
 precision highp float;
 uniform int maxIter;
@@ -118,24 +118,10 @@ vec2 multDF(vec2 a, vec2 b) {
 
 vec2 divDF(vec2 a, vec2 b) {
 
-    if (b.x == 0.0 && b.y == 0.0) { return vec2(1e10); }
     float xn = 1.0/b.x;
     float yn = a.x*xn;
     vec2 diff = addDF(a, -multDF(b, vec2(yn, 0.0)));
     vec2 prod = twoProd(xn, diff.x);
-    return addDF(vec2(yn, 0.0), prod);
-
-}
-
-vec2 sqrtDF(vec2 a) {
-
-    float xn = sqrt(a.x);
-    float yn = a.x*xn;
-    vec2 ynSqr = twoSqr(yn);
-
-    float diff = (addDF(a, -ynSqr)).x;
-    vec2 prod = twoProd(xn, diff)/2.0;
-
     return addDF(vec2(yn, 0.0), prod);
 
 }
@@ -161,6 +147,19 @@ vec2 sqrDF(vec2 a) {
     p.y += 2.0*a.x*a.y;
     p = quickTwoSum(p.x, p.y);
     return p;
+}
+
+vec2 sqrtDF(vec2 a) {
+
+    float xn = sqrt(a.x);
+    float yn = a.x*xn;
+    vec2 ynSqr = sqrDF(vec2(yn, 0.0));
+
+    float diff = (addDF(a, -ynSqr)).x;
+    vec2 prod = twoProd(xn, diff)/2.0;
+
+    return addDF(vec2(yn, 0.0), prod);
+
 }
 
 vec2 expDF(vec2 a) {
@@ -654,7 +653,52 @@ float _sqrt(float _a) {
     return sqrt(_a) * Sh;
 }
 
+vec2 _twoSqr(float _a) {
+    float _p = _m(_a, _a);
+    vec2 _s = split(_a);
+    float _e = ((_m(_s.x, _s.x) - _p) + 2.0*_m(_s.x, _s.y)) + _m(_s.y, _s.y);
+    return vec2(_p, _e);
+}
 
+vec2 _twoProd(float _a, float _b) {
+    float _p = _m(_a, _b);
+    vec2 _aS = split(_a);
+    vec2 _bS = split(_b);
+    float _err = ((_m(_aS.x, _bS.x) - _p) + _m(_aS.x, _bS.y) + _m(_aS.y, _bS.x)) + _m(_aS.y, _bS.y);
+    return vec2(_p, _err);
+}
+
+vec2 _sqrDF(vec2 _a) {
+    vec2 _p;
+    _p = _twoSqr(_a.x);
+    _p.y += 2.0*_m(_a.x, _a.y);
+    _p = quickTwoSum(_p.x, _p.y);
+    return _p;
+}
+
+vec2 _modSqrDF(vec2 _a, vec2 _b) {
+    return addDF(_sqrDF(_a), _sqrDF(_b));
+}
+
+vec2 _multDF(vec2 _a, vec2 _b) {
+    vec2 _p;
+    _p = _twoProd(_a.x, _b.x);
+    _p.y += _m(_a.x, _b.y);
+    _p.y += _m(_a.y, _b.x);
+    _p = quickTwoSum(_p.x, _p.y);
+    return _p;
+}
+
+vec2 _divDF(vec2 _a, vec2 _b) {
+
+    if (_b.x == 0.0 && _b.y == 0.0) { return vec2(1e10); }
+    float xn = 1.0/_b.x;
+    float _yn = _a.x*xn;
+    vec2 _diff = addDF(_a, -_multDF(_b, vec2(_yn, 0.0)));
+    vec2 _prod = twoProd(xn, _diff.x);
+    return addDF(vec2(_yn, 0.0), _prod);
+
+}
 
 
 
@@ -673,14 +717,12 @@ void main() {
     vec4 Y = vec4(0.);
     vec4 Y_temp;
 
-    float _x, _y;
-    float _a, _b = 0.;
-    vec2 _c = vec2(0.);
-    float _u, _v;
-    vec2 _w = vec2(0.);
-    float _modSqr;
-    float _mod;
-    float t;
+    vec2 x, y;
+    vec2 u, v = vec2(0.);
+    vec2 _a, _b = vec2(0.);
+    vec2 _modSqr;
+    vec2 mod;
+    vec2 t;
     float _1 = 1.0 * Sn;
     float _2 = 2.0 * Sn;
 
@@ -709,10 +751,6 @@ void main() {
 
 
 
-    vec2 A = vec2(0.);
-    vec2 B = vec2(0.);
-    vec2 U = vec2(0.);
-    vec2 V = vec2(0.);
 
     vec3 color    =  vec3(0.0, 0.0, 0.0);
     vec3 black    =  vec3(0.0, 0.0, 0.0);
@@ -746,21 +784,21 @@ void main() {
 //        B = multDF(vec2(2.0, 0.0), t.zw);
 
         // iterate derivative -- single float
-        _x = X.x * Sn;
-        _y = Y.x * Sn;
+//        x = X.x;
+//        y = Y.x;
+//        t = 2.0*(x*_b + y*_a);
+//        _a = 2.0*(x*_a - y*_b) + _1;
+//        _b = t;
 
-        t = _m(_2, _m(_x, _b) + _m(_y, _a));
-        _a = _m(_2, _m(_x, _a) - _m(_y, _b)) + _1;
+        x = X.xy;
+        y = Y.xy;
+        t = multDF(vec2(2.0, 0.0), addDF(multDF(x, _b), multDF(y, _a)));
+        _a = addDF(multDF(vec2(2.0, 0.0), addDF(multDF(x, _a), -multDF(y, _b))), vec2(_1, 0.0));
         _b = t;
 
-//        _c = cMultSF(vec2(_a, _b), vec2(_x, _y));
-//        _a = 2.0*_c.x + 1.0;
-//        _b = 2.0*_c.y;
 
 
 
-//        A = 2.0*cMultSF(A, vec2(X.x, Y.x));
-//        A.x += 1.0;
 
 
 
@@ -870,20 +908,36 @@ void main() {
 
 
 
-            _x = X.x;
-            _y = Y.x;
+            x = X.xy;
+            y = Y.xy;
 
-            _modSqr = _m(_a, _a) + _m(_b, _b);
-            _u = _d(_m(_x, _a) + _m(_y, _b), _modSqr);
-            _v = _d(_m(_y, _a) - _m(_x, _b), _modSqr);
-            _mod = _sqrt(_m(_u, _u) + _m(_v, _v));
-            _u = _d(_u, _mod);
-            _v = _d(_v, _mod);
+//            color = vec3(_a.x * 1e-2, 0.0, _b.x * 1e-2);
+//            break;
 
-//            _w = cDivSF(vec2(_x, _y), vec2(_a, _b));
-//            _mod = modSF(_w);
-//            _u = _w.x / _mod;
-//            _v = _w.y / _mod;
+            _modSqr = _modSqrDF(_a, _b);
+//            u = _divDF(addDF(multDF(x, _a), multDF(y, _b)), _modSqr);
+//            v = _divDF(addDF(multDF(y, _a), -multDF(x, _b)), _modSqr);
+            u = divDF(addDF(multDF(x, _a), multDF(y, _b)) * Sp, _modSqr);
+            v = divDF(addDF(multDF(y, _a), -multDF(x, _b)) * Sp, _modSqr);
+
+//            color = vec3(u.x > 0.0, v.x > 0.0, 0.0);
+//            break;
+
+            mod = modSqrDF(u, v);
+            u = u / sqrt(mod.x);
+            v = v / sqrt(mod.x);
+
+//            mod = modDF(u, v);
+//            u = divDF(u, mod);
+//            v = divDF(v, mod);
+
+
+//            _modSqr = _m(_a.x, _a.x) + _m(_b.x, _b.x);
+//            u.x = (X.x*_a.x + Y.x*_b.x) / _modSqr.x;
+//            v.x = (Y.x*_a.x - X.x*_b.x) / _modSqr.x;
+//            mod.x = sqrt(u.x*u.x + v.x*v.x);
+//            u.x /= mod.x;
+//            v.x /= mod.x;
 
 
 
@@ -892,7 +946,8 @@ void main() {
             // calculate rays for lighting calculations
 //            vec3 normRay = vec3(U.x, V.x, 1.0);
 //            vec3 normRay = vec3(T.x, T.y, 1.0);
-            vec3 normRay = vec3(_u*Sp, _v*Sp, 1.0);
+//            vec3 normRay = vec3(_u * Sp, _v * Sp, 1.0);
+            vec3 normRay = vec3(u.x, v.x, 1.0);
 
             normRay = normRay / length(normRay);
             vec3 lightRay = vec3(lightPos.x, lightPos.y, height);
