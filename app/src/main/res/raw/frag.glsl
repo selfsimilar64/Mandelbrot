@@ -1,5 +1,9 @@
 #version 320 es
-#define R 10000.
+#define R 1000.
+#define pi 3.141592654
+#define Sn 1e-18
+#define Sp 1e18
+#define Sh 1e-9
 
 precision highp float;
 uniform int maxIter;
@@ -14,12 +18,32 @@ in vec4 viewPos;
 out vec4 fragmentColor;
 
 
+
+float _m(float _a, float _b) {
+    return _a*_b * Sp;
+}
+
+
 vec2 mandelbrot(vec2 z, vec2 C) {
     return vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + C;
 }
 
+vec2 exponential(vec2 z, vec2 C) {
+    float t = exp(z.x);
+    float s = sin(z.y);
+    return vec2(t*(s + pi), t*s) + C;
+}
+
 vec2 mult(vec2 w1, vec2 w2) {
     return vec2(w1.x*w2.x - w1.y*w2.y, w1.x*w2.y + w2.x*w1.y);
+}
+
+vec2 _mult(vec2 _a, vec2 _b) {
+    return vec2(_m(_a.x, _b.x) - _m(_a.y, _b.y), _m(_a.x, _b.y) + _m(_b.x, _a.y));
+}
+
+vec2 _sqr(vec2 _a) {
+    return vec2(_m(_a.x, _a.x) - _m(_a.y, _a.y), 2.0*_m(_a.x, _a.y));
 }
 
 vec2 conj(vec2 w) {
@@ -30,13 +54,16 @@ float modulus(vec2 w) {
     return sqrt(w.x*w.x + w.y*w.y);
 }
 
+float _modulus(vec2 _a) {
+    return sqrt(_m(_a.x, _a.x) + _m(_a.y, _a.y)) * Sh;
+}
+
 vec2 div(vec2 w1, vec2 w2) {
     vec2 u = mult(w1, conj(w2));
     return u/dot(w2, w2);
 }
 
 float atan2(vec2 w) {
-    float pi = 3.141593;
     if (w.x > 0.0) {
         return atan(w.y, w.x);
     }
@@ -68,6 +95,9 @@ vec2 sine(vec2 z) {
 }
 
 
+
+
+
 void main() {
 
 //    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);    // range [-1, 1]
@@ -77,20 +107,22 @@ void main() {
 
     vec2 C = vec2(xC, yC);
 
-    float num_colors = 4.0;
+    float num_colors = 5.0;
     float cmap_cycles = 2.0;
     float MOD2 = 0.0;
 
     vec2 lightPos = vec2(1.0);
     float height = 1.25;
 
-    vec2 Z = vec2(0.0, 0.0);
-    vec2 a = vec2(0.0, 0.0);
-    vec2 b = vec2(0.0, 0.0);
-    vec2 u = vec2(0.0, 0.0);
-    float pi = 3.141593;
+    vec2 Z = vec2(0.);
+    // vec2 Z = C;
+    vec2 _a = vec2(0.0, 0.0);
+    vec2 _b = vec2(0.0, 0.0);
+    vec2 _u = vec2(0.0, 0.0);
+    vec2 v = vec2(0.0, 0.0);
 
-    vec3 color    =  vec3(0.0, 0.0, 0.0);
+    vec3 color    =  vec3(0.);
+    vec3 tusk    =  vec3(237.0, 205.0, 185.0) / 256.0;
     vec3 black    =  vec3(0.0, 0.0, 0.0);
     vec3 purple   =  vec3(0.3, 0.0, 0.5);
     vec3 red      =  vec3(1.0, 0.0, 0.0);
@@ -100,12 +132,15 @@ void main() {
     vec3 darkblue =  vec3(0.0, 0.15, 0.25);
     vec3 orange   =  vec3(1.0, 0.6, 0.0);
 
+//    vec3 c1 = white;
+//    vec3 c2 = black;
+
     vec3 c1 = vec3(0.0, 0.1, 0.2);
     vec3 c2 = darkblue;
     vec3 c3 = vec3(0.7);
     vec3 c4 = vec3(0.9, 0.4, 0.2);
     vec3 c5 = purple * 0.5;
-    vec3 c6 = vec3(0.8, 0.2, 0.2);
+//    vec3 c6 = vec3(0.8, 0.2, 0.2);
 
     for (int i = 0; i < maxIter; i++) {
         if (i == maxIter - 1) {
@@ -114,30 +149,32 @@ void main() {
         }
 
         // iterate second derivative
-        b = 2.0*(mult(b, Z) + mult(a, a));
+        _b = 2.0*(mult(_b, Z) + _sqr(_a));
 
         // iterate derivative
-        a = 2.0*mult(a, Z);
-        a.x = a.x + 1.0;
+        _a = 2.0*mult(_a, Z);
+        _a.x = _a.x + Sn;
 
         // iterate z
         // Z = sine(mult(Z, C))+C;
         Z = mandelbrot(Z, C);
+        // Z = exponential(Z, C);
+        // Z = sine(mult(Z, C));
 
         MOD2 = dot(Z, Z);
         if (MOD2 > R) {
 
             // normal calculation
             float lo = 0.5*log(MOD2);
-            u = mult(  mult(Z, a), (1.0 + lo)*conj(mult(a, a)) - lo*conj(mult(Z, b))  );
-            u = div(Z, a);
-            u = u/modulus(u);
+            _u = _mult(  mult(Z, _a), (1.0 + lo)*conj(_sqr(_a)) - lo*conj(mult(Z, _b))  );
+//            u = div(Z, a);
+            v = _u/_modulus(_u);
 
             // calculate rays for lighting calculations
-            vec3 normRay = vec3(u.x, u.y, 1.0);
-            normRay = normRay / sqrt(u.x*u.x + u.y*u.y + 1.0);
+            vec3 normRay = vec3(v.x, v.y, 1.0);
+            normRay = normRay / length(normRay);
             vec3 lightRay = vec3(lightPos.x, lightPos.y, height);
-            lightRay = lightRay / sqrt(lightPos.x*lightPos.x + lightPos.y*lightPos.y + height*height);
+            lightRay = lightRay / length(lightRay);
             vec3 viewRay = vec3(0.0, 0.0, 1.0);
             vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
 
@@ -150,10 +187,12 @@ void main() {
 
 
             // normalized values -- finite cycles
+//            float m = cmap_cycles*num_colors*float(i)/float(maxIter);
 //             float m = cmap_cycles*num_colors*(float(i)-log(0.5*log(MOD2.x))/log(2.0))/float(maxIter);
 //             float n = m - (num_colors * floor(m/num_colors));
 
             // unnormalized values -- infinite cycles
+//            float n = num_colors*float(i)/float(maxIter);
             float m = float(i)-log(0.5*log(MOD2))/log(2.0);
 //            float n = float(num_colors)/2.0*(cos(m/14.0) + 1.0);
             float n = float(num_colors)/2.0*(cos(2.0*pow(m + 5.0, 0.4) -  0.3) + 1.0);
@@ -166,6 +205,7 @@ void main() {
 //            else if (n >= 5.0 && n < 6.0) {  color = (6.0-n) * c6   +   (n-5.0) * c1;  }
 
 //            color = vec3(0.0);
+//            color = vec3(1.0 - float(i)/float(maxIter));
 
 //            color = 2.5*(diffuse + 0.2)*color;
             color = 1.75*(diffuse + 0.2)*color + 0.75*vec3(specular + 0.01);
