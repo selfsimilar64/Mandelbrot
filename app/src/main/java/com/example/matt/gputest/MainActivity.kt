@@ -22,6 +22,7 @@ import javax.microedition.khronos.opengles.GL10
 import java.nio.IntBuffer
 import kotlin.math.*
 import android.R.attr.x
+import java.nio.ByteBuffer
 
 
 const val SPLIT = 8193.0
@@ -38,6 +39,47 @@ fun loadShader(type: Int, shaderCode: String): Int {
     GL.glCompileShader(shader)
 
     return shader
+}
+
+
+
+class Texture (
+        val width : Int,
+        val height : Int,
+        val index : Int
+) {
+
+    val id : Int
+    val buffer : ByteBuffer
+
+    init {
+        // create texture id
+        val b = IntBuffer.allocate(1)
+        GL.glGenTextures(1, b)
+        id = b[0]
+
+        // allocate texture memory
+        buffer = allocateDirect(width * height * 4).order(ByteOrder.nativeOrder())
+
+        // bind and set texture parameters
+        GL.glActiveTexture(GL.GL_TEXTURE0 + index)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, id)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+        // define texture specs
+        GL.glTexImage2D(
+                GL.GL_TEXTURE_2D,           // target
+                0,                          // mipmap level
+                GL.GL_RGBA8,                // internal format
+                width, height,              // texture resolution
+                0,                          // border
+                GL.GL_RGBA,                 // format
+                GL.GL_UNSIGNED_BYTE,        // type
+                buffer                      // memory pointer
+        )
+    }
+
 }
 
 
@@ -94,16 +136,13 @@ class Fractal(
 //    private val bgTexWidth = 1
 //    private val bgTexHeight = 1
 
+    private val textures = arrayOf(
+            Texture(bgTexWidth, bgTexHeight, 0),
+            Texture(texWidth, texHeight, 1),
+            Texture(texWidth, texHeight, 2)
+    )
+
     // allocate memory for textures
-    private val texLowResBuffer =
-            allocateDirect(bgTexWidth * bgTexHeight * 4)
-            .order(ByteOrder.nativeOrder())
-    private val texHighResBuffer1 =
-            allocateDirect(texWidth * texHeight * 4)
-            .order(ByteOrder.nativeOrder())
-    private val texHighResBuffer2 =
-            allocateDirect(texWidth * texHeight * 4)
-            .order(ByteOrder.nativeOrder())
     private val quadBuffer =
             allocateDirect(viewCoords.size * 4)
             .order(ByteOrder.nativeOrder())
@@ -114,10 +153,9 @@ class Fractal(
             .asFloatBuffer()
 
     // create variables to store texture and fbo IDs
-    private val texIDs : IntBuffer = IntBuffer.allocate(3)
     private val fboIDs : IntBuffer = IntBuffer.allocate(1)
-    private var currHighResIndex = 1      // current high-res texture ID index
-    private var intHighResIndex = 2       // intermediate high-res texture ID index
+    private var currIndex = 1      // current high-res texture ID index
+    private var intIndex = 2       // intermediate high-res texture ID index
 
     // initialize byte buffer for the draw list
     // num coord values * 2 bytes/short
@@ -185,80 +223,6 @@ class Fractal(
 
         // generate texture and framebuffer objects
         GL.glGenFramebuffers(1, fboIDs)
-        GL.glGenTextures(3, texIDs)
-
-
-        
-        //======================================================================================
-        // INITIALIZE LOW-RES TEXTURE
-        //======================================================================================
-
-        // bind and set texture parameters
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[0])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-
-        // define texture specs
-        GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                GL.GL_RGBA8,                // internal format
-                bgTexWidth, bgTexHeight,    // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                GL.GL_UNSIGNED_BYTE,        // type
-                texLowResBuffer             // texture
-        )
-
-
-
-        //======================================================================================
-        // INITIALIZE HIGH-RES TEXTURE 1
-        //======================================================================================
-
-        // bind and set texture parameters
-        GL.glActiveTexture(GL.GL_TEXTURE1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[1])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-
-        // define texture specs
-        GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                GL.GL_RGBA8,                // internal format
-                texWidth, texHeight,        // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                GL.GL_UNSIGNED_BYTE,        // type
-                texHighResBuffer1           // texture
-        )
-
-
-
-        //======================================================================================
-        // INITIALIZE HIGH-RES TEXTURE 2
-        //======================================================================================
-
-        // bind and set texture parameters
-        GL.glActiveTexture(GL.GL_TEXTURE2)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texIDs[2])
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-
-        // define texture specs
-        GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                GL.GL_RGBA8,                // internal format
-                texWidth, texHeight,        // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                GL.GL_UNSIGNED_BYTE,        // type
-                texHighResBuffer2           // texture
-        )
-
 
 
 
@@ -288,6 +252,7 @@ class Fractal(
         textureTexHandle    = GL.glGetUniformLocation( texProgram, "tex"         )
 
     }
+
 
     fun splitSD(a: Double) : FloatArray {
 
@@ -331,13 +296,13 @@ class Fractal(
 
         GL.glUseProgram(program)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
-        
+
         val floatTouchPos = floatArrayOf( touchPos[0].toFloat(),     touchPos[1].toFloat()     )
         val xTouchPos = floatArrayOf( floatTouchPos[0], 0.0f )
         val yTouchPos = floatArrayOf( floatTouchPos[1], 0.0f )
 
         if (emulateQuad) {
-            
+
             val xScaleDD = (xCoordsDD[1] - xCoordsDD[0]) * DualDouble(0.5, 0.0)
             val yScaleDD = (yCoordsDD[1] - yCoordsDD[0]) * DualDouble(0.5, 0.0)
             val xOffsetDD = xCoordsDD[1] - xScaleDD
@@ -347,7 +312,7 @@ class Fractal(
 //            Log.d("TEST", "$yScaleDD")
             Log.d("TEST", "xOffsetDD: $xOffsetDD")
 //            Log.d("TEST", "$yOffsetDD")
-            
+
             val xScaleQF = splitDD(xScaleDD)
             val yScaleQF = splitDD(yScaleDD)
             val xOffsetQF = splitDD(xOffsetDD)
@@ -362,7 +327,7 @@ class Fractal(
             GL.glUniform4fv(yScaleHandle,  1,  yScaleQF,   0)
             GL.glUniform4fv(xOffsetHandle, 1,  xOffsetQF,  0)
             GL.glUniform4fv(yOffsetHandle, 1,  yOffsetQF,  0)
-            
+
         }
         else {
 
@@ -413,10 +378,10 @@ class Fractal(
                 GL.glUniform2fv(yScaleHandle,  1,  yScaleDF,   0)
                 GL.glUniform2fv(xOffsetHandle, 1,  xOffsetDF,  0)
                 GL.glUniform2fv(yOffsetHandle, 1,  yOffsetDF,  0)
-                
+
             }
             else {
-                
+
                 val xScaleSF = floatArrayOf(xScaleSD.toFloat())
                 val yScaleSF = floatArrayOf(yScaleSD.toFloat())
                 val xOffsetSF = floatArrayOf(xOffsetSD.toFloat())
@@ -428,7 +393,7 @@ class Fractal(
                 GL.glUniform1fv(yScaleHandle,  1,  yScaleSF,   0)
                 GL.glUniform1fv(xOffsetHandle, 1,  xOffsetSF,  0)
                 GL.glUniform1fv(yOffsetHandle, 1,  yOffsetSF,  0)
-                
+
             }
 
         }
@@ -445,7 +410,7 @@ class Fractal(
         // RENDER LOW-RES
         //======================================================================================
 
-        GL.glViewport(0, 0, bgTexWidth, bgTexHeight)
+        GL.glViewport(0, 0, textures[0].width, textures[0].height)
         GL.glUniform1fv(bgScaleHandle, 1, bgScale, 0)
         GL.glVertexAttribPointer(
                 viewCoordsHandle,       // index
@@ -459,7 +424,7 @@ class Fractal(
                 GL.GL_FRAMEBUFFER,              // target
                 GL.GL_COLOR_ATTACHMENT0,        // attachment
                 GL.GL_TEXTURE_2D,               // texture target
-                texIDs[0],                      // texture
+                textures[0].id,                 // texture
                 0                               // level
         )
 
@@ -545,7 +510,7 @@ class Fractal(
             // NOVEL RENDER -- TRANSLATION COMPLEMENT
             //===================================================================================
 
-            GL.glViewport(0, 0, texWidth, texHeight)
+            GL.glViewport(0, 0, textures[intIndex].width, textures[intIndex].height)
             GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
             viewChunkBuffer
                     .put(complementViewCoordsA)
@@ -562,7 +527,7 @@ class Fractal(
                     GL.GL_FRAMEBUFFER,              // target
                     GL.GL_COLOR_ATTACHMENT0,        // attachment
                     GL.GL_TEXTURE_2D,               // texture target
-                    texIDs[intHighResIndex],        // texture
+                    textures[intIndex].id,          // texture
                     0                               // level
             )
 
@@ -584,7 +549,7 @@ class Fractal(
             //===================================================================================
 
             GL.glUseProgram(texProgram)
-            GL.glViewport(0, 0, texWidth, texHeight)
+            GL.glViewport(0, 0, textures[intIndex].width, textures[intIndex].height)
 
             val intersectQuadCoords = floatArrayOf(
                     xIntersectQuadCoords[0].toFloat(),  yIntersectQuadCoords[1].toFloat(),  0.0f,     // top left
@@ -607,7 +572,7 @@ class Fractal(
 
             GL.glEnableVertexAttribArray(viewCoordsTexHandle)
             GL.glEnableVertexAttribArray(quadCoordsTexHandle)
-            GL.glUniform1i(textureTexHandle, currHighResIndex)
+            GL.glUniform1i(textureTexHandle, currIndex)
             GL.glVertexAttribPointer(
                     viewCoordsTexHandle,        // index
                     3,                          // coordinates per vertex
@@ -630,7 +595,7 @@ class Fractal(
                     GL.GL_FRAMEBUFFER,              // target
                     GL.GL_COLOR_ATTACHMENT0,        // attachment
                     GL.GL_TEXTURE_2D,               // texture target
-                    texIDs[intHighResIndex],        // texture
+                    textures[intIndex].id,          // texture
                     0                               // level
             )
 
@@ -641,9 +606,9 @@ class Fractal(
 
 
             // swap intermediate and current texture indices
-            val temp = intHighResIndex
-            intHighResIndex = currHighResIndex
-            currHighResIndex = temp
+            val temp = intIndex
+            intIndex = currIndex
+            currIndex = temp
 
 
         }
@@ -653,13 +618,13 @@ class Fractal(
             // NOVEL RENDER -- ENTIRE TEXTURE
             //===================================================================================
 
-            GL.glViewport(0, 0, texWidth, texHeight)
+            GL.glViewport(0, 0, textures[currIndex].width, textures[currIndex].height)
             GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
             GL.glFramebufferTexture2D(
                     GL.GL_FRAMEBUFFER,              // target
                     GL.GL_COLOR_ATTACHMENT0,        // attachment
                     GL.GL_TEXTURE_2D,               // texture target
-                    texIDs[currHighResIndex],       // texture
+                    textures[currIndex].id,         // texture
                     0                               // level
             )
 
@@ -782,7 +747,7 @@ class Fractal(
         // RENDER HIGH-RES
         //======================================================================================
 
-        GL.glUniform1i(textureTexHandle, currHighResIndex)
+        GL.glUniform1i(textureTexHandle, currIndex)
         GL.glVertexAttribPointer(
                 viewCoordsTexHandle,        // index
                 3,                          // coordinates per vertex
@@ -816,7 +781,7 @@ class Fractal(
 
 
 
-data class DualDouble(
+data class DualDouble (
         var hi : Double,
         var lo : Double
 ) {
@@ -1080,6 +1045,7 @@ class MainActivity : AppCompatActivity() {
 
         private var hasTranslated = false
         private var hasScaled = false
+        private val strictTranslate = { hasTranslated && !hasScaled }
 
         // complex coordinate arrays for 32/64-bit precision
         private val xCoords : DoubleArray
@@ -1358,6 +1324,11 @@ class MainActivity : AppCompatActivity() {
             quadFocus[1] = 0.0
 
         }
+
+
+
+
+
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
 
