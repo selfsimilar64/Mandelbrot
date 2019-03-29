@@ -21,6 +21,9 @@ import java.util.*
 import javax.microedition.khronos.opengles.GL10
 import java.nio.IntBuffer
 import kotlin.math.*
+import android.R.attr.x
+
+
 const val SPLIT = 8193.0
 
 
@@ -48,7 +51,7 @@ class Fractal(
     val emulateDouble = false
     val emulateQuad = false
 
-    private val numChunks = 10
+    private val numChunks = 8
     private val chunkInc : Float = 2.0f / numChunks
 
     // coordinates of default view boundaries
@@ -81,10 +84,15 @@ class Fractal(
     private val fragmentTexShader : Int
 
     // define texture resolutions
-    private val texWidth = screenWidth/4
-    private val texHeight = screenHeight/4
-    private val bgTexWidth = screenWidth/16
-    private val bgTexHeight = screenHeight/16
+    private val texWidth = screenWidth
+    private val texHeight = screenHeight
+    private val bgTexWidth = screenWidth/8
+    private val bgTexHeight = screenHeight/8
+
+//    private val texWidth = screenWidth/2
+//    private val texHeight = screenHeight/2
+//    private val bgTexWidth = 1
+//    private val bgTexHeight = 1
 
     // allocate memory for textures
     private val texLowResBuffer =
@@ -164,14 +172,10 @@ class Fractal(
 
         // create and compile shaders
         vertexShader = loadShader(GL.GL_VERTEX_SHADER, vertShaderCode)
-        fragmentShader = if (emulateQuad) {
-            loadShader(GL.GL_FRAGMENT_SHADER, fragQFShaderCode)
-        }
-        else if (emulateDouble) {
-            loadShader(GL.GL_FRAGMENT_SHADER, fragDFShaderCode)
-        }
-        else {
-            loadShader(GL.GL_FRAGMENT_SHADER, fragSFShaderCode)
+        fragmentShader = when {
+            emulateQuad -> loadShader(GL.GL_FRAGMENT_SHADER, fragQFShaderCode)
+            emulateDouble -> loadShader(GL.GL_FRAGMENT_SHADER, fragDFShaderCode)
+            else -> loadShader(GL.GL_FRAGMENT_SHADER, fragSFShaderCode)
         }
         vertexTexShader = loadShader(GL.GL_VERTEX_SHADER, vertTexShaderCode)
         fragmentTexShader = loadShader(GL.GL_FRAGMENT_SHADER, fragTexShaderCode)
@@ -339,9 +343,9 @@ class Fractal(
             val xOffsetDD = xCoordsDD[1] - xScaleDD
             val yOffsetDD = yCoordsDD[1] - yScaleDD
 
-            Log.d("TEST", "xScaleDD : $xScaleDD")
+            Log.d("TEST", "xScaleDD: $xScaleDD")
 //            Log.d("TEST", "$yScaleDD")
-//            Log.d("TEST", "$xOffsetDD")
+            Log.d("TEST", "xOffsetDD: $xOffsetDD")
 //            Log.d("TEST", "$yOffsetDD")
             
             val xScaleQF = splitDD(xScaleDD)
@@ -349,11 +353,10 @@ class Fractal(
             val xOffsetQF = splitDD(xOffsetDD)
             val yOffsetQF = splitDD(yOffsetDD)
 
-            Log.d("TEST", "xScaleQF : (${xScaleQF[0]}, ${xScaleQF[1]}, ${xScaleQF[2]}, ${xScaleQF[3]})")
-            Log.d("TEST", "${Float.MIN_VALUE}")
-//            Log.d("TEST", "${yScaleQF[0]}")
-//            Log.d("TEST", "${xOffsetQF[0]}")
-//            Log.d("TEST", "${yOffsetQF[0]}")
+            Log.d("TEST", "xScaleQF: (${xScaleQF[0]}, ${xScaleQF[1]}, ${xScaleQF[2]}, ${xScaleQF[3]})")
+            Log.d("TEST", "xScaleDD recon: (${xScaleQF[0].toDouble() + xScaleQF[1].toDouble()}, " +
+                    "${xScaleQF[2].toDouble() + xScaleQF[3].toDouble()})")
+            Log.d("TEST", "xOffsetQF: ${xOffsetQF[0]}, ${xOffsetQF[1]}, ${xOffsetQF[2]}, ${xOffsetQF[3]}")
 
             GL.glUniform4fv(xScaleHandle,  1,  xScaleQF,   0)
             GL.glUniform4fv(yScaleHandle,  1,  yScaleQF,   0)
@@ -369,13 +372,42 @@ class Fractal(
             val yOffsetSD = yCoords[1] - yScaleSD
 
             if (emulateDouble) {
-                
+
+                val shift = 1e4.toFloat()
+
+                var s = 3.043121310497554E-12
+//                s *= 100000.0
+                Log.d("TEST", "$s")
+//                Log.d("TEST", "${Float.MIN_VALUE}")
+                Log.d("TEST", "${s.toFloat().toDouble()}")
+                val t = splitSD(s)
+                Log.d("TEST", "${t[0]}, ${t[1]}")
+                Log.d("TEST", "${t[0].toDouble()}")
+                Log.d("TEST", "${t[1].toDouble()}")
+                Log.d("TEST", "${t[0].toDouble() + t[1].toDouble()}")
+
+//                Log.d("TEST", "xScaleSD: $xScaleSD")
+//                Log.d("TEST", "xOffsetSD: $xOffsetSD")
+
                 val xScaleDF = splitSD(xScaleSD)
                 val yScaleDF = splitSD(yScaleSD)
                 val xOffsetDF = splitSD(xOffsetSD)
                 val yOffsetDF = splitSD(yOffsetSD)
 
-                Log.d("TEST", "xScaleDF: (${xScaleDF[0]}, ${xScaleDF[1]})")
+//                xScaleDF[0] *= shift
+//                xScaleDF[1] *= shift
+//                yScaleDF[0] *= shift
+//                yScaleDF[1] *= shift
+//                xOffsetDF[0] *= shift
+//                xOffsetDF[1] *= shift
+//                yOffsetDF[0] *= shift
+//                yOffsetDF[1] *= shift
+
+//                Log.d("TEST", "xScaleDF: (${xScaleDF[0]}, ${xScaleDF[1]})")
+//                Log.d("TEST", "reconstructed: ${xScaleDF[0].toDouble() + xScaleDF[1].toDouble()}")
+
+//                Log.d("TEST", "xOffsetDF: (${xOffsetDF[0]}, ${xOffsetDF[1]})")
+//                Log.d("TEST", "reconstructed: ${xOffsetDF[0].toDouble() + xOffsetDF[1].toDouble()}")
 
                 GL.glUniform2fv(xScaleHandle,  1,  xScaleDF,   0)
                 GL.glUniform2fv(yScaleHandle,  1,  yScaleDF,   0)
@@ -789,6 +821,10 @@ data class DualDouble(
         var lo : Double
 ) {
 
+    override fun toString() : String {
+        return "{$hi + $lo}"
+    }
+
     private fun quickTwoSum(a: Double, b: Double) : DualDouble {
         val s = a + b
         val e = b - (s - a)
@@ -835,12 +871,22 @@ data class DualDouble(
         return plus(b.unaryMinus())
     }
 
-    operator fun times(b: DualDouble): DualDouble {
+    operator fun times(b: DualDouble) : DualDouble {
         var p = twoProd(hi, b.hi)
         p.lo += hi * b.lo
         p.lo += lo * b.hi
         p = quickTwoSum(p.hi, p.lo)
         return p
+    }
+
+    operator fun div(b: DualDouble) : DualDouble {
+
+        val xn = 1.0 / b.hi
+        val yn = hi * xn
+        val diff = minus(b*DualDouble(yn, 0.0))
+        val prod = twoProd(xn, diff.hi)
+        return DualDouble(yn, 0.0) + prod
+
     }
 
 }
@@ -1072,9 +1118,37 @@ class MainActivity : AppCompatActivity() {
 
             xCoords = doubleArrayOf(-2.5, 1.0)
             yCoords = doubleArrayOf(-1.75/ratio, 1.75/ratio)
-            xCoordsDD = arrayOf(DualDouble(-2.5, 0.0), DualDouble(1.0, 0.0))
-            yCoordsDD = arrayOf(DualDouble(-1.75/ratio, 0.0), DualDouble(1.75/ratio, 0.0))
-//            xCoords = doubleArrayOf(-1.75, 1.75)
+
+//            xCoordsDD = arrayOf(DualDouble(-2.5, 0.0), DualDouble(1.0, 0.0))
+//            yCoordsDD = arrayOf(DualDouble(-1.75/ratio, 0.0), DualDouble(1.75/ratio, 0.0))
+
+            xCoordsDD = arrayOf(
+                    DualDouble(0.37920827401670115, -1.6967977976103588E-17),
+                    DualDouble(0.37920827401676893, 2.0161868017805913E-17)
+            )
+            yCoordsDD = arrayOf(
+                    DualDouble(-0.5799286539791223, -4.092538660706216E-17),
+                    DualDouble(-0.5799286539790097, 3.2781664231013985E-17)
+            )
+
+//            xCoordsDD = arrayOf(
+//                    DualDouble(0.37920827401673174, 4.245500306531286E-18),
+//                    DualDouble(0.3792082740167318, -1.3333004058041256E-17)
+//            )
+//            yCoordsDD = arrayOf(
+//                    DualDouble(-0.5799286539790858, -8.276014005478715E-18),
+//                    DualDouble(-0.5799286539790858, 5.473432876437022E-17)
+//            )
+
+//            xCoordsDD = arrayOf(
+//                    DualDouble(0.37920827401673174, 2.5350208785805713E-17),
+//                    DualDouble(0.37920827401673174, 2.5350208786035614E-17)
+//            )
+//            yCoordsDD = arrayOf(
+//                    DualDouble(-0.5799286539790858, 2.220455155376108E-17),
+//                    DualDouble(-0.5799286539790858, 2.2204551554142982E-17)
+//            )
+
 
         }
 
@@ -1084,11 +1158,11 @@ class MainActivity : AppCompatActivity() {
             var dPos : DoubleArray
 
             if (f.emulateQuad) {
-                dPos = doubleArrayOf(
-                        (dScreenPos[0] / screenRes[0]).toDouble() * (xCoordsDD[1].hi - xCoordsDD[0].hi),
-                        (dScreenPos[1] / screenRes[1]).toDouble() * (yCoordsDD[1].hi - yCoordsDD[0].hi)
+                val dPosDD = arrayOf(
+                        DualDouble((dScreenPos[0].toDouble() / screenRes[0]), 0.0) * (xCoordsDD[1] - xCoordsDD[0]),
+                        DualDouble((dScreenPos[1].toDouble() / screenRes[1]), 0.0) * (yCoordsDD[1] - yCoordsDD[0])
                 )
-                val dPosDD = arrayOf(DualDouble(dPos[0], 0.0), DualDouble(dPos[1], 0.0))
+//                val dPosDD = arrayOf(DualDouble(dPos[0], 0.0), DualDouble(dPos[1], 0.0))
                 xCoordsDD[0] -= dPosDD[0]
                 xCoordsDD[1] -= dPosDD[0]
                 yCoordsDD[0] += dPosDD[1]
@@ -1140,20 +1214,20 @@ class MainActivity : AppCompatActivity() {
             // update complex coordinates
             // convert focus coordinates from screen space to complex space
             val prop = doubleArrayOf(
-                    (screenFocus[0] / screenRes[0]).toDouble(),
-                    (screenFocus[1] / screenRes[1]).toDouble()
+                    screenFocus[0].toDouble() / screenRes[0],
+                    screenFocus[1].toDouble() / screenRes[1]
             )
             val focus : DoubleArray
 
             //// Log.d("SCALE", "dScale: $dScale,  focus: (${focus[0]}, ${focus[1]})")
 
             if (f.emulateQuad) {
-                focus = doubleArrayOf(
-                        xCoordsDD[0].hi*(1 - prop[0]) + prop[0]*xCoordsDD[1].hi,
-                        yCoordsDD[1].hi*(1 - prop[1]) + prop[1]*yCoordsDD[0].hi
+                val focusDD = arrayOf(
+                        DualDouble(prop[0], 0.0)*(xCoordsDD[1] - xCoordsDD[0]) + xCoordsDD[0],
+                        DualDouble(prop[1], 0.0)*(yCoordsDD[0] - yCoordsDD[1]) + yCoordsDD[1]
                 )
-                val focusDD = arrayOf(DualDouble(focus[0], 0.0), DualDouble(focus[1], 0.0))
-                val dScaleDD = DualDouble(1.0/dScale, 0.0)
+//                val focusDD = arrayOf(DualDouble(focus[0], 0.0), DualDouble(focus[1], 0.0))
+                val dScaleDD = DualDouble(1.0/dScale.toDouble(), 0.0)
                 
                 // translate focus to origin in complex coordinates
                 xCoordsDD[0] -= focusDD[0]
@@ -1175,8 +1249,8 @@ class MainActivity : AppCompatActivity() {
             }
             else {
                 focus = doubleArrayOf(
-                        xCoords[0]*(1 - prop[0]) + prop[0]*xCoords[1],
-                        yCoords[1]*(1 - prop[1]) + prop[1]*yCoords[0]
+                        xCoords[0]*(1.0 - prop[0]) + prop[0]*xCoords[1],
+                        yCoords[1]*(1.0 - prop[1]) + prop[1]*yCoords[0]
                 )
 
                 // translate focus to origin in complex coordinates
@@ -1208,8 +1282,8 @@ class MainActivity : AppCompatActivity() {
                 )
 
                 // half magic
-                quadFocus[0] = (xQuadCoords[0] - quadFocus[0])*(1 - quadProp[0]) + quadProp[0]*(xQuadCoords[1] - quadFocus[0])
-                quadFocus[1] = (yQuadCoords[1] - quadFocus[1])*(1 - quadProp[1]) + quadProp[1]*(yQuadCoords[0] - quadFocus[1])
+                quadFocus[0] = (xQuadCoords[0] - quadFocus[0])*(1.0 - quadProp[0]) + quadProp[0]*(xQuadCoords[1] - quadFocus[0])
+                quadFocus[1] = (yQuadCoords[1] - quadFocus[1])*(1.0 - quadProp[1]) + quadProp[1]*(yQuadCoords[0] - quadFocus[1])
                 newQuadFocus = false
             }
 
@@ -1337,6 +1411,15 @@ class MainActivity : AppCompatActivity() {
                 hasScaled = false
                 resetQuadCoords()
 
+                if (f.emulateQuad) {
+                    Log.d("COORDS", "xCoordsDD: (${xCoordsDD[0]}, ${xCoordsDD[1]})")
+                    Log.d("COORDS", "yCoordsDD: (${yCoordsDD[0]}, ${yCoordsDD[1]})")
+                }
+                else {
+                    Log.d("COORDS", "xCoords: (${xCoords[0]}, ${xCoords[1]})")
+                    Log.d("COORDS", "yCoords: (${yCoords[0]}, ${yCoords[1]})")
+                }
+
             }
 
             // render from texture
@@ -1392,6 +1475,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
+        maxIterBar.progress = 25
         maxIterBar.layoutParams = LP(LP.MATCH_PARENT, LP.WRAP_CONTENT, Gravity.BOTTOM)
         addContentView(maxIterBar, maxIterBar.layoutParams)
         maxIterBar.bringToFront()
