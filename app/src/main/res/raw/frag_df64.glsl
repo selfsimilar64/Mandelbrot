@@ -1,6 +1,9 @@
 #version 320 es
 #define SPLIT 8193.
-#define R 10000.
+#define Sn 1e-10
+#define Sp 1e10
+#define Sh 1e-5
+#define R 1e14
 
 precision highp float;
 uniform int maxIter;
@@ -17,6 +20,8 @@ out vec4 fragmentColor;
 
 
 
+// == UTILITY FUNCTIONS ===========================================================================
+
 vec2 quickTwoSum(float a, float b) {
     float s = a + b;
     float e = b - (s - a);
@@ -30,16 +35,41 @@ vec2 twoSum(float a, float b) {
     return vec2(s, e);
 }
 
-vec2 add(vec2 a, vec2 b) {
-    vec2 s;
-    vec2 t;
-    s = twoSum(a.x, b.x);
-    t = twoSum(a.y, b.y);
-    s.y += t.x;
-    s = quickTwoSum(s.x, s.y);
-    s.y += t.y;
-    s = quickTwoSum(s.x, s.y);
-    return s;
+vec3 threeSum(float a, float b, float c) {
+
+    vec2 tmp;
+    vec3 res = vec3(0.0);
+    float t1, t2, t3;
+    tmp = twoSum(a, b);
+    t1 = tmp.x;
+    t2 = tmp.y;
+
+    tmp = twoSum(c, t1);
+    res.x = tmp.x;
+    t3 = tmp.y;
+
+    tmp = twoSum(t2, t3);
+    res.y = tmp.x;
+    res.z = tmp.y;
+
+    return res;
+
+}
+
+vec3 threeSumTwo(float a, float b, float c) {
+    vec2 tmp;
+    vec3 res = vec3(0.0);
+    float t1, t2, t3;
+    tmp = twoSum(a, b);
+    t1 = tmp.x;
+    t2 = tmp.y;
+
+    tmp = twoSum(c, t1);
+    res.x = tmp.x;
+    t3 = tmp.y;
+
+    res.y = t2 + t3;
+    return res;
 }
 
 vec2 split(float a) {
@@ -57,6 +87,30 @@ vec2 twoProd(float a, float b) {
     return vec2(p, err);
 }
 
+vec2 twoSqr(float a) {
+    float p = a*a;
+    vec2 s = split(a);
+    float e = ((s.x*s.x - p) + 2.0*s.x*s.y) + s.y*s.y;
+    return vec2(p, e);
+}
+
+
+
+
+// == DUAL-FLOAT ARITHMETIC =======================================================================
+
+vec2 add(vec2 a, vec2 b) {
+    vec2 s;
+    vec2 t;
+    s = twoSum(a.x, b.x);
+    t = twoSum(a.y, b.y);
+    s.y += t.x;
+    s = quickTwoSum(s.x, s.y);
+    s.y += t.y;
+    s = quickTwoSum(s.x, s.y);
+    return s;
+}
+
 vec2 mult(vec2 a, vec2 b) {
     vec2 p;
     p = twoProd(a.x, b.x);
@@ -64,13 +118,6 @@ vec2 mult(vec2 a, vec2 b) {
     p.y += a.y * b.x;
     p = quickTwoSum(p.x, p.y);
     return p;
-}
-
-vec2 twoSqr(float a) {
-    float p = a*a;
-    vec2 s = split(a);
-    float e = ((s.x*s.x - p) + 2.0*s.x*s.y) + s.y*s.y;
-    return vec2(p, e);
 }
 
 vec2 sqr(vec2 a) {
@@ -81,26 +128,55 @@ vec2 sqr(vec2 a) {
     return p;
 }
 
-bool gt(vec2 a, vec2 b) {
-    return (a.x > b.x || (a.x == b.x && a.y > b.y));
-}
-
 vec2 mandelbrot_x(vec2 X, vec2 Y, vec2 xC) {
     return add(add(sqr(X), -sqr(Y)), xC);
 }
 
 vec2 mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
     vec2 T = mult(X, Y);
-    return add(add(T, T), yC);
+    return add(mult(vec2(2.0, 0.0), T), yC);
 }
 
-vec2 perp_mandelbrot_y(vec2 X, vec2 Y, vec2 yC) {
-    vec2 T = mult(vec2(abs(X.x), abs(X.y)), Y);
-    return add(-add(T, T), yC);
+vec2 sqrtDF(vec2 a) {
+
+    float xn = 1.0/sqrt(a.x);
+    float yn = a.x*xn;
+    vec2 ynSqr = sqr(vec2(yn, 0.0));
+
+    float diff = (add(a, -ynSqr)).x;
+    vec2 prod = mult(twoProd(xn, diff), vec2(0.5, 0.0));
+
+    return add(vec2(yn, 0.0), prod);
+
+}
+
+vec2 divDF(vec2 a, vec2 b) {
+
+    float xn = 1.0/b.x;
+    float yn = a.x*xn;
+    float diff = add(a, -mult(b, vec2(yn, 0.0))).x;
+    vec2 prod = twoProd(xn, diff);
+    return add(vec2(yn, 0.0), prod);
+
 }
 
 vec2 modSqrDF(vec2 X, vec2 Y) {
-    return add(sqr(X), sqr(Y));
+        return add(sqr(X), sqr(Y));
+//    return mult(sqr(X), add(vec2(1.0, 0.0), sqr(divDF(Y, X))));
+}
+
+vec2 modDF(vec2 a, vec2 b) {
+//    return vec2(sqrt(modSqrDF(a, b).x), 0.0);
+    return sqrtDF(modSqrDF(a, b));
+}
+
+vec2 modDF2(vec2 a, vec2 b) {
+    return mult(a, sqrtDF(add(vec2(1.0, 0.0), sqr(divDF(b, a)))));
+}
+
+vec2 absDF(vec2 a) {
+    if (a.x < 0.0) { return -a; }
+    else { return a; }
 }
 
 vec4 cMultDF(vec2 X, vec2 Y, vec2 A, vec2 B) {
@@ -115,6 +191,249 @@ vec4 cMultDF(vec2 X, vec2 Y, vec2 A, vec2 B) {
 }
 
 
+
+
+// == QUAD-FLOAT ARITHMETIC =======================================================================
+
+vec4 renorm(float c0, float c1, float c2, float c3, float c4) {
+
+    float s0, s1, s2 = 0.0, s3 = 0.0;
+    vec2 tmp;
+
+    tmp = quickTwoSum(c3, c4);
+    s0 = tmp.x;
+    c4 = tmp.y;
+
+    tmp = quickTwoSum(c2, s0);
+    s0 = tmp.x;
+    c3 = tmp.y;
+
+    tmp = quickTwoSum(c1, s0);
+    s0 = tmp.x;
+    c2 = tmp.y;
+
+    tmp = quickTwoSum(c0, s0);
+    c0 = tmp.x;
+    c1 = tmp.y;
+
+    s0 = c0;
+    s1 = c1;
+
+    tmp = quickTwoSum(c0, c1);
+    s0 = tmp.x;
+    s1 = tmp.y;
+
+    if (s1 != 0.0) {
+        tmp = quickTwoSum(s1, c2);
+        s1 = tmp.x;
+        s2 = tmp.y;
+
+        if (s2 != 0.0) {
+            tmp = quickTwoSum(s2, c3);
+            s2 = tmp.x;
+            s3 = tmp.y;
+            if (s3 != 0.0) { s3 += c4; }
+            else { s2 += c4; }
+        }
+        else {
+            tmp = quickTwoSum(s1, c3);
+            s1 = tmp.x;
+            s2 = tmp.y;
+            if (s2 != 0.0) {
+                tmp = quickTwoSum(s2, c4);
+                s2 = tmp.x;
+                s3 = tmp.y;
+            }
+            else {
+                tmp = quickTwoSum(s1, c4);
+                s1 = tmp.x;
+                s2 = tmp.y;
+            }
+        }
+    }
+    else {
+        tmp = quickTwoSum(s0, c2);
+        s0 = tmp.x;
+        s1 = tmp.y;
+        if (s1 != 0.0) {
+            tmp = quickTwoSum(s1, c3);
+            s1 = tmp.x;
+            s2 = tmp.y;
+            if (s2 != 0.0) {
+                tmp = quickTwoSum(s2, c4);
+                s2 = tmp.x;
+                s3 = tmp.y;
+            }
+            else {
+                tmp = quickTwoSum(s1, c4);
+                s1 = tmp.x;
+                s2 = tmp.y;
+            }
+        }
+        else {
+            tmp = quickTwoSum(s0, c3);
+            s0 = tmp.x;
+            s1 = tmp.y;
+            if (s1 != 0.0) {
+                tmp = quickTwoSum(s1, c4);
+                s1 = tmp.x;
+                s2 = tmp.y;
+            }
+            else {
+                tmp = quickTwoSum(s0, c4);
+                s0 = tmp.x;
+                s1 = tmp.y;
+            }
+        }
+    }
+
+    return vec4(s0, s1, s2, s3);
+
+}
+
+vec4 addQF(vec4 a, vec4 b) {
+    float s0, s1, s2, s3;
+    float t0, t1, t2, t3;
+
+    float v0, v1, v2, v3;
+    float u0, u1, u2, u3;
+    float w0, w1, w2, w3;
+
+    vec2 tmp;
+    vec3 tmp3;
+
+    s0 = a.x + b.x;
+    s1 = a.y + b.y;
+    s2 = a.z + b.z;
+    s3 = a.w + b.w;
+
+    v0 = s0 - a.x;
+    v1 = s1 - a.y;
+    v2 = s2 - a.z;
+    v3 = s3 - a.w;
+
+    u0 = s0 - v0;
+    u1 = s1 - v1;
+    u2 = s2 - v2;
+    u3 = s3 - v3;
+
+    w0 = a.x - u0;
+    w1 = a.y - u1;
+    w2 = a.z - u2;
+    w3 = a.w - u3;
+
+    u0 = b.x - v0;
+    u1 = b.y - v1;
+    u2 = b.z - v2;
+    u3 = b.w - v3;
+
+    t0 = w0 + u0;
+    t1 = w1 + u1;
+    t2 = w2 + u2;
+    t3 = w3 + u3;
+
+    tmp = twoSum(s1, t0);
+    s1 = tmp.x;
+    t0 = tmp.y;
+
+    tmp3 = threeSum(s2, t0, t1);
+    s2 = tmp3.x;
+    t0 = tmp3.y;
+    t1 = tmp3.z;
+
+    tmp3 = threeSumTwo(s3, t0, t2);
+    s3 = tmp3.x;
+    t0 = tmp3.y;
+    t2 = tmp3.z;
+
+    t0 = t0 + t1 + t3;
+
+    return renorm(s0, s1, s2, s3, t0);
+}
+
+
+
+
+// == SHIFTED DUAL-FLOAT ARITHMETIC ===============================================================
+
+float _m(float _a, float _b) {
+    return (_a*_b) * Sp;
+}
+
+vec2 _twoProd(float _a, float _b) {
+    float _p = _m(_a, _b);
+    vec2 _aS = split(_a);
+    vec2 _bS = split(_b);
+    float _e = ((_m(_aS.x, _bS.x) - _p) + _m(_aS.x, _bS.y) + _m(_aS.y, _bS.x)) + _m(_aS.y, _bS.y);
+    return vec2(_p, _e);
+}
+
+vec2 _mult(vec2 _a, vec2 _b) {
+    vec2 _p = _twoProd(_a.x, _b.x);
+    _p.y += _m(_a.x, _b.y);
+    _p.y += _m(_a.y, _b.x);
+    _p = quickTwoSum(_p.x, _p.y);
+    return _p;
+}
+
+vec2 _twoSqr(float _a) {
+    float _p = _m(_a, _a);
+    vec2 _s = split(_a);
+    float _e = ((_m(_s.x, _s.x) - _p) + 2.0*_m(_s.x, _s.y)) + _m(_s.y, _s.y);
+    return vec2(_p, _e);
+}
+
+vec2 _sqr(vec2 _a) {
+    vec2 _p = _twoSqr(_a.x);
+    _p.y += 2.0*_m(_a.x, _a.y);
+    _p = quickTwoSum(_p.x, _p.y);
+    return _p;
+}
+
+vec2 _divDF(vec2 _a, vec2 _b) {
+
+    float _xn = (1.0/_b.x) * Sn * Sn;
+    float _yn = _m(_a.x, _xn);
+    float _diff = add(_a, -_mult(_b, vec2(_yn, 0.0))).x;
+    vec2 _prod = _twoProd(_xn, _diff);
+    return add(vec2(_yn, 0.0), _prod);
+
+}
+
+vec2 _modSqrDF(vec2 _X, vec2 _Y) {
+    return add(_sqr(_X), _sqr(_Y));
+}
+
+vec2 _sqrtDF(vec2 _a) {
+
+    float _xn = (1.0/(sqrt(_a.x) * Sh)) * Sn * Sn;
+    float _yn = _m(_a.x, _xn);
+    vec2 _ynSqr = _sqr(vec2(_yn, 0.0));
+
+    float _diff = (add(_a, -_ynSqr)).x;
+    vec2 prod = mult(_twoProd(_xn, _diff), vec2(0.5, 0.0));     // change to _mult?
+
+    return add(vec2(_yn, 0.0), prod);
+
+}
+
+vec2 _modDF(vec2 _a, vec2 _b) {
+    return _sqrtDF(_modSqrDF(_a, _b));
+}
+
+vec2 _mandelbrot_x(vec2 _X, vec2 _Y, vec2 _xC) {
+    return add(add(_sqr(_X), -_sqr(_Y)), _xC);
+}
+
+vec2 _mandelbrot_y(vec2 _X, vec2 _Y, vec2 _yC) {
+    vec2 _T = _mult(_X, _Y);
+    return add(add(_T, _T), _yC);
+}
+
+
+
+
+// == COMPLEX ARITHMETIC ==========================================================================
 
 vec2 conj(vec2 p) {
     return vec2(p.x, -p.y);
@@ -138,35 +457,52 @@ float modulus(vec2 p) {
 
 
 
-void main() {
 
-//    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);
+
+
+
+
+void main() {
 
     // use mandelbrot C components
     vec2 xC = add(mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
     vec2 yC = add(mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
+
+    vec2 _xC = xC * Sn;
+    vec2 _yC = yC * Sn;
+
+    vec2 MODC = modDF(xC, yC);
+    vec2 _MODC = _modDF(_xC, _yC);
 
     // use julia C components
 //    vec2 xC = xTouchPos;
 //    vec2 yC = yTouchPos;
 
     // use mandelbrot Z components
-    vec2 X = vec2(0.0);
-    vec2 Y = vec2(0.0);
+    vec2 X, Y = vec2(0.0);
+    vec2 _X, _Y = vec2(0.0);
+    vec2 X_prev, Y_prev = vec2(0.0);
+    vec2 _X_prev, _Y_prev = vec2(0.0);
     vec2 Y_temp;
+    vec2 MODZ, MODSQRZ, MODSQRZ_prev = vec2(0.);
+    vec2 _MODZ, _MODSQRZ, _MODSQRZ_prev = vec2(0.);
+    vec2 sum, sum_prev = vec2(0.0);
+    vec2 _sum = vec2(0.0);
 
     // use julia Z components
 //    vec2 X = add(mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
 //    vec2 Y = add(mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
 
 
-
     float num_colors = 5.0;
     float cmap_cycles = 3.0;
-    vec2 MOD2 = vec2(0.0);
+
     vec2 lightPos = vec2(1.0);
     float height = 1.25;
 
+
+    float il = 1.0/log(2.0);
+    float lp = log(log(R)/2.0);
 
 
     vec2 X1, X2, X3, X4, X5, X6, X7, X8 = vec2(0.0);
@@ -206,7 +542,7 @@ void main() {
     vec3 c5 = purple * 0.5;
     vec3 c6 = vec3(0.8, 0.2, 0.2);
 
-    for (int i = 0; i < maxIter; i++) {
+    for (int n = 0; n < maxIter; n++) {
 
         // iterate second derivative
         b = 2.0*(cMultSF(b, vec2(X.x, Y.x)) + cMultSF(a, a));
@@ -219,152 +555,241 @@ void main() {
 
 
         // cycle previous values
-        X8 = X7;
-        Y8 = Y7;
+//        X8 = X7;
+//        Y8 = Y7;
+//
+//        X7 = X6;
+//        Y7 = Y6;
+//
+//        X6 = X5;
+//        Y6 = Y5;
+//
+//        X5 = X4;
+//        Y5 = Y4;
+//
+//        X4 = X3;
+//        Y4 = Y3;
+//
+//        X3 = X2;
+//        Y3 = Y2;
+//
+//        X2 = X1;
+//        Y2 = Y1;
+//
+//        X1 = X;
+//        Y1 = Y;
 
-        X7 = X6;
-        Y7 = Y6;
-
-        X6 = X5;
-        Y6 = Y5;
-
-        X5 = X4;
-        Y5 = Y4;
-
-        X4 = X3;
-        Y4 = Y3;
-
-        X3 = X2;
-        Y3 = Y2;
-
-        X2 = X1;
-        Y2 = Y1;
-
-        X1 = X;
-        Y1 = Y;
 
 
+        X_prev = X;
+        Y_prev = Y;
 
+        _X_prev = _X;
+        _Y_prev = _Y;
+
+        MODSQRZ_prev = MODSQRZ;
+        _MODSQRZ_prev = _MODSQRZ;
 
         // iterate z
         Y_temp = mandelbrot_y(X, Y, yC);
         X = mandelbrot_x(X, Y, xC);
         Y = Y_temp;
 
+        Y_temp = _mandelbrot_y(_X, _Y, _yC);
+        _X = _mandelbrot_x(_X, _Y, _xC);
+        _Y = Y_temp;
 
+        MODSQRZ = modSqrDF(X, Y);
+        MODZ = modDF(X, Y);
 
-        XY1e = abs(X.x - X1.x) + abs(X.y - X1.y) + abs(Y.x - Y1.x) + abs(Y.y - Y1.y);
-        XY2e = abs(X.x - X2.x) + abs(X.y - X2.y) + abs(Y.x - Y2.x) + abs(Y.y - Y2.y);
-        XY3e = abs(X.x - X3.x) + abs(X.y - X3.y) + abs(Y.x - Y3.x) + abs(Y.y - Y3.y);
-        XY4e = abs(X.x - X4.x) + abs(X.y - X4.y) + abs(Y.x - Y4.x) + abs(Y.y - Y4.y);
-        XY5e = abs(X.x - X5.x) + abs(X.y - X5.y) + abs(Y.x - Y5.x) + abs(Y.y - Y5.y);
-        XY6e = abs(X.x - X6.x) + abs(X.y - X6.y) + abs(Y.x - Y6.x) + abs(Y.y - Y6.y);
-        XY7e = abs(X.x - X7.x) + abs(X.y - X7.y) + abs(Y.x - Y7.x) + abs(Y.y - Y7.y);
-        XY8e = abs(X.x - X8.x) + abs(X.y - X8.y) + abs(Y.x - Y8.x) + abs(Y.y - Y8.y);
+        _MODSQRZ = _modSqrDF(_X, _Y);
+        _MODZ = _modDF(_X, _Y);
 
-        if (i > 8) {
-        // check for periodicity
-            if (XY1e < eps) {
-                period = 1;
-                repeat = true;
-            }
-            if (XY2e < eps) {
-                period = 2;
-                repeat = true;
-            }
-            if (XY3e < eps) {
-                period = 3;
-                repeat = true;
-            }
-            if (XY4e < eps) {
-                period = 4;
-                repeat = true;
-            }
-            if (XY5e < eps) {
-                period = 5;
-                repeat = true;
-            }
-            if (XY6e < eps) {
-                period = 6;
-                repeat = true;
-            }
-            if (XY7e < eps) {
-                period = 7;
-                repeat = true;
-            }
-            if (XY8e < eps) {
-                period = 8;
-                repeat = true;
-            }
-        }
-
-        if (repeat) {
-            // color = vec3(float(i)/float(maxIter));
-            // color = vec3(1.0, 0.0, 1.0);
-            color = vec3(0.0);
-            break;
-        }
+//        XY1e = abs(X.x - X1.x) + abs(X.y - X1.y) + abs(Y.x - Y1.x) + abs(Y.y - Y1.y);
+//        XY2e = abs(X.x - X2.x) + abs(X.y - X2.y) + abs(Y.x - Y2.x) + abs(Y.y - Y2.y);
+//        XY3e = abs(X.x - X3.x) + abs(X.y - X3.y) + abs(Y.x - Y3.x) + abs(Y.y - Y3.y);
+//        XY4e = abs(X.x - X4.x) + abs(X.y - X4.y) + abs(Y.x - Y4.x) + abs(Y.y - Y4.y);
+//        XY5e = abs(X.x - X5.x) + abs(X.y - X5.y) + abs(Y.x - Y5.x) + abs(Y.y - Y5.y);
+//        XY6e = abs(X.x - X6.x) + abs(X.y - X6.y) + abs(Y.x - Y6.x) + abs(Y.y - Y6.y);
+//        XY7e = abs(X.x - X7.x) + abs(X.y - X7.y) + abs(Y.x - Y7.x) + abs(Y.y - Y7.y);
+//        XY8e = abs(X.x - X8.x) + abs(X.y - X8.y) + abs(Y.x - Y8.x) + abs(Y.y - Y8.y);
+//
+//        if (n > 8) {
+//        // check for periodicity
+//            if (XY1e < eps) {
+//                period = 1;
+//                repeat = true;
+//            }
+//            if (XY2e < eps) {
+//                period = 2;
+//                repeat = true;
+//            }
+//            if (XY3e < eps) {
+//                period = 3;
+//                repeat = true;
+//            }
+//            if (XY4e < eps) {
+//                period = 4;
+//                repeat = true;
+//            }
+//            if (XY5e < eps) {
+//                period = 5;
+//                repeat = true;
+//            }
+//            if (XY6e < eps) {
+//                period = 6;
+//                repeat = true;
+//            }
+//            if (XY7e < eps) {
+//                period = 7;
+//                repeat = true;
+//            }
+//            if (XY8e < eps) {
+//                period = 8;
+//                repeat = true;
+//            }
+//        }
+//
+//        if (repeat) {
+//            // color = vec3(float(i)/float(maxIter));
+//            // color = vec3(1.0, 0.0, 1.0);
+//            color = vec3(0.0);
+//            break;
+//        }
 
 
 
 
         // check for escape
-        MOD2 = modSqrDF(X, Y);
-        if (gt(MOD2, vec2(R, 0.0))) {
+        if (MODZ.x > R || isinf(X.x*X.x) || isinf(Y.x*Y.x) || isinf(X.x*X.x + Y.x*Y.x)) {
 
             // normal calculation
-            float lo = 0.5*log(MOD2.x);
-            vec2 Zf = vec2(X.x, Y.x);
-            u = cMultSF(  cMultSF(Zf, a), (1.0 + lo)*conj(cMultSF(a, a)) - lo*conj(cMultSF(Zf, b))  );
-            u = div(Zf, a);
-            u = u/modulus(u);
+//            vec2 Zf = vec2(X.x, Y.x);
+//            u = div(Zf, a);
+//            u = u/modulus(u);
 
             // calculate rays for lighting calculations
-            vec3 normRay = vec3(u.x, u.y, 1.0);
-            normRay = normRay / length(normRay);
-            vec3 lightRay = vec3(lightPos.x, lightPos.y, height);
-            lightRay = lightRay / length(lightRay);
-            vec3 viewRay = vec3(0.0, 0.0, 1.0);
-            vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
+//            vec3 normRay = vec3(u.x, u.y, 1.0);
+//            normRay = normRay / length(normRay);
+//            vec3 lightRay = vec3(lightPos.x, lightPos.y, height);
+//            lightRay = lightRay / length(lightRay);
+//            vec3 viewRay = vec3(0.0, 0.0, 1.0);
+//            vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
 
             // calculate lighting components
-            float diffuse = dot(normRay, lightRay);
-            diffuse = diffuse/(1.0 + height);
-            if (diffuse < 0.0) { diffuse = 0.0; }
-            float specular = pow(dot(reflectRay, viewRay), 1.5);
-            if (specular < 0.0) { specular = 0.0; }
+//            float diffuse = dot(normRay, lightRay);
+//            diffuse = diffuse/(1.0 + height);
+//            if (diffuse < 0.0) { diffuse = 0.0; }
+//            float specular = pow(dot(reflectRay, viewRay), 1.5);
+//            if (specular < 0.0) { specular = 0.0; }
+
+
+
+
+            sum = mult(sum, vec2(1.0/(float(n) - 1.0), 0.0));
+            sum_prev = mult(sum_prev, vec2(1.0/(float(n) - 2.0), 0.0));
+            float s = il*lp - il*log(log(modDF(X_prev, Y_prev).x));
+            float r = sum_prev.x + (sum.x - sum_prev.x)*(s + 1.0);
+
+            //            _sum = mult(_sum, vec2(1.0/(float(n) - 1.0), 0.0));
+
+            //            color = vec3((s + 1.0)*(sum.x + sum.y));
+
+
 
 
             // normalized values -- finite cycles
+//            float p = float(n)/float(maxIter) + 1.0;
 //             float m = cmap_cycles*num_colors*(float(i)-log(0.5*log(MOD2.x))/log(2.0))/float(maxIter);
+//            float p = (float(n) - log(0.25*log(MODSQRZ_prev.x))/log(2.0)) / float(maxIter);
 //             float n = m - (num_colors * floor(m/num_colors));
 
             // unnormalized values -- infinite cycles
-            float m = float(i)-log(0.5*log(MOD2.x))/log(2.0);
+//            float p = float(n)-log(0.25*log(MODSQRZ_prev.x))/log(2.0);
+//            float p = float(n) + 1.0 + 1.0/log(2.0)*log(log(R)/log(MODZ.x));
 //            float n = float(num_colors)/2.0*(cos(m/14.0) + 1.0);
-            float n = float(num_colors)/2.0*(cos(2.0*pow(m + 5.0, 0.4) -  0.3) + 1.0);
+//            float q = num_colors*0.5*(cos(2.0*pow(p + 5.0, 0.4) -  0.3) + 1.0);
+            float q = r*num_colors;
 
-            if      (n >= 0.0 && n < 1.0) {  color = (1.0-n) * c1   +   (n)     * c2;  }
-            else if (n >= 1.0 && n < 2.0) {  color = (2.0-n) * c2   +   (n-1.0) * c3;  }
-            else if (n >= 2.0 && n < 3.0) {  color = (3.0-n) * c3   +   (n-2.0) * c4;  }
-            else if (n >= 3.0 && n < 4.0) {  color = (4.0-n) * c4   +   (n-3.0) * c5;  }
-            else if (n >= 4.0 && n < 5.0) {  color = (5.0-n) * c5   +   (n-4.0) * c1;  }
-//            else if (n >= 5.0 && n < 6.0) {  color = (6.0-n) * c6   +   (n-5.0) * c1;  }
+//            if      (q >= 0.0 && q < 1.0) {  color = (1.0-q) * c1   +   (q)     * c2;  }
+//            else if (q >= 1.0 && q < 2.0) {  color = (2.0-q) * c2   +   (q-1.0) * c3;  }
+//            else if (q >= 2.0 && q < 3.0) {  color = (3.0-q) * c3   +   (q-2.0) * c4;  }
+//            else if (q >= 3.0 && q < 4.0) {  color = (4.0-q) * c4   +   (q-3.0) * c5;  }
+//            else if (q >= 4.0 && q < 5.0) {  color = (5.0-q) * c5   +   (q-4.0) * c1;  }
+//            else if (q >= 5.0 && q < 6.0) {  color = (6.0-q) * c6   +   (q-5.0) * c1;  }
 
 //            color = vec3(0.0);
 
 //            color = 2.5*(diffuse + 0.2)*color;
-            color = 1.75*(diffuse + 0.2)*color + 0.75*vec3(specular + 0.01);
+//            color = 1.75*(diffuse + 0.2)*color + 0.75*vec3(specular + 0.01);
 //            color = vec3(specular);
 
-            // float a = 0.45;
-            // float b = 0.8;
-            // float c = 0.3;
-            // color = vec3((1.0-cos(a*float(i)))/2.0, (1.0-cos(b*float(i)))/2.0, (1.0-cos(c*float(i)))/2.0);
 
+//            if (isnan(r)) { color = vec3(0.0, 0.0, 1.0); }
+//            else { color = vec3(r); }
+
+//            color *= r + 1.0;
+
+
+//            color = vec3(1.0, 0.0, 1.0);
+            
             break;
 
         }
+
+
+
+
+
+
+
+
+        if (n > 0) {
+
+            vec2 m_n = absDF(add(MODSQRZ_prev, -MODC));
+            vec2 M_n = add(MODSQRZ_prev, MODC);
+            vec2 j = add(MODZ, -m_n);
+//            vec4 j = addQF(vec4(MODZ, 0.0, 0.0), -vec4(m_n, 0.0, 0.0));
+            vec2 k = add(M_n, -m_n);
+            vec2 t = divDF(j, k);
+            sum_prev = sum;
+            sum = add(sum, t);
+
+//            vec2 m_n = abs(add(_MODSQRZ_prev, -_MODC));
+//            vec2 M_n = add(_MODSQRZ_prev, _MODC);
+//            vec2 _j = add(_MODZ, -m_n);
+//            vec2 _k = add(M_n, -m_n);
+//            vec2 _t = _divDF(_j, _k);
+//            _sum = add(_sum, _t);
+
+//            if (n == 6) {
+//                color = vec3(t.x);
+//                break;
+//            }
+
+
+//            if (n == 6) {
+//                float q = j.x;
+//                if (isnan(q)) {
+//                    color = vec3(0.0, 0.0, 1.0);
+//                }
+//                else {
+//                    color = vec3(q);
+//                }
+//                break;
+//            }
+
+//            if (n == 7) {
+//                if (isnan(X.x)) { color = vec3(0.0); }
+//                else { color = vec3(t.x); }
+//                break;
+//            }
+
+        }
+
+
+
+
 
     }
 
