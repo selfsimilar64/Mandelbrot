@@ -1,5 +1,5 @@
 #version 320 es
-#define R 1e5
+#define R 1e7
 #define pi 3.141592654
 #define Sn 1e-30
 #define Sp 1e30
@@ -17,6 +17,17 @@ uniform float yOffset;
 in vec4 viewPos;
 out vec4 fragmentColor;
 
+
+
+
+
+int factorial(int n) {
+    int prod = 1;
+    for (int i = 1; i <= n; i++) {
+        prod *= i;
+    }
+    return prod;
+}
 
 
 float _m(float _a, float _b) {
@@ -88,7 +99,7 @@ float atan2(vec2 w) {
             return pi/2.0;
         }
         else if (w.y < 0.0) {
-            return -1.0*pi/2.0;
+            return -pi/2.0;
         }
         else {
             return 0.0;
@@ -102,48 +113,98 @@ vec2 sine(vec2 z) {
     return vec2(u, v);
 }
 
+vec2 sine_series(vec2 Z, int N) {
+
+    int sign = -1;
+    vec2 Zn = Z;
+    vec2 sum = Z;
+    vec2 ZSQR = cMultSF(Z, Z);
+    for (int k = 1; k < N; k++) {
+        Zn = cMultSF(Zn, ZSQR);
+        float s = float(factorial(2*k + 1));
+        sum += float(sign) * Zn / s;
+        sign *= -1;
+    }
+
+    return sum;
+
+}
+
+vec2 cosine_series(vec2 Z, int N) {
+
+    int sign = -1;
+    vec2 sum = vec2(1.0, 0.0);
+    vec2 ZSQR = cMultSF(Z, Z);
+    vec2 Zn = vec2(1.0, 0.0);
+
+    for (int k = 1; k < N; k++) {
+        Zn = cMultSF(Zn, ZSQR);
+        float s = float(factorial(2*k));
+        sum += float(sign) * Zn / s;
+        sign *= -1;
+    }
+
+    return sum;
+
+}
+
+vec2 arctan_series(vec2 Z, int N) {
+
+    int sign = -1;
+    vec2 sum = Z;
+    vec2 ZSQR = cMultSF(Z, Z);
+    vec2 Zn = Z;
+
+    for (int k = 1; k < N; k++) {
+        Zn = cMultSF(Zn, ZSQR);
+        float s = float(2*k + 1);
+        sum += float(sign) * Zn / s;
+        sign *= -1;
+    }
+
+    return sum;
+
+}
+
 
 
 
 
 void main() {
 
-//    vec2 screenPos = 2.0*(gl_FragCoord.xy / texRes) - vec2(1.0, 1.0);    // range [-1, 1]
-
     float xC = xScale * viewPos.x + xOffset;
     float yC = yScale * viewPos.y + yOffset;
 
     vec2 C = vec2(xC, yC);
-//    vec2 _C = C * Sn;
     float CMOD = modSF(C);
-//    float _CMOD = _modSF(_C);
+
 
     // vec2 C = vec2(1.4686, 1.265);
-    // vec2 D = vec2(-0.2013, 0.5638);
-    // vec2 A = conj(C)/dot(C, C);
+//     vec2 D = vec2(-0.2013, 0.5638);
+     vec2 A = conj(C)/dot(C, C);
 
     float num_colors = 5.0;
-    float cmap_cycles = 2.0;
-    float MOD2 = 0.0;
+    float cmap_cycles = 5.0;
 
 
     float il = 1.0/log(2.0);
     float llr = log(log(R)/2.0);
 
+    float q = 0.0;
 
-    float ZMOD, Z1MODSQR;
-//    float _ZMOD, _Z1MODSQR = 0.0;
+
+    float MODZ, Z1MODSQR;
     float sum, sum2 = 0.0;
     float t = 0.0;
 
     vec2 lightPos = vec2(1.0);
     float height = 1.25;
 
-    vec2 Z, Z1 = vec2(0.);
+    vec2 Z, Z1, Z2 = vec2(0.0);
     vec2 P = vec2(0.);
-//    vec2 _Z, _Z1 = vec2(0.);
+    float xSqr, ySqr;
 
-    // vec2 Z = vec2(xC, yC);
+
     vec2 _a = vec2(0.0, 0.0);
     vec2 _b = vec2(0.0, 0.0);
     vec2 _u = vec2(0.0, 0.0);
@@ -160,19 +221,29 @@ void main() {
     vec3 darkblue =  vec3(0.0, 0.15, 0.25);
     vec3 orange   =  vec3(1.0, 0.6, 0.0);
 
-//    vec3 c1 = white;
-//    vec3 c2 = black;
+    vec3 yellowish = vec3(1.0, 0.95, 0.75);     // yellow-ish
+    vec3 darkblue2 = vec3(0.11, 0.188, 0.35);   // dark blue
+    vec3 grass = vec3(0.313, 0.53, 0.45);       // grass
 
-    vec3 c1 = vec3(0.0, 0.1, 0.2);
-    vec3 c2 = darkblue;
-    vec3 c3 = vec3(0.7);
-    vec3 c4 = vec3(0.9, 0.4, 0.2);
-    vec3 c5 = purple * 0.5;
-//    vec3 c6 = vec3(0.8, 0.2, 0.2);
+
+
+    vec3 c1 = yellowish;
+    vec3 c2 = darkblue2;
+    vec3 c3 = black;
+    vec3 c4 = 0.9*grass;
+    vec3 c5 = pink;
+
+
+//    vec3 c1 = vec3(0.0, 0.1, 0.2);
+//    vec3 c2 = darkblue;
+//    vec3 c3 = vec3(0.7);
+//    vec3 c4 = vec3(0.9, 0.4, 0.2);
+//    vec3 c5 = purple * 0.5;
 
     for (int i = 0; i < maxIter; i++) {
+
         if (i == maxIter - 1) {
-            color = black;
+            color.x = -1.0;
             break;
         }
 
@@ -184,7 +255,12 @@ void main() {
 //        _a = 2.0*cMultSF(_a, Z);
 //        _a.x = _a.x + Sn;
 
-        // iterate z
+
+        // P = 2.0*cMultSF(Z, P) + vec2(1.0, 0.0);
+        Z2 = Z1;
+        Z1 = Z;
+
+        Z = mandelbrot(Z, C);
         // Z = sine(cMultSF(Z, C))+C;
         // Z = mandelbrot(Z, C);
         // Z = cDivSF(cMultSF(Z, Z), cMultSF(D, Z) + vec2(1.0, 0.0)) + C;
@@ -193,17 +269,20 @@ void main() {
         // Z = sine(cMultSF(Z, C));
         // Z = sine(cDivSF(Z, C));
         // Z = sine(cDivSF(Z, cMultSF(C, C)));
+        // Z = sine(Z) + C;
+        // Z = sine_series(Z, 5) + C;
+        // Z = cosine_series(Z, 8) + C;
+        // Z = arctan_series(cMultSF(Z, C), 10) + C;
 
-        P = 2.0*cMultSF(Z, P) + vec2(1.0, 0.0);
-        Z1 = Z;
-        Z = mandelbrot(Z, C);
-        ZMOD = modSF(Z);
+        MODZ = modSF(Z);
 
 
+//        xSqr = Z.x*Z.x;
+//        ySqr = Z.y*Z.y;
 
-        // vec2 T = conj(Z)/modSF(Z);
-        // MOD2 = dot(T, T);
-        if (ZMOD > R || isinf(Z.x*Z.x) || isinf(Z.y*Z.y)) {
+
+//        if (MODZ > R || isinf(xSqr) || isinf(ySqr) || isinf(xSqr + ySqr)) {
+        if (MODZ > R) {
 
             // normal calculation
 //            float lo = 0.5*log(MOD2);
@@ -227,17 +306,31 @@ void main() {
 //            if (specular < 0.0) { specular = 0.0; }
 
 
+
+//            sum /= float(i);
+//            sum2 /= (float(i) - 1.0);
+//            float s = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+//            float r = sum2 + (sum - sum2)*(s + 1.0);
+//            r /= pi;
+//            float n = mod(cmap_cycles*num_colors*r, num_colors);
+
+//            color.z = s;
+
+
             // normalized values -- finite cycles
 //            float m = cmap_cycles*num_colors*float(i)/float(maxIter);
-//             float m = cmap_cycles*num_colors*(float(i)-log(0.5*log(MOD2.x))/log(2.0))/float(maxIter);
+//            float m =  (float(i)-log(0.5*log(MODZ))/log(2.0))/float(maxIter);
+
 //             float n = m - (num_colors * floor(m/num_colors));
 
             // unnormalized values -- infinite cycles
 //            float n = num_colors*float(i)/float(maxIter);
-//            float m = float(i)-log(0.5*log(MOD2))/log(2.0);
+            float m = float(i)-log(0.5*log(MODZ))/log(2.0);
 //            float m = float(i);
 //            float n = float(num_colors)/2.0*(cos(m/14.0) + 1.0);
-//            float n = float(num_colors)/2.0*(cos(2.0*pow(m + 5.0, 0.4) -  0.3) + 1.0);
+            float n = float(num_colors)/2.0*(cos(2.0*pow(m + 5.0, 0.4) -  0.3) + 1.0);
+
+            color.z = n;
 
 //            if      (n >= 0.0 && n < 1.0) {  color = (1.0-n) * c1   +   (n)     * c2;  }
 //            else if (n >= 1.0 && n < 2.0) {  color = (2.0-n) * c2   +   (n-1.0) * c3;  }
@@ -258,45 +351,58 @@ void main() {
             // float c = 0.3;
             // color = vec3((1.0-cos(a*float(i)))/2.0, (1.0-cos(b*float(i)))/2.0, (1.0-cos(c*float(i)))/2.0);
 
-            sum /= float(i);
-            sum2 /= (float(i) - 1.0);
-            float s = il*llr - il*log(0.5*log(modSqrSF(Z1)));
-            float r = sum2 + (sum - sum2)*(s + 1.0);
-            color = 5.0*r*r*c4;
+
 //            color = vec3(1.5*p);
 //            color = vec3(t);
 //            color = vec3(1.0, 0.0, 1.0);
 
-//            float w = modSF(cDivSF(vec2(2.0*ZMOD*log(ZMOD), 0.0), P));
+//            float d = modSF(cDivSF(vec2(2.0*MODZ*log(MODZ), 0.0), P));
+//            float w = d/2.0;
 //            float f = pow(w/xScale, 1.0/8.0);
-//            color = vec3(r/f);
 
+//            if (w >= 0.0 && w < 0.05) { color = vec3(r/w); }
+//            else { color = vec3(1.0, 0.0, 1.0); }
+
+//            color = vec3(r);
+//            color = vec3(atan(C.y, C.x)/(2.0*pi) + 0.5);
 
             break;
 
         }
 
-        sum2 = sum;
-        if (i > 0) {
-            Z1MODSQR = modSqrSF(Z1);
-            float m_n = abs(Z1MODSQR - CMOD);
-            float M_n = Z1MODSQR + CMOD;
-            float p = ZMOD - m_n;
-            float q = M_n - m_n;
-            t = p / q;
 
-//            if (i == 6) {
-//                color = vec3(p);
-//                break;
-//            }
+        // == TRIANGLE INEQUALITY ===============================================================
+//        sum2 = sum;
+//        if (i > 0) {
+//            Z1MODSQR = modSqrSF(Z1);
+//            float m_n = abs(Z1MODSQR - CMOD);
+//            float M_n = Z1MODSQR + CMOD;
+//            float p = MODZ - m_n;
+//            float q = M_n - m_n;
+//            t = p / q;
+//            sum += t;
+//        }
 
-            sum += t;
-        }
+
+
+        // == CURVATURE =========================================================================
+//        sum2 = sum;
+//        if (i > 1) {
+//            vec2 w = cDivSF(Z - Z1, Z1 - Z2);
+//            t = abs(atan(w.y, w.x));
+//            sum += t;
+//        }
+
+
+
+        // == STRIPE -- LOOP ====================================================================
+
+//        sum2 = sum;
+//        float ARGZ = atan(Z.y, Z.x);
+//        sum += 0.5*(sin(3.0*ARGZ) + 1.0);
 
 
     }
 
-    // fragmentColor.rgb = vec3(gl_FragCoord.x/texRes.x, 0.0, gl_FragCoord.y/texRes.y);
-    fragmentColor.rgb = color;
-    fragmentColor.a = 1.0;
+    fragmentColor = vec4(color, 1.0);
 }
