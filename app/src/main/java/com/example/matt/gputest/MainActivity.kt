@@ -21,9 +21,7 @@ import java.util.*
 import javax.microedition.khronos.opengles.GL10
 import java.nio.IntBuffer
 import kotlin.math.*
-import android.R.attr.x
 import java.nio.ByteBuffer
-import java.nio.FloatBuffer
 
 
 const val SPLIT = 8193.0
@@ -105,10 +103,10 @@ data class DualDouble (
 
 }
 
-
 class Texture (
         val width : Int,
         val height : Int,
+        val format : Int,
         index : Int
 ) {
 
@@ -130,15 +128,21 @@ class Texture (
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
 
+        val type = when(format) {
+            GL.GL_RGBA8 -> GL.GL_UNSIGNED_BYTE
+            GL.GL_RGBA32F -> GL.GL_FLOAT
+            else -> 0
+        }
+
         // define texture specs
         GL.glTexImage2D(
                 GL.GL_TEXTURE_2D,           // target
                 0,                          // mipmap level
-                GL.GL_RGBA8,                // internal format
+                format,                     // internal format
                 width, height,              // texture resolution
                 0,                          // border
                 GL.GL_RGBA,                 // format
-                GL.GL_UNSIGNED_BYTE,        // type
+                type,                       // type
                 buffer                      // memory pointer
         )
     }
@@ -149,7 +153,9 @@ class Texture (
 
 enum class Precision { SINGLE, DUAL, QUAD }
 
-enum class Reaction { TRANSFORM, LIGHT }
+enum class Reaction { TRANSFORM, COLOR, LIGHT }
+
+
 
 fun loadShader(type: Int, shaderCode: String): Int {
 
@@ -216,6 +222,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* -------------------------------------- */
+
+
+
+
 
 
 
@@ -306,6 +316,45 @@ class MainActivity : AppCompatActivity() {
 
                     }
                 }
+                Reaction.COLOR -> {
+                    // actions change coloring
+                    when (e?.actionMasked) {
+
+                        MotionEvent.ACTION_DOWN -> {
+                            val focus = e.focus()
+                            prevFocus[0] = focus[0]
+                            prevFocus[1] = focus[1]
+                            //// Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                            return true
+                        }
+                        MotionEvent.ACTION_POINTER_DOWN -> {
+                            val focus = e.focus()
+                            prevFocus[0] = focus[0]
+                            prevFocus[1] = focus[1]
+                            prevFocalLen = e.focalLength()
+                            //// Log.d("POINTER DOWN", "focus: $focus, focalLen: $prevFocalLen")
+                            return true
+                        }
+                        MotionEvent.ACTION_MOVE -> {
+                            val focus = e.focus()
+                            val dx: Float = focus[0] - prevFocus[0]
+                            val dy: Float = focus[1] - prevFocus[1]
+                            r.f.phase += dx/r.screenWidth
+                            prevFocus[0] = focus[0]
+                            prevFocus[1] = focus[1]
+                            if (e.pointerCount > 1) {   // MULTI-TOUCH
+                                val focalLen = e.focalLength()
+                                val dFocalLen = focalLen / prevFocalLen
+                                r.f.frequency *= dFocalLen
+                                prevFocalLen = focalLen
+                                // // Log.d("SCALE", "$dScale")
+                            }
+                            requestRender()
+                            return true
+                        }
+
+                    }
+                }
                 Reaction.LIGHT -> {
                     // actions change light position
                     when (e?.actionMasked) {
@@ -366,96 +415,18 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
+
+
+
     inner class FractalRenderer(private val ctx: Context) : GLSurfaceView.Renderer {
 
-        val screenWidth : Int
-        val screenHeight : Int
-        private val ratio : Float
-        private val screenRes : FloatArray
 
-        var maxIter : Int = 63
-        var renderToTex = false
-        // var renderFromTex = true
-
-        private var hasTranslated = false
-        private var hasScaled = false
-        private val strictTranslate = { hasTranslated && !hasScaled }
-
-        // complex coordinate arrays for 32/64-bit precision
-        private val xCoords : DoubleArray
-        private val yCoords : DoubleArray
-
-        // complex coordinate arrays for 128-bit precision
-        private val xCoordsDD : Array<DualDouble>
-        private val yCoordsDD : Array<DualDouble>
-
-        private val xQuadCoords = doubleArrayOf(-1.0, 1.0)
-        private val yQuadCoords = doubleArrayOf(-1.0, 1.0)
-
-        private val bgScaleFloat = floatArrayOf(5.0f)
-        private val bgScaleDouble = 5.0
-
-        private val xQuadCoords2 = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
-        private val yQuadCoords2 = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
-
-        private var quadFocus = doubleArrayOf(0.0, 0.0)
-        private val touchPos = doubleArrayOf(0.0, 0.0)
-
-        var newQuadFocus = false
-
-        private lateinit var f : Fractal
-
-        init {
-
-            val displayMetrics = DisplayMetrics()
-            windowManager.defaultDisplay.getMetrics(displayMetrics)
-            screenWidth = displayMetrics.widthPixels
-            screenHeight = displayMetrics.heightPixels
-            screenRes = floatArrayOf(screenWidth.toFloat(), screenHeight.toFloat())
-            // Log.d("WIDTH", "$screenWidth")
-            // Log.d("HEIGHT", "$screenHeight")
-            ratio = screenWidth.toFloat()/screenHeight.toFloat()
-
-            xCoords = doubleArrayOf(-2.5, 1.0)
-            yCoords = doubleArrayOf(-1.75/ratio, 1.75/ratio)
-
-//            xCoordsDD = arrayOf(DualDouble(-2.5, 0.0), DualDouble(1.0, 0.0))
-//            yCoordsDD = arrayOf(DualDouble(-1.75/ratio, 0.0), DualDouble(1.75/ratio, 0.0))
-
-            xCoordsDD = arrayOf(
-                    DualDouble(0.37920827401670115, -1.6967977976103588E-17),
-                    DualDouble(0.37920827401676893, 2.0161868017805913E-17)
-            )
-            yCoordsDD = arrayOf(
-                    DualDouble(-0.5799286539791223, -4.092538660706216E-17),
-                    DualDouble(-0.5799286539790097, 3.2781664231013985E-17)
-            )
-
-//            xCoordsDD = arrayOf(
-//                    DualDouble(0.37920827401673174, 4.245500306531286E-18),
-//                    DualDouble(0.3792082740167318, -1.3333004058041256E-17)
-//            )
-//            yCoordsDD = arrayOf(
-//                    DualDouble(-0.5799286539790858, -8.276014005478715E-18),
-//                    DualDouble(-0.5799286539790858, 5.473432876437022E-17)
-//            )
-
-//            xCoordsDD = arrayOf(
-//                    DualDouble(0.37920827401673174, 2.5350208785805713E-17),
-//                    DualDouble(0.37920827401673174, 2.5350208786035614E-17)
-//            )
-//            yCoordsDD = arrayOf(
-//                    DualDouble(-0.5799286539790858, 2.220455155376108E-17),
-//                    DualDouble(-0.5799286539790858, 2.2204551554142982E-17)
-//            )
-
-
-        }
-
-
-        inner class Fractal(ctx: Context) {
+        inner class RenderRoutine(ctx: Context) {
 
             val precision = Precision.SINGLE
+            var frequency = 1.0f
+            var phase = 0.0f
 
             private val numChunks = 8
             private val chunkInc : Float = 2.0f / numChunks
@@ -468,7 +439,7 @@ class MainActivity : AppCompatActivity() {
                     1.0f,   1.0f,   0.0f )    // top right
             private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
 
-            private val program = GL.glCreateProgram()
+            private val renderProgram = GL.glCreateProgram()
             private val viewCoordsHandle : Int
             private val iterHandle       : Int
             private val xScaleHandle     : Int
@@ -479,15 +450,26 @@ class MainActivity : AppCompatActivity() {
             private val yTouchHandle     : Int
             private val bgScaleHandle    : Int
 
-            private val texProgram = GL.glCreateProgram()
-            private val viewCoordsTexHandle : Int
-            private val quadCoordsTexHandle : Int
-            private val textureTexHandle    : Int
+            private val sampleProgram = GL.glCreateProgram()
+            private val viewCoordsSampleHandle : Int
+            private val quadCoordsSampleHandle : Int
+            private val textureSampleHandle    : Int
 
-            private val vertexShader      : Int
-            private val fragmentShader    : Int
-            private val vertexTexShader   : Int
-            private val fragmentTexShader : Int
+            private val colorProgram = GL.glCreateProgram()
+            private val viewCoordsColorHandle : Int
+            private val quadCoordsColorHandle : Int
+            private val textureColorHandle    : Int
+            private val iterColorHandle       : Int
+            private val frequencyHandle       : Int
+            private val phaseHandle           : Int
+
+
+            private val v_renderShader : Int
+            private val v_sampleShader : Int
+
+            private val f_renderShader         : Int
+            private val f_sampleShader         : Int
+            private val f_colorShader : Int
 
             // define texture resolutions
             private val texWidth = screenWidth
@@ -501,9 +483,9 @@ class MainActivity : AppCompatActivity() {
 //            private val bgTexHeight = 1
 
             private val textures = arrayOf(
-                    Texture(bgTexWidth, bgTexHeight, 0),
-                    Texture(texWidth, texHeight, 1),
-                    Texture(texWidth, texHeight, 2)
+                    Texture(bgTexWidth, bgTexHeight, GL.GL_RGBA32F, 0),
+                    Texture(texWidth, texHeight, GL.GL_RGBA32F, 1),
+                    Texture(texWidth, texHeight, GL.GL_RGBA32F, 2)
             )
 
             // allocate memory for textures
@@ -547,41 +529,47 @@ class MainActivity : AppCompatActivity() {
             init {
 
                 // load all vertex and fragment shader code
-                val vertStream = ctx.resources.openRawResource(R.raw.vert)
-                val vertShaderCode = Scanner(vertStream).useDelimiter("\\Z").next()
-                vertStream.close()
+                var s = ctx.resources.openRawResource(R.raw.vert_render)
+                val v_renderCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
 
-                val fragSFStream = ctx.resources.openRawResource(R.raw.frag)
-                val fragSFShaderCode = Scanner(fragSFStream).useDelimiter("\\Z").next()
-                fragSFStream.close()
+                s = ctx.resources.openRawResource(R.raw.vert_sample)
+                val v_sampleCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
 
-                val fragDFStream = ctx.resources.openRawResource(R.raw.frag_df64)
-                val fragDFShaderCode = Scanner(fragDFStream).useDelimiter("\\Z").next()
-                fragDFStream.close()
+                s = ctx.resources.openRawResource(R.raw.render_sf)
+                val f_renderSFCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
 
-                val fragQFStream = ctx.resources.openRawResource(R.raw.frag_qf128)
-                val fragQFShaderCode = Scanner(fragQFStream).useDelimiter("\\Z").next()
-                fragQFStream.close()
+                s = ctx.resources.openRawResource(R.raw.render_df)
+                val f_renderDFCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
 
-                val vertTexStream = ctx.resources.openRawResource(R.raw.vert_tex)
-                val vertTexShaderCode = Scanner(vertTexStream).useDelimiter("\\Z").next()
-                vertTexStream.close()
+                s = ctx.resources.openRawResource(R.raw.render_qf)
+                val f_renderQFCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
 
-                val fragTexStream = ctx.resources.openRawResource(R.raw.frag_tex)
-                val fragTexShaderCode = Scanner(fragTexStream).useDelimiter("\\Z").next()
-                fragTexStream.close()
+                s = ctx.resources.openRawResource(R.raw.sample)
+                val f_sampleCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
+
+                s = ctx.resources.openRawResource(R.raw.color)
+                val f_colorCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
 
 
                 // create and compile shaders
-                vertexShader = loadShader(GL.GL_VERTEX_SHADER, vertShaderCode)
-                fragmentShader =
+                v_renderShader = loadShader(GL.GL_VERTEX_SHADER, v_renderCode)
+                v_sampleShader = loadShader(GL.GL_VERTEX_SHADER, v_sampleCode)
+
+                f_renderShader =
                         when (precision) {
-                            Precision.SINGLE -> loadShader(GL.GL_FRAGMENT_SHADER, fragSFShaderCode)
-                            Precision.DUAL -> loadShader(GL.GL_FRAGMENT_SHADER, fragDFShaderCode)
-                            Precision.QUAD -> loadShader(GL.GL_FRAGMENT_SHADER, fragQFShaderCode)
+                            Precision.SINGLE -> loadShader(GL.GL_FRAGMENT_SHADER, f_renderSFCode)
+                            Precision.DUAL   -> loadShader(GL.GL_FRAGMENT_SHADER, f_renderDFCode)
+                            Precision.QUAD   -> loadShader(GL.GL_FRAGMENT_SHADER, f_renderQFCode)
                         }
-                vertexTexShader = loadShader(GL.GL_VERTEX_SHADER, vertTexShaderCode)
-                fragmentTexShader = loadShader(GL.GL_FRAGMENT_SHADER, fragTexShaderCode)
+                f_sampleShader = loadShader(GL.GL_FRAGMENT_SHADER, f_sampleCode)
+                f_colorShader  = loadShader(GL.GL_FRAGMENT_SHADER, f_colorCode)
 
 
                 GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
@@ -591,37 +579,48 @@ class MainActivity : AppCompatActivity() {
 
 
 
-                // attach shaders and create program executables
-                // render to texture program
-                GL.glAttachShader(program, vertexShader)
-                GL.glAttachShader(program, fragmentShader)
-                GL.glLinkProgram(program)
+                // attach shaders and create renderProgram executables
+                // render to texture renderProgram
+                GL.glAttachShader(renderProgram, v_renderShader)
+                GL.glAttachShader(renderProgram, f_renderShader)
+                GL.glLinkProgram(renderProgram)
 
-                viewCoordsHandle =  GL.glGetAttribLocation(   program, "viewCoords"  )
-                iterHandle       =  GL.glGetUniformLocation(  program, "maxIter"     )
-                xScaleHandle     =  GL.glGetUniformLocation(  program, "xScale"      )
-                yScaleHandle     =  GL.glGetUniformLocation(  program, "yScale"      )
-                xOffsetHandle    =  GL.glGetUniformLocation(  program, "xOffset"     )
-                yOffsetHandle    =  GL.glGetUniformLocation(  program, "yOffset"     )
-                xTouchHandle     =  GL.glGetUniformLocation(  program, "xTouchPos"   )
-                yTouchHandle     =  GL.glGetUniformLocation(  program, "yTouchPos"   )
-                bgScaleHandle    =  GL.glGetUniformLocation(  program, "bgScale"     )
+                viewCoordsHandle =  GL.glGetAttribLocation(   renderProgram, "viewCoords"  )
+                iterHandle       =  GL.glGetUniformLocation(  renderProgram, "maxIter"     )
+                xScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "xScale"      )
+                yScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "yScale"      )
+                xOffsetHandle    =  GL.glGetUniformLocation(  renderProgram, "xOffset"     )
+                yOffsetHandle    =  GL.glGetUniformLocation(  renderProgram, "yOffset"     )
+                xTouchHandle     =  GL.glGetUniformLocation(  renderProgram, "xTouchPos"   )
+                yTouchHandle     =  GL.glGetUniformLocation(  renderProgram, "yTouchPos"   )
+                bgScaleHandle    =  GL.glGetUniformLocation(  renderProgram, "bgScale"     )
 
-                // render from texture program
-                GL.glAttachShader(texProgram, vertexTexShader)
-                GL.glAttachShader(texProgram, fragmentTexShader)
-                GL.glLinkProgram(texProgram)
+                // render from texture renderProgram
+                GL.glAttachShader(sampleProgram, v_sampleShader)
+                GL.glAttachShader(sampleProgram, f_sampleShader)
+                GL.glLinkProgram(sampleProgram)
 
-                viewCoordsTexHandle = GL.glGetAttribLocation(  texProgram, "viewCoords"  )
-                quadCoordsTexHandle = GL.glGetAttribLocation(  texProgram, "quadCoords"  )
-                textureTexHandle    = GL.glGetUniformLocation( texProgram, "tex"         )
+                viewCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "viewCoords"  )
+                quadCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "quadCoords"  )
+                textureSampleHandle    = GL.glGetUniformLocation( sampleProgram, "tex"         )
+
+                GL.glAttachShader(colorProgram, v_sampleShader)
+                GL.glAttachShader(colorProgram, f_colorShader)
+                GL.glLinkProgram(colorProgram)
+                
+                viewCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "viewCoords"  )
+                quadCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "quadCoords"  )
+                textureColorHandle    = GL.glGetUniformLocation(  colorProgram, "tex"         )
+                iterColorHandle       = GL.glGetUniformLocation(  colorProgram, "maxIter"     )
+                frequencyHandle       = GL.glGetUniformLocation(  colorProgram, "frequency"   )
+                phaseHandle           = GL.glGetUniformLocation(  colorProgram, "phase"       )
 
             }
 
 
             fun renderToTexture() {
 
-                GL.glUseProgram(program)
+                GL.glUseProgram(renderProgram)
                 GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
                 val xTouchPos = floatArrayOf(touchPos[0].toFloat())
@@ -813,7 +812,7 @@ class MainActivity : AppCompatActivity() {
                     // SAMPLE -- TRANSLATION INTERSECTION
                     //===================================================================================
 
-                    GL.glUseProgram(texProgram)
+                    GL.glUseProgram(sampleProgram)
                     GL.glViewport(0, 0, textures[intIndex].width, textures[intIndex].height)
 
                     val intersectQuadCoords = floatArrayOf(
@@ -831,11 +830,11 @@ class MainActivity : AppCompatActivity() {
                     viewChunkBuffer.put(intersectViewCoords).position(0)
 
 
-                    GL.glEnableVertexAttribArray(viewCoordsTexHandle)
-                    GL.glEnableVertexAttribArray(quadCoordsTexHandle)
-                    GL.glUniform1i(textureTexHandle, currIndex)
+                    GL.glEnableVertexAttribArray(viewCoordsSampleHandle)
+                    GL.glEnableVertexAttribArray(quadCoordsSampleHandle)
+                    GL.glUniform1i(textureSampleHandle, currIndex)
                     GL.glVertexAttribPointer(
-                            viewCoordsTexHandle,        // index
+                            viewCoordsSampleHandle,        // index
                             3,                          // coordinates per vertex
                             GL.GL_FLOAT,                // type
                             false,                      // normalized
@@ -843,7 +842,7 @@ class MainActivity : AppCompatActivity() {
                             viewChunkBuffer             // coordinates
                     )
                     GL.glVertexAttribPointer(
-                            quadCoordsTexHandle,        // index
+                            quadCoordsSampleHandle,        // index
                             3,                          // coordinates per vertex
                             GL.GL_FLOAT,                // type
                             false,                      // normalized
@@ -862,8 +861,8 @@ class MainActivity : AppCompatActivity() {
 
                     GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
 
-                    GL.glDisableVertexAttribArray(viewCoordsTexHandle)
-                    GL.glDisableVertexAttribArray(quadCoordsTexHandle)
+                    GL.glDisableVertexAttribArray(viewCoordsSampleHandle)
+                    GL.glDisableVertexAttribArray(quadCoordsSampleHandle)
 
 
                     // swap intermediate and current texture indices
@@ -940,7 +939,7 @@ class MainActivity : AppCompatActivity() {
                 // PRE-RENDER PROCESSING
                 //======================================================================================
 
-                GL.glUseProgram(texProgram)
+                GL.glUseProgram(colorProgram)
                 GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
                 GL.glViewport(0, 0, screenWidth, screenHeight)
 
@@ -964,8 +963,12 @@ class MainActivity : AppCompatActivity() {
                         .put(bgQuadCoords)
                         .position(0)
 
-                GL.glEnableVertexAttribArray(viewCoordsTexHandle)
-                GL.glEnableVertexAttribArray(quadCoordsTexHandle)
+                GL.glUniform1fv(iterColorHandle, 1, floatArrayOf(maxIter.toFloat()), 0)
+                GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(frequency), 0)
+                GL.glUniform1fv(phaseHandle, 1, floatArrayOf(phase), 0)
+
+                GL.glEnableVertexAttribArray(viewCoordsColorHandle)
+                GL.glEnableVertexAttribArray(quadCoordsColorHandle)
 
 
 
@@ -974,9 +977,9 @@ class MainActivity : AppCompatActivity() {
                 // RENDER LOW-RES
                 //======================================================================================
 
-                GL.glUniform1i(textureTexHandle, 0)    // use GL_TEXTURE0
+                GL.glUniform1i(textureColorHandle, 0)    // use GL_TEXTURE0
                 GL.glVertexAttribPointer(
-                        viewCoordsTexHandle,        // index
+                        viewCoordsColorHandle,        // index
                         3,                          // coordinates per vertex
                         GL.GL_FLOAT,                // type
                         false,                      // normalized
@@ -984,7 +987,7 @@ class MainActivity : AppCompatActivity() {
                         viewBuffer                  // coordinates
                 )
                 GL.glVertexAttribPointer(
-                        quadCoordsTexHandle,        // index
+                        quadCoordsColorHandle,        // index
                         3,                          // coordinates per vertex
                         GL.GL_FLOAT,                // type
                         false,                      // normalized
@@ -1002,9 +1005,9 @@ class MainActivity : AppCompatActivity() {
                 // RENDER HIGH-RES
                 //======================================================================================
 
-                GL.glUniform1i(textureTexHandle, currIndex)
+                GL.glUniform1i(textureColorHandle, currIndex)
                 GL.glVertexAttribPointer(
-                        viewCoordsTexHandle,        // index
+                        viewCoordsColorHandle,        // index
                         3,                          // coordinates per vertex
                         GL.GL_FLOAT,                // type
                         false,                      // normalized
@@ -1012,7 +1015,7 @@ class MainActivity : AppCompatActivity() {
                         viewBuffer                  // coordinates
                 )
                 GL.glVertexAttribPointer(
-                        quadCoordsTexHandle,        // index
+                        quadCoordsColorHandle,        // index
                         3,                          // coordinates per vertex
                         GL.GL_FLOAT,                // type
                         false,                      // normalized
@@ -1025,8 +1028,8 @@ class MainActivity : AppCompatActivity() {
 
 
 
-                GL.glDisableVertexAttribArray(viewCoordsTexHandle)
-                GL.glDisableVertexAttribArray(quadCoordsTexHandle)
+                GL.glDisableVertexAttribArray(viewCoordsColorHandle)
+                GL.glDisableVertexAttribArray(quadCoordsColorHandle)
 
 //        Log.d("RENDER", "render from texture -- end")
 
@@ -1034,6 +1037,109 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+
+
+        inner class Fractal(
+            val name : String,
+            val init : String,
+            val loop : String,
+            val end : String
+        )
+
+
+//        val m = Fractal(
+//                "Mandelbrot",
+//                R.string.mandelbrot_init_SF,
+//                R.string.mandelbrot_loop,
+//                R.string.mandelbrot_end
+//        )
+
+
+
+
+        val screenWidth : Int
+        val screenHeight : Int
+        private val ratio : Float
+        private val screenRes : FloatArray
+
+        var maxIter : Int = 63
+        var renderToTex = false
+        // var renderFromTex = true
+
+        private var hasTranslated = false
+        private var hasScaled = false
+        private val strictTranslate = { hasTranslated && !hasScaled }
+
+        // complex coordinate arrays for 32/64-bit precision
+        private val xCoords : DoubleArray
+        private val yCoords : DoubleArray
+
+        // complex coordinate arrays for 128-bit precision
+        private val xCoordsDD : Array<DualDouble>
+        private val yCoordsDD : Array<DualDouble>
+
+        private val xQuadCoords = doubleArrayOf(-1.0, 1.0)
+        private val yQuadCoords = doubleArrayOf(-1.0, 1.0)
+
+        private val bgScaleFloat = floatArrayOf(5.0f)
+        private val bgScaleDouble = 5.0
+
+        private val xQuadCoords2 = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
+        private val yQuadCoords2 = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
+
+        private var quadFocus = doubleArrayOf(0.0, 0.0)
+        private val touchPos = doubleArrayOf(0.0, 0.0)
+
+        var newQuadFocus = false
+
+        lateinit var f : RenderRoutine
+
+        init {
+
+            val displayMetrics = DisplayMetrics()
+            windowManager.defaultDisplay.getMetrics(displayMetrics)
+            screenWidth = displayMetrics.widthPixels
+            screenHeight = displayMetrics.heightPixels
+            screenRes = floatArrayOf(screenWidth.toFloat(), screenHeight.toFloat())
+            // Log.d("WIDTH", "$screenWidth")
+            // Log.d("HEIGHT", "$screenHeight")
+            ratio = screenWidth.toFloat()/screenHeight.toFloat()
+
+            xCoords = doubleArrayOf(-2.5, 1.0)
+            yCoords = doubleArrayOf(-1.75/ratio, 1.75/ratio)
+
+//            xCoordsDD = arrayOf(DualDouble(-2.5, 0.0), DualDouble(1.0, 0.0))
+//            yCoordsDD = arrayOf(DualDouble(-1.75/ratio, 0.0), DualDouble(1.75/ratio, 0.0))
+
+            xCoordsDD = arrayOf(
+                    DualDouble(0.37920827401670115, -1.6967977976103588E-17),
+                    DualDouble(0.37920827401676893, 2.0161868017805913E-17)
+            )
+            yCoordsDD = arrayOf(
+                    DualDouble(-0.5799286539791223, -4.092538660706216E-17),
+                    DualDouble(-0.5799286539790097, 3.2781664231013985E-17)
+            )
+
+//            xCoordsDD = arrayOf(
+//                    DualDouble(0.37920827401673174, 4.245500306531286E-18),
+//                    DualDouble(0.3792082740167318, -1.3333004058041256E-17)
+//            )
+//            yCoordsDD = arrayOf(
+//                    DualDouble(-0.5799286539790858, -8.276014005478715E-18),
+//                    DualDouble(-0.5799286539790858, 5.473432876437022E-17)
+//            )
+
+//            xCoordsDD = arrayOf(
+//                    DualDouble(0.37920827401673174, 2.5350208785805713E-17),
+//                    DualDouble(0.37920827401673174, 2.5350208786035614E-17)
+//            )
+//            yCoordsDD = arrayOf(
+//                    DualDouble(-0.5799286539790858, 2.220455155376108E-17),
+//                    DualDouble(-0.5799286539790858, 2.2204551554142982E-17)
+//            )
+
+
+        }
 
 
         fun translate(dScreenPos: FloatArray) {
@@ -1248,7 +1354,7 @@ class MainActivity : AppCompatActivity() {
             GL.glGetShaderPrecisionFormat(GL.GL_FRAGMENT_SHADER, GL.GL_HIGH_FLOAT, a, b)
             Log.d("OPENGL ES", "FLOAT PRECISION == ${b[0]}")
 
-            f = Fractal(ctx)
+            f = RenderRoutine(ctx)
 
             f.renderToTexture()
 
@@ -1329,16 +1435,15 @@ class MainActivity : AppCompatActivity() {
         maxIterBar.bringToFront()
 
         // create Button and add to frame
-//        val lightPosToggle = Button(this)
-//        lightPosToggle.layoutParams = LP(LP.WRAP_CONTENT, LP.WRAP_CONTENT, Gravity.BOTTOM)
-//        lightPosToggle.setOnClickListener {
-            // fractalView.r.renderFromTex = true
-            // fractalView.requestRender()
-//            if (fractalView.reactionType == 0) {fractalView.reactionType = 1}
-//            else if (fractalView.reactionType == 1) {fractalView.reactionType = 0}
-//        }
-//        addContentView(lightPosToggle, lightPosToggle.layoutParams)
-//        lightPosToggle.bringToFront()
+        val lightPosToggle = Button(this)
+        lightPosToggle.layoutParams = LP(LP.WRAP_CONTENT, LP.WRAP_CONTENT, Gravity.BOTTOM)
+        lightPosToggle.setOnClickListener {
+             fractalView.requestRender()
+            if (fractalView.reactionType == Reaction.TRANSFORM) {fractalView.reactionType = Reaction.COLOR}
+            else if (fractalView.reactionType == Reaction.COLOR) {fractalView.reactionType = Reaction.TRANSFORM}
+        }
+        addContentView(lightPosToggle, lightPosToggle.layoutParams)
+        lightPosToggle.bringToFront()
 
     }
 
