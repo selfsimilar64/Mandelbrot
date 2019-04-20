@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Mandelbrot</string>
     <string name="title_activity_settings">Settings</string>
 
@@ -73,4 +73,526 @@
     <string name="pref_ringtone_silent">Silent</string>
 
     <string name="pref_title_vibrate">Vibrate</string>
+
+
+
+
+
+
+
+
+
+    <string name="header_sf">
+        #version 320 es\n
+        #define R 1e7\n
+        #define pi 3.141592654\n
+
+        precision highp float;
+        uniform int maxIter;
+        uniform float xTouchPos;
+        uniform float yTouchPos;
+        uniform float xScale;
+        uniform float yScale;
+        uniform float xOffset;
+        uniform float yOffset;
+
+        in vec4 viewPos;
+        out vec4 fragmentColor;
+    </string>
+    <string name="header_df">
+        #version 320 es\n
+        #define R 1e6\n
+        #define SPLIT 8193.\n
+        #define pi 3.141592654\n
+
+        precision highp float;
+        uniform int maxIter;
+        uniform float xTouchPos;
+        uniform float yTouchPos;
+        uniform vec2 xScale;
+        uniform vec2 yScale;
+        uniform vec2 xOffset;
+        uniform vec2 yOffset;
+
+        in vec4 viewPos;
+        out vec4 fragmentColor;
+    </string>
+
+
+
+    <string name="arithmetic_util">
+
+        vec2 quickTwoSum(float a, float b) {
+            float s = a + b;
+            float e = b - (s - a);
+            return vec2(s, e);
+        }
+
+        vec2 twoSum(float a, float b) {
+            float s = a + b;
+            float v = s - a;
+            float e = (a - (s - v)) + (b - v);
+            return vec2(s, e);
+        }
+
+        vec3 threeSum(float a, float b, float c) {
+            vec2 tmp;
+            vec3 res = vec3(0.0);
+            float t1, t2, t3;
+            tmp = twoSum(a, b);
+            t1 = tmp.x;
+            t2 = tmp.y;
+            tmp = twoSum(c, t1);
+            res.x = tmp.x;
+            t3 = tmp.y;
+            tmp = twoSum(t2, t3);
+            res.y = tmp.x;
+            res.z = tmp.y;
+            return res;
+        }
+
+        vec3 threeSumTwo(float a, float b, float c) {
+            vec2 tmp;
+            vec3 res = vec3(0.0);
+            float t1, t2, t3;
+            tmp = twoSum(a, b);
+            t1 = tmp.x;
+            t2 = tmp.y;
+            tmp = twoSum(c, t1);
+            res.x = tmp.x;
+            t3 = tmp.y;
+            res.y = t2 + t3;
+            return res;
+        }
+
+        vec2 split(float a) {
+            float t = a*SPLIT;
+            float a_hi = t - (t - a);
+            float a_lo = a - a_hi;
+            return vec2(a_hi, a_lo);
+        }
+
+        vec2 twoProd(float a, float b) {
+            float p = a*b;
+            vec2 aS = split(a);
+            vec2 bS = split(b);
+            float err = ((aS.x*bS.x - p) + aS.x*bS.y + aS.y*bS.x) + aS.y*bS.y;
+            return vec2(p, err);
+        }
+
+        vec2 twoSqr(float a) {
+            float p = a*a;
+            vec2 s = split(a);
+            float e = ((s.x*s.x - p) + 2.0*s.x*s.y) + s.y*s.y;
+            return vec2(p, e);
+        }
+
+    </string>
+    <string name="arithmetic_sf">
+
+        vec2 cMultSF(vec2 w1, vec2 w2) {
+           return vec2(w1.x*w2.x - w1.y*w2.y, w1.x*w2.y + w2.x*w1.y);
+        }
+
+        vec2 cSqrSF(vec2 w) {
+            return vec2(w.x*w.x - w.y*w.y, 2.0*w.x*w.y);
+        }
+
+        vec2 conjSF(vec2 w) {
+           return vec2(w.x, -w.y);
+        }
+
+        float modSF(vec2 w) {
+            return sqrt(w.x*w.x + w.y*w.y);
+        }
+
+        float modSqrSF(vec2 w) {
+            return w.x*w.x + w.y*w.y;
+        }
+
+        vec2 cDivSF(vec2 w1, vec2 w2) {
+            vec2 u = cMultSF(w1, conjSF(w2));
+            return u/dot(w2, w2);
+        }
+
+        vec2 cExp(vec2 w) {
+            return exp(w.x)*vec2(cos(w.y), sin(w.y));
+        }
+
+        vec2 sine(vec2 z) {
+            float u = 0.5*(exp(z.y)+exp(-z.y))*sin(z.x);
+            float v = 0.5*(exp(z.y)-exp(-z.y))*cos(z.x);
+            return vec2(u, v);
+        }
+
+        vec2 cosine(vec2 z) {
+            float u = 0.5*(exp(-z.y) + exp(z.y))*cos(z.x);
+            float v = 0.5*(exp(-z.y) - exp(z.y))*sin(z.x);
+            return vec2(u, v);
+        }
+
+        vec2 cPow(vec2 z, vec2 s) {
+            float theta = atan(z.y, z.x);
+            float lr = 0.5*log(dot(z, z));
+            float c = exp(s.x*lr - s.y*theta);
+            float f = s.y*lr + s.x*theta;
+            return c*vec2(cos(f), sin(f));
+        }
+
+    </string>
+    <string name="arithmetic_df">
+
+        vec2 addDF(vec2 a, vec2 b) {
+            vec2 s;
+            vec2 t;
+            s = twoSum(a.x, b.x);
+            t = twoSum(a.y, b.y);
+            s.y += t.x;
+            s = quickTwoSum(s.x, s.y);
+            s.y += t.y;
+            s = quickTwoSum(s.x, s.y);
+            return s;
+        }
+
+        vec2 multDF(vec2 a, vec2 b) {
+            vec2 p;
+            p = twoProd(a.x, b.x);
+            p.y += a.x * b.y;
+            p.y += a.y * b.x;
+            p = quickTwoSum(p.x, p.y);
+            return p;
+        }
+
+        vec2 sqrDF(vec2 a) {
+            vec2 p;
+            p = twoSqr(a.x);
+            p.y += 2.0*a.x*a.y;
+            p = quickTwoSum(p.x, p.y);
+            return p;
+        }
+
+        vec2 sqrtDF(vec2 a) {
+            float xn = 1.0/sqrt(a.x);
+            float yn = a.x*xn;
+            vec2 ynSqr = sqrDF(vec2(yn, 0.0));
+            float diff = (addDF(a, -ynSqr)).x;
+            vec2 prod = multDF(twoProd(xn, diff), vec2(0.5, 0.0));
+            return addDF(vec2(yn, 0.0), prod);
+        }
+
+        vec2 divDF(vec2 a, vec2 b) {
+            float xn = 1.0/b.x;
+            float yn = a.x*xn;
+            float diff = addDF(a, -multDF(b, vec2(yn, 0.0))).x;
+            vec2 prod = twoProd(xn, diff);
+            return addDF(vec2(yn, 0.0), prod);
+        }
+
+        vec2 modSqrDF(vec2 X, vec2 Y) {
+            return addDF(sqrDF(X), sqrDF(Y));
+        }
+
+        vec2 modDF(vec2 a, vec2 b) {
+            return sqrtDF(modSqrDF(a, b));
+        }
+
+        vec2 modDF2(vec2 a, vec2 b) {
+            return multDF(a, sqrtDF(addDF(vec2(1.0, 0.0), sqrDF(divDF(b, a)))));
+        }
+
+        vec2 absDF(vec2 a) {
+            if (a.x &lt; 0.0) { return -a; }
+            else { return a; }
+        }
+
+    </string>
+
+
+
+    <string name="general_init_sf" tools:ignore="TypographyOther">
+        vec4 colorParams = vec4(0.0);
+        vec2 C = vec2(xScale*viewPos.x + xOffset, yScale*viewPos.y + yOffset);
+        vec2 Z, Z1, Z2 = vec2(0.0);
+        float modZ;
+    </string>
+    <string name="general_init_df">
+        vec4 colorParams = vec4(0.0);
+        vec2 A = addDF(multDF(xScale, vec2(viewPos.x, 0.0)), xOffset);
+        vec2 B = addDF(multDF(yScale, vec2(viewPos.y, 0.0)), yOffset);
+        vec2 X, Y, X1, Y1, X2, Y2 = vec2(0.0);
+        vec2 modZ;
+    </string>
+
+
+
+
+    <!-- MANDELBROT -->
+
+    <string name="mandelbrot_init_sf">
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
+    </string>
+    <string name="mandelbrot_loop_sf">
+        Z2 = Z1;
+        Z1 = Z;
+        Z = cSqrSF(Z) + C;
+        modZ = modSF(Z);
+    </string>
+    <string name="mandelbrot_final_sf">
+    </string>
+
+    <string name="mandelbrot_init_df">
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
+    </string>
+    <string name="mandelbrot_loop_df">
+        X2 = X1;
+        Y2 = Y1;
+        X1 = X;
+        Y1 = Y;
+        X = addDF(addDF(sqrDF(X1), -sqrDF(Y1)), A);
+        Y = addDF(multDF(vec2(2.0, 0.0), multDF(X1, Y1)), B);
+        modZ = modDF(X, Y);
+    </string>
+    <string name="mandelbrot_final_df">
+    </string>
+
+
+
+
+
+
+    <!-- COLORING ALGORITHMS -->
+
+    <string name="mandelbrot_smooth_init_sf">
+    </string>
+    <string name="mandelbrot_smooth_final_sf">
+        float i = float(n)-log(0.5*log(modZ))/log(2.0);
+        float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
+        colorParams.z = j;
+    </string>
+
+
+    <string name="mandelbrot_light_init_sf">
+        vec2 a = vec2(0.0);
+    </string>
+    <string name="mandelbrot_light_loop_sf">
+        a = 2.0*cMultSF(a, vec2(Z1.x, Z1.y));
+        a.x += 1.0;
+    </string>
+    <string name="mandelbrot_light_final_sf">
+        vec2 u = cDivSF(Z, a);
+        float theta = atan(u.y, u.x);
+        colorParams.x = theta;
+    </string>
+    <string name="mandelbrot_light_color_sf">
+        float theta = colorParams.x;
+        vec3 normRay = vec3(cos(theta), sin(theta), 1.0);
+        normRay = normalize(normRay);
+        vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
+        // vec3 reflectRay = reflect(lightRay, normRay);
+        float diffuse = dot(normRay, lightRay);
+        if (diffuse &lt; 0.0) { diffuse = 0.0; }
+        diffuse = 1.75*(diffuse + 0.2);
+        float specular = pow(dot(reflectRay, viewRay), 1.5);
+        if (specular &lt; 0.0) { specular = 0.0; }
+        specular = 0.75*(specular + 0.01);
+        color = diffuse*color + specular;
+    </string>
+
+
+
+    <string name="mandelbrot_light_init_shift">
+        vec3 lightRay = vec3(1.0, 1.0, 1.25);
+        vec2 _a, _b, _u = vec2(0.0);
+    </string>
+
+
+    <!-- TRIANGLE INEQUALITY AVERAGE -->
+    <string name="mandelbrot_triangle_init_sf" tools:ignore="TypographyOther">
+        float modC = modSF(C);
+        float modSqrZ1;
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="mandelbrot_triangle_loop_sf">
+        if (n > 1) {
+            sum1 = sum;
+            modSqrZ1 = modSqrSF(Z1);
+            float m = abs(modSqrZ1 - modC);
+            float M = modSqrZ1 + modC;
+            float p = modZ - m;
+            float q = M - m;
+            sum += p / q;
+        }
+    </string>
+    <string name="mandelbrot_triangle_final_sf">
+        sum /= float(n);
+        sum1 /= float(n - 1);
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+    <string name="mandelbrot_triangle_init_df" tools:ignore="TypographyOther">
+        vec2 modC = modDF(A, B);
+        vec2 modSqrZ1;
+        vec2 sum, sum1 = vec2(0.0);
+    </string>
+    <string name="mandelbrot_triangle_loop_df">
+        if (n > 0) {
+            sum1 = sum;
+            modSqrZ1 = modSqrDF(X1, Y1);
+            vec2 m = absDF(addDF(modSqrZ1, -modC));
+            vec2 M = addDF(modSqrZ1, modC);
+            vec2 p = addDF(modZ, -m);
+            vec2 q = addDF(M, -m);
+            sum = addDF(sum, divDF(p, q));
+        }
+    </string>
+    <string name="mandelbrot_triangle_final_df">
+        sum = multDF(sum, vec2(1.0/float(n), 0.0));
+        sum1 = multDF(sum1, vec2(1.0/float(n - 1), 0.0));
+        float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
+        float s = sum1.x + (sum.x - sum1.x)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+    <string name="mandelbrot_triangle_init_df2" tools:ignore="TypographyOther">
+        float modC = modDF(A, B).x;
+        float modSqrZ1;
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="mandelbrot_triangle_loop_df2">
+        if (n > 0) {
+            sum1 = sum;
+            modSqrZ1 = modSqrDF(X1, Y1).x;
+            float m = abs(modSqrZ1 - modC);
+            float M = modSqrZ1 + modC;
+            float p = modZ.x - m;
+            float q = M - m;
+            sum += p / q;
+        }
+    </string>
+    <string name="mandelbrot_triangle_final_df2">
+        sum /= float(n);
+        sum1 /= float(n - 1);
+        float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+
+    <!-- CURVATURE AVERAGE -->
+    <string name="curvature_init_sf">
+        vec2 Z2 = vec2(0.0);
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="curvature_loop_sf">
+        if (n > 1) {
+            sum1 = sum;
+            vec2 w = cDivSF(Z - Z1, Z1 - Z2);
+            sum += abs(atan(w.y, w.x));
+        }
+    </string>
+    <string name="curvature_final_sf">
+        sum /= float(n) * pi;
+        sum1 /= float(n - 1) * pi;
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+    <string name="curvature_init_df">
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="curvature_loop_df">
+        if (n > 1) {
+            sum1 = sum;
+            vec2 w = cDivSF(vec2(X.x - X1.x, Y.x - Y1.x), vec2(X1.x - X2.x, Y1.x - Y2.x));
+            sum += abs(atan(w.y, w.x));
+        }
+    </string>
+    <string name="curvature_final_df">
+        sum /= float(n) * pi;
+        sum1 /= float(n - 1) * pi;
+        float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+
+    <!-- STRIPE AVERAGE -->
+    <string name="stripe_init_sf">
+        float argZ;
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="stripe_loop_sf">
+        sum1 = sum;
+        argZ = atan(Z.y, Z.x);
+        sum += 0.5*(sin(%f*argZ) + 1.0);
+    </string>
+    <string name="stripe_final_sf">
+        sum /= float(n) * pi;
+        sum1 /= float(n - 1) * pi;
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+    <string name="stripe_init_df2">
+        float argZ;
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="stripe_loop_df2">
+        sum1 = sum;
+        argZ = atan(Y.x, X.x);
+        sum += 0.5*(sin(%f*argZ) + 1.0);
+    </string>
+    <string name="stripe_final_df2">
+        sum /= float(n) * pi;
+        sum1 /= float(n - 1) * pi;
+        float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+
+    <string name="test_init_sf">
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="test_loop_sf">
+        sum1 = sum;
+        vec2 p = Z - Z2;
+        vec2 q = Z1 - Z2;
+        float phi = acos(dot(p, q) / (modSF(p)*modSF(q)));
+        sum += phi;
+    </string>
+    <string name="test_final_sf">
+        sum /= float(n) * pi;
+        sum1 /= float(n - 1) * pi;
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+
+    <string name="test_init_df">
+        float sum, sum1 = 0.0;
+    </string>
+    <string name="test_loop_df">
+        sum1 = sum;
+        vec2 p = vec2(X.x - X2.x, Y.x - Y2.x);
+        vec2 q = vec2(X1.x - X2.x, Y1.x - Y2.x);
+        float phi = acos(dot(p, q) / (modSF(p)*modSF(q)));
+        sum += sin(5.0*phi);
+    </string>
+    <string name="test_final_df">
+        sum /= float(n);
+        sum1 /= float(n - 1);
+        float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
+    <string name="transform">Transform</string>
+
+
 </resources>
