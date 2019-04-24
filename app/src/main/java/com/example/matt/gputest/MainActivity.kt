@@ -7,20 +7,14 @@ import android.content.Context
 import javax.microedition.khronos.egl.EGLConfig
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
 import android.opengl.GLES32 as GL
 import android.widget.FrameLayout.LayoutParams as LP
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
 import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.FrameLayout.SYSTEM_UI_FLAG_IMMERSIVE
 import android.widget.LinearLayout
 import android.widget.SeekBar
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
 import java.nio.ByteOrder
 import java.nio.ByteBuffer.allocateDirect
 import java.util.*
@@ -176,19 +170,6 @@ fun MotionEvent.focus() : FloatArray {
     else { floatArrayOf((getX(0) + getX(1))/2.0f, (getY(0) + getY(1))/2.0f) }
 }
 
-fun loadShader(type: Int, shaderCode: String): Int {
-
-    // create a vertex shader type (GL.GL_VERTEX_SHADER)
-    // or a fragment shader type (GL.GL_FRAGMENT_SHADER)
-    val shader = GL.glCreateShader(type)
-
-    // add the source code to the shader and compile it
-    GL.glShaderSource(shader, shaderCode)
-    GL.glCompileShader(shader)
-
-    return shader
-}
-
 fun splitSD(a: Double) : FloatArray {
 
     val b = FloatArray(2)
@@ -237,8 +218,7 @@ class FractalSurfaceView : GLSurfaceView {
             var frequency = 1.0f
             var phase = 0.0f
 
-            private val numChunks = 8
-            private val chunkInc : Float = 2.0f / numChunks
+            private val maxPixelsPerChunk = screenWidth*screenHeight/10
 
             // coordinates of default view boundaries
             private val viewCoords = floatArrayOf(
@@ -426,6 +406,50 @@ class FractalSurfaceView : GLSurfaceView {
 
             }
 
+            private fun loadShader(type: Int, shaderCode: String): Int {
+
+                // create a vertex shader type (GL.GL_VERTEX_SHADER)
+                // or a fragment shader type (GL.GL_FRAGMENT_SHADER)
+                val shader = GL.glCreateShader(type)
+
+                // add the source code to the shader and compile it
+                GL.glShaderSource(shader, shaderCode)
+                GL.glCompileShader(shader)
+
+                return shader
+            }
+
+            private fun splitCoords(xCoords: FloatArray, yCoords: FloatArray) : List<FloatArray> {
+
+                val xLength = xCoords[1] - xCoords[0]
+                val yLength = yCoords[1] - yCoords[0]
+                val xPixels = xLength / 2.0f * screenWidth
+                val yPixels = yLength / 2.0f * screenHeight
+                val numChunks = ceil((xPixels*yPixels) / maxPixelsPerChunk).toInt()
+                val chunkInc = if (xLength >= yLength) xLength/numChunks else yLength/numChunks
+
+                return if (xPixels >= yPixels) {
+                    List(numChunks) { i: Int ->
+                        floatArrayOf(
+                            xCoords[0] + i*chunkInc,       yCoords[1], 0.0f,    // top left
+                            xCoords[0] + i*chunkInc,       yCoords[0], 0.0f,    // bottom left
+                            xCoords[0] + (i + 1)*chunkInc, yCoords[0], 0.0f,    // bottom right
+                            xCoords[0] + (i + 1)*chunkInc, yCoords[1], 0.0f     // top right
+                        )
+                    }
+                }
+                else {
+                    List(numChunks) { i: Int ->
+                        floatArrayOf(
+                            xCoords[0], yCoords[0] + (i + 1)*chunkInc, 0.0f,    // top left
+                            xCoords[0], yCoords[0] + i*chunkInc,       0.0f,    // bottom left
+                            xCoords[1], yCoords[0] + i*chunkInc,       0.0f,    // bottom right
+                            xCoords[1], yCoords[0] + (i + 1)*chunkInc, 0.0f     // top right
+                        )
+                    }
+                }
+
+            }
 
             fun renderToTexture() {
 
@@ -529,53 +553,53 @@ class FractalSurfaceView : GLSurfaceView {
 
                 if (strictTranslate()) {
 
-                    val xIntersectQuadCoords : DoubleArray
-                    val yIntersectQuadCoords : DoubleArray
-                    val xIntersectViewCoords : DoubleArray
-                    val yIntersectViewCoords : DoubleArray
+                    val xIntersectQuadCoords : FloatArray
+                    val yIntersectQuadCoords : FloatArray
+                    val xIntersectViewCoords : FloatArray
+                    val yIntersectViewCoords : FloatArray
 
-                    val xComplementViewCoordsA : DoubleArray
-                    val yComplementViewCoordsA : DoubleArray
+                    val xComplementViewCoordsA : FloatArray
+                    val yComplementViewCoordsA : FloatArray
 
-                    val xComplementViewCoordsB = doubleArrayOf(-1.0, 1.0)
-                    val yComplementViewCoordsB : DoubleArray
+                    val xComplementViewCoordsB = floatArrayOf(-1.0f, 1.0f)
+                    val yComplementViewCoordsB : FloatArray
 
 
                     if (xQuadCoords[0] > -1.0) {
-                        xIntersectQuadCoords   = doubleArrayOf( xQuadCoords[0],              1.0 )
-                        xIntersectViewCoords   = doubleArrayOf( -1.0,            -xQuadCoords[0] )
-                        xComplementViewCoordsA = doubleArrayOf( -1.0,             xQuadCoords[0] )
+                        xIntersectQuadCoords   = floatArrayOf( xQuadCoords[0].toFloat(),   1.0f )
+                        xIntersectViewCoords   = floatArrayOf( -1.0f, -xQuadCoords[0].toFloat() )
+                        xComplementViewCoordsA = floatArrayOf( -1.0f,  xQuadCoords[0].toFloat() )
                     }
                     else {
-                        xIntersectQuadCoords   = doubleArrayOf( -1.0,             xQuadCoords[1] )
-                        xIntersectViewCoords   = doubleArrayOf( -xQuadCoords[1],             1.0 )
-                        xComplementViewCoordsA = doubleArrayOf( xQuadCoords[1],              1.0 )
+                        xIntersectQuadCoords   = floatArrayOf( -1.0f,  xQuadCoords[1].toFloat() )
+                        xIntersectViewCoords   = floatArrayOf( -xQuadCoords[1].toFloat(),  1.0f )
+                        xComplementViewCoordsA = floatArrayOf(  xQuadCoords[1].toFloat(),  1.0f )
                     }
 
                     if (yQuadCoords[0] > -1.0) {
-                        yIntersectQuadCoords   = doubleArrayOf( yQuadCoords[0],              1.0 )
-                        yIntersectViewCoords   = doubleArrayOf( -1.0,            -yQuadCoords[0] )
-                        yComplementViewCoordsA = doubleArrayOf( yQuadCoords[0],              1.0 )
-                        yComplementViewCoordsB = doubleArrayOf( -1.0,             yQuadCoords[0] )
+                        yIntersectQuadCoords   = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
+                        yIntersectViewCoords   = floatArrayOf( -1.0f, -yQuadCoords[0].toFloat() )
+                        yComplementViewCoordsA = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
+                        yComplementViewCoordsB = floatArrayOf( -1.0f,  yQuadCoords[0].toFloat() )
                     }
                     else {
-                        yIntersectQuadCoords   = doubleArrayOf( -1.0,             yQuadCoords[1] )
-                        yIntersectViewCoords   = doubleArrayOf( -yQuadCoords[1],             1.0 )
-                        yComplementViewCoordsA = doubleArrayOf( -1.0,             yQuadCoords[1] )
-                        yComplementViewCoordsB = doubleArrayOf( yQuadCoords[1],              1.0 )
+                        yIntersectQuadCoords   = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
+                        yIntersectViewCoords   = floatArrayOf( -yQuadCoords[1].toFloat(), 1.0f )
+                        yComplementViewCoordsA = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
+                        yComplementViewCoordsB = floatArrayOf(  yQuadCoords[1].toFloat(), 1.0f )
                     }
 
 
-                    val complementViewCoordsA = floatArrayOf(
-                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f,     // top left
-                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom left
-                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom right
-                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f )    // top right
-                    val complementViewCoordsB = floatArrayOf(
-                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f,     // top left
-                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom left
-                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom right
-                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f )    // top right
+//                    val complementViewCoordsA = floatArrayOf(
+//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f,     // top left
+//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom left
+//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom right
+//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f )    // top right
+//                    val complementViewCoordsB = floatArrayOf(
+//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f,     // top left
+//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom left
+//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom right
+//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f )    // top right
 
 
 
@@ -586,8 +610,6 @@ class FractalSurfaceView : GLSurfaceView {
 
                     GL.glViewport(0, 0, textures[intIndex].width, textures[intIndex].height)
                     GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
-                    viewChunkBuffer.put(complementViewCoordsA).position(0)
-
                     GL.glVertexAttribPointer(
                             viewCoordsHandle,           // index
                             3,                          // coordinates per vertex
@@ -603,15 +625,24 @@ class FractalSurfaceView : GLSurfaceView {
                             textures[intIndex].id,          // texture
                             0                               // level
                     )
-
                     GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-                    GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
 
-                    viewChunkBuffer
-                            .put(complementViewCoordsB)
-                            .position(0)
+                    val chunksA = splitCoords(xComplementViewCoordsA, yComplementViewCoordsA)
+                    for (complementViewChunkCoordsA in chunksA) {
 
-                    GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                        viewChunkBuffer.put(complementViewChunkCoordsA).position(0)
+                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                        GL.glFinish()
+
+                    }
+                    val chunksB = splitCoords(xComplementViewCoordsB, yComplementViewCoordsB)
+                    for (complementViewChunkCoordsB in chunksB) {
+
+                        viewChunkBuffer.put(complementViewChunkCoordsB).position(0)
+                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                        GL.glFinish()
+                        
+                    }
 
 
 
@@ -625,17 +656,17 @@ class FractalSurfaceView : GLSurfaceView {
                     GL.glViewport(0, 0, textures[intIndex].width, textures[intIndex].height)
 
                     val intersectQuadCoords = floatArrayOf(
-                            xIntersectQuadCoords[0].toFloat(),  yIntersectQuadCoords[1].toFloat(),  0.0f,     // top left
-                            xIntersectQuadCoords[0].toFloat(),  yIntersectQuadCoords[0].toFloat(),  0.0f,     // bottom left
-                            xIntersectQuadCoords[1].toFloat(),  yIntersectQuadCoords[0].toFloat(),  0.0f,     // bottom right
-                            xIntersectQuadCoords[1].toFloat(),  yIntersectQuadCoords[1].toFloat(),  0.0f )    // top right
+                            xIntersectQuadCoords[0],  yIntersectQuadCoords[1],  0.0f,     // top left
+                            xIntersectQuadCoords[0],  yIntersectQuadCoords[0],  0.0f,     // bottom left
+                            xIntersectQuadCoords[1],  yIntersectQuadCoords[0],  0.0f,     // bottom right
+                            xIntersectQuadCoords[1],  yIntersectQuadCoords[1],  0.0f )    // top right
                     quadBuffer.put(intersectQuadCoords).position(0)
 
                     val intersectViewCoords = floatArrayOf(
-                            xIntersectViewCoords[0].toFloat(),  yIntersectViewCoords[1].toFloat(),  0.0f,     // top left
-                            xIntersectViewCoords[0].toFloat(),  yIntersectViewCoords[0].toFloat(),  0.0f,     // bottom left
-                            xIntersectViewCoords[1].toFloat(),  yIntersectViewCoords[0].toFloat(),  0.0f,     // bottom right
-                            xIntersectViewCoords[1].toFloat(),  yIntersectViewCoords[1].toFloat(),  0.0f )    // top right
+                            xIntersectViewCoords[0],  yIntersectViewCoords[1],  0.0f,     // top left
+                            xIntersectViewCoords[0],  yIntersectViewCoords[0],  0.0f,     // bottom left
+                            xIntersectViewCoords[1],  yIntersectViewCoords[0],  0.0f,     // bottom right
+                            xIntersectViewCoords[1],  yIntersectViewCoords[1],  0.0f )    // top right
                     viewChunkBuffer.put(intersectViewCoords).position(0)
 
 
@@ -705,14 +736,16 @@ class FractalSurfaceView : GLSurfaceView {
 
                     GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
-                    for (i in 0..(numChunks - 1)) {
 
-                        val viewChunkCoords = floatArrayOf(
-                                -1.0f + i * chunkInc, 1.0f, 0.0f,    // top left
-                                -1.0f + i * chunkInc, -1.0f, 0.0f,    // bottom left
-                                -1.0f + (i + 1) * chunkInc, -1.0f, 0.0f,    // bottom right
-                                -1.0f + (i + 1) * chunkInc, 1.0f, 0.0f     // top right
-                        )
+                    val chunks = splitCoords(floatArrayOf(-1.0f, 1.0f), floatArrayOf(-1.0f, 1.0f))
+                    for (viewChunkCoords in chunks) {
+
+//                        val viewChunkCoords = floatArrayOf(
+//                                -1.0f +  i*chunkInc,        1.0f, 0.0f,    // top left
+//                                -1.0f +  i*chunkInc,       -1.0f, 0.0f,    // bottom left
+//                                -1.0f + (i + 1)*chunkInc,  -1.0f, 0.0f,    // bottom right
+//                                -1.0f + (i + 1)*chunkInc,   1.0f, 0.0f     // top right
+//                        )
                         viewChunkBuffer.put(viewChunkCoords)
                         viewChunkBuffer.position(0)
 
@@ -1406,6 +1439,7 @@ class FractalSurfaceView : GLSurfaceView {
 
     val screenWidth : Int
     val screenHeight : Int
+    val screenPixels : Int
 
     val r : FractalRenderer
     var reactionType = Reaction.TRANSFORM
@@ -1423,6 +1457,7 @@ class FractalSurfaceView : GLSurfaceView {
         val displayMetrics = context.resources.displayMetrics
         screenWidth = displayMetrics.widthPixels
         screenHeight = displayMetrics.heightPixels
+        screenPixels = screenWidth*screenHeight
 
         setEGLContextClientVersion(3)               // create OpenGL ES 3.0 context
         r = FractalRenderer(context)                // create renderer
