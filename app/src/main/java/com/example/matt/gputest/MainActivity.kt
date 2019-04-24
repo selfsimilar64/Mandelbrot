@@ -1,11 +1,13 @@
 package com.example.matt.gputest
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.opengl.GLSurfaceView
 import android.content.Context
 import javax.microedition.khronos.egl.EGLConfig
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
 import android.opengl.GLES32 as GL
 import android.widget.FrameLayout.LayoutParams as LP
@@ -14,8 +16,11 @@ import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.FrameLayout.SYSTEM_UI_FLAG_IMMERSIVE
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.view.*
 import java.nio.ByteOrder
 import java.nio.ByteBuffer.allocateDirect
 import java.util.*
@@ -168,15 +173,7 @@ fun MotionEvent.focalLength() : Float {
 
 fun MotionEvent.focus() : FloatArray {
     return if (pointerCount == 1) floatArrayOf(x, y)
-    else {
-        var sumX = 0.0f
-        var sumY = 0.0f
-        for (i in 0 until pointerCount) {
-            sumX += getX(i)
-            sumY += getY(i)
-        }
-        floatArrayOf(sumX/pointerCount, sumY/pointerCount)
-    }
+    else { floatArrayOf((getX(0) + getX(1))/2.0f, (getY(0) + getY(1))/2.0f) }
 }
 
 fun loadShader(type: Int, shaderCode: String): Int {
@@ -216,16 +213,27 @@ fun splitDD(a: DualDouble) : FloatArray {
 
 
 
-class MainActivity : AppCompatActivity() {
 
 
 
-    inner class FractalRenderer(private val ctx: Context) : GLSurfaceView.Renderer {
+
+
+
+class FractalSurfaceView : GLSurfaceView {
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
+
+
+
+
+    inner class FractalRenderer(private val ctx: Context) : Renderer {
+
+
 
 
         inner class RenderRoutine(ctx: Context) {
 
-            val precision = Precision.SINGLE
+            val precision = Precision.DUAL
             var frequency = 1.0f
             var phase = 0.0f
 
@@ -841,12 +849,11 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        val screenWidth : Int
-        val screenHeight : Int
-        //        val screen2Width : Int
-//        val screen2Height : Int
-        private val ratio : Float
-        private val screenRes : FloatArray
+        private val ratio = screenWidth.toFloat() / screenHeight.toFloat()
+        private val screenRes = floatArrayOf(
+                screenWidth.toFloat(),
+                screenHeight.toFloat()
+        )
 
         var maxIter : Int = 63
         var renderToTex = false
@@ -916,10 +923,10 @@ class MainActivity : AppCompatActivity() {
 
             val shader =
                     """
-                    ${resources.getString(R.string.header_sf)}
-                    ${resources.getString(R.string.arithmetic_sf)}
+                    ${ctx.resources.getString(R.string.header_sf)}
+                    ${ctx.resources.getString(R.string.arithmetic_sf)}
                     void main() {
-                    ${resources.getString(R.string.general_init_sf)}
+                    ${ctx.resources.getString(R.string.general_init_sf)}
                     ${map.init}
                     ${alg.init}
                         for (int n = 0; n < maxIter; n++) {
@@ -948,12 +955,12 @@ class MainActivity : AppCompatActivity() {
         ) {
 
             val shader =
-                    resources.getString(R.string.header_df) +
-                            resources.getString(R.string.arithmetic_util) +
-                            resources.getString(R.string.arithmetic_sf) +
-                            resources.getString(R.string.arithmetic_df) +
+                    ctx.resources.getString(R.string.header_df) +
+                            ctx.resources.getString(R.string.arithmetic_util) +
+                            ctx.resources.getString(R.string.arithmetic_sf) +
+                            ctx.resources.getString(R.string.arithmetic_df) +
                             "void main() {\n" +
-                            resources.getString(R.string.general_init_df) +
+                            ctx.resources.getString(R.string.general_init_df) +
                             map.init +
                             alg.init +
                             "    for (int n = 0; n < maxIter; n++) {\n" +
@@ -980,15 +987,15 @@ class MainActivity : AppCompatActivity() {
         // COMPLEX MAPS
         val mandelbrotMapSF = ComplexMap(
                 "Mandelbrot",
-                resources.getString(R.string.mandelbrot_init_sf),
-                resources.getString(R.string.mandelbrot_loop_sf),
-                resources.getString(R.string.mandelbrot_final_sf)
+                ctx.resources.getString(R.string.mandelbrot_init_sf),
+                ctx.resources.getString(R.string.mandelbrot_loop_sf),
+                ctx.resources.getString(R.string.mandelbrot_final_sf)
         )
         val mandelbrotMapDF = ComplexMap(
                 "Mandelbrot",
-                resources.getString(R.string.mandelbrot_init_df),
-                resources.getString(R.string.mandelbrot_loop_df),
-                resources.getString(R.string.mandelbrot_final_df)
+                ctx.resources.getString(R.string.mandelbrot_init_df),
+                ctx.resources.getString(R.string.mandelbrot_loop_df),
+                ctx.resources.getString(R.string.mandelbrot_final_df)
         )
 
         val exponentialSF = ComplexMap(
@@ -1010,64 +1017,76 @@ class MainActivity : AppCompatActivity() {
         // COLORING ALGORITHMS
         val smoothSF = ColorAlgorithm(
                 "Smooth",
-                resources.getString(R.string.mandelbrot_smooth_init_sf),
                 "",
-                resources.getString(R.string.mandelbrot_smooth_final_sf)
+                "",
+                ctx.resources.getString(R.string.mandelbrot_smooth_final_sf)
+        )
+        val smoothDF = ColorAlgorithm(
+                "Smooth",
+                "",
+                "",
+                ctx.resources.getString(R.string.mandelbrot_smooth_final_df)
         )
         val lightingSF = ColorAlgorithm(
                 "Lighting",
-                resources.getString(R.string.mandelbrot_light_init_sf),
-                resources.getString(R.string.mandelbrot_light_loop_sf),
-                resources.getString(R.string.mandelbrot_light_final_sf)
+                ctx.resources.getString(R.string.mandelbrot_light_init_sf),
+                ctx.resources.getString(R.string.mandelbrot_light_loop_sf),
+                ctx.resources.getString(R.string.mandelbrot_light_final_sf)
+        )
+        val lightingDF = ColorAlgorithm(
+                "Lighting",
+                ctx.resources.getString(R.string.mandelbrot_light_init_df),
+                ctx.resources.getString(R.string.mandelbrot_light_loop_df),
+                ctx.resources.getString(R.string.mandelbrot_light_final_sf)
         )
         val triangleIneqAvgSF = ColorAlgorithm(
                 "Triangle Inequality Average",
-                resources.getString(R.string.mandelbrot_triangle_init_sf),
-                resources.getString(R.string.mandelbrot_triangle_loop_sf),
-                resources.getString(R.string.mandelbrot_triangle_final_sf)
+                ctx.resources.getString(R.string.mandelbrot_triangle_init_sf),
+                ctx.resources.getString(R.string.mandelbrot_triangle_loop_sf),
+                ctx.resources.getString(R.string.mandelbrot_triangle_final_sf)
         )
         val triangleIneqAvgDF = ColorAlgorithm(
                 "Triangle Inequality Average",
-                resources.getString(R.string.mandelbrot_triangle_init_df2),
-                resources.getString(R.string.mandelbrot_triangle_loop_df2),
-                resources.getString(R.string.mandelbrot_triangle_final_df2)
+                ctx.resources.getString(R.string.mandelbrot_triangle_init_df),
+                ctx.resources.getString(R.string.mandelbrot_triangle_loop_df),
+                ctx.resources.getString(R.string.mandelbrot_triangle_final_df)
         )
         val curvatureAvgSF = ColorAlgorithm(
                 "Curvature Average",
-                resources.getString(R.string.curvature_init_sf),
-                resources.getString(R.string.curvature_loop_sf),
-                resources.getString(R.string.curvature_final_sf)
+                ctx.resources.getString(R.string.curvature_init_sf),
+                ctx.resources.getString(R.string.curvature_loop_sf),
+                ctx.resources.getString(R.string.curvature_final_sf)
         )
         val curvatureAvgDF = ColorAlgorithm(
                 "Curvature Average",
-                resources.getString(R.string.curvature_init_df),
-                resources.getString(R.string.curvature_loop_df),
-                resources.getString(R.string.curvature_final_df)
+                ctx.resources.getString(R.string.curvature_init_df),
+                ctx.resources.getString(R.string.curvature_loop_df),
+                ctx.resources.getString(R.string.curvature_final_df)
         )
         val stripeAvgSF = ColorAlgorithm(
                 "Stripe Average",
-                resources.getString(R.string.stripe_init_sf),
-                resources.getString(R.string.stripe_loop_sf).format(5.0f),
-                resources.getString(R.string.stripe_final_sf)
+                ctx.resources.getString(R.string.stripe_init_sf),
+                ctx.resources.getString(R.string.stripe_loop_sf).format(5.0f),
+                ctx.resources.getString(R.string.stripe_final_sf)
         )
         val stripeAvgDF = ColorAlgorithm(
                 "Stripe Average",
-                resources.getString(R.string.stripe_init_df2),
-                resources.getString(R.string.stripe_loop_df2).format(5.0f),
-                resources.getString(R.string.stripe_final_df2)
+                ctx.resources.getString(R.string.stripe_init_df2),
+                ctx.resources.getString(R.string.stripe_loop_df2).format(5.0f),
+                ctx.resources.getString(R.string.stripe_final_df2)
         )
 
         val testSF = ColorAlgorithm(
                 "test",
-                resources.getString(R.string.test_init_sf),
-                resources.getString(R.string.test_loop_sf),
-                resources.getString(R.string.test_final_sf)
+                ctx.resources.getString(R.string.test_init_sf),
+                ctx.resources.getString(R.string.test_loop_sf),
+                ctx.resources.getString(R.string.test_final_sf)
         )
         val testDF = ColorAlgorithm(
                 "test",
-                resources.getString(R.string.test_init_df),
-                resources.getString(R.string.test_loop_df),
-                resources.getString(R.string.test_final_df)
+                ctx.resources.getString(R.string.test_init_df),
+                ctx.resources.getString(R.string.test_loop_df),
+                ctx.resources.getString(R.string.test_final_df)
         )
 
 
@@ -1076,7 +1095,7 @@ class MainActivity : AppCompatActivity() {
         val mandelbrotDF = FractalShaderDF(
                 "Mandelbrot",
                 mandelbrotMapDF,
-                triangleIneqAvgDF
+                triangleIneqAvgDF.add(lightingDF)
         )
 
         val mandelbrotSF = FractalShaderSF(
@@ -1094,32 +1113,23 @@ class MainActivity : AppCompatActivity() {
 
         init {
 
-            val displayMetrics = DisplayMetrics()
-//            windowManager.defaultDisplay.getMetrics(displayMetrics)
-//            screenWidth = displayMetrics.widthPixels
-//            screenHeight = displayMetrics.heightPixels
-            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
-            screenWidth = displayMetrics.widthPixels
-            screenHeight = displayMetrics.heightPixels
-            screenRes = floatArrayOf(screenWidth.toFloat(), screenHeight.toFloat())
             // Log.d("WIDTH", "$screenWidth")
             // Log.d("HEIGHT", "$screenHeight")
-            ratio = screenWidth.toFloat()/screenHeight.toFloat()
 
             xCoords = doubleArrayOf(-2.5, 1.0)
             yCoords = doubleArrayOf(-1.75/ratio, 1.75/ratio)
 
-//            xCoordsDD = arrayOf(DualDouble(-2.5, 0.0), DualDouble(1.0, 0.0))
-//            yCoordsDD = arrayOf(DualDouble(-1.75/ratio, 0.0), DualDouble(1.75/ratio, 0.0))
+            xCoordsDD = arrayOf(DualDouble(-2.5, 0.0), DualDouble(1.0, 0.0))
+            yCoordsDD = arrayOf(DualDouble(-1.75/ratio, 0.0), DualDouble(1.75/ratio, 0.0))
 
-            xCoordsDD = arrayOf(
-                    DualDouble(0.37920827401670115, -1.6967977976103588E-17),
-                    DualDouble(0.37920827401676893, 2.0161868017805913E-17)
-            )
-            yCoordsDD = arrayOf(
-                    DualDouble(-0.5799286539791223, -4.092538660706216E-17),
-                    DualDouble(-0.5799286539790097, 3.2781664231013985E-17)
-            )
+//            xCoordsDD = arrayOf(
+//                    DualDouble(0.37920827401670115, -1.6967977976103588E-17),
+//                    DualDouble(0.37920827401676893, 2.0161868017805913E-17)
+//            )
+//            yCoordsDD = arrayOf(
+//                    DualDouble(-0.5799286539791223, -4.092538660706216E-17),
+//                    DualDouble(-0.5799286539790097, 3.2781664231013985E-17)
+//            )
 
 //            xCoordsDD = arrayOf(
 //                    DualDouble(0.37920827401673174, 4.245500306531286E-18),
@@ -1388,164 +1398,255 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    inner class FractalSurfaceView : GLSurfaceView {
-
-        constructor(context : Context) : super(context)
-        constructor(context : Context, attrs : AttributeSet) : super(context, attrs)
-
-        val r : FractalRenderer
-        var reactionType = Reaction.TRANSFORM
-        val continuousRender = false
-
-        private val prevFocus = floatArrayOf(0.0f, 0.0f)
-        private var prevFocalLen = 1.0f
 
 
-        init {
-            setEGLContextClientVersion(3)               // create OpenGL ES 3.0 context
-            r = FractalRenderer(context)                // create renderer
-            setRenderer(r)                              // set renderer
-            renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly
+
+
+    lateinit var activity : Activity
+
+    val screenWidth : Int
+    val screenHeight : Int
+
+    val r : FractalRenderer
+    var reactionType = Reaction.TRANSFORM
+    val continuousRender = false
+
+    private val prevFocus = floatArrayOf(0.0f, 0.0f)
+    private val edgeRightSize = 150
+    private var prevFocalLen = 1.0f
+
+    private var visibleUI = false
+
+
+    init {
+
+        val displayMetrics = context.resources.displayMetrics
+        screenWidth = displayMetrics.widthPixels
+        screenHeight = displayMetrics.heightPixels
+
+        setEGLContextClientVersion(3)               // create OpenGL ES 3.0 context
+        r = FractalRenderer(context)                // create renderer
+        setRenderer(r)                              // set renderer
+        renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly
+    }
+
+    fun hideSystemUI() {
+        // Enables regular immersive mode.
+        // For "lean back" mode, remove SYSTEM_UI_FLAG_IMMERSIVE.
+        // Or for "sticky immersive," replace it with SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        systemUiVisibility = (
+                SYSTEM_UI_FLAG_IMMERSIVE
+                // Set the content to appear under the system bars so that the
+                // content doesn't resize when the system bars hide and show.
+                or SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                // Hide the nav bar and status bar
+                or SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or SYSTEM_UI_FLAG_FULLSCREEN
+        )
+    }
+    fun showSystemUI() {
+        systemUiVisibility = (
+                SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        )
+    }
+
+    fun hideAppUI() {
+        activity.findViewById<LinearLayout>(R.id.linearLayout).bringToFront()
+        activity.findViewById<Button>(R.id.transformButton).visibility = Button.INVISIBLE
+        activity.findViewById<Button>(R.id.colorButton).visibility = Button.INVISIBLE
+        activity.findViewById<SeekBar>(R.id.maxIterBar).visibility = SeekBar.INVISIBLE
+    }
+    fun showAppUI() {
+        activity.findViewById<LinearLayout>(R.id.linearLayout).bringToFront()
+        activity.findViewById<Button>(R.id.transformButton).visibility = Button.VISIBLE
+        activity.findViewById<Button>(R.id.colorButton).visibility = Button.VISIBLE
+        activity.findViewById<SeekBar>(R.id.maxIterBar).visibility = SeekBar.VISIBLE
+    }
+    fun toggleAppUI() {
+        if (visibleUI) { hideAppUI() }
+        else { showAppUI() }
+        visibleUI = !visibleUI
+    }
+
+
+
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(e: MotionEvent?): Boolean {
+
+        if (screenWidth - (e?.x ?: 0.0f) < edgeRightSize) {
+            when (e?.actionMasked) {
+
+                MotionEvent.ACTION_DOWN -> {
+                    // Log.d("UI", "DOWN")
+
+                    val focus = e.focus()
+                    prevFocus[0] = focus[0]
+                    prevFocus[1] = focus[1]
+
+                    Log.d("UI", "DOWN -- EDGE RIGHT")
+                    toggleAppUI()
+                    return true
+
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    // Log.d("UI", "MOVE")
+
+                    val focus = e.focus()
+                    prevFocus[0] = focus[0]
+                    prevFocus[1] = focus[1]
+
+                    Log.d("UI", "MOVE -- EDGE RIGHT")
+                    return true
+
+                }
+
+            }
         }
 
-        @SuppressLint("ClickableViewAccessibility")
-        override fun onTouchEvent(e: MotionEvent?): Boolean {
+        when (reactionType) {
 
-            when (reactionType) {
+            Reaction.TRANSFORM -> {
 
-                Reaction.TRANSFORM -> {
-                    // actions change fractal
-                    when (e?.actionMasked) {
+                // actions change fractal
+                when (e?.actionMasked) {
 
-                        MotionEvent.ACTION_DOWN -> {
-                            val focus = e.focus()
-                            prevFocus[0] = focus[0]
-                            prevFocus[1] = focus[1]
-                            //// Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                            return true
-                        }
-                        MotionEvent.ACTION_POINTER_DOWN -> {
+                    MotionEvent.ACTION_DOWN -> {
+                        Log.d("TRANSFORM", "DOWN -- x: ${e.x}, y: ${e.y}")
+
+                        val focus = e.focus()
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
+
+                        return true
+                    }
+                    MotionEvent.ACTION_POINTER_DOWN -> {
+                        Log.d("TRANSFORM", "POINTER ${e.actionIndex + 1} DOWN -- x: ${e.x}, y: ${e.y}")
+                        if (e.actionIndex == 1) {
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             prevFocalLen = e.focalLength()
                             r.newQuadFocus = true
-                            //// Log.d("POINTER DOWN", "focus: $focus, focalLen: $prevFocalLen")
-                            return true
                         }
-                        MotionEvent.ACTION_MOVE -> {
-                            val focus = e.focus()
-                            val dx: Float = focus[0] - prevFocus[0]
-                            val dy: Float = focus[1] - prevFocus[1]
-                            r.translate(floatArrayOf(dx, dy))
-                            prevFocus[0] = focus[0]
-                            prevFocus[1] = focus[1]
-                            if (e.pointerCount > 1) {   // MULTI-TOUCH
-                                val focalLen = e.focalLength()
-                                val dFocalLen = focalLen / prevFocalLen
-                                r.scale(dFocalLen, focus)
-                                prevFocalLen = focalLen
-                                // // Log.d("SCALE", "$dScale")
-                            }
+                        return true
 
-                            //// Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                            //// Log.d("TRANSLATE", "dx: $dx, dy: $dy")
-                            if (continuousRender) {
-                                r.renderToTex = true
-                            }
-                            requestRender()
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        // Log.d("TRANSFORM", "MOVE -- x: ${e.x}, y: ${e.y}")
 
-                            return true
+                        val focus = e.focus()
+                        val dx: Float = focus[0] - prevFocus[0]
+                        val dy: Float = focus[1] - prevFocus[1]
+                        r.translate(floatArrayOf(dx, dy))
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
+                        if (e.pointerCount > 1) {   // MULTI-TOUCH
+                            val focalLen = e.focalLength()
+                            val dFocalLen = focalLen / prevFocalLen
+                            r.scale(dFocalLen, focus)
+                            prevFocalLen = focalLen
+                            // // Log.d("SCALE", "$dScale")
                         }
-                        MotionEvent.ACTION_UP -> {
-                            //// Log.d("UP", "x: ${e.x}, y: ${e.y}, count: ${e.pointerCount}")
+
+                        Log.d("MOVE", "x: ${e.x}, y: ${e.y}")
+                        if (continuousRender) {
                             r.renderToTex = true
-                            // r.renderFromTex = true
-                            requestRender()
-                            return true
                         }
-                        MotionEvent.ACTION_POINTER_UP -> {
-                            //// Log.d("POINTER UP", "x: ${e.x}, y: ${e.y}, count: ${e.pointerCount}")
-                            if (e.getPointerId(e.actionIndex) == 0) {
-                                prevFocus[0] = e.getX(1)
-                                prevFocus[1] = e.getY(1)
-                            } else if (e.getPointerId(e.actionIndex) == 1) {
-                                prevFocus[0] = e.getX(0)
-                                prevFocus[1] = e.getY(0)
-                            }
-                            return true
-                        }
+                        requestRender()
 
+                        return true
                     }
-                }
-                Reaction.COLOR -> {
-                    // actions change coloring
-                    when (e?.actionMasked) {
-
-                        MotionEvent.ACTION_DOWN -> {
-                            val focus = e.focus()
-                            prevFocus[0] = focus[0]
-                            prevFocus[1] = focus[1]
-                            //// Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                            return true
-                        }
-                        MotionEvent.ACTION_POINTER_DOWN -> {
-                            val focus = e.focus()
-                            prevFocus[0] = focus[0]
-                            prevFocus[1] = focus[1]
-                            prevFocalLen = e.focalLength()
-                            //// Log.d("POINTER DOWN", "focus: $focus, focalLen: $prevFocalLen")
-                            return true
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            val focus = e.focus()
-                            val dx: Float = focus[0] - prevFocus[0]
-                            val dy: Float = focus[1] - prevFocus[1]
-                            r.f.phase += dx/r.screenWidth
-                            prevFocus[0] = focus[0]
-                            prevFocus[1] = focus[1]
-                            if (e.pointerCount > 1) {   // MULTI-TOUCH
-                                val focalLen = e.focalLength()
-                                val dFocalLen = focalLen / prevFocalLen
-                                r.f.frequency *= dFocalLen
-                                prevFocalLen = focalLen
-                                // // Log.d("SCALE", "$dScale")
-                            }
-                            requestRender()
-                            return true
-                        }
-
+                    MotionEvent.ACTION_UP -> {
+                        //// Log.d("UP", "x: ${e.x}, y: ${e.y}, count: ${e.pointerCount}")
+                        r.renderToTex = true
+                        requestRender()
+                        return true
                     }
-                }
-                Reaction.LIGHT -> {
-                    // actions change light position
-                    when (e?.actionMasked) {
+                    MotionEvent.ACTION_POINTER_UP -> {
+                        //// Log.d("POINTER UP", "x: ${e.x}, y: ${e.y}, count: ${e.pointerCount}")
+                        if (e.getPointerId(e.actionIndex) == 0) {
+                            prevFocus[0] = e.getX(1)
+                            prevFocus[1] = e.getY(1)
+                        } else if (e.getPointerId(e.actionIndex) == 1) {
+                            prevFocus[0] = e.getX(0)
+                            prevFocus[1] = e.getY(0)
+                        }
+                        return true
+                    }
 
-                        MotionEvent.ACTION_DOWN -> {
-                            // Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                }
+            }
+            Reaction.COLOR -> {
+                // actions change coloring
+                when (e?.actionMasked) {
+
+                    MotionEvent.ACTION_DOWN -> {
+                        val focus = e.focus()
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
+                        //// Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        return true
+                    }
+                    MotionEvent.ACTION_POINTER_DOWN -> {
+                        val focus = e.focus()
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
+                        prevFocalLen = e.focalLength()
+                        //// Log.d("POINTER DOWN", "focus: $focus, focalLen: $prevFocalLen")
+                        return true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val focus = e.focus()
+                        val dx: Float = focus[0] - prevFocus[0]
+                        val dy: Float = focus[1] - prevFocus[1]
+                        r.f.phase += dx/screenWidth
+                        prevFocus[0] = focus[0]
+                        prevFocus[1] = focus[1]
+                        if (e.pointerCount > 1) {   // MULTI-TOUCH
+                            val focalLen = e.focalLength()
+                            val dFocalLen = focalLen / prevFocalLen
+                            r.f.frequency *= dFocalLen
+                            prevFocalLen = focalLen
+                            // // Log.d("SCALE", "$dScale")
+                        }
+                        requestRender()
+                        return true
+                    }
+
+                }
+            }
+            Reaction.LIGHT -> {
+                // actions change light position
+                when (e?.actionMasked) {
+
+                    MotionEvent.ACTION_DOWN -> {
+                        // Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
 //                        val u : Float = e.x - r.screenWidth
 //                        val v : Float = e.y - r.screenHeight
 //                        val r : Float = sqrt(u*u + v*v)
 //                        r.touchPos = floatArrayOf(u/r, v/r)
 //                        // Log.d("LIGHTPOS", "u: ${u/r}, v: ${v/r}")
 
-                            val screenPos = doubleArrayOf(
-                                    e.x.toDouble() / r.screenWidth.toDouble(),
-                                    e.y.toDouble() / r.screenHeight.toDouble()
-                            )
-                            r.setTouchPos(screenPos)
-                            r.renderToTex = true
-                            requestRender()
-                            return true
-                        }
-                        MotionEvent.ACTION_UP -> {
-                            // Log.d("UP", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
-                            // Log.d("LIGHTPOS", "u: ${r.touchPos[0]}, v: ${r.touchPos[1]}")
-                            requestRender()
-                            return true
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            // Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        val screenPos = doubleArrayOf(
+                                e.x.toDouble() / screenWidth.toDouble(),
+                                e.y.toDouble() / screenHeight.toDouble()
+                        )
+                        r.setTouchPos(screenPos)
+                        r.renderToTex = true
+                        requestRender()
+                        return true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        // Log.d("UP", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                        // Log.d("LIGHTPOS", "u: ${r.touchPos[0]}, v: ${r.touchPos[1]}")
+                        requestRender()
+                        return true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        // Log.d("MOVE", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
 
 //                        val u : Float = e.x - r.screenWidth/2.0f
 //                        val v : Float = e.y - r.screenHeight/2.0f
@@ -1553,79 +1654,109 @@ class MainActivity : AppCompatActivity() {
 //                        r.touchPos = floatArrayOf(u/r, -v/r)
 //                        // Log.d("LIGHTPOS", "u: ${u/r}, v: ${-v/r}")
 
-                            val screenPos = doubleArrayOf(
-                                    e.x.toDouble() / r.screenWidth.toDouble(),
-                                    e.y.toDouble() / r.screenHeight.toDouble()
-                            )
-                            r.setTouchPos(screenPos)
-                            r.renderToTex = true
+                        val screenPos = doubleArrayOf(
+                                e.x.toDouble() / screenWidth.toDouble(),
+                                e.y.toDouble() / screenHeight.toDouble()
+                        )
+                        r.setTouchPos(screenPos)
+                        r.renderToTex = true
 
-                            requestRender()
-                            return true
-
-                        }
+                        requestRender()
+                        return true
 
                     }
+
                 }
-
             }
-
-            return false
 
         }
 
+        return false
+
     }
 
+}
 
 
+
+
+
+
+
+
+class MainActivity : AppCompatActivity() {
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN)
+//        window.setFlags(
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN
+//        )
+
+        val displayMetrics = baseContext.resources.displayMetrics
+        windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+
+        setContentView(R.layout.activity_main)
+
+        val fractalView = findViewById<FractalSurfaceView>(R.id.fractalView)
+        fractalView.hideSystemUI()
+        fractalView.activity = this
+
+        val transformButton = findViewById<Button>(R.id.transformButton)
+        transformButton.setOnClickListener { fractalView.reactionType = Reaction.TRANSFORM }
+        transformButton.visibility = Button.INVISIBLE
+
+        val colorButton = findViewById<Button>(R.id.colorButton)
+        colorButton.setOnClickListener { fractalView.reactionType = Reaction.COLOR }
+        colorButton.visibility = Button.INVISIBLE
+
+        val maxIterBar = findViewById<SeekBar>(R.id.maxIterBar)
+        maxIterBar.visibility = SeekBar.INVISIBLE
+
+//        fractalView.bringToFront()
 
 
         // set up frame layout
-        val frame = FrameLayout(this)
-        frame.layoutParams = LP(LP(LP.MATCH_PARENT, LP.MATCH_PARENT))
-        addContentView(frame, frame.layoutParams)
+//        val frame = FrameLayout(this)
+//        frame.layoutParams = LP(LP(LP.MATCH_PARENT, LP.MATCH_PARENT))
+//        addContentView(frame, frame.layoutParams)
 
         // create GLSurfaceView and add to frame
-        val fractalView = FractalSurfaceView(this)
-        frame.addView(fractalView)
+//        val fractalView = FractalSurfaceView(this)
+//        fractalView.screenWidth = screenWidth
+//        fractalView.screenHeight = screenHeight
+//        frame.addView(fractalView)
 
-        setContentView(frame)
+
+        maxIterBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
+                val p: Float = i.toFloat() / 100.0f
+                fractalView.r.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(11) - 1)*p).toInt()
+                if (fractalView.continuousRender) {
+                    fractalView.r.renderToTex = true
+                    fractalView.requestRender()
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                if (!fractalView.continuousRender) {
+                    // Log.d("SEEKBAR", seekBar.progress.toString())
+                    fractalView.r.renderToTex = true
+                    fractalView.requestRender()
+                }
+            }
+
+        })
 
 
-        // create SeekBar and add to frame
-//        val maxIterBar = SeekBar(this)
-//        maxIterBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-//
-//            override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
-//                val p: Float = i.toFloat() / 100.0f
-//                fractalView.r.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(11) - 1)*p).toInt()
-//                if (fractalView.continuousRender) {
-//                    fractalView.r.renderToTex = true
-//                    fractalView.requestRender()
-//                }
-//            }
-//
-//            override fun onStartTrackingTouch(seekBar: SeekBar) {
-//
-//            }
-//
-//            override fun onStopTrackingTouch(seekBar: SeekBar) {
-//                if (!fractalView.continuousRender) {
-//                    // Log.d("SEEKBAR", seekBar.progress.toString())
-//                    fractalView.r.renderToTex = true
-//                    fractalView.requestRender()
-//                }
-//            }
-//
-//        })
 //        maxIterBar.progress = 25
 //        addContentView(maxIterBar, maxIterBar.layoutParams)
 //        maxIterBar.bringToFront()
