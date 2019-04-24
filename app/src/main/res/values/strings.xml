@@ -101,7 +101,7 @@
     </string>
     <string name="header_df">
         #version 320 es\n
-        #define R 1e6\n
+        #define R 1e10\n
         #define SPLIT 8193.\n
         #define pi 3.141592654\n
 
@@ -364,20 +364,25 @@
 
     <!-- COLORING ALGORITHMS -->
 
-    <string name="mandelbrot_smooth_init_sf">
-    </string>
+    <!-- SMOOTH -->
     <string name="mandelbrot_smooth_final_sf">
         float i = float(n)-log(0.5*log(modZ))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
         colorParams.z = j;
     </string>
 
+    <string name="mandelbrot_smooth_final_df">
+        float i = float(n)-log(0.5*log(modZ.x))/log(2.0);
+        float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
+        colorParams.z = j;
+    </string>
 
+    <!-- LIGHTING -->
     <string name="mandelbrot_light_init_sf">
         vec2 a = vec2(0.0);
     </string>
     <string name="mandelbrot_light_loop_sf">
-        a = 2.0*cMultSF(a, vec2(Z1.x, Z1.y));
+        a = 2.0*cMultSF(a, Z1);
         a.x += 1.0;
     </string>
     <string name="mandelbrot_light_final_sf">
@@ -400,12 +405,17 @@
         color = diffuse*color + specular;
     </string>
 
-
-
-    <string name="mandelbrot_light_init_shift">
-        vec3 lightRay = vec3(1.0, 1.0, 1.25);
-        vec2 _a, _b, _u = vec2(0.0);
+    <string name="mandelbrot_light_init_df">
+        vec2 a = vec2(0.0);
+        vec2 Z, Z1;
     </string>
+    <string name="mandelbrot_light_loop_df">
+        Z = vec2(X.x, Y.x);
+        Z1 = vec2(X1.x, Y1.x);
+        a = 2.0*cMultSF(a, Z1);
+        a.x += 1.0;
+    </string>
+
 
 
     <!-- TRIANGLE INEQUALITY AVERAGE -->
@@ -592,7 +602,12 @@
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
     </string>
+
+
+
+
     <string name="transform">Transform</string>
+    <string name="color">Color</string>
 
 
 </resources>
