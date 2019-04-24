@@ -1,9 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.widget.FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layout_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.matt.gputest.MainActivity">
+
+    <view
+        android:id="@+id/fractalView"
+        class="com.example.matt.gputest.FractalSurfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom|end"
+        android:orientation="vertical"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp">
+
+        <Button
+            android:id="@+id/transformButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/transform"
+            tools:layout_conversion_absoluteHeight="48dp"
+            tools:layout_conversion_absoluteWidth="108dp" />
+
+        <Button
+            android:id="@+id/colorButton"
+            android:layout_width="108dp"
+            android:layout_height="wrap_content"
+            android:text="@string/color"
+            tools:layout_conversion_absoluteHeight="48dp"
+            tools:layout_conversion_absoluteWidth="108dp" />
+
+        <SeekBar
+            android:id="@+id/maxIterBar"
+            android:layout_width="378dp"
+            android:layout_height="34dp"
+            android:progress="25" />
+    </LinearLayout>
 
 </android.widget.FrameLayout>
