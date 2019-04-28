@@ -82,9 +82,35 @@
 
 
 
+    <string name="bailout_sf">
+        if (modZ > R)
+    </string>
+    <string name="bailout_df">
+        if (modZ.x > R || isinf(X.x*X.x) || isinf(Y.x*Y.x) || isinf(X.x*X.x + Y.x*Y.x))
+    </string>
+
+
+    <string name="dualpow_init_sf">
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
+        float alpha = 0.5;
+        float beta = 2.0;
+        float gamma = 0.5;
+        float delta = -2.0;
+    </string>
+    <string name="dualpow_loop_sf">
+        Z2 = Z1;
+        Z1 = Z;
+        Z = cMultSF(C, alpha*cPow3(Z, beta) + gamma*cPow3(Z, delta));
+        modZ = modSF(Z);
+    </string>
+    <string name="dualpow_final_sf">
+    </string>
+
+
     <string name="header_sf">
         #version 320 es\n
-        #define R 1e7\n
+        #define R 1e6\n
         #define pi 3.141592654\n
 
         precision highp float;
@@ -231,11 +257,11 @@
             return vec2(u, v);
         }
 
-        vec2 cPow(vec2 z, vec2 s) {
+        vec2 cPow3(vec2 z, float p) {
             float theta = atan(z.y, z.x);
-            float lr = 0.5*log(dot(z, z));
-            float c = exp(s.x*lr - s.y*theta);
-            float f = s.y*lr + s.x*theta;
+            float r = sqrt(dot(z, z));
+            float c = pow(r, p);
+            float f = p*theta;
             return c*vec2(cos(f), sin(f));
         }
 
@@ -309,17 +335,19 @@
 
 
 
-    <string name="general_init_sf" tools:ignore="TypographyOther">
+    <string name="general_init_sf">
         vec4 colorParams = vec4(0.0);
         vec2 C = vec2(xScale*viewPos.x + xOffset, yScale*viewPos.y + yOffset);
-        vec2 Z, Z1, Z2 = vec2(0.0);
+        vec2 Z = vec2(1.0);
+        vec2 Z1, Z2 = vec2(0.0);
         float modZ;
     </string>
     <string name="general_init_df">
         vec4 colorParams = vec4(0.0);
         vec2 A = addDF(multDF(xScale, vec2(viewPos.x, 0.0)), xOffset);
         vec2 B = addDF(multDF(yScale, vec2(viewPos.y, 0.0)), yOffset);
-        vec2 X, Y, X1, Y1, X2, Y2 = vec2(0.0);
+        vec2 X, X1, X2 = vec2(0.0);
+        vec2 Y, Y1, Y2 = vec2(0.0);
         vec2 modZ;
     </string>
 
@@ -363,6 +391,10 @@
 
 
     <!-- COLORING ALGORITHMS -->
+
+    <!-- ESCAPE TIME -->
+    <string name="escapetime_init_sf">
+    </string>
 
     <!-- SMOOTH -->
     <string name="mandelbrot_smooth_final_sf">
