@@ -17,18 +17,24 @@
         android:paddingEnd="15dp">
 
         <Button
-            android:id="@+id/transformButton"
-            android:layout_width="wrap_content"
+            android:id="@+id/paramButton1"
+            android:layout_width="108dp"
             android:layout_height="wrap_content"
-            android:text="@string/transform"
-            tools:layout_conversion_absoluteHeight="48dp"
-            tools:layout_conversion_absoluteWidth="108dp" />
+            android:text="@string/param1" />
 
         <Button
             android:id="@+id/colorButton"
             android:layout_width="108dp"
             android:layout_height="wrap_content"
             android:text="@string/color"
+            tools:layout_conversion_absoluteHeight="48dp"
+            tools:layout_conversion_absoluteWidth="108dp" />
+
+        <Button
+            android:id="@+id/transformButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/transform"
             tools:layout_conversion_absoluteHeight="48dp"
             tools:layout_conversion_absoluteWidth="108dp" />
 
