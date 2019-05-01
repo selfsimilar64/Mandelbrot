@@ -81,7 +81,7 @@
 
 
 
-
+    <!-- CONDITIONALS -->
     <string name="bailout_sf">
         if (modZ > R)
     </string>
@@ -90,24 +90,8 @@
     </string>
 
 
-    <string name="dualpow_init_sf">
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
-        float alpha = 0.5;
-        float beta = 2.0;
-        float gamma = 0.5;
-        float delta = -2.0;
-    </string>
-    <string name="dualpow_loop_sf">
-        Z2 = Z1;
-        Z1 = Z;
-        Z = cMultSF(C, alpha*cPow3(Z, beta) + gamma*cPow3(Z, delta));
-        modZ = modSF(Z);
-    </string>
-    <string name="dualpow_final_sf">
-    </string>
 
-
+    <!-- UTILITY -->
     <string name="header_sf">
         #version 320 es\n
         #define R 1e6\n
@@ -115,6 +99,8 @@
 
         precision highp float;
         uniform int maxIter;
+        uniform float xInit;
+        uniform float yInit;
         uniform float xTouchPos;
         uniform float yTouchPos;
         uniform float xScale;
@@ -143,8 +129,6 @@
         in vec4 viewPos;
         out vec4 fragmentColor;
     </string>
-
-
 
     <string name="arithmetic_util">
 
@@ -257,6 +241,27 @@
             return vec2(u, v);
         }
 
+        vec2 cPow(vec2 z, vec2 s) {
+            float theta = atan(z.y, z.x);
+            float lr = 0.5*log(dot(z, z));
+            float c = exp(s.x*lr - s.y*theta);
+            float f = s.y*lr + s.x*theta;
+            return c*vec2(cos(f), sin(f));
+        }
+
+        vec2 cPow2(float x, vec2 s) {
+
+            float t;
+            if (x == 0.0) { return vec2(0.0); }
+            else if (x > 0.0) { t = 0.0; }
+            else { t = pi; }
+
+            float c = pow(x, s.x)*exp(-s.y*t);
+            float f = s.x*t + s.y*log(x);
+            return c*vec2(cos(f), sin(f));
+
+        }
+
         vec2 cPow3(vec2 z, float p) {
             float theta = atan(z.y, z.x);
             float r = sqrt(dot(z, z));
@@ -333,13 +338,12 @@
 
     </string>
 
-
-
     <string name="general_init_sf">
         vec4 colorParams = vec4(0.0);
         vec2 C = vec2(xScale*viewPos.x + xOffset, yScale*viewPos.y + yOffset);
-        vec2 Z = vec2(1.0);
+        vec2 Z = vec2(xInit, yInit);
         vec2 Z1, Z2 = vec2(0.0);
+        vec2 S = vec2(xTouchPos, yTouchPos);
         float modZ;
     </string>
     <string name="general_init_df">
@@ -353,9 +357,9 @@
 
 
 
+    <!-- COMPLEX MAPS -->
 
     <!-- MANDELBROT -->
-
     <string name="mandelbrot_init_sf">
         float il = 1.0/log(2.0);
         float llr = log(log(R)/2.0);
@@ -386,15 +390,33 @@
     </string>
 
 
-
+    <!-- DUALPOW -->
+    <string name="dualpow_init_sf">
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
+        vec2 alpha = vec2(1.0, 0.0);
+        vec2 beta = vec2(1.0, 0.0);
+        vec2 gamma = vec2(2.0, 0.0);
+    </string>
+    <string name="dualpow_loop_sf">
+        Z2 = Z1;
+        Z1 = Z;
+        Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, -gamma.x)));
+        modZ = modSF(Z);
+    </string>
+    <string name="dualpow_final_sf">
+    </string>
 
 
 
     <!-- COLORING ALGORITHMS -->
 
     <!-- ESCAPE TIME -->
-    <string name="escapetime_init_sf">
+    <string name="escape_final">
+        float j = 0.5*(cos(2.0*pow(float(n) + 5.0, 0.4) -  0.3) + 1.0);
+        colorParams.z = j;
     </string>
+
 
     <!-- SMOOTH -->
     <string name="mandelbrot_smooth_final_sf">
@@ -408,6 +430,23 @@
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
         colorParams.z = j;
     </string>
+
+
+    <!-- MIN RADIUS -->
+    <string name="minmod_init_sf">
+        float minModZ = R;
+        int m = 0;
+    </string>
+    <string name="minmod_loop_sf">
+        if(modZ &lt; minModZ) {
+            minModZ = modZ;
+            m = n;
+        }
+    </string>
+    <string name="minmod_final_sf">
+        colorParams.z = float(m);
+    </string>
+
 
     <!-- LIGHTING -->
     <string name="mandelbrot_light_init_sf">
@@ -447,7 +486,6 @@
         a = 2.0*cMultSF(a, Z1);
         a.x += 1.0;
     </string>
-
 
 
     <!-- TRIANGLE INEQUALITY AVERAGE -->
@@ -526,7 +564,6 @@
 
     <!-- CURVATURE AVERAGE -->
     <string name="curvature_init_sf">
-        vec2 Z2 = vec2(0.0);
         float sum, sum1 = 0.0;
     </string>
     <string name="curvature_loop_sf">
@@ -599,6 +636,7 @@
     </string>
 
 
+    <!-- TEST -->
     <string name="test_init_sf">
         float sum, sum1 = 0.0;
     </string>
@@ -640,6 +678,7 @@
 
     <string name="transform">Transform</string>
     <string name="color">Color</string>
+    <string name="param1">Param1</string>
 
 
 </resources>
