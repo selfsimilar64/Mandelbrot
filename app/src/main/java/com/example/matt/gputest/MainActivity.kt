@@ -124,7 +124,11 @@ class Texture (
         id = b[0]
 
         // allocate texture memory
-        buffer = allocateDirect(width * height * 4).order(ByteOrder.nativeOrder())
+        buffer = when(format) {
+            GL.GL_RGBA8 -> allocateDirect(width * height * 4).order(ByteOrder.nativeOrder())
+            GL.GL_RGBA16F -> allocateDirect(width * height * 8).order(ByteOrder.nativeOrder())
+            else -> allocateDirect(0)
+        }
 
         // bind and set texture parameters
         GL.glActiveTexture(GL.GL_TEXTURE0 + index)
@@ -134,7 +138,7 @@ class Texture (
 
         val type = when(format) {
             GL.GL_RGBA8 -> GL.GL_UNSIGNED_BYTE
-            GL.GL_RGBA32F -> GL.GL_FLOAT
+            GL.GL_RGBA16F -> GL.GL_HALF_FLOAT
             else -> 0
         }
 
@@ -153,7 +157,7 @@ class Texture (
 
 }
 
-class ColorMap (colors: List<FloatArray>) {
+class ColorPalette (colors: List<FloatArray>) {
 
     companion object Color {
 
@@ -178,8 +182,13 @@ class ColorMap (colors: List<FloatArray>) {
 
     }
 
-    val size = colors.size
-        
+    private val palette = colors.plus(colors[0])
+    val flatPalette = FloatArray(palette.size * 3) {i: Int ->
+        val a = floor(i / 3.0f).toInt()
+        val b = i % 3
+        palette[a][b]
+    }
+
 }
 
 class ComplexMap (
@@ -209,7 +218,7 @@ class ColorAlgorithm (
 
 enum class Precision { SINGLE, DUAL, QUAD }
 
-enum class Reaction { TRANSFORM, COLOR, LIGHT }
+enum class Reaction { TRANSFORM, COLOR, PARAM }
 
 
 
@@ -252,18 +261,20 @@ fun splitDD(a: DualDouble) : FloatArray {
 
 
 class Fractal(
-        val context         : Context,
-        val name            : String,
-        val precision       : Precision,
-        val xCoordsInit     : DoubleArray,
-        val yCoordsInit     : DoubleArray,
-        val map             : ComplexMap,
-        val alg             : ColorAlgorithm,
-        val cmap            : ColorMap,
-        val texWidth        : Int,
-        val texHeight       : Int,
-        val screenWidth     : Int,
-        val screenHeight    : Int
+        private val context         : Context,
+        val name                    : String,
+        val precision               : Precision,
+        private val xCoordsInit     : DoubleArray,
+        private val yCoordsInit     : DoubleArray,
+        val xInit                   : FloatArray,
+        val yInit                   : FloatArray,
+        val map                     : ComplexMap,
+        val alg                     : ColorAlgorithm,
+        val palette                 : ColorPalette,
+        val texWidth                : Int,
+        val texHeight               : Int,
+        val screenWidth             : Int,
+        val screenHeight            : Int
 ) {
 
     val shader : String
@@ -320,6 +331,7 @@ class Fractal(
                     ${alg.init}
                     for (int n = 0; n < maxIter; n++) {
                         if (n == maxIter - 1) {
+                            colorParams.z = float(m);
                             colorParams.w = -1.0;
                             break;
                         }
@@ -504,12 +516,14 @@ class FractalSurfaceView(val f: Fractal, context: Context) : GLSurfaceView(conte
         activity.findViewById<LinearLayout>(R.id.linearLayout).bringToFront()
         activity.findViewById<Button>(R.id.transformButton).visibility = Button.INVISIBLE
         activity.findViewById<Button>(R.id.colorButton).visibility = Button.INVISIBLE
+        activity.findViewById<Button>(R.id.paramButton1).visibility = Button.INVISIBLE
         activity.findViewById<SeekBar>(R.id.maxIterBar).visibility = SeekBar.INVISIBLE
     }
     fun showAppUI() {
         activity.findViewById<LinearLayout>(R.id.linearLayout).bringToFront()
         activity.findViewById<Button>(R.id.transformButton).visibility = Button.VISIBLE
         activity.findViewById<Button>(R.id.colorButton).visibility = Button.VISIBLE
+        activity.findViewById<Button>(R.id.paramButton1).visibility = Button.VISIBLE
         activity.findViewById<SeekBar>(R.id.maxIterBar).visibility = SeekBar.VISIBLE
     }
     fun toggleAppUI() {
@@ -665,7 +679,7 @@ class FractalSurfaceView(val f: Fractal, context: Context) : GLSurfaceView(conte
 
                 }
             }
-            Reaction.LIGHT -> {
+            Reaction.PARAM -> {
                 // actions change light position
                 when (e?.actionMasked) {
 
@@ -744,6 +758,8 @@ class FractalRenderer(val f: Fractal, val context: Context) : Renderer {
         private val renderProgram = GL.glCreateProgram()
         private val viewCoordsHandle : Int
         private val iterHandle       : Int
+        private val xInitHandle      : Int
+        private val yInitHandle      : Int
         private val xScaleHandle     : Int
         private val yScaleHandle     : Int
         private val xOffsetHandle    : Int
@@ -761,6 +777,7 @@ class FractalRenderer(val f: Fractal, val context: Context) : Renderer {
         private val viewCoordsColorHandle : Int
         private val quadCoordsColorHandle : Int
         private val textureColorHandle    : Int
+        private val paletteHandle         : Int
         private val frequencyHandle       : Int
         private val phaseHandle           : Int
 
@@ -777,9 +794,9 @@ class FractalRenderer(val f: Fractal, val context: Context) : Renderer {
         private val bgTexHeight = f.screenHeight/8
 
         private val textures = arrayOf(
-                Texture(bgTexWidth, bgTexHeight, GL.GL_RGBA32F, 0),
-                Texture(f.texWidth, f.texHeight, GL.GL_RGBA32F, 1),
-                Texture(f.texWidth, f.texHeight, GL.GL_RGBA32F, 2)
+                Texture(bgTexWidth, bgTexHeight, GL.GL_RGBA16F, 0),
+                Texture(f.texWidth, f.texHeight, GL.GL_RGBA16F, 1),
+                Texture(f.texWidth, f.texHeight, GL.GL_RGBA16F, 2)
         )
 
         // allocate memory for textures
@@ -881,6 +898,8 @@ class FractalRenderer(val f: Fractal, val context: Context) : Renderer {
 
             viewCoordsHandle =  GL.glGetAttribLocation(   renderProgram, "viewCoords"  )
             iterHandle       =  GL.glGetUniformLocation(  renderProgram, "maxIter"     )
+            xInitHandle      =  GL.glGetUniformLocation(  renderProgram, "xInit"       )
+            yInitHandle      =  GL.glGetUniformLocation(  renderProgram, "yInit"       )
             xScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "xScale"      )
             yScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "yScale"      )
             xOffsetHandle    =  GL.glGetUniformLocation(  renderProgram, "xOffset"     )
@@ -905,6 +924,7 @@ class FractalRenderer(val f: Fractal, val context: Context) : Renderer {
             viewCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "viewCoords"  )
             quadCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "quadCoords"  )
             textureColorHandle    = GL.glGetUniformLocation(  colorProgram, "tex"         )
+            paletteHandle         = GL.glGetUniformLocation(  colorProgram, "palette"     )
             frequencyHandle       = GL.glGetUniformLocation(  colorProgram, "frequency"   )
             phaseHandle           = GL.glGetUniformLocation(  colorProgram, "phase"       )
 
@@ -1018,6 +1038,8 @@ class FractalRenderer(val f: Fractal, val context: Context) : Renderer {
             GL.glEnableVertexAttribArray(viewCoordsHandle)
             Log.d("RENDER ROUTINE", "maxIter == ${f.maxIter}")
             GL.glUniform1i(iterHandle, f.maxIter)
+            GL.glUniform1fv(xInitHandle, 1, f.xInit, 0)
+            GL.glUniform1fv(yInitHandle, 1, f.yInit, 0)
             GL.glUniform1fv(xTouchHandle,  1,  xTouchPos, 0)
             GL.glUniform1fv(yTouchHandle,  1,  yTouchPos, 0)
 
@@ -1310,6 +1332,7 @@ class FractalRenderer(val f: Fractal, val context: Context) : Renderer {
                     .put(bgQuadCoords)
                     .position(0)
 
+            GL.glUniform3fv(paletteHandle, 6, f.palette.flatPalette, 0)
             GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(frequency), 0)
             GL.glUniform1fv(phaseHandle, 1, floatArrayOf(phase), 0)
 
@@ -1606,20 +1629,20 @@ class MainActivity : AppCompatActivity() {
 
 
         // COLORING ALGORITHMS
-        val escapeTimeSF = ColorAlgorithm(
+        val escape = ColorAlgorithm(
                 "Escape Time",
                 "",
                 "",
-                resources.getString(R.string.mandelbrot_smooth_final_sf)
+                resources.getString(R.string.escape_final)
         )
-        val smoothSF = ColorAlgorithm(
-                "Smooth",
+        val escapeSmoothSF = ColorAlgorithm(
+                "Escape Time Smooth",
                 "",
                 "",
                 resources.getString(R.string.mandelbrot_smooth_final_sf)
         )
-        val smoothDF = ColorAlgorithm(
-                "Smooth",
+        val escapeSmoothDF = ColorAlgorithm(
+                "Escape Time Smooth",
                 "",
                 "",
                 resources.getString(R.string.mandelbrot_smooth_final_df)
@@ -1701,9 +1724,20 @@ class MainActivity : AppCompatActivity() {
                 Precision.SINGLE,
                 doubleArrayOf(-1.75, 1.75),
                 doubleArrayOf(-1.75*aspectRatio, 1.75*aspectRatio),
-                dualpowSF,
-                smoothSF,
-                ColorMap(listOf(ColorMap.YELLOWISH, ColorMap.DARKBLUE, ColorMap.BLACK)),
+                floatArrayOf(0.0f), floatArrayOf(0.0f),
+                mandelbrotMapSF,
+                ColorAlgorithm(
+                    "Minmod",
+                    resources.getString(R.string.minmod_init_sf),
+                    resources.getString(R.string.minmod_loop_sf),
+                    resources.getString(R.string.minmod_final_sf)),
+                ColorPalette(listOf(
+                    ColorPalette.YELLOWISH,
+                    ColorPalette.DARKBLUE,
+                    ColorPalette.BLACK,
+                    ColorPalette.TURQUOISE,
+                    ColorPalette.TUSK,
+                    ColorPalette.YELLOWISH)),
                 screenWidth, screenHeight,
                 screenWidth, screenHeight
         )
@@ -1720,14 +1754,14 @@ class MainActivity : AppCompatActivity() {
 
         val transformButton = findViewById<Button>(R.id.transformButton)
         transformButton.setOnClickListener { fractalView.reactionType = Reaction.TRANSFORM }
-        transformButton.visibility = Button.INVISIBLE
 
         val colorButton = findViewById<Button>(R.id.colorButton)
         colorButton.setOnClickListener { fractalView.reactionType = Reaction.COLOR }
-        colorButton.visibility = Button.INVISIBLE
+
+        val paramButton1 = findViewById<Button>(R.id.paramButton1)
+        paramButton1.setOnClickListener { fractalView.reactionType = Reaction.PARAM }
 
         val maxIterBar = findViewById<SeekBar>(R.id.maxIterBar)
-        maxIterBar.visibility = SeekBar.INVISIBLE
         maxIterBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
@@ -1752,6 +1786,8 @@ class MainActivity : AppCompatActivity() {
 
         })
         maxIterBar.progress = 20
+
+        fractalView.hideAppUI()
 
     }
 
