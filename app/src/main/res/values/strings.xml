@@ -78,10 +78,20 @@
 
 
 
+    <!-- LAYOUT -->
+    <!-- ===================================================================================== -->
+    <string name="transform">Transform</string>
+    <string name="color">Color</string>
+    <string name="param1">Param1</string>
+
+
 
 
 
     <!-- CONDITIONALS -->
+    <!-- ===================================================================================== -->
+
+    <!-- BAILOUT -->
     <string name="bailout_sf">
         if (modZ > R)
     </string>
@@ -91,7 +101,10 @@
 
 
 
+
+
     <!-- UTILITY -->
+    <!-- ===================================================================================== -->
     <string name="header_sf">
         #version 320 es\n
         #define R 1e6\n
@@ -357,12 +370,13 @@
 
 
 
+
+
     <!-- COMPLEX MAPS -->
+    <!-- ===================================================================================== -->
 
     <!-- MANDELBROT -->
     <string name="mandelbrot_init_sf">
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
     </string>
     <string name="mandelbrot_loop_sf">
         Z2 = Z1;
@@ -372,10 +386,7 @@
     </string>
     <string name="mandelbrot_final_sf">
     </string>
-
     <string name="mandelbrot_init_df">
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
     </string>
     <string name="mandelbrot_loop_df">
         X2 = X1;
@@ -409,11 +420,14 @@
 
 
 
+
+
     <!-- COLORING ALGORITHMS -->
+    <!-- ===================================================================================== -->
 
     <!-- ESCAPE TIME -->
     <string name="escape_final">
-        float j = 0.5*(cos(2.0*pow(float(n) + 5.0, 0.4) -  0.3) + 1.0);
+        float j = float(n);
         colorParams.z = j;
     </string>
 
@@ -424,7 +438,6 @@
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
         colorParams.z = j;
     </string>
-
     <string name="mandelbrot_smooth_final_df">
         float i = float(n)-log(0.5*log(modZ.x))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
@@ -433,7 +446,7 @@
 
 
     <!-- MIN RADIUS -->
-    <string name="minmod_init_sf">
+    <string name="minmod_init">
         float minModZ = R;
         int m = 0;
     </string>
@@ -443,7 +456,13 @@
             m = n;
         }
     </string>
-    <string name="minmod_final_sf">
+    <string name="minmod_loop_df">
+        if(modZ.x &lt; minModZ) {
+            minModZ = modZ.x;
+            m = n;
+        }
+    </string>
+    <string name="minmod_final">
         colorParams.z = float(m);
     </string>
 
@@ -456,7 +475,7 @@
         a = 2.0*cMultSF(a, Z1);
         a.x += 1.0;
     </string>
-    <string name="mandelbrot_light_final_sf">
+    <string name="mandelbrot_light_final">
         vec2 u = cDivSF(Z, a);
         float theta = atan(u.y, u.x);
         colorParams.x = theta;
@@ -475,7 +494,6 @@
         specular = 0.75*(specular + 0.01);
         color = diffuse*color + specular;
     </string>
-
     <string name="mandelbrot_light_init_df">
         vec2 a = vec2(0.0);
         vec2 Z, Z1;
@@ -493,6 +511,8 @@
         float modC = modSF(C);
         float modSqrZ1;
         float sum, sum1 = 0.0;
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
     </string>
     <string name="mandelbrot_triangle_loop_sf">
         if (n > 1) {
@@ -512,11 +532,12 @@
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
     </string>
-
     <string name="mandelbrot_triangle_init_df" tools:ignore="TypographyOther">
         vec2 modC = modDF(A, B);
         vec2 modSqrZ1;
         vec2 sum, sum1 = vec2(0.0);
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
     </string>
     <string name="mandelbrot_triangle_loop_df">
         if (n > 0) {
@@ -536,7 +557,6 @@
         float s = sum1.x + (sum.x - sum1.x)*(r + 1.0);
         colorParams.z = s;
     </string>
-
     <string name="mandelbrot_triangle_init_df2" tools:ignore="TypographyOther">
         float modC = modDF(A, B).x;
         float modSqrZ1;
@@ -563,8 +583,10 @@
 
 
     <!-- CURVATURE AVERAGE -->
-    <string name="curvature_init_sf">
+    <string name="curvature_init">
         float sum, sum1 = 0.0;
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
     </string>
     <string name="curvature_loop_sf">
         if (n > 1) {
@@ -579,10 +601,6 @@
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
-    </string>
-
-    <string name="curvature_init_df">
-        float sum, sum1 = 0.0;
     </string>
     <string name="curvature_loop_df">
         if (n > 1) {
@@ -601,9 +619,11 @@
 
 
     <!-- STRIPE AVERAGE -->
-    <string name="stripe_init_sf">
+    <string name="stripe_init">
         float argZ;
         float sum, sum1 = 0.0;
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
     </string>
     <string name="stripe_loop_sf">
         sum1 = sum;
@@ -617,17 +637,12 @@
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
     </string>
-
-    <string name="stripe_init_df2">
-        float argZ;
-        float sum, sum1 = 0.0;
-    </string>
-    <string name="stripe_loop_df2">
+    <string name="stripe_loop_df">
         sum1 = sum;
         argZ = atan(Y.x, X.x);
         sum += 0.5*(sin(%f*argZ) + 1.0);
     </string>
-    <string name="stripe_final_df2">
+    <string name="stripe_final_df">
         sum /= float(n) * pi;
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
@@ -637,8 +652,10 @@
 
 
     <!-- TEST -->
-    <string name="test_init_sf">
+    <string name="test_init">
         float sum, sum1 = 0.0;
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
     </string>
     <string name="test_loop_sf">
         sum1 = sum;
@@ -653,10 +670,6 @@
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
-    </string>
-
-    <string name="test_init_df">
-        float sum, sum1 = 0.0;
     </string>
     <string name="test_loop_df">
         sum1 = sum;
@@ -673,12 +686,6 @@
         colorParams.z = s;
     </string>
 
-
-
-
-    <string name="transform">Transform</string>
-    <string name="color">Color</string>
-    <string name="param1">Param1</string>
 
 
 </resources>
