@@ -491,11 +491,14 @@ vec4 test(vec2 X, vec2 Y, vec2 xD, vec2 yD, vec2 xC, vec2 yC) {
 
 void main() {
 
+    vec4 colorParams = vec4(0.0);
+
     // use mandelbrot C components
     vec2 xC = add(mult(xScale, vec2(viewPos.x, 0.0)), xOffset);
     vec2 yC = add(mult(yScale, vec2(viewPos.y, 0.0)), yOffset);
+//    vec4 A = cDivDF(vec2(1.0, 0.0), vec2(0.0, 0.0), xC, yC);
     vec2 MODC = modDF(xC, yC);
-    float ARGC = atan(yC.x, xC.x);
+//    float ARGC = atan(yC.x, xC.x);
 
 //    xC = vec2(1.4686, 0.0);
 //    yC = vec2(1.265, 0.0);
@@ -547,7 +550,6 @@ void main() {
 
     float q;
 
-    vec3 color    =  vec3(0.0, 0.0, 0.0);
     vec3 black    =  vec3(0.0, 0.0, 0.0);
     vec3 purple   =  vec3(0.3, 0.0, 0.5);
     vec3 red      =  vec3(1.0, 0.0, 0.0);
@@ -581,10 +583,9 @@ void main() {
 
     for (int n = 0; n < maxIter; n++) {
 
-        q = float(n)/float(maxIter - 1);
 
         if (n == maxIter - 1) {
-            color = vec3(0.0);
+            colorParams.w = -1.0;
         }
 
 
@@ -633,9 +634,12 @@ void main() {
         MODSQRZ1 = MODSQRZ;
 
         // iterate z
-        Y_temp = mandelbrot_y(X, Y, yC);
-        X = mandelbrot_x(X, Y, xC);
-        Y = Y_temp;
+        X = mandelbrot_x(X1, Y1, xC);
+        Y = mandelbrot_y(X1, Y1, yC);
+
+//        X = mandelbrot_x(X1, Y1, A.xy);
+//        Y = mandelbrot_y(X1, Y1, A.zw);
+
 //        vec4 S = test(X, Y, vec2(-0.2013, 0.0), vec2(0.5638, 0.0), xC, yC);
 //        X = S.xy;
 //        Y = S.zw;
@@ -727,14 +731,14 @@ void main() {
 //            r /= pi;
 //            float q = mod(cmap_cycles*num_colors*r, num_colors);
 
-            color.z = r;
+            colorParams.z = r;
 //            color.z = float(n)/float(maxIter);
 
 
             // normalized values -- finite cycles
 //            float p = float(n)/float(maxIter) + 1.0;
 //             float m = cmap_cycles*num_colors*(float(i)-log(0.5*log(MOD2.x))/log(2.0))/float(maxIter);
-            float p = (float(n) - log(0.25*log(MODSQRZ1.x))/log(2.0)) / float(maxIter);
+//            float p = (float(n) - log(0.25*log(MODSQRZ1.x))/log(2.0)) / float(maxIter);
 //            color.z = p;
 //            float n = m - (num_colors * floor(m/num_colors));
 
@@ -769,15 +773,15 @@ void main() {
 
         // == TRIANGLE INEQUALITY -- LOOP =======================================================
 
-//        if (n > 0) {
-//            vec2 m_n = absDF(add(MODSQRZ1, -MODC));
-//            vec2 M_n = add(MODSQRZ1, MODC);
-//            vec2 j = add(MODZ, -m_n);
-//            vec2 k = add(M_n, -m_n);
-//            vec2 t = divDF(j, k);
-//            sum1 = sum;
-//            sum = add(sum, t);
-//        }
+        if (n > 0) {
+            vec2 m_n = absDF(add(MODSQRZ1, -MODC));
+            vec2 M_n = add(MODSQRZ1, MODC);
+            vec2 j = add(MODZ, -m_n);
+            vec2 k = add(M_n, -m_n);
+            vec2 t = divDF(j, k);
+            sum1 = sum;
+            sum = add(sum, t);
+        }
 
 
 
@@ -796,9 +800,9 @@ void main() {
 
         // == STRIPE -- LOOP ====================================================================
 
-        sum1 = sum;
-        float ARGZ = atan(Y.x, X.x);
-        sum.x += 0.5*(sin(3.0*ARGZ) + 1.0);
+//        sum1 = sum;
+//        float ARGZ = atan(Y.x, X.x);
+//        sum.x += 0.5*(sin(3.0*ARGZ) + 1.0);
 
 
 
@@ -806,6 +810,6 @@ void main() {
 
     }
 
-    fragmentColor = vec4(color, q);
+    fragmentColor = colorParams;
 
 }
