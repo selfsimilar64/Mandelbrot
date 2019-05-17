@@ -6,12 +6,14 @@ uniform int numColors;
 uniform vec3 palette[10];
 uniform float frequency;
 uniform float phase;
+uniform float xTouchPos;
+uniform float yTouchPos;
 in vec2 texCoord;
 out vec4 fragmentColor;
 
 void main() {
 
-    vec3 color = vec3(1.0);
+    vec3 color = vec3(0.0);
 
     vec3 black      =  vec3(0.0, 0.0, 0.0);
     vec3 purple     =  vec3(0.3, 0.0, 0.5);
@@ -51,13 +53,6 @@ void main() {
 //    vec3 c4 = 0.7*softgreen;
 //    vec3 c5 = 0.225*purple;
 //    vec3 c6 = vec3(0.4, 0.1, 0.2);
-
-//    vec3 c1 = 0.7*yellowish;
-//    vec3 c2 = darkblue2;
-//    vec3 c3 = 0.5*softgreen;
-//    vec3 c4 = 0.35*purple;
-//    vec3 c5 = vec3(0.4, 0.1, 0.2);
-
 
 //    vec3 c1 = 0.2*yellowish;
 //    vec3 c2 = darkblue2;
@@ -105,34 +100,39 @@ void main() {
         // calculate rays for lighting calculations
 //        vec3 normRay = vec3(cos(s.x), sin(s.x), 1.0);
 //        normRay /= length(normRay);
-//        vec3 lightRay = vec3(1.0, 1.0, 1.25);
+//        float lightHeight = 1.0;
+//        vec3 lightRay = vec3(xTouchPos, yTouchPos, lightHeight);
 //        lightRay /= length(lightRay);
 //        vec3 viewRay = vec3(0.0, 0.0, 1.0);
 //        vec3 reflectRay = 2.0*dot(normRay, lightRay)*normRay - lightRay;
 //
 //        // calculate lighting components
-//        float diffuse = dot(normRay, lightRay);
-//        diffuse /= (1.0 + lightRay.z);
-//        if (diffuse < 0.0) { diffuse = 0.0; }
-//        float specular = pow(dot(reflectRay, viewRay), 1.5);
-//        if (specular < 0.0) { specular = 0.0; }
+//        float diffuse_intensity = 0.2;
+//        float phi = dot(normRay, lightRay) / lightHeight;
+//        float diffuse = clamp(phi, 0.0, 1.0);
+////        diffuse = (diffuse + (1.0 - diffuse_intensity)) / (1.0 + (1.0 - diffuse_intensity));
+//        diffuse = diffuse_intensity*(diffuse - 1.0) + 1.0;
 //
-//        color = 2.0*(diffuse + 0.2)*color + 0.75*vec3(specular + 0.01);
-//        color = vec3(s.x, 0.0, s.y);
+//        float specular_intenseity = 1.0;
+//        float specular_phong = 3.0;
+//        float alpha = dot(reflectRay, viewRay);
+//        float specular = clamp(alpha, 0.0, 1.0);
+////        specular = (pow(specular, specular_phong) + specular_offset) / (1.0 + specular_offset);
+//        specular = specular_intenseity*(1.5*pow(specular, specular_phong) - 1.0) + 1.0;
+//        diffuse *= 1.0 - specular;
+//
+//        color = diffuse*color + specular;
+//        color = ((diffuse + 0.2)*color + specular) / 1.7;
 //        color = vec3(specular);
-//        color = vec3(diffuse);
+//        color = vec3(s.x, 0.0, s.y);
+//        color = diffuse*color;
+//        color = sqrt(sqrt(diffuse*specular)*color);
 
 
     }
 
 
 
-
-
-
-//    color = vec3(frequency*s.w + phase);
-
-//    fragmentColor = vec4(s.xyz, 1.0);
     fragmentColor = vec4(color, 1.0);
 
 }
