@@ -7,14 +7,49 @@
     android:layout_height="match_parent"
     tools:context="com.example.matt.gputest.MainActivity">
 
+
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/fullUI"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/ProgressBar"
+            android:layout_width="match_parent"
+            android:layout_height="3dip" />
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#222">
+
+        </android.support.design.widget.TabLayout>
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/quickUI"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="bottom|end"
         android:orientation="vertical"
         android:paddingStart="15dp"
         android:paddingEnd="15dp">
+
+        <Button
+            android:id="@+id/testButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Test" />
 
         <Button
             android:id="@+id/paramButton1"
@@ -43,6 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="34dp"
             android:progress="25" />
+
     </LinearLayout>
 
 </android.widget.FrameLayout>
