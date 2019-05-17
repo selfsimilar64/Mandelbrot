@@ -285,8 +285,6 @@ fun splitDD(a: DualDouble) : FloatArray {
 
 
 
-
-
 class Fractal(
         private val context         : Activity,
         val name                    : String,
@@ -561,7 +559,6 @@ class Fractal(
     }
 
 }
-
 
 @SuppressLint("ViewConstructor")
 class FractalSurfaceView(
@@ -844,7 +841,6 @@ class FractalSurfaceView(
     }
 
 }
-
 
 class FractalRenderer(val f: Fractal, val context: Activity) : Renderer {
 
@@ -1732,10 +1728,6 @@ class FractalRenderer(val f: Fractal, val context: Activity) : Renderer {
 
 }
 
-
-
-
-
 class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
 
     private val mFragmentList = ArrayList<Fragment>()
@@ -1759,10 +1751,6 @@ class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager)
     }
 
 }
-
-
-
-
 
 
 
