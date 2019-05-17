@@ -126,7 +126,7 @@
     </string>
     <string name="header_df">
         #version 320 es\n
-        #define R 1e10\n
+        #define R 1e12\n
         #define SPLIT 8193.\n
         #define pi 3.141592654\n
 
@@ -365,6 +365,7 @@
         vec2 B = addDF(multDF(yScale, vec2(viewPos.y, 0.0)), yOffset);
         vec2 X, X1, X2 = vec2(0.0);
         vec2 Y, Y1, Y2 = vec2(0.0);
+        vec2 S = vec2(xTouchPos, yTouchPos);
         vec2 modZ;
     </string>
 
@@ -403,8 +404,6 @@
 
     <!-- DUALPOW -->
     <string name="dualpow_init_sf">
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
         vec2 alpha = vec2(1.0, 0.0);
         vec2 beta = vec2(1.0, 0.0);
         vec2 gamma = vec2(2.0, 0.0);
@@ -442,28 +441,6 @@
         float i = float(n)-log(0.5*log(modZ.x))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
         colorParams.z = j;
-    </string>
-
-
-    <!-- MIN RADIUS -->
-    <string name="minmod_init">
-        float minModZ = R;
-        int m = 0;
-    </string>
-    <string name="minmod_loop_sf">
-        if(modZ &lt; minModZ) {
-            minModZ = modZ;
-            m = n;
-        }
-    </string>
-    <string name="minmod_loop_df">
-        if(modZ.x &lt; minModZ) {
-            minModZ = modZ.x;
-            m = n;
-        }
-    </string>
-    <string name="minmod_final">
-        colorParams.z = float(m);
     </string>
 
 
@@ -651,41 +628,59 @@
     </string>
 
 
-    <!-- TEST -->
-    <string name="test_init">
+    <!-- MINMOD -->
+    <string name="minmod_init">
+        float minModZ = R;
+        int m = 0;
+    </string>
+    <string name="minmod_loop_sf">
+        if(modZ &lt; minModZ) {
+            minModZ = modZ;
+            m = n;
+        }
+    </string>
+    <string name="minmod_loop_df">
+        if(modZ.x &lt; minModZ) {
+            minModZ = modZ.x;
+            m = n;
+        }
+    </string>
+    <string name="minmod_final">
+        colorParams.z = float(m);
+    </string>
+
+
+    <!-- PERPENDICULAR STRIPE -->
+    <string name="overlay_init">
+        float argZ;
         float sum, sum1 = 0.0;
         float il = 1.0/log(2.0);
         float llr = log(log(R)/2.0);
     </string>
-    <string name="test_loop_sf">
+    <string name="overlay_loop_sf">
         sum1 = sum;
-        vec2 p = Z - Z2;
-        vec2 q = Z1 - Z2;
-        float phi = acos(dot(p, q) / (modSF(p)*modSF(q)));
-        sum += phi;
+        argZ = atan(Z.y, Z.x);
+        sum += tan(0.495*argZ);
     </string>
-    <string name="test_final_sf">
+    <string name="overlay_loop_df">
+        sum1 = sum;
+        argZ = atan(Y.x, X.x);
+        sum += tan(0.495*argZ);
+    </string>
+    <string name="overlay_final_sf">
         sum /= float(n) * pi;
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
     </string>
-    <string name="test_loop_df">
-        sum1 = sum;
-        vec2 p = vec2(X.x - X2.x, Y.x - Y2.x);
-        vec2 q = vec2(X1.x - X2.x, Y1.x - Y2.x);
-        float phi = acos(dot(p, q) / (modSF(p)*modSF(q)));
-        sum += sin(5.0*phi);
-    </string>
-    <string name="test_final_df">
-        sum /= float(n);
-        sum1 /= float(n - 1);
+    <string name="overlay_final_df">
+        sum /= float(n) * pi;
+        sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
     </string>
-
 
 
 </resources>
