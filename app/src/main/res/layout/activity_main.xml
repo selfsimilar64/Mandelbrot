@@ -46,10 +46,10 @@
         android:paddingEnd="15dp">
 
         <Button
-            android:id="@+id/testButton"
-            android:layout_width="match_parent"
+            android:id="@+id/fullUIButton"
+            android:layout_width="108dp"
             android:layout_height="wrap_content"
-            android:text="Test" />
+            android:text="Full UI" />
 
         <Button
             android:id="@+id/paramButton1"
@@ -61,17 +61,13 @@
             android:id="@+id/colorButton"
             android:layout_width="108dp"
             android:layout_height="wrap_content"
-            android:text="@string/color"
-            tools:layout_conversion_absoluteHeight="48dp"
-            tools:layout_conversion_absoluteWidth="108dp" />
+            android:text="@string/color" />
 
         <Button
             android:id="@+id/transformButton"
-            android:layout_width="wrap_content"
+            android:layout_width="108dp"
             android:layout_height="wrap_content"
-            android:text="@string/transform"
-            tools:layout_conversion_absoluteHeight="48dp"
-            tools:layout_conversion_absoluteWidth="108dp" />
+            android:text="@string/transform" />
 
         <SeekBar
             android:id="@+id/maxIterBar"

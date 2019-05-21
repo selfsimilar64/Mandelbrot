@@ -112,8 +112,8 @@
 
         precision highp float;
         uniform int maxIter;
-        uniform float xInit;
-        uniform float yInit;
+        uniform float x0;
+        uniform float y0;
         uniform float xTouchPos;
         uniform float yTouchPos;
         uniform float xScale;
@@ -354,7 +354,7 @@
     <string name="general_init_sf">
         vec4 colorParams = vec4(0.0);
         vec2 C = vec2(xScale*viewPos.x + xOffset, yScale*viewPos.y + yOffset);
-        vec2 Z = vec2(xInit, yInit);
+        vec2 Z = vec2(x0, y0);
         vec2 Z1, Z2 = vec2(0.0);
         vec2 S = vec2(xTouchPos, yTouchPos);
         float modZ;
@@ -433,12 +433,12 @@
 
     <!-- SMOOTH -->
     <string name="mandelbrot_smooth_final_sf">
-        float i = float(n)-log(0.5*log(modZ))/log(2.0);
+        float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
         colorParams.z = j;
     </string>
     <string name="mandelbrot_smooth_final_df">
-        float i = float(n)-log(0.5*log(modZ.x))/log(2.0);
+        float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
         colorParams.z = j;
     </string>

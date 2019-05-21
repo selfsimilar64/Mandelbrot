@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:prompt="@string/app_name"
-        android:spinnerMode="dialog" />
+        android:spinnerMode="dropdown" />
 
     <View
         android:id="@+id/divider"

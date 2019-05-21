@@ -113,12 +113,12 @@ void main() {
 ////        diffuse = (diffuse + (1.0 - diffuse_intensity)) / (1.0 + (1.0 - diffuse_intensity));
 //        diffuse = diffuse_intensity*(diffuse - 1.0) + 1.0;
 //
-//        float specular_intenseity = 1.0;
+//        float specular_intenseity = 0.5;
 //        float specular_phong = 3.0;
 //        float alpha = dot(reflectRay, viewRay);
 //        float specular = clamp(alpha, 0.0, 1.0);
 ////        specular = (pow(specular, specular_phong) + specular_offset) / (1.0 + specular_offset);
-//        specular = specular_intenseity*(1.5*pow(specular, specular_phong) - 1.0) + 1.0;
+//        specular = specular_intenseity*1.5*pow(specular, specular_phong);
 //        diffuse *= 1.0 - specular;
 //
 //        color = diffuse*color + specular;
