@@ -18,7 +18,7 @@ class ColorFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
     private lateinit var colorAlgSpinner : Spinner
-    lateinit var initSelection : String
+    lateinit var initParams : Map<String, Any>
 
     private val colorAlgOptions : List<String> = arrayListOf(
             "Escape Time",
@@ -42,7 +42,7 @@ class ColorFragment : Fragment() {
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
-                callback.onColorAlgorithmChange(item)
+                callback.onColorParamsChanged("colorAlg", item)
             }
 
         }
@@ -54,20 +54,17 @@ class ColorFragment : Fragment() {
         )
         colorAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         colorAlgSpinner.adapter = colorAlgAdapter
+        colorAlgSpinner.setSelection(colorAlgOptions.indexOf(
+                savedInstanceState?.getString("colorAlg") ?: initParams["colorAlg"])
+        )
         return v
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.d("COLOR FRAGMENT", "view created")
-        colorAlgSpinner.setSelection(colorAlgOptions.indexOf(
-                savedInstanceState?.getString("colorAlgName") ?: initSelection)
-        )
-        super.onViewCreated(view, savedInstanceState)
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString("colorAlgName", colorAlgSpinner.selectedItem.toString())
-        Log.d("COLOR FRAGMENT", "saving colorAlgName as ${colorAlgSpinner.selectedItem.toString()}")
+        outState.putString(
+                "colorAlg",
+                colorAlgSpinner.selectedItem.toString()
+        )
         super.onSaveInstanceState(outState)
     }
 
@@ -76,8 +73,7 @@ class ColorFragment : Fragment() {
     }
 
     interface OnParamChangeListener {
-        fun onColorAlgorithmChange(name: String)
-        fun onColorParamChange()
+        fun onColorParamsChanged(key: String, value: Any)
     }
 
 }
