@@ -8,6 +8,12 @@
     tools:context="com.example.matt.gputest.MainActivity">
 
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/ProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="3dip" />
+
     <LinearLayout
         android:id="@+id/fullUI"
         android:layout_width="match_parent"
@@ -15,14 +21,8 @@
         android:layout_gravity="bottom"
         android:orientation="vertical">
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="@style/ProgressBar"
-            android:layout_width="match_parent"
-            android:layout_height="3dip" />
-
         <android.support.design.widget.TabLayout
-            android:id="@+id/tabLayout"
+            android:id="@+id/fullUITabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#222">

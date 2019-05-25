@@ -116,10 +116,10 @@
         uniform float y0;
         uniform float xTouchPos;
         uniform float yTouchPos;
-        uniform float xScale;
-        uniform float yScale;
-        uniform float xOffset;
-        uniform float yOffset;
+        uniform vec2 xScale;
+        uniform vec2 yScale;
+        uniform vec2 xOffset;
+        uniform vec2 yOffset;
 
         in vec4 viewPos;
         out vec4 fragmentColor;
@@ -132,6 +132,8 @@
 
         precision highp float;
         uniform int maxIter;
+        uniform float x0;
+        uniform float y0;
         uniform float xTouchPos;
         uniform float yTouchPos;
         uniform vec2 xScale;
@@ -353,7 +355,7 @@
 
     <string name="general_init_sf">
         vec4 colorParams = vec4(0.0);
-        vec2 C = vec2(xScale*viewPos.x + xOffset, yScale*viewPos.y + yOffset);
+        vec2 C = vec2(xScale.x*viewPos.x + xOffset.x, yScale.x*viewPos.y + yOffset.x);
         vec2 Z = vec2(x0, y0);
         vec2 Z1, Z2 = vec2(0.0);
         vec2 S = vec2(xTouchPos, yTouchPos);
@@ -363,8 +365,8 @@
         vec4 colorParams = vec4(0.0);
         vec2 A = addDF(multDF(xScale, vec2(viewPos.x, 0.0)), xOffset);
         vec2 B = addDF(multDF(yScale, vec2(viewPos.y, 0.0)), yOffset);
-        vec2 X, X1, X2 = vec2(0.0);
-        vec2 Y, Y1, Y2 = vec2(0.0);
+        vec2 X, X1, X2 = vec2(x0, 0.0);
+        vec2 Y, Y1, Y2 = vec2(y0, 0.0);
         vec2 S = vec2(xTouchPos, yTouchPos);
         vec2 modZ;
     </string>
