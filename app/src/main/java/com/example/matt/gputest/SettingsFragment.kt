@@ -59,11 +59,11 @@ class SettingsFragment : Fragment() {
             }
 
         })
+
+        val p = savedInstanceState?.getString("precision") ?: initParams["precision"] ?: ""
+
         precisionTabs.getTabAt(
-            Precision.valueOf(
-                savedInstanceState?.getString("precision")
-                ?: initParams["precision"] ?: ""
-            ).ordinal
+            if (p == "AUTO") 2 else Precision.valueOf(p).ordinal
         )?.select()
 
         return v
