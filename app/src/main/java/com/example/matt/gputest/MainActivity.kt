@@ -302,8 +302,6 @@ class Fractal(
         private val xCoordsInit    : DoubleArray,
         private val yCoordsInit    : DoubleArray,
         val screenRes              : IntArray,
-        var frequency              : Float,
-        var phase                  : Float,
         val colorParams            : MutableMap<String, Any>,
         val settingsParams         : MutableMap<String, String>
 ) {
@@ -335,14 +333,14 @@ class Fractal(
 
     var texRes = {
         when (resolution()) {
-            Resolution.LOW -> intArrayOf(screenRes[0]/4, screenRes[1]/4)
-            Resolution.MED -> intArrayOf(screenRes[0]/2, screenRes[1]/2)
+            Resolution.LOW -> intArrayOf(screenRes[0]/8, screenRes[1]/8)
+            Resolution.MED -> intArrayOf(screenRes[0]/4, screenRes[1]/4)
             Resolution.HIGH -> screenRes
             Resolution.ULTRA -> intArrayOf((7*screenRes[0])/4, (7*screenRes[1])/4)
         }
     }
-    val xCoords = xCoordsInit
-    val yCoords = yCoordsInit
+    val xCoords = xCoordsInit.clone()
+    val yCoords = yCoordsInit.clone()
     val touchPos = doubleArrayOf(1.0, 1.0)
     var maxIter = 0
 
@@ -481,6 +479,21 @@ class Fractal(
         yCoords[1] = yCoordsInit[1]
     }
 
+    @SuppressLint("SetTextI18n")
+    private fun updateDisplayParams() {
+
+        val xCoordView = context.findViewById<TextView>(R.id.xCoordText)
+        val yCoordView = context.findViewById<TextView>(R.id.yCoordText)
+        val scaleView = context.findViewById<TextView>(R.id.scaleText)
+
+        xCoordView.text = "x:  ${(xCoords[1] + xCoords[0])/2.0}"
+        yCoordView.text = "y:  ${(yCoords[1] + yCoords[0])/2.0}"
+
+        val scale = (xCoords[1] - xCoords[0])/(xCoordsInit[1] - xCoordsInit[0])
+        scaleView.text = "scale:  %e".format(scale)
+
+    }
+
     fun switchOrientation() {
 
         val center = doubleArrayOf((xCoords[0] + xCoords[1]) / 2.0, -(yCoords[0] + yCoords[1]) / 2.0)
@@ -533,7 +546,8 @@ class Fractal(
             }
         }
 
-//        Log.d("FRACTAL", "TRANSLATE -- xCoords: (${xCoords[0]}, ${xCoords[1]}),  yCoords: (${yCoords[0]}, ${yCoords[1]})")
+        updateDisplayParams()
+        Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
 
     }
 
@@ -559,7 +573,8 @@ class Fractal(
             }
         }
 
-//        Log.d("FRACTAL", "TRANSLATE -- xCoords: (${xCoords[0]}, ${xCoords[1]}),  yCoords: (${yCoords[0]}, ${yCoords[1]})")
+        updateDisplayParams()
+        Log.d("FRACTAL", "translation (coordinates) -- dx: ${dPos[0]}, dy: ${dPos[1]}")
 
     }
 
@@ -625,7 +640,7 @@ class Fractal(
             }
         }
 
-        Log.d("FRACTAL", "length of x-interval: ${abs(xCoords[1] - xCoords[0])}")
+//        Log.d("FRACTAL", "length of x-interval: ${abs(xCoords[1] - xCoords[0])}")
 
         val precisionPostScale = precision()
         if (precisionPostScale != precisionPreScale) {
@@ -633,7 +648,8 @@ class Fractal(
             Log.d("FRACTAL", "precision changed")
         }
 
-//        Log.d("FRACTAL", "SCALE -- xCoords: (${xCoords[0]}, ${xCoords[1]}),  yCoords: (${yCoords[0]}, ${yCoords[1]})")
+        updateDisplayParams()
+        Log.d("FRACTAL", "scale -- dscale: $dScale")
 
     }
 
@@ -651,7 +667,7 @@ class FractalSurfaceView(
 
     val r : FractalRenderer
     var reactionType = Reaction.TRANSFORM
-    val continuousRender = false
+    val continuousRender = true
 
     private val minPointerDist = 500.0f
     private val prevFocus = floatArrayOf(0.0f, 0.0f)
@@ -682,8 +698,11 @@ class FractalSurfaceView(
                 or SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 // Hide the nav bar and status bar
                 or SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                // or SYSTEM_UI_FLAG_FULLSCREEN
+                or SYSTEM_UI_FLAG_FULLSCREEN
         )
+
+
+
     }
     fun showSystemUI() {
         systemUiVisibility = (
@@ -699,7 +718,7 @@ class FractalSurfaceView(
         context.findViewById<SeekBar>(R.id.maxIterBar).visibility = SeekBar.INVISIBLE
     }
     fun showAppUI() {
-        context.findViewById<LinearLayout>(R.id.quickUI).bringToFront()
+        context.findViewById<ConstraintLayout>(R.id.test).bringToFront()
         context.findViewById<Button>(R.id.transformButton).visibility = Button.VISIBLE
         context.findViewById<Button>(R.id.colorButton).visibility = Button.VISIBLE
         context.findViewById<Button>(R.id.paramButton1).visibility = Button.VISIBLE
@@ -754,25 +773,26 @@ class FractalSurfaceView(
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
-//                            Log.d("TRANSFORM", "DOWN -- x: ${e.x}, y: ${e.y}")
-
+                            Log.d("TRANSFORM", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
 
-                            r.setQuadAnchor(focus)
-                            r.setQuadFocus(floatArrayOf(0.0f, 0.0f))
+                            if (!continuousRender) {
+                                r.setQuadAnchor(focus)
+                                r.setQuadFocus(floatArrayOf(0.0f, 0.0f))
+                            }
 
                             return true
                         }
                         MotionEvent.ACTION_POINTER_DOWN -> {
-//                            Log.d("TRANSFORM", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
-                            if (e.actionIndex == 1) {
-                                val focus = e.focus()
-                                prevFocus[0] = focus[0]
-                                prevFocus[1] = focus[1]
-                                prevFocalLen = e.focalLength()
-//                                Log.d("SURFACEVIEW", "screenDist : (${focus[0] - e.getX(0)}, ${focus[1] - e.getY(0)})")
+                            Log.d("TRANSFORM", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
+                            val focus = e.focus()
+                            prevFocus[0] = focus[0]
+                            prevFocus[1] = focus[1]
+                            prevFocalLen = e.focalLength()
+                            Log.d("TRANSFORM", "focalLen: $prevFocalLen")
+                            if (!continuousRender) {
                                 r.setQuadFocus(floatArrayOf(
                                         focus[0] - e.getX(0),
                                         focus[1] - e.getY(0)
@@ -781,20 +801,23 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_MOVE -> {
-                            // Log.d("TRANSFORM", "MOVE -- x: ${e.x}, y: ${e.y}")
-
                             val focus = e.focus()
                             val dx: Float = focus[0] - prevFocus[0]
                             val dy: Float = focus[1] - prevFocus[1]
                             f.translate(floatArrayOf(dx, dy))
-                            r.translate(floatArrayOf(dx, dy))
+                            if (!continuousRender) {
+                                r.translate(floatArrayOf(dx, dy))
+                            }
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             if (e.pointerCount > 1) {   // MULTI-TOUCH
                                 val focalLen = e.focalLength()
+                                Log.d("TRANSFORM", "prevFocalLen: $prevFocalLen, focalLen: $focalLen")
                                 val dFocalLen = focalLen / prevFocalLen
                                 f.scale(dFocalLen, focus)
-                                r.scale(dFocalLen)
+                                if (!continuousRender) {
+                                    r.scale(dFocalLen)
+                                }
                                 prevFocalLen = focalLen
                             }
 
@@ -818,7 +841,9 @@ class FractalSurfaceView(
                                 prevFocus[1] = e.getY(1)
 
                                 // change quad anchor to remaining pointer
-                                r.setQuadAnchor(floatArrayOf(e.getX(1), e.getY(1)))
+                                if (!continuousRender) {
+                                    r.setQuadAnchor(floatArrayOf(e.getX(1), e.getY(1)))
+                                }
                             } else if (e.getPointerId(e.actionIndex) == 1) {
                                 prevFocus[0] = e.getX(0)
                                 prevFocus[1] = e.getY(0)
@@ -850,14 +875,13 @@ class FractalSurfaceView(
                         MotionEvent.ACTION_MOVE -> {
                             val focus = e.focus()
                             val dx: Float = focus[0] - prevFocus[0]
-                            val dy: Float = focus[1] - prevFocus[1]
-                            f.phase += dx / screenWidth
+                            f.colorParams["phase"] = (f.colorParams["phase"] as Float) + dx / screenWidth
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             if (e.pointerCount > 1) {   // MULTI-TOUCH
                                 val focalLen = e.focalLength()
                                 val dFocalLen = focalLen / prevFocalLen
-                                f.frequency *= dFocalLen
+                                f.colorParams["frequency"] = (f.colorParams["frequency"] as Float) * dFocalLen
                                 prevFocalLen = focalLen
                             }
                             requestRender()
@@ -962,10 +986,10 @@ class FractalRenderer(var f: Fractal, val context: Activity) : Renderer {
         private val fColorShader  : Int
 
         // define texture resolutions
-        private val bgTexWidth = f.screenRes[0]/8
-        private val bgTexHeight = f.screenRes[1]/8
-//        private val bgTexWidth = 1
-//        private val bgTexHeight = 1
+//        private val bgTexWidth = f.screenRes[0]/8
+//        private val bgTexHeight = f.screenRes[1]/8
+        private val bgTexWidth = 1
+        private val bgTexHeight = 1
 
         private val interpolation = {
             if (f.resolution() == Resolution.ULTRA) GL.GL_LINEAR
@@ -1538,8 +1562,8 @@ class FractalRenderer(var f: Fractal, val context: Activity) : Renderer {
 
             GL.glUniform1i(numColorsHandle, f.palette.size)
             GL.glUniform3fv(paletteHandle, f.palette.size, f.palette.flatPalette, 0)
-            GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.frequency), 0)
-            GL.glUniform1fv(phaseHandle, 1, floatArrayOf(f.phase), 0)
+            GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.colorParams["frequency"] as Float), 0)
+            GL.glUniform1fv(phaseHandle, 1, floatArrayOf(f.colorParams["phase"] as Float), 0)
             GL.glUniform1fv(xTouchColorHandle, 1, floatArrayOf(f.touchPos[0].toFloat()), 0)
             GL.glUniform1fv(yTouchColorHandle, 1, floatArrayOf(f.touchPos[1].toFloat()), 0)
 
@@ -1787,9 +1811,9 @@ class FractalRenderer(var f: Fractal, val context: Activity) : Renderer {
         // render to texture on ACTION_UP
         if (renderToTex) {
 
-            ignoreTouch = true
+//            ignoreTouch = true
             rr.renderToTexture()
-            ignoreTouch = false
+//            ignoreTouch = false
 
             renderToTex = false
             hasTranslated = false
@@ -2040,6 +2064,7 @@ class MainActivity : AppCompatActivity(),
         val aspectRatio = screenHeight.toDouble() / screenWidth.toDouble()
 
 
+        // get saved or default parameters
         val colorAlgName = savedInstanceState?.getString("colorAlgName") ?: escapeSmooth.name
         val xCoords = savedInstanceState?.getDoubleArray("xCoords") ?: doubleArrayOf(-2.5, 1.0)
         val yCoords = savedInstanceState?.getDoubleArray("yCoords") ?: doubleArrayOf(-1.75, 1.75).mult(aspectRatio)
@@ -2051,20 +2076,19 @@ class MainActivity : AppCompatActivity(),
                 "phase" to 0.0f
         )
         val settingsParams : MutableMap<String, String> = mutableMapOf(
-                "resolution" to Resolution.HIGH.name,
-                "precision" to Precision.DUAL.name
+                "resolution" to Resolution.LOW.name,
+                "precision" to "AUTO"
         )
 
 
-
+        // create fractal
         f = Fractal(
                 mandelbrot,
                 colorAlgorithms[colorAlgName] ?: empty,
-                p4,
+                p5,
                 this,
                 xCoords, yCoords,
                 intArrayOf(screenWidth, screenHeight),
-                frequency, phase,
                 colorParams,
                 settingsParams
         )
@@ -2081,8 +2105,8 @@ class MainActivity : AppCompatActivity(),
 
         setContentView(R.layout.activity_main)
 
-        val frameLayout = findViewById<FrameLayout>(R.id.layout_main)
-        frameLayout.addView(fractalView)
+        val fractalLayout = findViewById<FrameLayout>(R.id.layout_main)
+        fractalLayout.addView(fractalView)
 
         val quickUI = findViewById<LinearLayout>(R.id.quickUI)
 
@@ -2131,6 +2155,12 @@ class MainActivity : AppCompatActivity(),
 
         quickUI.bringToFront()
 
+
+
+        val displayParams = findViewById<LinearLayout>(R.id.displayParams)
+        displayParams.bringToFront()
+
+
         val fullUITabs = findViewById<TabLayout>(R.id.fullUITabs)
         fullUITabs.addTab(fullUITabs.newTab().setText("Equation"))
         fullUITabs.addTab(fullUITabs.newTab().setText("Color"))
@@ -2174,12 +2204,15 @@ class MainActivity : AppCompatActivity(),
 
         val phi = 0.5*(sqrt(5.0) + 1.0)
         val fullUIHeight = (screenHeight*(1.0 - 1.0/phi)).toInt()
+        Log.d("MAIN ACTIVITY", "fullUIHeight set to $fullUIHeight")
 
-        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
-        progressBar.visibility = ProgressBar.VISIBLE
-        progressBar.y = (screenHeight - fullUIHeight - progressBar.layoutParams.height).toFloat()
-        progressBar.requestLayout()
-        progressBar.bringToFront()
+//        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
+//        progressBar.visibility = ProgressBar.VISIBLE
+        val statusBarHeight = 103
+//        progressBar.y = (screenHeight - fullUIHeight - progressBar.layoutParams.height).toFloat()
+//        Log.d("MAIN ACTIVITY", "progressBar height set to ${progressBar.y}")
+//        progressBar.requestLayout()
+//        progressBar.bringToFront()
 
         val fullUI = findViewById<LinearLayout>(R.id.fullUI)
         fullUI.layoutParams.height = fullUIHeight
@@ -2188,14 +2221,16 @@ class MainActivity : AppCompatActivity(),
 
         val fullUIButton = findViewById<Button>(R.id.fullUIButton)
         fullUIButton.setOnClickListener {
-            val isHidden = fullUI.layoutParams.height == 0
-            val newHeight = if (isHidden) fullUIHeight else 0
-            fullUI.layoutParams = FrameLayout.LayoutParams(
-                    screenWidth, newHeight,
-                    Gravity.BOTTOM
-            )
-            progressBar.y = (screenHeight - newHeight - progressBar.height).toFloat()
+            val uiIsVisible = fullUI.visibility == FrameLayout.VISIBLE
+            val newSurfaceViewPos = if (uiIsVisible) -fullUIHeight/2.0f else 0.0f
+            fullUI.visibility = FrameLayout.INVISIBLE
+            fractalView.y = newSurfaceViewPos
         }
+        fullUI.visibility = FrameLayout.INVISIBLE
+
+
+
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
 
     }
@@ -2203,10 +2238,10 @@ class MainActivity : AppCompatActivity(),
     override fun onSaveInstanceState(outState: Bundle?) {
         outState?.putDoubleArray("xCoords", f.xCoords)
         outState?.putDoubleArray("yCoords", f.yCoords)
-        outState?.putFloat("frequency", f.frequency)
-        outState?.putFloat("phase", f.phase)
+        outState?.putString("colorAlgName", f.colorParams["colorAlg"] as String)
+        outState?.putFloat("frequency", f.colorParams["frequency"] as Float)
+        outState?.putFloat("phase", f.colorParams["phase"] as Float)
         outState?.putInt("orientation", orientation)
-        outState?.putString("colorAlgName", f.alg.name)
         super.onSaveInstanceState(outState)
     }
 
