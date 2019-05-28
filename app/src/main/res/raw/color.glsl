@@ -79,7 +79,7 @@ void main() {
 
     if (s.w != -1.0) {
 
-        float n = mod(frequency*s.z + phase, float(numColors - 1));
+        float n = mod(float(numColors - 1)*(frequency*s.z + phase), float(numColors - 1));
 //
 //        if (n >= 0.0 && n < 1.0) { color = (1.0-n) * c1   +   (n)     * c2; }
 //        else if (n >= 1.0 && n < 2.0) { color = (2.0-n) * c2   +   (n-1.0) * c3; }

@@ -428,7 +428,7 @@
 
     <!-- ESCAPE TIME -->
     <string name="escape_final">
-        float j = float(n);
+        float j = float(n)/float(maxIter);
         colorParams.z = j;
     </string>
 
@@ -622,8 +622,8 @@
         sum += 0.5*(sin(%f*argZ) + 1.0);
     </string>
     <string name="stripe_final_df">
-        sum /= float(n) * pi;
-        sum1 /= float(n - 1) * pi;
+        sum /= float(n);
+        sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
@@ -648,7 +648,7 @@
         }
     </string>
     <string name="minmod_final">
-        colorParams.z = float(m);
+        colorParams.z = float(m)/float(maxIter);
     </string>
 
 
@@ -667,7 +667,7 @@
     <string name="overlay_loop_df">
         sum1 = sum;
         argZ = atan(Y.x, X.x);
-        sum += tan(0.495*argZ);
+        sum += tan(0.49*argZ);
     </string>
     <string name="overlay_final_sf">
         sum /= float(n) * pi;
