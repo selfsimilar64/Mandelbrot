@@ -6,17 +6,20 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
+import android.widget.Switch
 import kotlinx.android.synthetic.main.settings_fragment.*
 
 
 class SettingsFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
-    lateinit var initParams : Map<String, String>
+    lateinit var initParams : Map<String, Any>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.settings_fragment, container, false)
+
 
         val resolutionTabs = v.findViewById<TabLayout>(R.id.resolutionTabs)
         resolutionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -38,9 +41,10 @@ class SettingsFragment : Fragment() {
         resolutionTabs.getTabAt(
             Resolution.valueOf(
                 savedInstanceState?.getString("resolution")
-                ?: initParams["resolution"] ?: ""
+                ?: initParams["resolution"] as String ?: ""
             ).ordinal
         )?.select()
+
 
         val precisionTabs = v.findViewById<TabLayout>(R.id.precisionTabs)
         precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -59,12 +63,29 @@ class SettingsFragment : Fragment() {
             }
 
         })
-
-        val p = savedInstanceState?.getString("precision") ?: initParams["precision"] ?: ""
-
+        val p = savedInstanceState?.getString("precision") ?: initParams["precision"] as String ?: ""
         precisionTabs.getTabAt(
             if (p == "AUTO") 2 else Precision.valueOf(p).ordinal
         )?.select()
+
+
+        val continuousRenderSwitch = v.findViewById<Switch>(R.id.continuousRenderSwitch)
+        continuousRenderSwitch.setOnCheckedChangeListener {
+            buttonView, isChecked -> callback.onSettingsParamsChanged("continuousRender", isChecked)
+        }
+        continuousRenderSwitch.isChecked =
+                savedInstanceState?.getBoolean("continuousRender")
+                ?: initParams["continuousRender"] as Boolean
+
+
+        val displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
+        displayParamsSwitch.setOnCheckedChangeListener {
+            buttonView, isChecked -> callback.onSettingsParamsChanged("displayParams", isChecked)
+        }
+        displayParamsSwitch.isChecked =
+                savedInstanceState?.getBoolean("displayParams")
+                ?: initParams["displayParams"] as Boolean
+
 
         return v
     }
@@ -80,12 +101,21 @@ class SettingsFragment : Fragment() {
         )
         outState.putString(
                 "precision",
-                precisionTabs.getTabAt(precisionTabs.selectedTabPosition)?.text.toString())
+                precisionTabs.getTabAt(precisionTabs.selectedTabPosition)?.text.toString()
+        )
+        outState.putBoolean(
+                "continuousRender",
+                continuousRenderSwitch.isChecked
+        )
+        outState.putBoolean(
+                "displayParams",
+                displayParamsSwitch.isChecked
+        )
         super.onSaveInstanceState(outState)
     }
 
     interface OnParamChangeListener {
-        fun onSettingsParamsChanged(key: String, value: String)
+        fun onSettingsParamsChanged(key: String, value: Any)
     }
 
 }

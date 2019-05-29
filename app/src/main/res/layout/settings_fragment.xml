@@ -19,7 +19,7 @@
             android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_gravity="start|center_vertical"
-            android:text="RESOLUTION"
+            android:text="Resolution"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -71,7 +71,7 @@
             android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_gravity="start|center_vertical"
-            android:text="PRECISION"
+            android:text="Precision"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -110,14 +110,37 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="5dip"
+        android:showDividers="middle">
 
-        <TextView
-            android:layout_width="100dip"
+        <Switch
+            android:id="@+id/continuousRenderSwitch"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="start|center_vertical"
-            android:text="RESOLUTION"
-            android:textSize="14sp"
+            android:layout_weight="1"
+            android:checked="true"
+            android:paddingEnd="10dip"
+            android:showText="false"
+            android:text="Continuous render"
+            android:textColor="@android:color/secondary_text_dark"
+            android:textStyle="bold" />
+
+        <View
+            android:id="@+id/divider4"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:background="@color/colorPrimaryDarkSelected" />
+
+        <Switch
+            android:id="@+id/displayParamsSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="10dip"
+            android:text="Display params"
+            android:textColor="@android:color/secondary_text_dark"
             android:textStyle="bold" />
     </LinearLayout>
 
