@@ -31,7 +31,6 @@ class EquationFragment : Fragment() {
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
-                Log.d("TEST", "item is -$item-")
                 callback.onEquationParamsChanged(
                         "map",
                         ComplexMap.all[item]?.invoke(resources) ?: initConfig.map()
@@ -59,7 +58,7 @@ class EquationFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-
+        outState.putString("map", complexMapSpinner.selectedItem.toString())
         super.onSaveInstanceState(outState)
     }
 
