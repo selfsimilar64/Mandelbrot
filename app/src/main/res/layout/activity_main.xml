@@ -25,31 +25,64 @@
             android:id="@+id/displayParams"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorTransparent"
+            android:background="@color/colorHalfTransparent"
             android:gravity="bottom"
-            android:orientation="vertical"
+            android:orientation="horizontal"
             android:paddingStart="10dip"
             android:paddingTop="5dip"
             android:paddingBottom="5dip"
             app:layout_constraintBottom_toTopOf="@id/progressBar">
 
-            <TextView
-                android:id="@+id/xCoordText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/yCoordText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="" />
+                <TextView
+                    android:id="@+id/xCoordText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/colorDarkText" />
 
-            <TextView
-                android:id="@+id/scaleText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="" />
+                <TextView
+                    android:id="@+id/yCoordText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/colorDarkText" />
+
+                <TextView
+                    android:id="@+id/scaleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/colorDarkText" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/frequencyText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/colorDarkText" />
+
+                <TextView
+                    android:id="@+id/phaseText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/colorDarkText" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
@@ -100,8 +133,8 @@
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
             android:layout_height="3dip"
-            android:background="@color/black"
-            android:progressBackgroundTint="@color/black"
+            android:background="@color/colorHalfTransparent"
+            android:progressBackgroundTint="@color/colorTransparent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
         <LinearLayout
@@ -116,14 +149,15 @@
                 android:id="@+id/fullUITabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#222">
+                android:background="#333">
 
             </android.support.design.widget.TabLayout>
 
             <android.support.v4.view.ViewPager
                 android:id="@+id/viewPager"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:background="#222" />
         </LinearLayout>
 
 
