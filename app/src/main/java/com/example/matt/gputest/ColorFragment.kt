@@ -18,20 +18,15 @@ class ColorFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
     private lateinit var colorAlgSpinner : Spinner
-    lateinit var initParams : Map<String, Any>
 
-    private val colorAlgOptions : List<String> = arrayListOf(
-            "Escape Time",
-            "Escape Time Smooth",
-            "Triangle Inequality Average",
-            "Curvature Average",
-            "Stripe Average",
-            "Overlay Average"
-    )
+    lateinit var initConfig : ColorConfig
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.color_fragment, container, false)
+
+
 
         colorAlgSpinner = v.findViewById(R.id.colorAlgSpinner)
         colorAlgSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -42,7 +37,10 @@ class ColorFragment : Fragment() {
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
-                callback.onColorParamsChanged("colorAlg", item)
+                callback.onColorParamsChanged(
+                        "algorithm",
+                        ColorAlgorithm.all[item]?.invoke(resources) ?: initConfig.algorithm()
+                )
             }
 
         }
@@ -50,19 +48,20 @@ class ColorFragment : Fragment() {
         val colorAlgAdapter = ArrayAdapter<String>(
                 v.context,
                 android.R.layout.simple_spinner_item,
-                colorAlgOptions
+                List(ColorAlgorithm.all.size) { i: Int -> ColorAlgorithm.all.keys.elementAt(i) }
         )
         colorAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         colorAlgSpinner.adapter = colorAlgAdapter
-        colorAlgSpinner.setSelection(colorAlgOptions.indexOf(
-                savedInstanceState?.getString("colorAlg") ?: initParams["colorAlg"])
+        Log.d("COLOR FRAGMENT", "algorithm is ${initConfig.algorithm().name}")
+        colorAlgSpinner.setSelection(ColorAlgorithm.all.keys.indexOf(
+                savedInstanceState?.getString("algorithm") ?: initConfig.algorithm().name)
         )
         return v
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString(
-                "colorAlg",
+                "algorithm",
                 colorAlgSpinner.selectedItem.toString()
         )
         super.onSaveInstanceState(outState)

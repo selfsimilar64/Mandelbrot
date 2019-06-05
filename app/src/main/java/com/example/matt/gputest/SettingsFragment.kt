@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.settings_fragment.*
 class SettingsFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
-    lateinit var initParams : Map<String, Any>
+    lateinit var initConfig : SettingsConfig
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
@@ -26,7 +26,7 @@ class SettingsFragment : Fragment() {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
                 val res = tab.text.toString()
-                callback.onSettingsParamsChanged("resolution", res)
+                callback.onSettingsParamsChanged("resolution", Resolution.valueOf(res))
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
@@ -41,7 +41,7 @@ class SettingsFragment : Fragment() {
         resolutionTabs.getTabAt(
             Resolution.valueOf(
                 savedInstanceState?.getString("resolution")
-                ?: initParams["resolution"] as String ?: ""
+                ?: initConfig.resolution().name
             ).ordinal
         )?.select()
 
@@ -51,7 +51,7 @@ class SettingsFragment : Fragment() {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
                 val p = tab.text.toString()
-                callback.onSettingsParamsChanged("precision", p)
+                callback.onSettingsParamsChanged("precision", Precision.valueOf(p))
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
@@ -63,9 +63,11 @@ class SettingsFragment : Fragment() {
             }
 
         })
-        val p = savedInstanceState?.getString("precision") ?: initParams["precision"] as String ?: ""
         precisionTabs.getTabAt(
-            if (p == "AUTO") 2 else Precision.valueOf(p).ordinal
+            Precision.valueOf(
+                    savedInstanceState?.getString("precision")
+                    ?: initConfig.precision().name
+            ).ordinal
         )?.select()
 
 
@@ -75,7 +77,7 @@ class SettingsFragment : Fragment() {
         }
         continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
-                ?: initParams["continuousRender"] as Boolean
+                ?: initConfig.continuousRender()
 
 
         val displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
@@ -84,7 +86,7 @@ class SettingsFragment : Fragment() {
         }
         displayParamsSwitch.isChecked =
                 savedInstanceState?.getBoolean("displayParams")
-                ?: initParams["displayParams"] as Boolean
+                ?: initConfig.displayParams()
 
 
         return v
