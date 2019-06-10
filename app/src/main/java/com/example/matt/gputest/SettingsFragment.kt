@@ -1,20 +1,23 @@
 package com.example.matt.gputest
 
 import android.os.Bundle
+import android.support.constraint.ConstraintSet
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
+import android.widget.LinearLayout
 import android.widget.Switch
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.settings_fragment.*
 
 
 class SettingsFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
-    lateinit var initConfig : SettingsConfig
+    
+    lateinit var config : SettingsConfig
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
@@ -41,7 +44,7 @@ class SettingsFragment : Fragment() {
         resolutionTabs.getTabAt(
             Resolution.valueOf(
                 savedInstanceState?.getString("resolution")
-                ?: initConfig.resolution().name
+                ?: config.resolution().name
             ).ordinal
         )?.select()
 
@@ -66,7 +69,7 @@ class SettingsFragment : Fragment() {
         precisionTabs.getTabAt(
             Precision.valueOf(
                     savedInstanceState?.getString("precision")
-                    ?: initConfig.precision().name
+                    ?: config.precision().name
             ).ordinal
         )?.select()
 
@@ -77,8 +80,7 @@ class SettingsFragment : Fragment() {
         }
         continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
-                ?: initConfig.continuousRender()
-
+                ?: config.continuousRender()
 
         val displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
         displayParamsSwitch.setOnCheckedChangeListener {
@@ -86,8 +88,7 @@ class SettingsFragment : Fragment() {
         }
         displayParamsSwitch.isChecked =
                 savedInstanceState?.getBoolean("displayParams")
-                ?: initConfig.displayParams()
-
+                ?: config.displayParams()
 
         return v
     }

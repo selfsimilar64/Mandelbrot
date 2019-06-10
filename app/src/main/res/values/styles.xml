@@ -35,4 +35,13 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <style name="EditTextDark" parent="android:style/Widget.Material.TextView">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">end</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:inputType">numberDecimal|numberSigned</item>
+        <item name="android:selectAllOnFocus">true</item>
+    </style>
+
 </resources>
