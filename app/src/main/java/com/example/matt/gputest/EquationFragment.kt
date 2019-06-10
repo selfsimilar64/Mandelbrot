@@ -6,9 +6,13 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
+import android.view.inputmethod.EditorInfo
+import android.widget.*
+import android.content.Context.INPUT_METHOD_SERVICE
+import android.support.constraint.ConstraintLayout
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.inputmethod.InputMethodManager
 
 
 class EquationFragment : Fragment() {
@@ -16,10 +20,11 @@ class EquationFragment : Fragment() {
     private lateinit var callback : OnParamChangeListener
     private lateinit var complexMapSpinner : Spinner
 
-    lateinit var initConfig : EquationConfig
+    lateinit var config : EquationConfig
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
+        Log.d("EQUATION FRAGMENT", "creating...")
         val v = inflater.inflate(R.layout.equation_fragment, container, false)
 
         complexMapSpinner = v.findViewById(R.id.complexMapSpinner)
@@ -33,7 +38,7 @@ class EquationFragment : Fragment() {
                 val item = parent?.getItemAtPosition(position).toString()
                 callback.onEquationParamsChanged(
                         "map",
-                        ComplexMap.all[item]?.invoke(resources) ?: initConfig.map()
+                        ComplexMap.all[item]?.invoke(resources) ?: config.map()
                 )
             }
 
@@ -47,7 +52,89 @@ class EquationFragment : Fragment() {
         complexMapAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         complexMapSpinner.adapter = complexMapAdapter
         complexMapSpinner.setSelection(ComplexMap.all.keys.indexOf(
-                savedInstanceState?.getString("map") ?: initConfig.map().name)
+                savedInstanceState?.getString("map") ?: config.map().name)
+        )
+
+        val xCoordEdit = v.findViewById<EditText>(R.id.xCoordEdit)
+        val yCoordEdit = v.findViewById<EditText>(R.id.yCoordEdit)
+        val scaleSignificandEdit = v.findViewById<EditText>(R.id.scaleSignificandEdit)
+        val scaleExponentEdit = v.findViewById<EditText>(R.id.scaleExponentEdit)
+
+        val editListenerNext = {
+            editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)->DoubleArray -> TextView.OnEditorActionListener {
+                w, actionId, event -> when (actionId) {
+                    EditorInfo.IME_ACTION_NEXT -> {
+                        callback.onEquationParamsChanged(key, value(w))
+                        editText.clearFocus()
+                        editText.isSelected = false
+
+                        nextEditText.requestFocus()
+                        true
+                    }
+                    else -> {
+                        Log.d("EQUATION FRAGMENT", "some other action")
+                        false
+                    }
+                }
+            }
+        }
+
+        val editListenerDone = {
+            editText: EditText, key: String, value: (w: TextView)->DoubleArray -> TextView.OnEditorActionListener {
+                w, actionId, event -> when (actionId) {
+                    EditorInfo.IME_ACTION_DONE -> {
+                        callback.onEquationParamsChanged(key, value(w))
+                        val imm = v.context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(v.windowToken, 0)
+                        editText.clearFocus()
+                        editText.isSelected = false
+                        v.findViewById<LinearLayout>(R.id.params).requestLayout()
+                        true
+                    }
+                    else -> {
+                        Log.d("EQUATION FRAGMENT", "some other action")
+                        false
+                    }
+                }
+            }
+        }
+
+        xCoordEdit.setOnEditorActionListener(editListenerNext(
+                xCoordEdit,
+                yCoordEdit,
+                "coords") { w: TextView ->
+            doubleArrayOf(
+                    w.text.toString().toDouble(),
+                    config.coords()[1]
+            )
+        }
+        )
+        yCoordEdit.setOnEditorActionListener(editListenerNext(
+                yCoordEdit,
+                scaleSignificandEdit,
+                "coords") { w: TextView ->
+            doubleArrayOf(
+                    config.coords()[0],
+                    w.text.toString().toDouble()
+            )
+        }
+        )
+        scaleSignificandEdit.setOnEditorActionListener(editListenerNext(
+                scaleSignificandEdit,
+                scaleExponentEdit,
+                "scale") { w: TextView ->
+            val aspectRatio = config.scale()[1]/config.scale()[0]
+            val s = "${w.text}e${scaleExponentEdit.text}".toDouble()
+            doubleArrayOf(s, s*aspectRatio)
+        }
+        )
+        scaleExponentEdit.setOnEditorActionListener(editListenerDone(
+                scaleExponentEdit,
+                "scale") { w: TextView ->
+            val aspectRatio = config.scale()[1]/config.scale()[0]
+            val s = "${scaleSignificandEdit.text}e${w.text}".toDouble()
+            doubleArrayOf(s, s*aspectRatio)
+        }
         )
 
         return v
@@ -55,6 +142,16 @@ class EquationFragment : Fragment() {
 
     fun setOnParamChangeListener(callback: OnParamChangeListener) {
         this.callback = callback
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Log.d("EQUATION FRAGMENT", "...created")
+        super.onViewCreated(view, savedInstanceState)
+    }
+
+    override fun onResume() {
+        Log.d("EQUATION FRAGMENT", "resuming...")
+        super.onResume()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
