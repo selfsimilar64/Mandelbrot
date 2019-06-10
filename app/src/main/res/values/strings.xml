@@ -578,6 +578,21 @@
     </string>
 
 
+    <!-- SINE -->
+    <string name="sine1_loop_sf">
+        Z2 = Z1;
+        Z1 = Z;
+        Z = sine(cDivSF(cPow3(Z, S.x), C));
+        modZ = modSF(Z);
+    </string>
+    <string name="sine2_loop_sf">
+        Z2 = Z1;
+        Z1 = Z;
+        Z = sine(cDivSF(cSqrSF(Z) + S, C));
+        modZ = modSF(Z);
+    </string>
+
+
 
 
 
