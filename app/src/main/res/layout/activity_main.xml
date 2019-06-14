@@ -9,7 +9,6 @@
     tools:context="com.example.matt.gputest.MainActivity">
 
 
-
     <android.support.constraint.ConstraintLayout
         android:id="@+id/overlay"
         android:layout_width="match_parent"
@@ -94,28 +93,36 @@
             app:layout_constraintBottom_toTopOf="@id/displayParams">
 
             <Button
-                android:id="@+id/fullUIButton"
-                android:layout_width="108dp"
-                android:layout_height="wrap_content"
-                android:text="Full UI" />
-
-            <Button
                 android:id="@+id/paramButton1"
-                android:layout_width="108dp"
-                android:layout_height="wrap_content"
-                android:text="@string/param1" />
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/round_button_unselected"
+                android:text="P1"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/colorButton"
-                android:layout_width="108dp"
-                android:layout_height="wrap_content"
-                android:text="@string/color" />
-
-            <Button
+            <ImageButton
                 android:id="@+id/transformButton"
-                android:layout_width="108dp"
-                android:layout_height="wrap_content"
-                android:text="@string/transform" />
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/round_button_unselected"
+                android:scaleType="centerInside"
+                android:src="@drawable/baseline_open_with_black_36"
+                android:tint="#fff" />
+
+            <ImageButton
+                android:id="@+id/colorButton"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/round_button_unselected"
+                android:scaleType="centerInside"
+                android:src="@drawable/baseline_color_lens_black_36"
+                android:tint="#fff" />
 
             <SeekBar
                 android:id="@+id/maxIterBar"
@@ -133,15 +140,28 @@
             android:layout_height="3dip"
             android:background="@color/colorHalfTransparent"
             android:progressBackgroundTint="@color/colorTransparent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toTopOf="@id/fullUIButton" />
+
+        <Button
+            android:id="@+id/fullUIButton"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="15dp"
+            android:background="@color/black"
+            android:foreground="@android:drawable/button_onoff_indicator_off"
+            android:foregroundGravity="clip_horizontal|center|center_horizontal"
+            android:foregroundTint="#ddd"
+            app:layout_constraintBottom_toTopOf="@id/fullUI" />
 
         <LinearLayout
             android:id="@+id/fullUI"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="500dp"
             android:layout_gravity="bottom"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:orientation="vertical">
+            android:background="#333"
+            android:orientation="vertical"
+            android:scrollbarSize="4dp"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <android.support.design.widget.TabLayout
                 android:id="@+id/fullUITabs"
@@ -171,7 +191,6 @@
                 android:layout_height="wrap_content"
                 android:background="#222" />
         </LinearLayout>
-
 
 
     </android.support.constraint.ConstraintLayout>
