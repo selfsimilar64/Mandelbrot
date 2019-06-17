@@ -90,20 +90,6 @@
 
 
 
-    <!-- CONDITIONALS -->
-    <!-- ===================================================================================== -->
-
-    <!-- BAILOUT -->
-    <string name="bailout_sf">
-        if (modZ > R)
-    </string>
-    <string name="bailout_df">
-        if (modZ.x > R || isinf(X.x*X.x) || isinf(Y.x*Y.x) || isinf(X.x*X.x + Y.x*Y.x))
-    </string>
-
-
-
-
 
     <!-- UTILITY -->
     <!-- ===================================================================================== -->
@@ -400,9 +386,10 @@
     <string name="general_init_sf">
         vec4 colorParams = vec4(0.0);
         vec2 C = vec2(xScale.x*viewPos.x + xOffset.x, yScale.x*viewPos.y + yOffset.x);
-        vec2 Z = vec2(x0, y0);
+        vec2 Z = C;
         vec2 Z1, Z2 = vec2(0.0);
         float modZ;
+        float eps;
         vec2 aaa = P1;
     </string>
     <string name="general_init_df">
@@ -412,7 +399,18 @@
         vec2 X, X1, X2 = vec2(x0, 0.0);
         vec2 Y, Y1, Y2 = vec2(y0, 0.0);
         vec2 modZ;
+        vec2 eps;
         vec2 aaa = P1;
+    </string>
+    <string name="general_loop_sf">
+        Z2 = Z1;
+        Z1 = Z;
+    </string>
+    <string name="general_loop_df">
+        X2 = X1;
+        X1 = X;
+        Y2 = Y1;
+        Y1 = Y;
     </string>
 
 
@@ -424,19 +422,11 @@
 
     <!-- MANDELBROT -->
     <string name="mandelbrot_loop_sf">
-        Z2 = Z1;
-        Z1 = Z;
         Z = cSqrSF(Z) + C;
-        modZ = modSF(Z);
     </string>
     <string name="mandelbrot_loop_df">
-        X2 = X1;
-        Y2 = Y1;
-        X1 = X;
-        Y1 = Y;
         X = addDF(addDF(sqrDF(X1), -sqrDF(Y1)), A);
         Y = addDF(multDF(vec2(2.0, 0.0), multDF(X1, Y1)), B);
-        modZ = modDF(X, Y);
     </string>
 
 
@@ -447,31 +437,60 @@
         vec2 gamma = P1;
     </string>
     <string name="dualpow_loop_sf">
-        Z2 = Z1;
-        Z1 = Z;
         Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, -gamma.y)));
-        modZ = modSF(Z);
     </string>
 
 
     <!-- SINE -->
     <string name="sine1_loop_sf">
-        Z2 = Z1;
-        Z1 = Z;
         Z = sine(cDivSF(cPow3(Z, P1.x), C));
-        modZ = modSF(Z);
     </string>
     <string name="sine2_loop_sf">
-        Z2 = Z1;
-        Z1 = Z;
         Z = sine(cDivSF(cSqrSF(Z) + P1, C));
-        modZ = modSF(Z);
     </string>
     <string name="sine3_loop_sf">
-        Z2 = Z1;
-        Z1 = Z;
         Z = sine(cDivSF(cSqrSF(Z), C) + P1);
+    </string>
+
+
+    <!-- NEWTON 1 -->
+    <string name="newton1_loop_sf">
+        Z = Z - cDivSF(cSqrSF(cSqrSF(Z)) - vec2(1.0, 0.0), 4.0*cMultSF(Z, cSqrSF(Z)));
+    </string>
+
+
+    <!-- MOBIUS -->
+    <string name="mobius_init_sf">
+        vec2 alpha = vec2(1.0, 0.0);
+        vec2 beta = C;
+        vec2 gamma = vec2(0.0, 1.0);
+        vec2 delta = cDivSF(vec2(1.0, 0.0), C);
+    </string>
+    <string name="mobius_loop_sf">
+        Z = cDivSF(cMultSF(alpha, Z) + beta, cMultSF(gamma, Z) + delta);
+    </string>
+
+
+
+
+
+    <!-- CONDITIONALS -->
+    <!-- ===================================================================================== -->
+
+    <!-- BAILOUT -->
+    <string name="bailout_sf">
         modZ = modSF(Z);
+        if (modZ > R)
+    </string>
+    <string name="bailout_df">
+        modZ = modDF(X, Y);
+        if (modZ.x > R || isinf(X.x*X.x) || isinf(Y.x*Y.x) || isinf(X.x*X.x + Y.x*Y.x))
+    </string>
+
+    <!-- CONVERGE -->
+    <string name="converge_sf">
+        eps = modSF(Z - Z1);
+        if (eps &lt; 10e-7)
     </string>
 
 
