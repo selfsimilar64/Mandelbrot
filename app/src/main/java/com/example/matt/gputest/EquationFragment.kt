@@ -9,10 +9,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import android.content.Context.INPUT_METHOD_SERVICE
-import android.support.constraint.ConstraintLayout
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
+import kotlin.math.pow
 
 
 class EquationFragment : Fragment() {
@@ -59,9 +57,11 @@ class EquationFragment : Fragment() {
         val yCoordEdit = v.findViewById<EditText>(R.id.yCoordEdit)
         val scaleSignificandEdit = v.findViewById<EditText>(R.id.scaleSignificandEdit)
         val scaleExponentEdit = v.findViewById<EditText>(R.id.scaleExponentEdit)
+        val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
+        val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
 
         val editListenerNext = {
-            editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)->DoubleArray -> TextView.OnEditorActionListener {
+            editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)->Any -> TextView.OnEditorActionListener {
                 w, actionId, event -> when (actionId) {
                     EditorInfo.IME_ACTION_NEXT -> {
                         callback.onEquationParamsChanged(key, value(w))
@@ -78,9 +78,8 @@ class EquationFragment : Fragment() {
                 }
             }
         }
-
         val editListenerDone = {
-            editText: EditText, key: String, value: (w: TextView)->DoubleArray -> TextView.OnEditorActionListener {
+            editText: EditText, key: String, value: (w: TextView)->Any -> TextView.OnEditorActionListener {
                 w, actionId, event -> when (actionId) {
                     EditorInfo.IME_ACTION_DONE -> {
                         callback.onEquationParamsChanged(key, value(w))
@@ -128,14 +127,46 @@ class EquationFragment : Fragment() {
             doubleArrayOf(s, s*aspectRatio)
         }
         )
-        scaleExponentEdit.setOnEditorActionListener(editListenerDone(
+        scaleExponentEdit.setOnEditorActionListener(editListenerNext(
                 scaleExponentEdit,
+                bailoutSignificandEdit,
                 "scale") { w: TextView ->
             val aspectRatio = config.scale()[1]/config.scale()[0]
             val s = "${scaleSignificandEdit.text}e${w.text}".toDouble()
             doubleArrayOf(s, s*aspectRatio)
         }
         )
+        bailoutSignificandEdit.setOnEditorActionListener(editListenerNext(
+                bailoutSignificandEdit,
+                bailoutExponentEdit,
+                "bailoutRadius") { w: TextView -> "${w.text}e${bailoutExponentEdit.text}".toFloat() }
+        )
+        bailoutExponentEdit.setOnEditorActionListener(editListenerDone(
+                bailoutExponentEdit,
+                "bailoutRadius") { w: TextView -> "${bailoutSignificandEdit.text}e${w.text}".toFloat() }
+        )
+
+
+
+        val maxIterBar = v.findViewById<SeekBar>(R.id.maxIterBar)
+        maxIterBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
+
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+
+            }
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                val p = seekBar.progress.toFloat() / 100.0f
+                callback.onEquationParamsChanged(
+                    "maxIter",
+                    ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(11) - 1)*p).toInt()
+                )
+            }
+
+        })
+        maxIterBar.progress = 20
 
         return v
     }

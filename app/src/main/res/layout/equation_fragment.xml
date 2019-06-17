@@ -55,8 +55,6 @@
 
                 <TextView
                     style="@style/TextDark"
-                    android:layout_width="90dp"
-                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="x" />
 
@@ -74,7 +72,6 @@
 
                 <TextView
                     style="@style/TextDark"
-                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="y" />
 
@@ -92,13 +89,14 @@
 
                 <TextView
                     style="@style/TextDark"
-                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="scale" />
 
                 <EditText
                     android:id="@+id/scaleSignificandEdit"
                     style="@style/EditTextDark"
+                    android:digits="012345789"
+                    android:inputType="number"
                     android:imeOptions="actionNext" />
 
                 <TextView
@@ -109,9 +107,60 @@
                 <EditText
                     android:id="@+id/scaleExponentEdit"
                     style="@style/EditTextDark"
+                    android:digits="012345789"
+                    android:inputType="number|numberSigned"
+                    android:imeOptions="actionNext" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/TextDark"
+                    android:layout_weight="1"
+                    android:text="bailout" />
+
+                <EditText
+                    android:id="@+id/bailoutSignificandEdit"
+                    style="@style/EditTextDark"
+                    android:digits="012345789"
+                    android:inputType="number"
+                    android:imeOptions="actionNext" />
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="e" />
+
+                <EditText
+                    android:id="@+id/bailoutExponentEdit"
+                    style="@style/EditTextDark"
+                    android:digits="012345789"
+                    android:inputType="number|numberSigned"
                     android:imeOptions="actionDone" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="detail" />
+
+                <SeekBar
+                    android:id="@+id/maxIterBar"
+                    android:layout_width="227dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:progress="25" />
             </LinearLayout>
 
         </LinearLayout>
