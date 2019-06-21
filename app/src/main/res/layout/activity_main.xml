@@ -88,15 +88,51 @@
             android:layout_height="wrap_content"
             android:gravity="bottom|end"
             android:orientation="vertical"
-            android:paddingStart="15dp"
-            android:paddingEnd="15dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
             app:layout_constraintBottom_toTopOf="@id/displayParams">
+
+            <Button
+                android:id="@+id/paramButton4"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/round_button_unselected"
+                android:text="P4"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/paramButton3"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/round_button_unselected"
+                android:text="P3"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/paramButton2"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/round_button_unselected"
+                android:text="P2"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/paramButton1"
                 android:layout_width="55dp"
                 android:layout_height="55dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:background="@drawable/round_button_unselected"
                 android:text="P1"
@@ -105,25 +141,27 @@
                 android:textStyle="bold" />
 
             <ImageButton
-                android:id="@+id/transformButton"
+                android:id="@+id/colorButton"
                 android:layout_width="55dp"
                 android:layout_height="55dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:background="@drawable/round_button_unselected"
+                android:contentDescription="COLOR"
                 android:scaleType="centerInside"
-                android:src="@drawable/baseline_open_with_black_36"
+                android:src="@drawable/baseline_color_lens_black_36"
                 android:tint="#fff" />
 
             <ImageButton
-                android:id="@+id/colorButton"
+                android:id="@+id/transformButton"
                 android:layout_width="55dp"
                 android:layout_height="55dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="15dp"
                 android:background="@drawable/round_button_unselected"
+                android:contentDescription="TRANSFORM"
                 android:scaleType="centerInside"
-                android:src="@drawable/baseline_color_lens_black_36"
+                android:src="@drawable/baseline_open_with_black_36"
                 android:tint="#fff" />
 
         </LinearLayout>
@@ -142,7 +180,7 @@
         <LinearLayout
             android:id="@+id/uiFull"
             android:layout_width="match_parent"
-            android:layout_height="500dp"
+            android:layout_height="200dp"
             android:layout_gravity="bottom"
             android:background="#333"
             android:orientation="vertical"
@@ -153,7 +191,7 @@
                 android:id="@+id/uiFullHandle"
                 style="?android:attr/borderlessButtonStyle"
                 android:layout_width="match_parent"
-                android:layout_height="15dp"
+                android:layout_height="20dp"
                 android:background="@color/black"
                 android:clickable="false"
                 android:focusable="false"
