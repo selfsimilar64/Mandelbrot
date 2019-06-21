@@ -103,6 +103,9 @@
         uniform float x0;
         uniform float y0;
         uniform vec2 P1;
+        uniform vec2 P2;
+        uniform vec2 P3;
+        uniform vec2 P4;
         uniform vec2 xScale;
         uniform vec2 yScale;
         uniform vec2 xOffset;
@@ -122,6 +125,9 @@
         uniform float x0;
         uniform float y0;
         uniform vec2 P1;
+        uniform vec2 P2;
+        uniform vec2 P3;
+        uniform vec2 P4;
         uniform vec2 xScale;
         uniform vec2 yScale;
         uniform vec2 xOffset;
@@ -386,21 +392,20 @@
     <string name="general_init_sf">
         vec4 colorParams = vec4(0.0);
         vec2 C = vec2(xScale.x*viewPos.x + xOffset.x, yScale.x*viewPos.y + yOffset.x);
-        vec2 Z = C;
-        vec2 Z1, Z2 = vec2(0.0);
-        float modZ;
-        float eps;
-        vec2 aaa = P1;
+        vec2 Z, Z1, Z2 = vec2(0.0);
+        float modZ = 0.0;
+        float eps = 0.0;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + x0 + y0 + R;
     </string>
     <string name="general_init_df">
         vec4 colorParams = vec4(0.0);
         vec2 A = addDF(multDF(xScale, vec2(viewPos.x, 0.0)), xOffset);
         vec2 B = addDF(multDF(yScale, vec2(viewPos.y, 0.0)), yOffset);
-        vec2 X, X1, X2 = vec2(x0, 0.0);
-        vec2 Y, Y1, Y2 = vec2(y0, 0.0);
-        vec2 modZ;
-        vec2 eps;
-        vec2 aaa = P1;
+        vec2 X, X1, X2 = vec2(0.0, 0.0);
+        vec2 Y, Y1, Y2 = vec2(0.0, 0.0);
+        vec2 modZ = vec2(0.0);
+        float eps = 0.0;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + x0 + y0 + R;
     </string>
     <string name="general_loop_sf">
         Z2 = Z1;
@@ -427,6 +432,16 @@
     <string name="mandelbrot_loop_df">
         X = addDF(addDF(sqrDF(X1), -sqrDF(Y1)), A);
         Y = addDF(multDF(vec2(2.0, 0.0), multDF(X1, Y1)), B);
+    </string>
+
+
+    <!-- JULIA -->
+    <string name="julia_loop_sf">
+        Z = cSqrSF(Z) + P1;
+    </string>
+    <string name="julia_loop_df">
+        X = addDF(addDF(sqrDF(X1), -sqrDF(Y1)), vec2(P1.x, 0.0));
+        Y = addDF(multDF(vec2(2.0, 0.0), multDF(X1, Y1)), vec2(P1.y, 0.0));
     </string>
 
 
@@ -457,6 +472,12 @@
     <string name="newton1_loop_sf">
         Z = Z - cDivSF(cSqrSF(cSqrSF(Z)) - vec2(1.0, 0.0), 4.0*cMultSF(Z, cSqrSF(Z)));
     </string>
+    <string name="newton2_loop_sf">
+        vec2 W = cMultSF(Z - P1, Z - P2);
+        vec2 numerator = cMultSF(W, Z - P3);
+        vec2 denominator = W + cMultSF(Z - P3, 2.0*Z - P1 - P2);
+        Z = Z - cDivSF(numerator, denominator);
+    </string>
 
 
     <!-- MOBIUS -->
@@ -477,12 +498,12 @@
     <!-- CONDITIONALS -->
     <!-- ===================================================================================== -->
 
-    <!-- BAILOUT -->
-    <string name="bailout_sf">
+    <!-- ESCAPE -->
+    <string name="escape_sf">
         modZ = modSF(Z);
         if (modZ > R)
     </string>
-    <string name="bailout_df">
+    <string name="escape_df">
         modZ = modDF(X, Y);
         if (modZ.x > R || isinf(X.x*X.x) || isinf(Y.x*Y.x) || isinf(X.x*X.x + Y.x*Y.x))
     </string>
@@ -490,9 +511,36 @@
     <!-- CONVERGE -->
     <string name="converge_sf">
         eps = modSF(Z - Z1);
-        if (eps &lt; 10e-7)
+        if (eps &lt; 1e-9)
+    </string>
+    <string name="converge_df">
+        eps = modSqrDF(addDF(X, -X1), addDF(Y, -Y1)).x;
+        if (eps &lt; 1e-9)
     </string>
 
+
+
+
+    <!-- INITIALIZATIONS -->
+    <!-- ===================================================================================== -->
+
+    <!-- CONSTANT -->
+    <string name="constant_sf">
+        Z = vec2(x0, y0);
+    </string>
+    <string name="constant_df">
+        X = vec2(x0, 0.0);
+        Y = vec2(y0, 0.0);
+    </string>
+
+    <!-- JULIA -->
+    <string name="julia_sf">
+        Z = C;
+    </string>
+    <string name="julia_df">
+        X = A;
+        Y = B;
+    </string>
 
 
 
@@ -500,14 +548,19 @@
     <!-- COLORING ALGORITHMS -->
     <!-- ===================================================================================== -->
 
-    <!-- ESCAPE TIME -->
+    <!-- CONDITIONAL ITERATION -->
     <string name="escape_final">
         float j = float(n)/float(maxIter);
         colorParams.z = j;
     </string>
 
 
-    <!-- SMOOTH -->
+    <!-- CONVERGE SMOOTH -->
+    <string name="converge_smooth_final">
+
+    </string>
+
+    <!-- ESCAPE SMOOTH -->
     <string name="mandelbrot_smooth_final_sf">
         float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
@@ -562,7 +615,7 @@
     <!-- TRIANGLE INEQUALITY AVERAGE -->
     <string name="mandelbrot_triangle_init_sf" tools:ignore="TypographyOther">
         float modC = modSF(C);
-        float modSqrZ1;
+        float modSqrZ1 = 0.0;
         float sum, sum1 = 0.0;
         float il = 1.0/log(2.0);
         float llr = log(log(R)/2.0);
