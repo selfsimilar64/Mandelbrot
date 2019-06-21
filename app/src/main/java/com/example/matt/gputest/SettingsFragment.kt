@@ -18,13 +18,15 @@ class SettingsFragment : Fragment() {
     private lateinit var callback : OnParamChangeListener
     
     lateinit var config : SettingsConfig
+    lateinit var resolutionTabs : TabLayout
+    lateinit var precisionTabs : TabLayout
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.settings_fragment, container, false)
 
 
-        val resolutionTabs = v.findViewById<TabLayout>(R.id.resolutionTabs)
+        resolutionTabs = v.findViewById(R.id.resolutionTabs)
         resolutionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
@@ -49,7 +51,7 @@ class SettingsFragment : Fragment() {
         )?.select()
 
 
-        val precisionTabs = v.findViewById<TabLayout>(R.id.precisionTabs)
+        precisionTabs = v.findViewById(R.id.precisionTabs)
         precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
