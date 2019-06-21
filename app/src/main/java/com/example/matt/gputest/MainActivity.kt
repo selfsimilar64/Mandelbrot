@@ -25,6 +25,7 @@ import android.util.Log
 import android.view.*
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.Float.sum
 import java.nio.ByteOrder
 import java.nio.ByteBuffer.allocateDirect
 import java.util.*
@@ -2563,21 +2564,26 @@ class MainActivity : AppCompatActivity(),
 
 
 
-
         val uiFullHandle = findViewById<View>(R.id.uiFullHandle)
+        val uiFullSwipable = findViewById<LinearLayout>(R.id.uiFullSwipeable)
 
         val phi = 0.5*(sqrt(5.0) + 1.0)
 //        val uiFullHeightOpen = (screenHeight*(1.0 - 1.0/phi)).toInt()
         val uiFullHeightOpen = screenHeight/2 - 200
         val uiFullHeightFullscreen = screenHeight - statusBarHeight
 
-        uiFullHandle.setOnTouchListener(object : View.OnTouchListener {
+        uiFullSwipable.setOnTouchListener(object : View.OnTouchListener {
 
             var velocityTracker : VelocityTracker? = null
-            val velocityThreshold1 = 0.02f
-            val velocityThreshold2 = 5*velocityThreshold1
+            val velocityThreshold1 = 0.1f
+            val velocityThreshold2 = 10f
 
-            var velocity = 0.0f
+            var v1 = 0f
+            var v2 = 0f
+            var v3 = 0f
+            var v4 = 0f
+            var v5 = 0f
+            var avgVelocity = 0f
 
             override fun onTouch(v: View?, event: MotionEvent?): Boolean {
                 val uiFullHeightClosed = uiFullHandle.height
@@ -2594,43 +2600,51 @@ class MainActivity : AppCompatActivity(),
                     MotionEvent.ACTION_MOVE -> {
                         val c = ConstraintSet()
                         c.clone(overlay)
-//                        Log.d("FULL UI HANDLE", "event.y: ${event.rawY.toInt()}")
                         c.constrainHeight(R.id.uiFull, screenHeight - event.rawY.toInt())
                         c.applyTo(overlay)
-                        fractalView.y = -(uiFullHandle.height + uiFull.height)/2.0f
+                        fractalView.y = -uiFull.height/2.0f
 
                         velocityTracker?.apply {
                             val pointerId: Int = event.getPointerId(event.actionIndex)
                             addMovement(event)
-                            computeCurrentVelocity(100)
-                            velocity = getYVelocity(pointerId) / screenHeight
-//                            Log.d("FULL UI HANDLE", "X velocity: ${getXVelocity(pointerId)}")
-                            Log.d("FULL UI HANDLE", "velocity: $velocity")
+                            computeCurrentVelocity(1000)  // compute over last second
+                            v5 = v4
+                            v4 = v3
+                            v3 = v2
+                            v2 = v1
+                            v1 = getYVelocity(pointerId) / screenHeight
+                            Log.d("FULL UI HANDLE", "velocity: $v1")
                         }
 
                         return true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         Log.d("FULL UI HANDLE", "action up")
+                        avgVelocity = (v3 + v4) / 2f
+                        v1 = 0f
+                        v2 = 0f
+                        v3 = 0f
+                        v4 = 0f
+                        v5 = 0f
                         val snapToHeight : Int = when {
                             uiFull.height > 0.5*(uiFullHeightOpen + screenHeight) -> {
                                 when {
-                                    velocity < velocityThreshold1 -> uiFullHeightFullscreen
-                                    velocity >= velocityThreshold2 -> uiFullHeightClosed
+                                    avgVelocity < velocityThreshold1 -> uiFullHeightFullscreen
+                                    avgVelocity >= velocityThreshold2 -> uiFullHeightClosed
                                     else -> uiFullHeightOpen
                                 }
                             }
                             uiFull.height < 0.5*uiFullHeightOpen -> {
                                 when {
-                                    velocity > -velocityThreshold1 -> uiFullHeightClosed
-                                    velocity <= -velocityThreshold2 -> uiFullHeightFullscreen
+                                    avgVelocity > -velocityThreshold1 -> uiFullHeightClosed
+                                    avgVelocity <= -velocityThreshold2 -> uiFullHeightFullscreen
                                     else -> uiFullHeightOpen
                                 }
                             }
                             else -> {
                                 when {
-                                    velocity >= velocityThreshold1 -> uiFullHeightClosed
-                                    velocity <= -velocityThreshold1 -> uiFullHeightFullscreen
+                                    avgVelocity >= velocityThreshold1 -> uiFullHeightClosed
+                                    avgVelocity <= -velocityThreshold1 -> uiFullHeightFullscreen
                                     else -> uiFullHeightOpen
                                 }
                             }
@@ -2647,14 +2661,14 @@ class MainActivity : AppCompatActivity(),
                         }
 
                         anim.duration =
-                            if (abs(velocity) < velocityThreshold1) 200
+                            if (abs(avgVelocity) < velocityThreshold1) 200
                             else {
                                 val dHeight = abs(uiFull.height - snapToHeight)
                                 Log.d("FULL UI HANDLE", "dHeight: $dHeight")
                                 val dScreen = dHeight.toFloat() / screenHeight.toFloat()
                                 Log.d("FULL UI HANDLE", "dScreen: $dScreen")
-                                Log.d("FULL UI HANDLE", "velocity: ${abs(velocity)}")
-                                (50f * dHeight.toFloat() / screenHeight.toFloat() / abs(velocity)).toLong()
+                                Log.d("FULL UI HANDLE", "avgVelocity: ${abs(avgVelocity)}")
+                                min((500f * dHeight.toFloat() / screenHeight.toFloat() / abs(avgVelocity)).toLong(), 300L)
                             }
                         anim.setInterpolator { input: Float -> input }
 
@@ -2671,6 +2685,7 @@ class MainActivity : AppCompatActivity(),
             }
 
         })
+//        uiFullSwipable.bringToFront()
 
         val uiFull = findViewById<LinearLayout>(R.id.uiFull)
         uiFull.layoutParams.height = uiFullHeightOpen
