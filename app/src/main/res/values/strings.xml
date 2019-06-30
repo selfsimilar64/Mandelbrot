@@ -482,13 +482,10 @@
 
     <!-- MOBIUS -->
     <string name="mobius_init_sf">
-        vec2 alpha = vec2(1.0, 0.0);
-        vec2 beta = C;
-        vec2 gamma = vec2(0.0, 1.0);
-        vec2 delta = cDivSF(vec2(1.0, 0.0), C);
+
     </string>
     <string name="mobius_loop_sf">
-        Z = cDivSF(cMultSF(alpha, Z) + beta, cMultSF(gamma, Z) + delta);
+        Z = cDivSF(cMultSF(P1, Z) + P2, cMultSF(P3, Z) + P4);
     </string>
 
 
