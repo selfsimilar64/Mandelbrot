@@ -2342,7 +2342,8 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var f : Fractal
     private lateinit var fractalView : FractalSurfaceView
-//    private lateinit var colorAlgorithms : Map<String, ColorAlgorithm>
+    private lateinit var uiQuickButtons : List<View>
+
     private var orientation = Configuration.ORIENTATION_UNDEFINED
 
 
@@ -2422,7 +2423,7 @@ class MainActivity : AppCompatActivity(),
             resources.getDrawable(R.drawable.round_button_unselected, null),
             resources.getDrawable(R.drawable.round_button_selected, null)
         )
-        val uiQuickButtons = listOf<View>(
+        uiQuickButtons = listOf<View>(
                 findViewById(R.id.transformButton),
                 findViewById(R.id.colorButton),
                 findViewById(R.id.paramButton1),
@@ -2452,6 +2453,8 @@ class MainActivity : AppCompatActivity(),
             b.setOnClickListener(uiQuickButtonListener)
         }
         uiQuick.bringToFront()
+        uiQuick.removeViews(0, 1)
+        uiQuick.addView(uiQuickButtons[5], 0)
 
 
 
@@ -2602,6 +2605,22 @@ class MainActivity : AppCompatActivity(),
                 "map" -> {
                     f.resetPosition()
                     f.renderShaderChanged = true
+                    val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
+                    Log.d("MAIN ACTIVITY", "uiQuick has ${uiQuick.childCount - 2} param children")
+                    Log.d("MAIN ACTIVITY", "new map has ${f.equationConfig.map().params.size} params")
+                    val diff = f.equationConfig.map().params.size - uiQuick.childCount + 2
+                    Log.d("MAIN ACTIVITY", "diff: $diff")
+                    when {
+                        diff < 0 -> {  // remove unnecessary param buttons
+                            uiQuick.removeViews(0, abs(diff))
+                        }
+                        diff > 0 -> {  // add missing param buttons
+                            for (i in 0 until diff) {
+                                uiQuick.addView(uiQuickButtons[uiQuickButtons.size - diff + i], 0)
+                            }
+                        }
+                    }
+
                 }
                 "coords" -> {
                     fractalView.requestFocus()
