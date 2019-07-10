@@ -28,18 +28,77 @@
 
 
         <LinearLayout
+            android:id="@+id/displayParams"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/display_params_bg_visible"
+            android:orientation="vertical"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/displayReaction"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="REACTION"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/displayParam1"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="param1:"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/displayParam2"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="param2:"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/displayParam3"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="param3:"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="end"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toTopOf="@id/progressBar">
+            app:layout_constraintBottom_toTopOf="@id/progressBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/leftArrow"
+                android:layout_width="10dp"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="1dp"
+                android:rotation="90"
+                android:scaleType="centerInside"
+                app:srcCompat="@android:drawable/arrow_down_float" />
 
             <HorizontalScrollView
                 android:id="@+id/buttonScroll"
                 android:layout_width="300dp"
                 android:layout_height="wrap_content"
-                android:fillViewport="false"
+                android:layout_weight="1"
+                android:fillViewport="true"
                 android:scrollbarStyle="outsideInset">
 
                 <LinearLayout
@@ -48,9 +107,7 @@
                     android:layout_height="match_parent"
                     android:layout_gravity="end"
                     android:gravity="end"
-                    android:orientation="horizontal"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp">
+                    android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/paramButton4"
@@ -119,6 +176,15 @@
 
                 </LinearLayout>
             </HorizontalScrollView>
+
+            <ImageView
+                android:id="@+id/rightArrow"
+                android:layout_width="10dp"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="1dp"
+                android:rotation="270"
+                android:scaleType="fitCenter"
+                app:srcCompat="@android:drawable/arrow_down_float" />
 
             <ImageButton
                 android:id="@+id/uiFullButton"
