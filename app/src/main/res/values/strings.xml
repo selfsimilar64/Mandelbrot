@@ -292,11 +292,18 @@
             return vec2(u, v);
         }
 
-        vec2 cPow(vec2 z, vec2 s) {
+        vec2 cLog(vec2 z) {
+            float r = modSF(z);
             float theta = atan(z.y, z.x);
-            float lr = 0.5*log(dot(z, z));
-            float c = exp(s.x*lr - s.y*theta);
-            float f = s.y*lr + s.x*theta;
+            return vec2(log(r + 0.01), theta);
+        }
+
+        vec2 cPow1(vec2 z, vec2 s) {
+            float theta = atan(z.y, z.x);
+            float r = sqrt(dot(z, z));
+            float a = pow(r, s.x);
+            float c = a*exp(-s.y*theta);
+            float f = s.y*log(r) + s.x*theta;
             return c*vec2(cos(f), sin(f));
         }
 
@@ -318,6 +325,17 @@
             float r = sqrt(dot(z, z));
             float c = pow(r, p);
             float f = p*theta;
+            return c*vec2(cos(f), sin(f));
+        }
+
+        vec2 cPow4(vec2 z, vec2 s) {
+            float theta = atan(z.y, z.x);
+            float r = sqrt(dot(z, z));
+            float a = pow(r, s.x);
+            float b = exp(-s.y*theta);
+            float c = a*b;
+            float qq = s.y*log(r + 0.001);
+            float f = qq + s.x*theta;
             return c*vec2(cos(f), sin(f));
         }
 
@@ -434,6 +452,14 @@
         Y = addDF(multDF(vec2(2.0, 0.0), multDF(X1, Y1)), B);
     </string>
 
+    <!-- MANDELBROT CPOW -->
+    <string name="mandelbrotcpow_loop_sf">
+        Z = cPow4(Z, P1) + C;
+    </string>
+    <string name="mandelbrotcpow_loop_df">
+
+    </string>
+
 
     <!-- JULIA -->
     <string name="julia_loop_sf">
@@ -465,6 +491,9 @@
     </string>
     <string name="sine3_loop_sf">
         Z = sine(cDivSF(cSqrSF(Z), C) + P1);
+    </string>
+    <string name="sine4_loop_sf">
+        Z = cPow4(Z, -Z) + P1;
     </string>
 
 
