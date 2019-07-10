@@ -23,6 +23,7 @@ import android.opengl.GLES32 as GL
 import android.widget.FrameLayout.LayoutParams as LP
 import android.util.Log
 import android.view.*
+import android.view.animation.AlphaAnimation
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.nio.ByteOrder
@@ -337,7 +338,7 @@ class ComplexMap (
                 doubleArrayOf(0.0, 0.0),
                 doubleArrayOf(0.0, 0.0),
                 1.0,
-                listOf(doubleArrayOf(0.0, 0.0)),
+                listOf(),
                 "",
                 "",
                 "",
@@ -354,7 +355,7 @@ class ComplexMap (
                 doubleArrayOf(0.0, 0.0),
                 doubleArrayOf(-0.75, 0.0),
                 3.5,
-                listOf(doubleArrayOf(2.0, 0.0)),
+                listOf(),
                 res.getString(R.string.constant_sf),
                 res.getString(R.string.escape_sf),
                 "",
@@ -364,6 +365,23 @@ class ComplexMap (
                 res.getString(R.string.escape_df),
                 "",
                 res.getString(R.string.mandelbrot_loop_df),
+                ""
+        )}
+        val mandelbrotCpow  = { res: Resources -> ComplexMap(
+                "Mandelbrot Complex Power",
+                doubleArrayOf(0.0, 0.0),
+                doubleArrayOf(-0.75, 0.0),
+                3.5,
+                listOf(doubleArrayOf(2.0, 2.0)),
+                res.getString(R.string.constant_sf),
+                res.getString(R.string.escape_sf),
+                "",
+                res.getString(R.string.mandelbrotcpow_loop_sf),
+                "",
+                "",
+                "",
+                "",
+                "",
                 ""
         )}
         val julia       = { res: Resources -> ComplexMap(
@@ -451,6 +469,23 @@ class ComplexMap (
                 "",
                 ""
         )}
+        val sine4       = { res: Resources -> ComplexMap(
+                "Sine 4",
+                doubleArrayOf(1.0, 0.0),
+                doubleArrayOf(0.0, 0.0),
+                3.5,
+                listOf(doubleArrayOf(1.0, 0.0)),
+                res.getString(R.string.julia_sf),
+                res.getString(R.string.escape_sf),
+                "",
+                res.getString(R.string.sine4_loop_sf),
+                "",
+                res.getString(R.string.constant_df),
+                res.getString(R.string.escape_df),
+                "",
+                "",
+                ""
+        )}
         val newton1     = { res: Resources -> ComplexMap(
                 "Newton 1",
                 doubleArrayOf(0.0, 0.0),
@@ -513,11 +548,13 @@ class ComplexMap (
         ) }
         val all         = mapOf(
             "Mandelbrot"  to  mandelbrot,
+            "Mandelbrot Complex Power"  to  mandelbrotCpow,
             "Julia"       to  julia,
             "Dual Power"  to  dualpow,
             "Sine 1"      to  sine1,
             "Sine 2"      to  sine2,
             "Sine 3"      to  sine3,
+            "Sine 4"      to  sine4,
             "Mobius"      to  mobius,
             "Newton 1"    to  newton1,
             "Newton 2"    to  newton2
@@ -757,6 +794,7 @@ class Fractal(
         val screenRes           : IntArray
 ) {
 
+
     private var header       : String = ""
     private var arithmetic   : String = ""
     private var init         : String = ""
@@ -919,9 +957,9 @@ class Fractal(
         equationConfig.coords()[1] = equationConfig.map().coordsInit[1]
         equationConfig.scale()[0] = equationConfig.map().scaleInit
         equationConfig.scale()[1] = equationConfig.map().scaleInit * aspectRatio
-        updateDisplayParams()
+        updateEditTexts()
     }
-    fun updateDisplayParams() {
+    fun updateEditTexts() {
 
         val xCoordEdit = context.findViewById<EditText>(R.id.xCoordEdit)
         val yCoordEdit = context.findViewById<EditText>(R.id.yCoordEdit)
@@ -939,6 +977,36 @@ class Fractal(
         bailoutSignificandEdit?.setText(bailoutStrings[0])
         bailoutExponentEdit?.setText(bailoutStrings[1])
 
+    }
+    fun updateDisplayParams(reaction: Reaction, reactionChanged: Boolean) {
+        val displayParams = context.findViewById<LinearLayout>(R.id.displayParams)
+        if (settingsConfig.displayParams()) {
+            when (reaction) {
+                Reaction.TRANSFORM -> {
+                    (displayParams.getChildAt(1) as TextView).text = "x: %.17f".format(equationConfig.coords()[0])
+                    (displayParams.getChildAt(2) as TextView).text = "y: %.17f".format(equationConfig.coords()[1])
+                    (displayParams.getChildAt(3) as TextView).text = "scale: %e".format(equationConfig.scale()[0])
+                }
+                Reaction.COLOR -> {
+                    (displayParams.getChildAt(1) as TextView).text = "frequency: %.4f".format(colorConfig.frequency())
+                    (displayParams.getChildAt(2) as TextView).text = "phase: %.4f".format(colorConfig.phase())
+                }
+                else -> {
+                    val i = reaction.ordinal - 2
+                    (displayParams.getChildAt(1) as TextView).text = "x: %.8f".format(equationConfig.map().params[i][0])
+                    (displayParams.getChildAt(2) as TextView).text = "y: %.8f".format(equationConfig.map().params[i][1])
+                }
+            }
+        }
+        if (settingsConfig.displayParams() || reactionChanged) {
+            val fadeOut = AlphaAnimation(1f, 0f)
+            fadeOut.duration = 1000L
+            fadeOut.startOffset = 2500L
+            fadeOut.fillAfter = true
+            displayParams.animation = fadeOut
+            displayParams.animation.start()
+            displayParams.requestLayout()
+        }
     }
     fun switchOrientation() {
 
@@ -964,7 +1032,7 @@ class Fractal(
         // dx -- [0, screenWidth]
         equationConfig.map().params[p][0] += equationConfig.scale()[0]*dPos[0]/screenRes[0]
         equationConfig.map().params[p][1] += equationConfig.scale()[1]*dPos[1]/screenRes[1]
-        Log.d("FRACTAL", "setting map param $p to (${equationConfig.map().params[p][0]}, ${equationConfig.map().params[p][1]})")
+        Log.d("FRACTAL", "setting map param ${p + 1} to (${equationConfig.map().params[p][0]}, ${equationConfig.map().params[p][1]})")
 
         // SINE2 :: (-0.26282883851642613, 2.042520182493586E-6)
         // SINE2 :: (-0.999996934286532, 9.232660318047263E-5)
@@ -974,6 +1042,8 @@ class Fractal(
         // SINE1 :: 0.2948570315666499
         // SINE1 :: 0.31960705187983646
         // JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ !!!!!
+
+        updateDisplayParams(Reaction.valueOf("P${p + 1}"), false)
 
         Log.d("FRACTAL", "touchPos set to (${equationConfig.map().params[0][0]}, ${equationConfig.map().params[0][1]})")
     }
@@ -997,7 +1067,8 @@ class Fractal(
             }
         }
 
-        updateDisplayParams()
+        updateEditTexts()
+        updateDisplayParams(Reaction.TRANSFORM, false)
 //        Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
 
     }
@@ -1021,7 +1092,6 @@ class Fractal(
             }
         }
 
-        updateDisplayParams()
 //        Log.d("FRACTAL", "translation (coordinates) -- dx: ${dPos[0]}, dy: ${dPos[1]}")
 
     }
@@ -1087,17 +1157,20 @@ class Fractal(
             Log.d("FRACTAL", "precision changed")
         }
 
-        updateDisplayParams()
+        updateEditTexts()
+        updateDisplayParams(Reaction.TRANSFORM, false)
 //        Log.d("FRACTAL", "scale -- dscale: $dScale")
 
     }
     fun setFrequency(dScale: Float) {
         colorConfig.params["frequency"] = colorConfig.frequency() * dScale
-        updateDisplayParams()
+        updateEditTexts()
+        updateDisplayParams(Reaction.COLOR, false)
     }
     fun setPhase(dx: Float) {
-        colorConfig.params["phase"] = colorConfig.phase() + dx/screenRes[0]
-        updateDisplayParams()
+        colorConfig.params["phase"] = (colorConfig.phase() + dx/screenRes[0])
+        updateEditTexts()
+        updateDisplayParams(Reaction.COLOR, false)
     }
 
 }
@@ -1142,6 +1215,13 @@ class FractalSurfaceView(
 
     }
     var reaction = Reaction.TRANSFORM
+    val numDisplayParams = {
+        when (reaction) {
+            Reaction.TRANSFORM -> 3
+            Reaction.COLOR -> 2
+            else -> 2
+        }
+    }
 
     private val prevFocus = floatArrayOf(0.0f, 0.0f)
     private val edgeRightSize = 150
@@ -1194,7 +1274,7 @@ class FractalSurfaceView(
                     val focus = e.focus()
                     prevFocus[0] = focus[0]
                     prevFocus[1] = focus[1]
-                    h.postDelayed(longPressed, 300)
+                    h.postDelayed(longPressed, 500)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val focus = e.focus()
@@ -2343,6 +2423,7 @@ class MainActivity : AppCompatActivity(),
     private lateinit var f : Fractal
     private lateinit var fractalView : FractalSurfaceView
     private lateinit var uiQuickButtons : List<View>
+    private lateinit var displayParamTextViews : List<TextView>
 
     private var orientation = Configuration.ORIENTATION_UNDEFINED
 
@@ -2374,15 +2455,15 @@ class MainActivity : AppCompatActivity(),
 
 
         val equationConfig = EquationConfig(mutableMapOf(
-                "map"               to  ComplexMap.julia(resources),
+                "map"               to  ComplexMap.mandelbrot(resources),
                 "coords"            to  doubleArrayOf(0.0, 0.0),
                 "scale"             to  doubleArrayOf(1.0, 1.0*aspectRatio),
                 "maxIter"           to  255,
                 "bailoutRadius"     to  1e5f
         ))
         val colorConfig = ColorConfig(mutableMapOf(
-                "algorithm"         to  ColorAlgorithm.triangleIneqAvg(resources),
-                "palette"           to  ColorPalette.p5,
+                "algorithm"         to  ColorAlgorithm.escapeSmooth(resources),
+                "palette"           to  ColorPalette.p8,
                 "frequency"         to  frequency,
                 "phase"             to  phase
         ))
@@ -2418,18 +2499,28 @@ class MainActivity : AppCompatActivity(),
         val fractalLayout = findViewById<FrameLayout>(R.id.layout_main)
         fractalLayout.addView(fractalView)
 
+
+        val displayParams = findViewById<LinearLayout>(R.id.displayParams)
+        displayParamTextViews = listOf(
+            findViewById(R.id.displayParam1),
+            findViewById(R.id.displayParam2),
+            findViewById(R.id.displayParam3)
+        )
+        displayParams.removeViews(1, displayParams.childCount - 1)
+
+
         val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
         val buttonBackgrounds = arrayOf(
             resources.getDrawable(R.drawable.round_button_unselected, null),
             resources.getDrawable(R.drawable.round_button_selected, null)
         )
-        uiQuickButtons = listOf<View>(
-                findViewById(R.id.transformButton),
-                findViewById(R.id.colorButton),
-                findViewById(R.id.paramButton1),
-                findViewById(R.id.paramButton2),
-                findViewById(R.id.paramButton3),
-                findViewById(R.id.paramButton4)
+        uiQuickButtons = listOf(
+            findViewById(R.id.transformButton),
+            findViewById(R.id.colorButton),
+            findViewById(R.id.paramButton1),
+            findViewById(R.id.paramButton2),
+            findViewById(R.id.paramButton3),
+            findViewById(R.id.paramButton4)
         )
         val uiQuickButtonListener = View.OnClickListener {
             val s = when (it) {
@@ -2438,24 +2529,56 @@ class MainActivity : AppCompatActivity(),
                 else -> ""
             }
             fractalView.reaction = Reaction.valueOf(s)
+            (displayParams.getChildAt(0) as TextView).text = when (fractalView.reaction) {
+                Reaction.TRANSFORM, Reaction.COLOR -> s
+                else -> "PARAMETER ${s[1]}"
+            }
+
+            if (fractalView.f.settingsConfig.displayParams()) {
+                displayParams.removeViews(1, displayParams.childCount - 1)
+                for (i in 0 until fractalView.numDisplayParams()) {
+                    displayParams.addView(displayParamTextViews[i])
+                }
+            }
+
             for (b in uiQuickButtons) {
                 val btd = b.background as TransitionDrawable
                 if (b == it) { btd.startTransition(0) }
                 else { btd.resetTransition() }
             }
-            val displayText = if(s[0].toString() == "P") "PARAMETER ${s[1]}" else s
-            val toast = Toast.makeText(baseContext, displayText, Toast.LENGTH_SHORT)
-            toast.setGravity(Gravity.BOTTOM, 0, uiFull.height + 20)
-            toast.show()
+            fractalView.f.updateDisplayParams(Reaction.valueOf(s), true)
         }
         for (b in uiQuickButtons) {
             b.background = TransitionDrawable(buttonBackgrounds)
             b.setOnClickListener(uiQuickButtonListener)
         }
+        val diff = f.equationConfig.map().params.size - uiQuick.childCount + 2
+        uiQuick.removeViews(0, abs(diff))
         uiQuick.bringToFront()
-        uiQuick.removeViews(0, 1)
-        uiQuick.addView(uiQuickButtons[5], 0)
+        uiQuickButtons[0].performClick()
 
+        val buttonScroll = findViewById<HorizontalScrollView>(R.id.buttonScroll)
+        val leftArrow = findViewById<ImageView>(R.id.leftArrow)
+        val rightArrow = findViewById<ImageView>(R.id.rightArrow)
+        leftArrow.alpha = 0f
+        rightArrow.alpha = 0f
+
+        buttonScroll.viewTreeObserver.addOnScrollChangedListener {
+            if (uiQuick.width > buttonScroll.width) {
+                val scrollX = buttonScroll.scrollX
+                val scrollEnd = uiQuick.width - buttonScroll.width
+                Log.d("MAIN ACTIVITY", "scrollX: $scrollX")
+                Log.d("MAIN ACTIVITY", "scrollEnd: $scrollEnd")
+                when {
+                    scrollX > 5 -> leftArrow.alpha = 1f
+                    scrollX < 5 -> leftArrow.alpha = 0f
+                }
+                when {
+                    scrollX < scrollEnd - 5 -> rightArrow.alpha = 1f
+                    scrollX > scrollEnd - 5 -> rightArrow.alpha = 0f
+                }
+            }
+        }
 
 
         val uiFullTabs = findViewById<TabLayout>(R.id.uiFullTabs)
@@ -2512,7 +2635,7 @@ class MainActivity : AppCompatActivity(),
             override fun onTabSelected(tab: TabLayout.Tab) {
                 viewPager.currentItem = tab.position
                 when (tab.text) {
-                    "Equation" -> f.updateDisplayParams()
+                    "Equation" -> f.updateEditTexts()
                     else -> {}
                 }
             }
@@ -2573,11 +2696,10 @@ class MainActivity : AppCompatActivity(),
 
 
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        f.updateDisplayParams()
+        f.updateEditTexts()
 
 
     }
-
 
     override fun onSaveInstanceState(outState: Bundle?) {
         outState?.putString(  "colorAlgName",   f.colorConfig.algorithm().name    )
@@ -2587,7 +2709,6 @@ class MainActivity : AppCompatActivity(),
         outState?.putInt(     "orientation",    orientation                       )
         super.onSaveInstanceState(outState)
     }
-
     override fun onAttachFragment(fragment: Fragment) {
         super.onAttachFragment(fragment)
         when (fragment) {
@@ -2596,7 +2717,6 @@ class MainActivity : AppCompatActivity(),
             is EquationFragment -> fragment.setOnParamChangeListener(this)
         }
     }
-
     override fun onEquationParamsChanged(key: String, value: Any) {
         if (f.equationConfig.params[key] != value) {
             Log.d("MAIN ACTIVITY", "$key set from ${f.equationConfig.params[key]} to $value")
@@ -2606,17 +2726,16 @@ class MainActivity : AppCompatActivity(),
                     f.resetPosition()
                     f.renderShaderChanged = true
                     val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
-                    Log.d("MAIN ACTIVITY", "uiQuick has ${uiQuick.childCount - 2} param children")
-                    Log.d("MAIN ACTIVITY", "new map has ${f.equationConfig.map().params.size} params")
-                    val diff = f.equationConfig.map().params.size - uiQuick.childCount + 2
-                    Log.d("MAIN ACTIVITY", "diff: $diff")
+                    val prevChildCount = uiQuick.childCount
+                    val diff = f.equationConfig.map().params.size - prevChildCount + 2
                     when {
                         diff < 0 -> {  // remove unnecessary param buttons
                             uiQuick.removeViews(0, abs(diff))
+                            uiQuickButtons[0].performClick()
                         }
                         diff > 0 -> {  // add missing param buttons
                             for (i in 0 until diff) {
-                                uiQuick.addView(uiQuickButtons[uiQuickButtons.size - diff + i], 0)
+                                uiQuick.addView(uiQuickButtons[prevChildCount + i], 0)
                             }
                         }
                     }
@@ -2639,7 +2758,6 @@ class MainActivity : AppCompatActivity(),
             Log.d("MAIN ACTIVITY", "$key already set to $value")
         }
     }
-
     override fun onColorParamsChanged(key: String, value: Any) {
         if (f.colorConfig.params[key] != value) {
             Log.d("MAIN ACTIVITY", "$key set from ${f.colorConfig.params[key]} to $value")
@@ -2662,7 +2780,6 @@ class MainActivity : AppCompatActivity(),
             Log.d("MAIN ACTIVITY", "$key already set to $value")
         }
     }
-
     override fun onSettingsParamsChanged(key: String, value: Any) {
         if (f.settingsConfig.params[key] != value) {
             Log.d("MAIN ACTIVITY", "$key set from ${f.settingsConfig.params[key]} to $value")
@@ -2684,7 +2801,16 @@ class MainActivity : AppCompatActivity(),
                     fractalView.requestRender()
                 }
                 "displayParams" -> {
-                    // setDisplayParamsVisibility(value as Boolean)
+                    val displayParams = findViewById<LinearLayout>(R.id.displayParams)
+                    if (value as Boolean) {
+                        for (i in 0 until fractalView.numDisplayParams()) {
+                            displayParams.addView(displayParamTextViews[i])
+                        }
+                        fractalView.f.updateDisplayParams(fractalView.reaction, false)
+                    }
+                    else {
+                        displayParams.removeViews(1, displayParams.childCount - 1)
+                    }
                 }
             }
         }
