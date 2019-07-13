@@ -87,7 +87,7 @@ class EquationFragment : Fragment() {
                         imm.hideSoftInputFromWindow(v.windowToken, 0)
                         editText.clearFocus()
                         editText.isSelected = false
-                        v.findViewById<LinearLayout>(R.id.params).requestLayout()
+                        v.findViewById<LinearLayout>(R.id.positionParams).requestLayout()
                         true
                     }
                     else -> {

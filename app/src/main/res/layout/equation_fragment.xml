@@ -7,163 +7,219 @@
     android:orientation="vertical"
     android:paddingTop="10dp">
 
-    <android.support.v7.widget.CardView
-        style="@style/CardDark"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
-
-            <TextView
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Map" />
-
-            <Spinner
-                android:id="@+id/complexMapSpinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_weight="2"
-                android:gravity="center_vertical|end"
-                android:prompt="@string/equation"
-                android:spinnerMode="dialog" />
-        </LinearLayout>
-
-    </android.support.v7.widget.CardView>
-
-    <android.support.v7.widget.CardView
-        style="@style/CardDark"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-        <LinearLayout
-            android:id="@+id/params"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical" >
 
-            <LinearLayout
+            <android.support.v7.widget.CardView
+                style="@style/CardDark"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:orientation="horizontal">
+                android:layout_height="wrap_content">
 
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_weight="1"
-                    android:text="x" />
-
-                <EditText
-                    android:id="@+id/xCoordEdit"
-                    style="@style/EditTextDark"
-                    android:imeOptions="actionNext" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:orientation="horizontal">
-
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_weight="1"
-                    android:text="y" />
-
-                <EditText
-                    android:id="@+id/yCoordEdit"
-                    style="@style/EditTextDark"
-                    android:imeOptions="actionNext" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:orientation="horizontal">
-
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_weight="1"
-                    android:text="scale" />
-
-                <EditText
-                    android:id="@+id/scaleSignificandEdit"
-                    style="@style/EditTextDark"
-                    android:digits="012345789"
-                    android:inputType="number"
-                    android:imeOptions="actionNext" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="e" />
-
-                <EditText
-                    android:id="@+id/scaleExponentEdit"
-                    style="@style/EditTextDark"
-                    android:digits="012345789"
-                    android:inputType="number|numberSigned"
-                    android:imeOptions="actionNext" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_weight="1"
-                    android:text="bailout" />
-
-                <EditText
-                    android:id="@+id/bailoutSignificandEdit"
-                    style="@style/EditTextDark"
-                    android:digits="012345789"
-                    android:inputType="number"
-                    android:imeOptions="actionNext" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="e" />
-
-                <EditText
-                    android:id="@+id/bailoutExponentEdit"
-                    style="@style/EditTextDark"
-                    android:digits="012345789"
-                    android:inputType="number|numberSigned"
-                    android:imeOptions="actionDone" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="detail" />
-
-                <SeekBar
-                    android:id="@+id/maxIterBar"
-                    android:layout_width="227dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:progress="25" />
-            </LinearLayout>
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fractal"
+                        android:textAllCaps="true"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Function" />
+
+                        <Spinner
+                            android:id="@+id/complexMapSpinner"
+                            android:layout_width="match_parent"
+                            android:layout_height="35dp"
+                            android:layout_gravity="end"
+                            android:layout_marginStart="10dp"
+                            android:gravity="center_vertical|end"
+                            android:prompt="@string/equation"
+                            android:spinnerMode="dialog" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                style="@style/CardDark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="5dp"
+                        android:text="Position"
+                        android:textAllCaps="true"
+                        android:textSize="16sp" />
+
+                    <LinearLayout
+                        android:id="@+id/positionParams"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_weight="1"
+                                android:text="x" />
+
+                            <EditText
+                                android:id="@+id/xCoordEdit"
+                                style="@style/EditTextDark"
+                                android:imeOptions="actionNext" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_weight="1"
+                                android:text="y" />
+
+                            <EditText
+                                android:id="@+id/yCoordEdit"
+                                style="@style/EditTextDark"
+                                android:imeOptions="actionNext" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_weight="1"
+                                android:text="Scale" />
+
+                            <EditText
+                                android:id="@+id/scaleSignificandEdit"
+                                style="@style/EditTextDark"
+                                android:digits="012345789"
+                                android:imeOptions="actionNext"
+                                android:inputType="number" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="e" />
+
+                            <EditText
+                                android:id="@+id/scaleExponentEdit"
+                                style="@style/EditTextDark"
+                                android:digits="012345789"
+                                android:imeOptions="actionNext"
+                                android:inputType="number|numberSigned" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                style="@style/CardDark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="45dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Maximum Iterations" />
+
+                        <SeekBar
+                            android:id="@+id/maxIterBar"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:progress="25" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_weight="1"
+                            android:text="Bailout Radius" />
+
+                        <EditText
+                            android:id="@+id/bailoutSignificandEdit"
+                            style="@style/EditTextDark"
+                            android:digits="012345789"
+                            android:imeOptions="actionNext"
+                            android:inputType="number" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="e" />
+
+                        <EditText
+                            android:id="@+id/bailoutExponentEdit"
+                            style="@style/EditTextDark"
+                            android:digits="012345789"
+                            android:imeOptions="actionDone"
+                            android:inputType="number|numberSigned" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
 
         </LinearLayout>
-    </android.support.v7.widget.CardView>
+    </ScrollView>
 
 </LinearLayout>

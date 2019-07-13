@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.Switch
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.settings_fragment.*
@@ -85,8 +86,8 @@ class SettingsFragment : Fragment() {
                 ?: config.continuousRender()
 
         val displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
-        displayParamsSwitch.setOnCheckedChangeListener {
-            buttonView, isChecked -> callback.onSettingsParamsChanged("displayParams", isChecked)
+        displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            callback.onSettingsParamsChanged("displayParams", isChecked)
         }
         displayParamsSwitch.isChecked =
                 savedInstanceState?.getBoolean("displayParams")
