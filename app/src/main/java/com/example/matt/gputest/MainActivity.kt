@@ -708,11 +708,12 @@ enum class Resolution { LOW, MED, HIGH, ULTRA }
 
 class EquationConfig (val params : MutableMap<String, Any>) {
 
-    val map                 = { params["map"]            as ComplexMap  }
-    val coords              = { params["coords"]         as DoubleArray }
-    val scale               = { params["scale"]          as DoubleArray }
-    val maxIter             = { params["maxIter"]        as Int         }
-    val bailoutRadius       = { params["bailoutRadius"]  as Float       }
+    val map                 = { params["map"]              as ComplexMap  }
+    val paramSensitivity    = { params["paramSensitivity"] as Double      }
+    val coords              = { params["coords"]           as DoubleArray }
+    val scale               = { params["scale"]            as DoubleArray }
+    val maxIter             = { params["maxIter"]          as Int         }
+    val bailoutRadius       = { params["bailoutRadius"]    as Float       }
 
 }
 
@@ -739,8 +740,8 @@ fun MotionEvent.focalLength() : Float {
     val f = focus()
     val pos = floatArrayOf(x, y)
     val dist = floatArrayOf(pos[0] - f[0], pos[1] - f[1])
-    return Math.sqrt(Math.pow(dist[0].toDouble(), 2.0) +
-            Math.pow(dist[1].toDouble(), 2.0)).toFloat()
+    return sqrt(dist[0].toDouble().pow(2.0) +
+            dist[1].toDouble().pow(2.0)).toFloat()
 }
 
 fun MotionEvent.focus() : FloatArray {
@@ -995,6 +996,7 @@ class Fractal(
                     val i = reaction.ordinal - 2
                     (displayParams.getChildAt(1) as TextView).text = "x: %.8f".format(equationConfig.map().params[i][0])
                     (displayParams.getChildAt(2) as TextView).text = "y: %.8f".format(equationConfig.map().params[i][1])
+                    (displayParams.getChildAt(3) as TextView).text = "sensitivity: %.4f".format(equationConfig.paramSensitivity())
                 }
             }
         }
@@ -1030,9 +1032,12 @@ class Fractal(
     }
     fun setMapParam(p: Int, dPos: FloatArray) {
         // dx -- [0, screenWidth]
-        equationConfig.map().params[p][0] += equationConfig.scale()[0]*dPos[0]/screenRes[0]
-        equationConfig.map().params[p][1] += equationConfig.scale()[1]*dPos[1]/screenRes[1]
-        Log.d("FRACTAL", "setting map param ${p + 1} to (${equationConfig.map().params[p][0]}, ${equationConfig.map().params[p][1]})")
+        val sensitivity =
+            if (equationConfig.paramSensitivity() == -1.0) equationConfig.scale()[0]
+            else equationConfig.paramSensitivity()
+        equationConfig.map().params[p - 1][0] += sensitivity*dPos[0]/screenRes[0]
+        equationConfig.map().params[p - 1][1] += sensitivity*dPos[1]/screenRes[1]
+        // Log.d("FRACTAL", "setting map param ${p + 1} to (${equationConfig.map().params[p - 1][0]}, ${equationConfig.map().params[p - 1][1]})")
 
         // SINE2 :: (-0.26282883851642613, 2.042520182493586E-6)
         // SINE2 :: (-0.999996934286532, 9.232660318047263E-5)
@@ -1043,9 +1048,13 @@ class Fractal(
         // SINE1 :: 0.31960705187983646
         // JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ !!!!!
 
-        updateDisplayParams(Reaction.valueOf("P${p + 1}"), false)
+        updateDisplayParams(Reaction.valueOf("P$p"), false)
 
-        Log.d("FRACTAL", "touchPos set to (${equationConfig.map().params[0][0]}, ${equationConfig.map().params[0][1]})")
+    }
+    fun setMapParamSensetivity(p: Int, dScale: Float) {
+        equationConfig.params["paramSensitivity"] = equationConfig.paramSensitivity() * dScale
+        updateEditTexts()
+        updateDisplayParams(Reaction.valueOf("P$p"), false)
     }
     fun translate(dScreenPos: FloatArray) {
 
@@ -1183,7 +1192,918 @@ class FractalSurfaceView(
         private val context   : Activity
 ) : GLSurfaceView(context) {
 
-//    val texPixels = f.texRes[0]*f.texRes[1]
+    inner class FractalRenderer(var f: Fractal, val context: Activity) : Renderer {
+
+        inner class RenderRoutine {
+
+            private val maxPixelsPerChunk = f.screenRes[0]*f.screenRes[1]/8
+
+            // coordinates of default view boundaries
+            private val viewCoords = floatArrayOf(
+                    -1.0f,   1.0f,   0.0f,     // top left
+                    -1.0f,  -1.0f,   0.0f,     // bottom left
+                    1.0f,  -1.0f,   0.0f,     // bottom right
+                    1.0f,   1.0f,   0.0f )    // top right
+            private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
+
+            private val renderProgram = GL.glCreateProgram()
+            private val viewCoordsHandle : Int
+            private val iterHandle       : Int
+            private val rHandle          : Int
+            private val xInitHandle      : Int
+            private val yInitHandle      : Int
+            private val xScaleHandle     : Int
+            private val yScaleHandle     : Int
+            private val xOffsetHandle    : Int
+            private val yOffsetHandle    : Int
+            private val bgScaleHandle    : Int
+            private val paramHandles     : IntArray
+
+            private val sampleProgram = GL.glCreateProgram()
+            private val viewCoordsSampleHandle : Int
+            private val quadCoordsSampleHandle : Int
+            private val textureSampleHandle    : Int
+
+            private val colorProgram = GL.glCreateProgram()
+            private val viewCoordsColorHandle : Int
+            private val quadCoordsColorHandle : Int
+            private val numColorsHandle       : Int
+            private val textureColorHandle    : Int
+            private val paletteHandle         : Int
+            private val frequencyHandle       : Int
+            private val phaseHandle           : Int
+
+
+            private val vRenderShader : Int
+            private val vSampleShader : Int
+
+            private var fRenderShader : Int
+            private var fColorShader  : Int
+            private val fSampleShader : Int
+
+            // define texture resolutions
+            private val bgTexWidth = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[0]/8 }
+            private val bgTexHeight = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[1]/8 }
+
+            private val interpolation = {
+                if (f.settingsConfig.resolution() == Resolution.ULTRA) GL.GL_LINEAR
+                else GL.GL_NEAREST
+            }
+
+            private val textures = arrayOf(
+                    Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0),
+                    Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 1),
+                    Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 2)
+            )
+
+            // allocate memory for textures
+            private val quadBuffer =
+                    allocateDirect(viewCoords.size * 4)
+                            .order(ByteOrder.nativeOrder())
+                            .asFloatBuffer()
+            private val bgQuadBuffer =
+                    allocateDirect(viewCoords.size * 4)
+                            .order(ByteOrder.nativeOrder())
+                            .asFloatBuffer()
+
+            // create variables to store texture and fbo IDs
+            private val fboIDs : IntBuffer = IntBuffer.allocate(1)
+            private var currIndex = 1      // current high-res texture ID index
+            private var intIndex = 2       // intermediate high-res texture ID index
+
+            // initialize byte buffer for the draw list
+            // num coord values * 2 bytes/short
+            private val drawListBuffer =
+                    allocateDirect(drawOrder.size * 2)
+                            .order(ByteOrder.nativeOrder())
+                            .asShortBuffer()
+                            .put(drawOrder)
+                            .position(0)
+
+            // initialize byte buffer for view coordinates
+            // num coord values * 4 bytes/float
+            private val viewBuffer =
+                    allocateDirect(viewCoords.size * 4)
+                            .order(ByteOrder.nativeOrder())
+                            .asFloatBuffer()
+                            .put(viewCoords)
+                            .position(0)
+            private val viewChunkBuffer =
+                    allocateDirect(viewCoords.size * 4)
+                            .order(ByteOrder.nativeOrder())
+                            .asFloatBuffer()
+
+
+            init {
+
+                // load all vertex and fragment shader code
+                var s = context.resources.openRawResource(R.raw.vert_render)
+                val vRenderCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
+
+                s = context.resources.openRawResource(R.raw.vert_sample)
+                val vSampleCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
+
+//            s = context.resources.openRawResource(R.raw.render_qf)
+//            val fRenderCodeQF = Scanner(s).useDelimiter("\\Z").next()
+//            s.close()
+
+                s = context.resources.openRawResource(R.raw.sample)
+                val fSampleCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
+
+//            s = context.resources.openRawResource(R.raw.color)
+//            val fColorCode = Scanner(s).useDelimiter("\\Z").next()
+//            s.close()
+
+
+                // create and compile shaders
+                vRenderShader = loadShader(GL.GL_VERTEX_SHADER, vRenderCode)
+                vSampleShader = loadShader(GL.GL_VERTEX_SHADER, vSampleCode)
+
+                fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, f.renderShader())
+                fSampleShader = loadShader(GL.GL_FRAGMENT_SHADER, fSampleCode)
+                fColorShader  = loadShader(GL.GL_FRAGMENT_SHADER, f.colorShader())
+
+
+                GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+
+                // generate texture and framebuffer objects
+                GL.glGenFramebuffers(1, fboIDs)
+
+
+
+                // attach shaders and create renderProgram executables
+                GL.glAttachShader(renderProgram, vRenderShader)
+                GL.glAttachShader(renderProgram, fRenderShader)
+                GL.glLinkProgram(renderProgram)
+
+                viewCoordsHandle =  GL.glGetAttribLocation(   renderProgram, "viewCoords"  )
+                iterHandle       =  GL.glGetUniformLocation(  renderProgram, "maxIter"     )
+                rHandle          =  GL.glGetUniformLocation(  renderProgram, "R"           )
+                xInitHandle      =  GL.glGetUniformLocation(  renderProgram, "x0"          )
+                yInitHandle      =  GL.glGetUniformLocation(  renderProgram, "y0"          )
+                xScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "xScale"      )
+                yScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "yScale"      )
+                xOffsetHandle    =  GL.glGetUniformLocation(  renderProgram, "xOffset"     )
+                yOffsetHandle    =  GL.glGetUniformLocation(  renderProgram, "yOffset"     )
+                bgScaleHandle    =  GL.glGetUniformLocation(  renderProgram, "bgScale"     )
+                paramHandles     =  IntArray(4) { i: Int ->
+                    GL.glGetUniformLocation(renderProgram, "P${i+1}")
+                }
+//            p1Handle         =  GL.glGetUniformLocation(  renderProgram, "P1"          )
+//            p2Handle         =  GL.glGetUniformLocation(  renderProgram, "P2"          )
+//            p3Handle         =  GL.glGetUniformLocation(  renderProgram, "P3"          )
+//            p4Handle         =  GL.glGetUniformLocation(  renderProgram, "P4"          )
+
+
+                GL.glAttachShader(sampleProgram, vSampleShader)
+                GL.glAttachShader(sampleProgram, fSampleShader)
+                GL.glLinkProgram(sampleProgram)
+
+                viewCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "viewCoords"  )
+                quadCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "quadCoords"  )
+                textureSampleHandle    = GL.glGetUniformLocation( sampleProgram, "tex"         )
+
+                GL.glAttachShader(colorProgram, vSampleShader)
+                GL.glAttachShader(colorProgram, fColorShader)
+                GL.glLinkProgram(colorProgram)
+
+                viewCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "viewCoords"   )
+                quadCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "quadCoords"   )
+                textureColorHandle    = GL.glGetUniformLocation(  colorProgram, "tex"          )
+                numColorsHandle       = GL.glGetUniformLocation(  colorProgram, "numColors"    )
+                paletteHandle         = GL.glGetUniformLocation(  colorProgram, "palette"      )
+                frequencyHandle       = GL.glGetUniformLocation(  colorProgram, "frequency"    )
+                phaseHandle           = GL.glGetUniformLocation(  colorProgram, "phase"        )
+
+            }
+
+            private fun loadShader(type: Int, shaderCode: String): Int {
+
+                // create a vertex shader type (GL.GL_VERTEX_SHADER)
+                // or a fragment shader type (GL.GL_FRAGMENT_SHADER)
+                val shader = GL.glCreateShader(type)
+
+                // add the source code to the shader and compile it
+                GL.glShaderSource(shader, shaderCode)
+                GL.glCompileShader(shader)
+
+//            val a = IntBuffer.allocate(1)
+//            GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS, a)
+//            if (a[0] == GL.GL_FALSE) {
+//                Log.d("RENDER ROUTINE", "shader compile failed")
+//            }
+//            else if (a[0] == GL.GL_TRUE) {
+//                Log.d("RENDER ROUTINE", "shader compile succeeded")
+//            }
+
+                return shader
+
+            }
+            private fun splitCoords(xCoords: FloatArray, yCoords: FloatArray) : List<FloatArray> {
+
+                val xLength = xCoords[1] - xCoords[0]
+                val yLength = yCoords[1] - yCoords[0]
+                val texRes = f.texRes()
+                val xPixels = xLength / 2.0f * texRes[0]
+                val yPixels = yLength / 2.0f * texRes[1]
+                val numChunks = ceil((xPixels*yPixels) / maxPixelsPerChunk).toInt()
+                val chunkInc = if (xLength >= yLength) xLength/numChunks else yLength/numChunks
+
+                return if (xPixels >= yPixels) {
+                    List(numChunks) { i: Int ->
+                        floatArrayOf(
+                                xCoords[0] + i*chunkInc,       yCoords[1], 0.0f,    // top left
+                                xCoords[0] + i*chunkInc,       yCoords[0], 0.0f,    // bottom left
+                                xCoords[0] + (i + 1)*chunkInc, yCoords[0], 0.0f,    // bottom right
+                                xCoords[0] + (i + 1)*chunkInc, yCoords[1], 0.0f     // top right
+                        )
+                    }
+                }
+                else {
+                    List(numChunks) { i: Int ->
+                        floatArrayOf(
+                                xCoords[0], yCoords[0] + (i + 1)*chunkInc, 0.0f,    // top left
+                                xCoords[0], yCoords[0] + i*chunkInc,       0.0f,    // bottom left
+                                xCoords[1], yCoords[0] + i*chunkInc,       0.0f,    // bottom right
+                                xCoords[1], yCoords[0] + (i + 1)*chunkInc, 0.0f     // top right
+                        )
+                    }
+                }
+
+            }
+            fun renderToTexture() {
+
+                if (f.renderShaderChanged) {
+                    Log.d("RENDER ROUTINE", "render shader changed")
+                    GL.glDetachShader(renderProgram, fRenderShader)
+                    fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, f.renderShader())
+                    GL.glAttachShader(renderProgram, fRenderShader)
+                    GL.glLinkProgram(renderProgram)
+                    f.renderShaderChanged = false
+                }
+                if (f.resolutionChanged) {
+                    val texRes = f.texRes()
+                    textures[1].delete()
+                    textures[1] = Texture(texRes, interpolation(), GL.GL_RGBA16F, 1)
+                    textures[2].delete()
+                    textures[2] = Texture(texRes, interpolation(), GL.GL_RGBA16F, 2)
+                    f.resolutionChanged = false
+                }
+                if (f.renderProfileChanged) {
+                    textures[0].delete()
+                    textures[0] = Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0)
+                    f.renderProfileChanged = false
+                }
+
+                context.findViewById<ProgressBar>(R.id.progressBar).progress = 0
+
+                GL.glUseProgram(renderProgram)
+                GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
+
+                for (i in 0..3) {
+                    val p = if (i < f.equationConfig.map().params.size) floatArrayOf(
+                            f.equationConfig.map().params[i][0].toFloat(),
+                            f.equationConfig.map().params[i][1].toFloat()
+                    ) else floatArrayOf(0.0f, 0.0f)
+                    GL.glUniform2fv(paramHandles[i], 1, p, 0)
+                }
+
+                val x0 = floatArrayOf(f.equationConfig.map().z0[0].toFloat())
+                val y0 = floatArrayOf(f.equationConfig.map().z0[1].toFloat())
+
+
+                val xScaleSD = f.equationConfig.scale()[0] / 2.0
+                val yScaleSD = f.equationConfig.scale()[1] / 2.0
+                val xOffsetSD = f.equationConfig.coords()[0]
+                val yOffsetSD = f.equationConfig.coords()[1]
+
+                // calculate scale/offset parameters and pass to fragment shader
+                when (f.precision()) {
+                    Precision.SINGLE -> {
+
+                        val xScaleSF = xScaleSD.toFloat()
+                        val yScaleSF = yScaleSD.toFloat()
+                        val xOffsetSF = xOffsetSD.toFloat()
+                        val yOffsetSF = yOffsetSD.toFloat()
+
+                        GL.glUniform2fv(xScaleHandle,  1,  floatArrayOf(xScaleSF, 0.0f),   0)
+                        GL.glUniform2fv(yScaleHandle,  1,  floatArrayOf(yScaleSF, 0.0f),   0)
+                        GL.glUniform2fv(xOffsetHandle, 1,  floatArrayOf(xOffsetSF, 0.0f),  0)
+                        GL.glUniform2fv(yOffsetHandle, 1,  floatArrayOf(yOffsetSF, 0.0f),  0)
+
+                    }
+                    Precision.DUAL -> {
+
+                        val xScaleDF = splitSD(xScaleSD)
+                        val yScaleDF = splitSD(yScaleSD)
+                        val xOffsetDF = splitSD(xOffsetSD)
+                        val yOffsetDF = splitSD(yOffsetSD)
+
+                        GL.glUniform2fv(xScaleHandle,  1,  xScaleDF,   0)
+                        GL.glUniform2fv(yScaleHandle,  1,  yScaleDF,   0)
+                        GL.glUniform2fv(xOffsetHandle, 1,  xOffsetDF,  0)
+                        GL.glUniform2fv(yOffsetHandle, 1,  yOffsetDF,  0)
+
+                    }
+                    Precision.QUAD -> {
+
+//                val xScaleQF = splitDD(xScaleDD)
+//                val yScaleQF = splitDD(yScaleDD)
+//                val xOffsetQF = splitDD(xOffsetDD)
+//                val yOffsetQF = splitDD(yOffsetDD)
+//
+//                GL.glUniform4fv(xScaleHandle,  1,  xScaleQF,   0)
+//                GL.glUniform4fv(yScaleHandle,  1,  yScaleQF,   0)
+//                GL.glUniform4fv(xOffsetHandle, 1,  xOffsetQF,  0)
+//                GL.glUniform4fv(yOffsetHandle, 1,  yOffsetQF,  0)
+
+                    }
+                    else -> {}
+                }
+
+                GL.glEnableVertexAttribArray(viewCoordsHandle)
+                GL.glUniform1i(iterHandle, f.equationConfig.maxIter())
+                GL.glUniform1fv(rHandle, 1, floatArrayOf(f.equationConfig.bailoutRadius()), 0)
+                GL.glUniform1fv(xInitHandle, 1, x0, 0)
+                GL.glUniform1fv(yInitHandle, 1, y0, 0)
+
+
+
+
+                //======================================================================================
+                // RENDER LOW-RES
+                //======================================================================================
+
+                GL.glViewport(0, 0, textures[0].res[0], textures[0].res[1])
+                GL.glUniform1fv(bgScaleHandle, 1, bgScaleFloat, 0)
+                GL.glVertexAttribPointer(
+                        viewCoordsHandle,       // index
+                        3,                      // coordinates per vertex
+                        GL.GL_FLOAT,            // type
+                        false,                  // normalized
+                        12,                     // coordinates per vertex * bytes per float
+                        viewBuffer              // coordinates
+                )
+                GL.glFramebufferTexture2D(
+                        GL.GL_FRAMEBUFFER,              // target
+                        GL.GL_COLOR_ATTACHMENT0,        // attachment
+                        GL.GL_TEXTURE_2D,               // texture target
+                        textures[0].id,                 // texture
+                        0                               // level
+                )
+
+                GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+
+
+
+
+                //======================================================================================
+                // RENDER HIGH-RES
+                //======================================================================================
+
+                if (strictTranslate()) {
+
+                    val xIntersectQuadCoords : FloatArray
+                    val yIntersectQuadCoords : FloatArray
+                    val xIntersectViewCoords : FloatArray
+                    val yIntersectViewCoords : FloatArray
+
+                    val xComplementViewCoordsA : FloatArray
+                    val yComplementViewCoordsA : FloatArray
+
+                    val xComplementViewCoordsB = floatArrayOf(-1.0f, 1.0f)
+                    val yComplementViewCoordsB : FloatArray
+
+
+                    if (xQuadCoords[0] > -1.0) {
+                        xIntersectQuadCoords   = floatArrayOf( xQuadCoords[0].toFloat(),   1.0f )
+                        xIntersectViewCoords   = floatArrayOf( -1.0f, -xQuadCoords[0].toFloat() )
+                        xComplementViewCoordsA = floatArrayOf( -1.0f,  xQuadCoords[0].toFloat() )
+                    }
+                    else {
+                        xIntersectQuadCoords   = floatArrayOf( -1.0f,  xQuadCoords[1].toFloat() )
+                        xIntersectViewCoords   = floatArrayOf( -xQuadCoords[1].toFloat(),  1.0f )
+                        xComplementViewCoordsA = floatArrayOf(  xQuadCoords[1].toFloat(),  1.0f )
+                    }
+
+                    if (yQuadCoords[0] > -1.0) {
+                        yIntersectQuadCoords   = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
+                        yIntersectViewCoords   = floatArrayOf( -1.0f, -yQuadCoords[0].toFloat() )
+                        yComplementViewCoordsA = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
+                        yComplementViewCoordsB = floatArrayOf( -1.0f,  yQuadCoords[0].toFloat() )
+                    }
+                    else {
+                        yIntersectQuadCoords   = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
+                        yIntersectViewCoords   = floatArrayOf( -yQuadCoords[1].toFloat(), 1.0f )
+                        yComplementViewCoordsA = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
+                        yComplementViewCoordsB = floatArrayOf(  yQuadCoords[1].toFloat(), 1.0f )
+                    }
+
+
+//                    val complementViewCoordsA = floatArrayOf(
+//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f,     // top left
+//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom left
+//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom right
+//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f )    // top right
+//                    val complementViewCoordsB = floatArrayOf(
+//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f,     // top left
+//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom left
+//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom right
+//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f )    // top right
+
+
+
+
+                    //===================================================================================
+                    // NOVEL RENDER -- TRANSLATION COMPLEMENT
+                    //===================================================================================
+
+                    GL.glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
+                    GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
+                    GL.glVertexAttribPointer(
+                            viewCoordsHandle,           // index
+                            3,                          // coordinates per vertex
+                            GL.GL_FLOAT,                // type
+                            false,                      // normalized
+                            12,                         // coordinates per vertex * bytes per float
+                            viewChunkBuffer             // coordinates
+                    )
+                    GL.glFramebufferTexture2D(
+                            GL.GL_FRAMEBUFFER,              // target
+                            GL.GL_COLOR_ATTACHMENT0,        // attachment
+                            GL.GL_TEXTURE_2D,               // texture target
+                            textures[intIndex].id,          // texture
+                            0                               // level
+                    )
+                    GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+
+                    val chunksA = splitCoords(xComplementViewCoordsA, yComplementViewCoordsA)
+                    val chunksB = splitCoords(xComplementViewCoordsB, yComplementViewCoordsB)
+                    val totalChunks = chunksA.size + chunksB.size
+                    var chunksRendered = 0
+                    for (complementViewChunkCoordsA in chunksA) {
+
+                        viewChunkBuffer.put(complementViewChunkCoordsA).position(0)
+                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                        GL.glFinish()
+                        chunksRendered++
+                        if (!f.settingsConfig.continuousRender()) {
+                            context.findViewById<ProgressBar>(R.id.progressBar).progress =
+                                    (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
+                        }
+
+                    }
+                    for (complementViewChunkCoordsB in chunksB) {
+
+                        viewChunkBuffer.put(complementViewChunkCoordsB).position(0)
+                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                        GL.glFinish()
+                        chunksRendered++
+                        if (!f.settingsConfig.continuousRender()) {
+                            context.findViewById<ProgressBar>(R.id.progressBar).progress =
+                                    (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
+                        }
+
+                    }
+
+
+
+
+
+                    //===================================================================================
+                    // SAMPLE -- TRANSLATION INTERSECTION
+                    //===================================================================================
+
+                    GL.glUseProgram(sampleProgram)
+                    GL.glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
+
+                    val intersectQuadCoords = floatArrayOf(
+                            xIntersectQuadCoords[0],  yIntersectQuadCoords[1],  0.0f,     // top left
+                            xIntersectQuadCoords[0],  yIntersectQuadCoords[0],  0.0f,     // bottom left
+                            xIntersectQuadCoords[1],  yIntersectQuadCoords[0],  0.0f,     // bottom right
+                            xIntersectQuadCoords[1],  yIntersectQuadCoords[1],  0.0f )    // top right
+                    quadBuffer.put(intersectQuadCoords).position(0)
+
+                    val intersectViewCoords = floatArrayOf(
+                            xIntersectViewCoords[0],  yIntersectViewCoords[1],  0.0f,     // top left
+                            xIntersectViewCoords[0],  yIntersectViewCoords[0],  0.0f,     // bottom left
+                            xIntersectViewCoords[1],  yIntersectViewCoords[0],  0.0f,     // bottom right
+                            xIntersectViewCoords[1],  yIntersectViewCoords[1],  0.0f )    // top right
+                    viewChunkBuffer.put(intersectViewCoords).position(0)
+
+
+                    GL.glEnableVertexAttribArray(viewCoordsSampleHandle)
+                    GL.glEnableVertexAttribArray(quadCoordsSampleHandle)
+                    GL.glUniform1i(textureSampleHandle, currIndex)
+                    GL.glVertexAttribPointer(
+                            viewCoordsSampleHandle,        // index
+                            3,                          // coordinates per vertex
+                            GL.GL_FLOAT,                // type
+                            false,                      // normalized
+                            12,                         // coordinates per vertex * bytes per float
+                            viewChunkBuffer             // coordinates
+                    )
+                    GL.glVertexAttribPointer(
+                            quadCoordsSampleHandle,        // index
+                            3,                          // coordinates per vertex
+                            GL.GL_FLOAT,                // type
+                            false,                      // normalized
+                            12,                         // coordinates per vertex * bytes per float
+                            quadBuffer                  // coordinates
+                    )
+
+
+                    GL.glFramebufferTexture2D(
+                            GL.GL_FRAMEBUFFER,              // target
+                            GL.GL_COLOR_ATTACHMENT0,        // attachment
+                            GL.GL_TEXTURE_2D,               // texture target
+                            textures[intIndex].id,          // texture
+                            0                               // level
+                    )
+
+                    GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+
+                    GL.glDisableVertexAttribArray(viewCoordsSampleHandle)
+                    GL.glDisableVertexAttribArray(quadCoordsSampleHandle)
+
+
+                    // swap intermediate and current texture indices
+                    val temp = intIndex
+                    intIndex = currIndex
+                    currIndex = temp
+
+
+                }
+                else {
+
+                    //===================================================================================
+                    // NOVEL RENDER -- ENTIRE TEXTURE
+                    //===================================================================================
+
+                    GL.glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
+                    GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
+                    GL.glFramebufferTexture2D(
+                            GL.GL_FRAMEBUFFER,              // target
+                            GL.GL_COLOR_ATTACHMENT0,        // attachment
+                            GL.GL_TEXTURE_2D,               // texture target
+                            textures[currIndex].id,         // texture
+                            0                               // level
+                    )
+
+                    // check framebuffer status
+                    val status = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
+                    if (status != GL.GL_FRAMEBUFFER_COMPLETE) {
+                        Log.d("FRAMEBUFFER", "$status")
+                    }
+
+                    GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+
+
+                    val chunks = splitCoords(floatArrayOf(-1.0f, 1.0f), floatArrayOf(-1.0f, 1.0f))
+                    val totalChunks = chunks.size
+                    var chunksRendered = 0
+                    for (viewChunkCoords in chunks) {
+
+                        viewChunkBuffer.put(viewChunkCoords)
+                        viewChunkBuffer.position(0)
+
+                        GL.glVertexAttribPointer(
+                                viewCoordsHandle,           // index
+                                3,                          // coordinates per vertex
+                                GL.GL_FLOAT,                // type
+                                false,                      // normalized
+                                12,                         // coordinates per vertex * bytes per float
+                                viewChunkBuffer             // coordinates
+                        )
+
+                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                        GL.glFinish()   // force chunk to finish rendering before continuing
+                        chunksRendered++
+                        if(!f.settingsConfig.continuousRender()) {
+                            context.findViewById<ProgressBar>(R.id.progressBar).progress =
+                                    (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
+                        }
+
+                    }
+
+                    GL.glDisableVertexAttribArray(viewCoordsHandle)
+
+                }
+
+
+
+
+            }
+            fun renderFromTexture() {
+
+//        Log.d("RENDER", "render from texture -- start")
+
+                if (f.colorShaderChanged) {
+                    Log.d("RENDER ROUTINE", "color shader changed")
+                    GL.glDetachShader(colorProgram, fColorShader)
+                    fColorShader = loadShader(GL.GL_FRAGMENT_SHADER, f.colorShader())
+                    GL.glAttachShader(colorProgram, fColorShader)
+                    GL.glLinkProgram(colorProgram)
+                    f.colorShaderChanged = false
+                }
+
+                //======================================================================================
+                // PRE-RENDER PROCESSING
+                //======================================================================================
+
+                GL.glUseProgram(colorProgram)
+                GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+                GL.glViewport(0, 0, f.screenRes[0], f.screenRes[1])
+
+                // create float array of quad coordinates
+                val quadCoords = floatArrayOf(
+                        xQuadCoords[0].toFloat(),  yQuadCoords[1].toFloat(),  0.0f,     // top left
+                        xQuadCoords[0].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom left
+                        xQuadCoords[1].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom right
+                        xQuadCoords[1].toFloat(),  yQuadCoords[1].toFloat(),  0.0f )    // top right
+                quadBuffer
+                        .put(quadCoords)
+                        .position(0)
+
+                // create float array of background quad coordinates
+                val bgQuadCoords = floatArrayOf(
+                        xBgQuadCoords[0].toFloat(),  yBgQuadCoords[1].toFloat(),  0.0f,     // top left
+                        xBgQuadCoords[0].toFloat(),  yBgQuadCoords[0].toFloat(),  0.0f,     // bottom left
+                        xBgQuadCoords[1].toFloat(),  yBgQuadCoords[0].toFloat(),  0.0f,     // bottom right
+                        xBgQuadCoords[1].toFloat(),  yBgQuadCoords[1].toFloat(),  0.0f )    // top right
+                bgQuadBuffer
+                        .put(bgQuadCoords)
+                        .position(0)
+
+                GL.glUniform1i(numColorsHandle, f.colorConfig.palette().size)
+                GL.glUniform3fv(paletteHandle, f.colorConfig.palette().size, f.colorConfig.palette().flatPalette, 0)
+                GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.colorConfig.frequency()), 0)
+                GL.glUniform1fv(phaseHandle, 1, floatArrayOf(f.colorConfig.phase()), 0)
+
+                GL.glEnableVertexAttribArray(viewCoordsColorHandle)
+                GL.glEnableVertexAttribArray(quadCoordsColorHandle)
+
+
+
+
+                //======================================================================================
+                // RENDER LOW-RES
+                //======================================================================================
+
+                GL.glUniform1i(textureColorHandle, 0)    // use GL_TEXTURE0
+                GL.glVertexAttribPointer(
+                        viewCoordsColorHandle,      // index
+                        3,                          // coordinates per vertex
+                        GL.GL_FLOAT,                // type
+                        false,                      // normalized
+                        12,                         // coordinates per vertex * bytes per float
+                        viewBuffer                  // coordinates
+                )
+                GL.glVertexAttribPointer(
+                        quadCoordsColorHandle,      // index
+                        3,                          // coordinates per vertex
+                        GL.GL_FLOAT,                // type
+                        false,                      // normalized
+                        12,                         // coordinates per vertex * bytes per float
+                        bgQuadBuffer                // coordinates
+                )
+
+                GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+
+
+
+
+                //======================================================================================
+                // RENDER HIGH-RES
+                //======================================================================================
+
+                GL.glUniform1i(textureColorHandle, currIndex)
+                GL.glVertexAttribPointer(
+                        viewCoordsColorHandle,        // index
+                        3,                          // coordinates per vertex
+                        GL.GL_FLOAT,                // type
+                        false,                      // normalized
+                        12,                         // coordinates per vertex * bytes per float
+                        viewBuffer                  // coordinates
+                )
+                GL.glVertexAttribPointer(
+                        quadCoordsColorHandle,        // index
+                        3,                          // coordinates per vertex
+                        GL.GL_FLOAT,                // type
+                        false,                      // normalized
+                        12,                         // coordinates per vertex * bytes per float
+                        quadBuffer                  // coordinates
+                )
+
+                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+
+
+
+
+                GL.glDisableVertexAttribArray(viewCoordsColorHandle)
+                GL.glDisableVertexAttribArray(quadCoordsColorHandle)
+
+//        Log.d("RENDER", "render from texture -- end")
+
+                context.findViewById<ProgressBar>(R.id.progressBar).progress = 0
+
+            }
+
+        }
+
+        var renderToTex = false
+        private var hasTranslated = false
+        private var hasScaled = false
+        private val strictTranslate = { hasTranslated && !hasScaled }
+        var ignoreTouch = false
+
+
+        private val xQuadCoords = doubleArrayOf(-1.0, 1.0)
+        private val yQuadCoords = doubleArrayOf(-1.0, 1.0)
+        private val quadLength = { xQuadCoords[1] - xQuadCoords[0] }
+        private val quadScale = { quadLength() / 2.0 }
+
+        private val bgScaleFloat = floatArrayOf(5.0f)
+        private val bgScaleDouble = 5.0
+
+        private val xBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
+        private val yBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
+
+        val quadAnchor = doubleArrayOf(0.0, 0.0)
+        val quadFocus = doubleArrayOf(0.0, 0.0)
+        val t = doubleArrayOf(0.0, 0.0)
+
+        lateinit var rr : RenderRoutine
+
+
+        fun setQuadAnchor(screenPos: FloatArray) {
+
+            val screenProp = doubleArrayOf(
+                    screenPos[0].toDouble()/f.screenRes[0],
+                    screenPos[1].toDouble()/f.screenRes[1]
+            )
+            quadAnchor[0] = screenProp[0]*2.0 - 1.0
+            quadAnchor[1] = 1.0 - screenProp[1]*2.0
+            // Log.d("RENDERER", "quadAnchor : (${quadAnchor[0]}, ${quadAnchor[1]})")
+
+        }
+        fun setQuadFocus(screenDist: FloatArray) {
+            // update texture quad coordinates
+            // convert focus coordinates from screen space to quad space
+            val screenProp = doubleArrayOf(
+                    screenDist[0].toDouble() / f.screenRes[0],
+                    screenDist[1].toDouble() / f.screenRes[1]
+            )
+
+            quadFocus[0] = quadAnchor[0] + screenProp[0]*(2.0/quadScale())
+            quadFocus[1] = quadAnchor[1] - screenProp[1]*(2.0/quadScale())
+
+//        quadFocus[0] = (xQuadCoords[0] - quadFocus[0])*(1.0 - screenProp[0]) + screenProp[0]*(xQuadCoords[1] - quadFocus[0])
+//        quadFocus[1] = (yQuadCoords[1] - quadFocus[1])*(1.0 - screenProp[1]) + screenProp[1]*(yQuadCoords[0] - quadFocus[1])
+//        Log.d("RENDERER", "quadFocus : (${quadFocus[0]}, ${quadFocus[1]})")
+        }
+        fun translate(dScreenPos: FloatArray) {
+
+            // update texture quad coordinates
+            val dQuadPos = doubleArrayOf(
+                    dScreenPos[0].toDouble() / f.screenRes[0].toDouble() * 2.0,
+                    dScreenPos[1].toDouble() / f.screenRes[1].toDouble() * 2.0
+            )
+
+            xQuadCoords[0] += dQuadPos[0]
+            xQuadCoords[1] += dQuadPos[0]
+            yQuadCoords[0] -= dQuadPos[1]
+            yQuadCoords[1] -= dQuadPos[1]
+
+            xBgQuadCoords[0] += dQuadPos[0]
+            xBgQuadCoords[1] += dQuadPos[0]
+            yBgQuadCoords[0] -= dQuadPos[1]
+            yBgQuadCoords[1] -= dQuadPos[1]
+
+            // still magic
+            t[0] += dQuadPos[0]
+            t[1] -= dQuadPos[1]
+
+            hasTranslated = true
+
+        }
+        fun scale(dScale: Float) {
+
+            val tQuadFocus = doubleArrayOf(quadFocus[0] + t[0], quadFocus[1] + t[1])
+
+            // translate quadFocus to origin in quad coordinates
+            xQuadCoords[0] -= tQuadFocus[0]
+            xQuadCoords[1] -= tQuadFocus[0]
+            yQuadCoords[0] -= tQuadFocus[1]
+            yQuadCoords[1] -= tQuadFocus[1]
+
+            // scale quad coordinates
+            xQuadCoords[0] *= dScale.toDouble()
+            xQuadCoords[1] *= dScale.toDouble()
+            yQuadCoords[0] *= dScale.toDouble()
+            yQuadCoords[1] *= dScale.toDouble()
+
+            // translate origin back to quadFocus in quad coordinates
+            xQuadCoords[0] += tQuadFocus[0]
+            xQuadCoords[1] += tQuadFocus[0]
+            yQuadCoords[0] += tQuadFocus[1]
+            yQuadCoords[1] += tQuadFocus[1]
+
+
+
+            // translate quadFocus to origin in quad coordinates
+            xBgQuadCoords[0] -= tQuadFocus[0]
+            xBgQuadCoords[1] -= tQuadFocus[0]
+            yBgQuadCoords[0] -= tQuadFocus[1]
+            yBgQuadCoords[1] -= tQuadFocus[1]
+
+            // scale quad coordinates
+            xBgQuadCoords[0] *= dScale.toDouble()
+            xBgQuadCoords[1] *= dScale.toDouble()
+            yBgQuadCoords[0] *= dScale.toDouble()
+            yBgQuadCoords[1] *= dScale.toDouble()
+
+            // translate origin back to quadFocus in quad coordinates
+            xBgQuadCoords[0] += tQuadFocus[0]
+            xBgQuadCoords[1] += tQuadFocus[0]
+            yBgQuadCoords[0] += tQuadFocus[1]
+            yBgQuadCoords[1] += tQuadFocus[1]
+
+            hasScaled = true
+
+            // Log.d("equationConfig.coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
+
+        }
+        private fun resetQuadParams() {
+
+            xQuadCoords[0] = -1.0
+            xQuadCoords[1] = 1.0
+            yQuadCoords[0] = -1.0
+            yQuadCoords[1] = 1.0
+
+            xBgQuadCoords[0] = -bgScaleDouble
+            xBgQuadCoords[1] = bgScaleDouble
+            yBgQuadCoords[0] = -bgScaleDouble
+            yBgQuadCoords[1] = bgScaleDouble
+
+            quadFocus[0] = 0.0
+            quadFocus[1] = 0.0
+
+            t[0] = 0.0
+            t[1] = 0.0
+
+        }
+
+        override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
+
+            // get OpenGL ES version
+            Log.d("SURFACE VIEW", "OpenGL ES version: ${unused.glGetString(GL10.GL_VERSION)}")
+
+            // get fragment shader precision
+            val a : IntBuffer = IntBuffer.allocate(2)
+            val b : IntBuffer = IntBuffer.allocate(1)
+            GL.glGetShaderPrecisionFormat(GL.GL_FRAGMENT_SHADER, GL.GL_HIGH_FLOAT, a, b)
+            Log.d("SURFACE VIEW", "float precision: ${b[0]}")
+
+            rr = RenderRoutine()
+            rr.renderToTexture()
+
+            val buttonScroll = context.findViewById<HorizontalScrollView>(R.id.buttonScroll)
+            buttonScroll.fullScroll(HorizontalScrollView.FOCUS_RIGHT)
+
+        }
+        override fun onDrawFrame(unused: GL10) {
+
+            // Log.d("RENDER", "DRAW FRAME")
+
+            // render to texture on ACTION_UP
+            if (renderToTex) {
+
+                ignoreTouch = !(f.settingsConfig.continuousRender() || reaction.name[0].toString() == "P")
+                rr.renderToTexture()
+                ignoreTouch = false
+
+                renderToTex = false
+                hasTranslated = false
+                hasScaled = false
+                resetQuadParams()
+
+            }
+
+            // render from texture
+            rr.renderFromTexture()
+
+        }
+        override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+
+        }
+
+    }
 
     val r : FractalRenderer
     var hasTranslated = false
@@ -1214,12 +2134,13 @@ class FractalSurfaceView(
         uiQuick.visibility = v
 
     }
+
     var reaction = Reaction.TRANSFORM
     val numDisplayParams = {
         when (reaction) {
             Reaction.TRANSFORM -> 3
             Reaction.COLOR -> 2
-            else -> 2
+            else -> 3
         }
     }
 
@@ -1326,7 +2247,7 @@ class FractalSurfaceView(
                             val dx: Float = focus[0] - prevFocus[0]
                             val dy: Float = focus[1] - prevFocus[1]
 
-                            Log.d("TRANSFORM", "dx: $dx, dy: $dy")
+                            // Log.d("TRANSFORM", "MOVE -- dx: $dx, dy: $dy")
                             f.translate(floatArrayOf(dx, dy))
                             hasTranslated = true
                             if (!f.settingsConfig.continuousRender()) {
@@ -1336,7 +2257,7 @@ class FractalSurfaceView(
                             prevFocus[1] = focus[1]
                             if (e.pointerCount > 1) {   // MULTI-TOUCH
                                 val focalLen = e.focalLength()
-                                Log.d("TRANSFORM", "prevFocalLen: $prevFocalLen, focalLen: $focalLen")
+                                // Log.d("TRANSFORM", "MOVE -- prevFocalLen: $prevFocalLen, focalLen: $focalLen")
                                 val dFocalLen = focalLen / prevFocalLen
                                 f.scale(dFocalLen, focus)
                                 if (!f.settingsConfig.continuousRender()) {
@@ -1353,6 +2274,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
+                            Log.d("TRANSFORM", "POINTER UP")
                             if (hasTranslated) {
                                 r.renderToTex = true
                                 requestRender()
@@ -1361,7 +2283,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
-//                            Log.d("POINTER UP ${e.actionIndex}", "x: ${e.x}, y: ${e.y}")
+                            Log.d("TRANSFORM", "POINTER ${e.actionIndex} UP")
                             if (e.getPointerId(e.actionIndex) == 0) {
                                 prevFocus[0] = e.getX(1)
                                 prevFocus[1] = e.getY(1)
@@ -1384,23 +2306,24 @@ class FractalSurfaceView(
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
+                            Log.d("COLOR", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
-//                            Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
                             return true
                         }
                         MotionEvent.ACTION_POINTER_DOWN -> {
+                            Log.d("COLOR", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             prevFocalLen = e.focalLength()
-//                            Log.d("POINTER DOWN", "focus: $focus, focalLen: $prevFocalLen")
                             return true
                         }
                         MotionEvent.ACTION_MOVE -> {
                             val focus = e.focus()
                             val dx: Float = focus[0] - prevFocus[0]
+                            // Log.d("COLOR", "MOVE -- dx: $dx")
                             when (e.pointerCount) {
                                 1 -> {
                                     f.setPhase(dx)
@@ -1417,6 +2340,14 @@ class FractalSurfaceView(
                             requestRender()
                             return true
                         }
+                        MotionEvent.ACTION_POINTER_UP -> {
+                            Log.d("COLOR", "POINTER ${e.actionIndex} UP")
+                            return true
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            Log.d("COLOR", "ACTION UP")
+                            return true
+                        }
 
                     }
                 }
@@ -1425,29 +2356,52 @@ class FractalSurfaceView(
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
+                            Log.d("PARAMETER", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
-//                            Log.d("DOWN", "x: ${e.x}, y: ${e.y}, rawX: ${e.rawX}, rawY: ${e.rawY}")
+                            return true
+                        }
+                        MotionEvent.ACTION_POINTER_DOWN -> {
+                            Log.d("PARAMETER", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
+                            val focus = e.focus()
+                            prevFocus[0] = focus[0]
+                            prevFocus[1] = focus[1]
+                            prevFocalLen = e.focalLength()
+                            Log.d("PARAMETER", "POINTER DOWN -- focalLen: $prevFocalLen")
                             return true
                         }
                         MotionEvent.ACTION_MOVE -> {
                             val focus = e.focus()
                             val dx = focus[0] - prevFocus[0]
                             val dy = focus[1] - prevFocus[1]
+                            // Log.d("PARAMETER", "MOVE -- dx: $dx, dy: $dy")
                             when (e.pointerCount) {
-                                1, 2 -> {
-                                    f.setMapParam(reaction.ordinal - 2, floatArrayOf(dx, dy))
+                                1 -> {
+                                    f.setMapParam(reaction.name[1].toString().toInt(), floatArrayOf(dx, dy))
                                     prevFocus[0] = focus[0]
                                     prevFocus[1] = focus[1]
+                                    r.renderToTex = true
+                                    requestRender()
+                                }
+                                2 -> {
+                                    val focalLen = e.focalLength()
+                                    val dFocalLen = focalLen / prevFocalLen
+                                    f.setMapParamSensetivity(reaction.name[1].toString().toInt(), dFocalLen)
+                                    prevFocalLen = focalLen
                                 }
                             }
-                            r.renderToTex = true
-                            requestRender()
+                            return true
+                        }
+                        MotionEvent.ACTION_POINTER_UP -> {
+                            Log.d("PARAMETER", "POINTER ${e.actionIndex} UP")
+                            val focus = e.focus()
+                            prevFocus[0] = focus[0]
+                            prevFocus[1] = focus[1]
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            requestRender()
+                            Log.d("PARAMETER", "POINTER UP")
                             return true
                         }
 
@@ -1462,926 +2416,7 @@ class FractalSurfaceView(
 
 }
 
-class FractalRenderer(var f: Fractal, val context: Activity) : Renderer {
 
-    inner class RenderRoutine {
-
-        private val maxPixelsPerChunk = f.screenRes[0]*f.screenRes[1]/8
-
-        // coordinates of default view boundaries
-        private val viewCoords = floatArrayOf(
-                -1.0f,   1.0f,   0.0f,     // top left
-                -1.0f,  -1.0f,   0.0f,     // bottom left
-                1.0f,  -1.0f,   0.0f,     // bottom right
-                1.0f,   1.0f,   0.0f )    // top right
-        private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
-
-        private val renderProgram = GL.glCreateProgram()
-        private val viewCoordsHandle : Int
-        private val iterHandle       : Int
-        private val rHandle          : Int
-        private val xInitHandle      : Int
-        private val yInitHandle      : Int
-        private val xScaleHandle     : Int
-        private val yScaleHandle     : Int
-        private val xOffsetHandle    : Int
-        private val yOffsetHandle    : Int
-        private val bgScaleHandle    : Int
-        private val paramHandles     : IntArray
-
-        private val sampleProgram = GL.glCreateProgram()
-        private val viewCoordsSampleHandle : Int
-        private val quadCoordsSampleHandle : Int
-        private val textureSampleHandle    : Int
-
-        private val colorProgram = GL.glCreateProgram()
-        private val viewCoordsColorHandle : Int
-        private val quadCoordsColorHandle : Int
-        private val numColorsHandle       : Int
-        private val textureColorHandle    : Int
-        private val paletteHandle         : Int
-        private val frequencyHandle       : Int
-        private val phaseHandle           : Int
-
-
-        private val vRenderShader : Int
-        private val vSampleShader : Int
-
-        private var fRenderShader : Int
-        private var fColorShader  : Int
-        private val fSampleShader : Int
-
-        // define texture resolutions
-        private val bgTexWidth = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[0]/8 }
-        private val bgTexHeight = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[1]/8 }
-
-        private val interpolation = {
-            if (f.settingsConfig.resolution() == Resolution.ULTRA) GL.GL_LINEAR
-            else GL.GL_NEAREST
-        }
-
-        private val textures = arrayOf(
-                Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0),
-                Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 1),
-                Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 2)
-        )
-
-        // allocate memory for textures
-        private val quadBuffer =
-                allocateDirect(viewCoords.size * 4)
-                        .order(ByteOrder.nativeOrder())
-                        .asFloatBuffer()
-        private val bgQuadBuffer =
-                allocateDirect(viewCoords.size * 4)
-                        .order(ByteOrder.nativeOrder())
-                        .asFloatBuffer()
-
-        // create variables to store texture and fbo IDs
-        private val fboIDs : IntBuffer = IntBuffer.allocate(1)
-        private var currIndex = 1      // current high-res texture ID index
-        private var intIndex = 2       // intermediate high-res texture ID index
-
-        // initialize byte buffer for the draw list
-        // num coord values * 2 bytes/short
-        private val drawListBuffer =
-                allocateDirect(drawOrder.size * 2)
-                        .order(ByteOrder.nativeOrder())
-                        .asShortBuffer()
-                        .put(drawOrder)
-                        .position(0)
-
-        // initialize byte buffer for view coordinates
-        // num coord values * 4 bytes/float
-        private val viewBuffer =
-                allocateDirect(viewCoords.size * 4)
-                        .order(ByteOrder.nativeOrder())
-                        .asFloatBuffer()
-                        .put(viewCoords)
-                        .position(0)
-        private val viewChunkBuffer =
-                allocateDirect(viewCoords.size * 4)
-                        .order(ByteOrder.nativeOrder())
-                        .asFloatBuffer()
-
-
-        init {
-
-            // load all vertex and fragment shader code
-            var s = context.resources.openRawResource(R.raw.vert_render)
-            val vRenderCode = Scanner(s).useDelimiter("\\Z").next()
-            s.close()
-
-            s = context.resources.openRawResource(R.raw.vert_sample)
-            val vSampleCode = Scanner(s).useDelimiter("\\Z").next()
-            s.close()
-
-//            s = context.resources.openRawResource(R.raw.render_qf)
-//            val fRenderCodeQF = Scanner(s).useDelimiter("\\Z").next()
-//            s.close()
-
-            s = context.resources.openRawResource(R.raw.sample)
-            val fSampleCode = Scanner(s).useDelimiter("\\Z").next()
-            s.close()
-
-//            s = context.resources.openRawResource(R.raw.color)
-//            val fColorCode = Scanner(s).useDelimiter("\\Z").next()
-//            s.close()
-
-
-            // create and compile shaders
-            vRenderShader = loadShader(GL.GL_VERTEX_SHADER, vRenderCode)
-            vSampleShader = loadShader(GL.GL_VERTEX_SHADER, vSampleCode)
-
-            fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, f.renderShader())
-            fSampleShader = loadShader(GL.GL_FRAGMENT_SHADER, fSampleCode)
-            fColorShader  = loadShader(GL.GL_FRAGMENT_SHADER, f.colorShader())
-
-
-            GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-
-            // generate texture and framebuffer objects
-            GL.glGenFramebuffers(1, fboIDs)
-
-
-
-            // attach shaders and create renderProgram executables
-            GL.glAttachShader(renderProgram, vRenderShader)
-            GL.glAttachShader(renderProgram, fRenderShader)
-            GL.glLinkProgram(renderProgram)
-
-            viewCoordsHandle =  GL.glGetAttribLocation(   renderProgram, "viewCoords"  )
-            iterHandle       =  GL.glGetUniformLocation(  renderProgram, "maxIter"     )
-            rHandle          =  GL.glGetUniformLocation(  renderProgram, "R"           )
-            xInitHandle      =  GL.glGetUniformLocation(  renderProgram, "x0"          )
-            yInitHandle      =  GL.glGetUniformLocation(  renderProgram, "y0"          )
-            xScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "xScale"      )
-            yScaleHandle     =  GL.glGetUniformLocation(  renderProgram, "yScale"      )
-            xOffsetHandle    =  GL.glGetUniformLocation(  renderProgram, "xOffset"     )
-            yOffsetHandle    =  GL.glGetUniformLocation(  renderProgram, "yOffset"     )
-            bgScaleHandle    =  GL.glGetUniformLocation(  renderProgram, "bgScale"     )
-            paramHandles     =  IntArray(4) { i: Int ->
-                GL.glGetUniformLocation(renderProgram, "P${i+1}")
-            }
-//            p1Handle         =  GL.glGetUniformLocation(  renderProgram, "P1"          )
-//            p2Handle         =  GL.glGetUniformLocation(  renderProgram, "P2"          )
-//            p3Handle         =  GL.glGetUniformLocation(  renderProgram, "P3"          )
-//            p4Handle         =  GL.glGetUniformLocation(  renderProgram, "P4"          )
-
-
-            GL.glAttachShader(sampleProgram, vSampleShader)
-            GL.glAttachShader(sampleProgram, fSampleShader)
-            GL.glLinkProgram(sampleProgram)
-
-            viewCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "viewCoords"  )
-            quadCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "quadCoords"  )
-            textureSampleHandle    = GL.glGetUniformLocation( sampleProgram, "tex"         )
-
-            GL.glAttachShader(colorProgram, vSampleShader)
-            GL.glAttachShader(colorProgram, fColorShader)
-            GL.glLinkProgram(colorProgram)
-
-            viewCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "viewCoords"   )
-            quadCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "quadCoords"   )
-            textureColorHandle    = GL.glGetUniformLocation(  colorProgram, "tex"          )
-            numColorsHandle       = GL.glGetUniformLocation(  colorProgram, "numColors"    )
-            paletteHandle         = GL.glGetUniformLocation(  colorProgram, "palette"      )
-            frequencyHandle       = GL.glGetUniformLocation(  colorProgram, "frequency"    )
-            phaseHandle           = GL.glGetUniformLocation(  colorProgram, "phase"        )
-
-        }
-
-        private fun loadShader(type: Int, shaderCode: String): Int {
-
-            // create a vertex shader type (GL.GL_VERTEX_SHADER)
-            // or a fragment shader type (GL.GL_FRAGMENT_SHADER)
-            val shader = GL.glCreateShader(type)
-
-            // add the source code to the shader and compile it
-            GL.glShaderSource(shader, shaderCode)
-            GL.glCompileShader(shader)
-
-//            val a = IntBuffer.allocate(1)
-//            GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS, a)
-//            if (a[0] == GL.GL_FALSE) {
-//                Log.d("RENDER ROUTINE", "shader compile failed")
-//            }
-//            else if (a[0] == GL.GL_TRUE) {
-//                Log.d("RENDER ROUTINE", "shader compile succeeded")
-//            }
-
-            return shader
-
-        }
-        private fun splitCoords(xCoords: FloatArray, yCoords: FloatArray) : List<FloatArray> {
-
-            val xLength = xCoords[1] - xCoords[0]
-            val yLength = yCoords[1] - yCoords[0]
-            val texRes = f.texRes()
-            val xPixels = xLength / 2.0f * texRes[0]
-            val yPixels = yLength / 2.0f * texRes[1]
-            val numChunks = ceil((xPixels*yPixels) / maxPixelsPerChunk).toInt()
-            val chunkInc = if (xLength >= yLength) xLength/numChunks else yLength/numChunks
-
-            return if (xPixels >= yPixels) {
-                List(numChunks) { i: Int ->
-                    floatArrayOf(
-                            xCoords[0] + i*chunkInc,       yCoords[1], 0.0f,    // top left
-                            xCoords[0] + i*chunkInc,       yCoords[0], 0.0f,    // bottom left
-                            xCoords[0] + (i + 1)*chunkInc, yCoords[0], 0.0f,    // bottom right
-                            xCoords[0] + (i + 1)*chunkInc, yCoords[1], 0.0f     // top right
-                    )
-                }
-            }
-            else {
-                List(numChunks) { i: Int ->
-                    floatArrayOf(
-                            xCoords[0], yCoords[0] + (i + 1)*chunkInc, 0.0f,    // top left
-                            xCoords[0], yCoords[0] + i*chunkInc,       0.0f,    // bottom left
-                            xCoords[1], yCoords[0] + i*chunkInc,       0.0f,    // bottom right
-                            xCoords[1], yCoords[0] + (i + 1)*chunkInc, 0.0f     // top right
-                    )
-                }
-            }
-
-        }
-        fun renderToTexture() {
-
-            if (f.renderShaderChanged) {
-                Log.d("RENDER ROUTINE", "render shader changed")
-                GL.glDetachShader(renderProgram, fRenderShader)
-                fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, f.renderShader())
-                GL.glAttachShader(renderProgram, fRenderShader)
-                GL.glLinkProgram(renderProgram)
-                f.renderShaderChanged = false
-            }
-            if (f.resolutionChanged) {
-                val texRes = f.texRes()
-                textures[1].delete()
-                textures[1] = Texture(texRes, interpolation(), GL.GL_RGBA16F, 1)
-                textures[2].delete()
-                textures[2] = Texture(texRes, interpolation(), GL.GL_RGBA16F, 2)
-                f.resolutionChanged = false
-            }
-            if (f.renderProfileChanged) {
-                textures[0].delete()
-                textures[0] = Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0)
-                f.renderProfileChanged = false
-            }
-
-            context.findViewById<ProgressBar>(R.id.progressBar).progress = 0
-
-            GL.glUseProgram(renderProgram)
-            GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
-
-            for (i in 0..3) {
-                val p = if (i < f.equationConfig.map().params.size) floatArrayOf(
-                    f.equationConfig.map().params[i][0].toFloat(),
-                    f.equationConfig.map().params[i][1].toFloat()
-                ) else floatArrayOf(0.0f, 0.0f)
-                GL.glUniform2fv(paramHandles[i], 1, p, 0)
-            }
-
-            val x0 = floatArrayOf(f.equationConfig.map().z0[0].toFloat())
-            val y0 = floatArrayOf(f.equationConfig.map().z0[1].toFloat())
-
-
-            val xScaleSD = f.equationConfig.scale()[0] / 2.0
-            val yScaleSD = f.equationConfig.scale()[1] / 2.0
-            val xOffsetSD = f.equationConfig.coords()[0]
-            val yOffsetSD = f.equationConfig.coords()[1]
-
-            // calculate scale/offset parameters and pass to fragment shader
-            when (f.precision()) {
-                Precision.SINGLE -> {
-
-                    val xScaleSF = xScaleSD.toFloat()
-                    val yScaleSF = yScaleSD.toFloat()
-                    val xOffsetSF = xOffsetSD.toFloat()
-                    val yOffsetSF = yOffsetSD.toFloat()
-
-                    GL.glUniform2fv(xScaleHandle,  1,  floatArrayOf(xScaleSF, 0.0f),   0)
-                    GL.glUniform2fv(yScaleHandle,  1,  floatArrayOf(yScaleSF, 0.0f),   0)
-                    GL.glUniform2fv(xOffsetHandle, 1,  floatArrayOf(xOffsetSF, 0.0f),  0)
-                    GL.glUniform2fv(yOffsetHandle, 1,  floatArrayOf(yOffsetSF, 0.0f),  0)
-
-                }
-                Precision.DUAL -> {
-
-                    val xScaleDF = splitSD(xScaleSD)
-                    val yScaleDF = splitSD(yScaleSD)
-                    val xOffsetDF = splitSD(xOffsetSD)
-                    val yOffsetDF = splitSD(yOffsetSD)
-
-                    GL.glUniform2fv(xScaleHandle,  1,  xScaleDF,   0)
-                    GL.glUniform2fv(yScaleHandle,  1,  yScaleDF,   0)
-                    GL.glUniform2fv(xOffsetHandle, 1,  xOffsetDF,  0)
-                    GL.glUniform2fv(yOffsetHandle, 1,  yOffsetDF,  0)
-
-                }
-                Precision.QUAD -> {
-
-//                val xScaleQF = splitDD(xScaleDD)
-//                val yScaleQF = splitDD(yScaleDD)
-//                val xOffsetQF = splitDD(xOffsetDD)
-//                val yOffsetQF = splitDD(yOffsetDD)
-//
-//                GL.glUniform4fv(xScaleHandle,  1,  xScaleQF,   0)
-//                GL.glUniform4fv(yScaleHandle,  1,  yScaleQF,   0)
-//                GL.glUniform4fv(xOffsetHandle, 1,  xOffsetQF,  0)
-//                GL.glUniform4fv(yOffsetHandle, 1,  yOffsetQF,  0)
-
-                }
-                else -> {}
-            }
-
-            GL.glEnableVertexAttribArray(viewCoordsHandle)
-            GL.glUniform1i(iterHandle, f.equationConfig.maxIter())
-            GL.glUniform1fv(rHandle, 1, floatArrayOf(f.equationConfig.bailoutRadius()), 0)
-            GL.glUniform1fv(xInitHandle, 1, x0, 0)
-            GL.glUniform1fv(yInitHandle, 1, y0, 0)
-
-
-
-
-            //======================================================================================
-            // RENDER LOW-RES
-            //======================================================================================
-
-            GL.glViewport(0, 0, textures[0].res[0], textures[0].res[1])
-            GL.glUniform1fv(bgScaleHandle, 1, bgScaleFloat, 0)
-            GL.glVertexAttribPointer(
-                    viewCoordsHandle,       // index
-                    3,                      // coordinates per vertex
-                    GL.GL_FLOAT,            // type
-                    false,                  // normalized
-                    12,                     // coordinates per vertex * bytes per float
-                    viewBuffer              // coordinates
-            )
-            GL.glFramebufferTexture2D(
-                    GL.GL_FRAMEBUFFER,              // target
-                    GL.GL_COLOR_ATTACHMENT0,        // attachment
-                    GL.GL_TEXTURE_2D,               // texture target
-                    textures[0].id,                 // texture
-                    0                               // level
-            )
-
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-            GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-
-
-
-
-            //======================================================================================
-            // RENDER HIGH-RES
-            //======================================================================================
-
-            if (strictTranslate()) {
-
-                val xIntersectQuadCoords : FloatArray
-                val yIntersectQuadCoords : FloatArray
-                val xIntersectViewCoords : FloatArray
-                val yIntersectViewCoords : FloatArray
-
-                val xComplementViewCoordsA : FloatArray
-                val yComplementViewCoordsA : FloatArray
-
-                val xComplementViewCoordsB = floatArrayOf(-1.0f, 1.0f)
-                val yComplementViewCoordsB : FloatArray
-
-
-                if (xQuadCoords[0] > -1.0) {
-                    xIntersectQuadCoords   = floatArrayOf( xQuadCoords[0].toFloat(),   1.0f )
-                    xIntersectViewCoords   = floatArrayOf( -1.0f, -xQuadCoords[0].toFloat() )
-                    xComplementViewCoordsA = floatArrayOf( -1.0f,  xQuadCoords[0].toFloat() )
-                }
-                else {
-                    xIntersectQuadCoords   = floatArrayOf( -1.0f,  xQuadCoords[1].toFloat() )
-                    xIntersectViewCoords   = floatArrayOf( -xQuadCoords[1].toFloat(),  1.0f )
-                    xComplementViewCoordsA = floatArrayOf(  xQuadCoords[1].toFloat(),  1.0f )
-                }
-
-                if (yQuadCoords[0] > -1.0) {
-                    yIntersectQuadCoords   = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
-                    yIntersectViewCoords   = floatArrayOf( -1.0f, -yQuadCoords[0].toFloat() )
-                    yComplementViewCoordsA = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
-                    yComplementViewCoordsB = floatArrayOf( -1.0f,  yQuadCoords[0].toFloat() )
-                }
-                else {
-                    yIntersectQuadCoords   = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
-                    yIntersectViewCoords   = floatArrayOf( -yQuadCoords[1].toFloat(), 1.0f )
-                    yComplementViewCoordsA = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
-                    yComplementViewCoordsB = floatArrayOf(  yQuadCoords[1].toFloat(), 1.0f )
-                }
-
-
-//                    val complementViewCoordsA = floatArrayOf(
-//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f,     // top left
-//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom left
-//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom right
-//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f )    // top right
-//                    val complementViewCoordsB = floatArrayOf(
-//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f,     // top left
-//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom left
-//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom right
-//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f )    // top right
-
-
-
-
-                //===================================================================================
-                // NOVEL RENDER -- TRANSLATION COMPLEMENT
-                //===================================================================================
-
-                GL.glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
-                GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
-                GL.glVertexAttribPointer(
-                        viewCoordsHandle,           // index
-                        3,                          // coordinates per vertex
-                        GL.GL_FLOAT,                // type
-                        false,                      // normalized
-                        12,                         // coordinates per vertex * bytes per float
-                        viewChunkBuffer             // coordinates
-                )
-                GL.glFramebufferTexture2D(
-                        GL.GL_FRAMEBUFFER,              // target
-                        GL.GL_COLOR_ATTACHMENT0,        // attachment
-                        GL.GL_TEXTURE_2D,               // texture target
-                        textures[intIndex].id,          // texture
-                        0                               // level
-                )
-                GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-
-                val chunksA = splitCoords(xComplementViewCoordsA, yComplementViewCoordsA)
-                val chunksB = splitCoords(xComplementViewCoordsB, yComplementViewCoordsB)
-                val totalChunks = chunksA.size + chunksB.size
-                var chunksRendered = 0
-                for (complementViewChunkCoordsA in chunksA) {
-
-                    viewChunkBuffer.put(complementViewChunkCoordsA).position(0)
-                    GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-                    GL.glFinish()
-                    chunksRendered++
-                    if (!f.settingsConfig.continuousRender()) {
-                        context.findViewById<ProgressBar>(R.id.progressBar).progress =
-                                (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
-                    }
-
-                }
-                for (complementViewChunkCoordsB in chunksB) {
-
-                    viewChunkBuffer.put(complementViewChunkCoordsB).position(0)
-                    GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-                    GL.glFinish()
-                    chunksRendered++
-                    if (!f.settingsConfig.continuousRender()) {
-                        context.findViewById<ProgressBar>(R.id.progressBar).progress =
-                                (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
-                    }
-
-                }
-
-
-
-
-
-                //===================================================================================
-                // SAMPLE -- TRANSLATION INTERSECTION
-                //===================================================================================
-
-                GL.glUseProgram(sampleProgram)
-                GL.glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
-
-                val intersectQuadCoords = floatArrayOf(
-                        xIntersectQuadCoords[0],  yIntersectQuadCoords[1],  0.0f,     // top left
-                        xIntersectQuadCoords[0],  yIntersectQuadCoords[0],  0.0f,     // bottom left
-                        xIntersectQuadCoords[1],  yIntersectQuadCoords[0],  0.0f,     // bottom right
-                        xIntersectQuadCoords[1],  yIntersectQuadCoords[1],  0.0f )    // top right
-                quadBuffer.put(intersectQuadCoords).position(0)
-
-                val intersectViewCoords = floatArrayOf(
-                        xIntersectViewCoords[0],  yIntersectViewCoords[1],  0.0f,     // top left
-                        xIntersectViewCoords[0],  yIntersectViewCoords[0],  0.0f,     // bottom left
-                        xIntersectViewCoords[1],  yIntersectViewCoords[0],  0.0f,     // bottom right
-                        xIntersectViewCoords[1],  yIntersectViewCoords[1],  0.0f )    // top right
-                viewChunkBuffer.put(intersectViewCoords).position(0)
-
-
-                GL.glEnableVertexAttribArray(viewCoordsSampleHandle)
-                GL.glEnableVertexAttribArray(quadCoordsSampleHandle)
-                GL.glUniform1i(textureSampleHandle, currIndex)
-                GL.glVertexAttribPointer(
-                        viewCoordsSampleHandle,        // index
-                        3,                          // coordinates per vertex
-                        GL.GL_FLOAT,                // type
-                        false,                      // normalized
-                        12,                         // coordinates per vertex * bytes per float
-                        viewChunkBuffer             // coordinates
-                )
-                GL.glVertexAttribPointer(
-                        quadCoordsSampleHandle,        // index
-                        3,                          // coordinates per vertex
-                        GL.GL_FLOAT,                // type
-                        false,                      // normalized
-                        12,                         // coordinates per vertex * bytes per float
-                        quadBuffer                  // coordinates
-                )
-
-
-                GL.glFramebufferTexture2D(
-                        GL.GL_FRAMEBUFFER,              // target
-                        GL.GL_COLOR_ATTACHMENT0,        // attachment
-                        GL.GL_TEXTURE_2D,               // texture target
-                        textures[intIndex].id,          // texture
-                        0                               // level
-                )
-
-                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-
-                GL.glDisableVertexAttribArray(viewCoordsSampleHandle)
-                GL.glDisableVertexAttribArray(quadCoordsSampleHandle)
-
-
-                // swap intermediate and current texture indices
-                val temp = intIndex
-                intIndex = currIndex
-                currIndex = temp
-
-
-            }
-            else {
-
-                //===================================================================================
-                // NOVEL RENDER -- ENTIRE TEXTURE
-                //===================================================================================
-
-                GL.glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
-                GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
-                GL.glFramebufferTexture2D(
-                        GL.GL_FRAMEBUFFER,              // target
-                        GL.GL_COLOR_ATTACHMENT0,        // attachment
-                        GL.GL_TEXTURE_2D,               // texture target
-                        textures[currIndex].id,         // texture
-                        0                               // level
-                )
-
-                // check framebuffer status
-                val status = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
-                if (status != GL.GL_FRAMEBUFFER_COMPLETE) {
-                    Log.d("FRAMEBUFFER", "$status")
-                }
-
-                GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-
-
-                val chunks = splitCoords(floatArrayOf(-1.0f, 1.0f), floatArrayOf(-1.0f, 1.0f))
-                val totalChunks = chunks.size
-                var chunksRendered = 0
-                for (viewChunkCoords in chunks) {
-
-                    viewChunkBuffer.put(viewChunkCoords)
-                    viewChunkBuffer.position(0)
-
-                    GL.glVertexAttribPointer(
-                            viewCoordsHandle,           // index
-                            3,                          // coordinates per vertex
-                            GL.GL_FLOAT,                // type
-                            false,                      // normalized
-                            12,                         // coordinates per vertex * bytes per float
-                            viewChunkBuffer             // coordinates
-                    )
-
-                    GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-                    GL.glFinish()   // force chunk to finish rendering before continuing
-                    chunksRendered++
-                    if(!f.settingsConfig.continuousRender()) {
-                        context.findViewById<ProgressBar>(R.id.progressBar).progress =
-                                (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
-                    }
-
-                }
-
-                GL.glDisableVertexAttribArray(viewCoordsHandle)
-
-            }
-
-
-
-
-        }
-        fun renderFromTexture() {
-
-//        Log.d("RENDER", "render from texture -- start")
-
-            if (f.colorShaderChanged) {
-                Log.d("RENDER ROUTINE", "color shader changed")
-                GL.glDetachShader(colorProgram, fColorShader)
-                fColorShader = loadShader(GL.GL_FRAGMENT_SHADER, f.colorShader())
-                GL.glAttachShader(colorProgram, fColorShader)
-                GL.glLinkProgram(colorProgram)
-                f.colorShaderChanged = false
-            }
-
-            //======================================================================================
-            // PRE-RENDER PROCESSING
-            //======================================================================================
-
-            GL.glUseProgram(colorProgram)
-            GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-            GL.glViewport(0, 0, f.screenRes[0], f.screenRes[1])
-
-            // create float array of quad coordinates
-            val quadCoords = floatArrayOf(
-                    xQuadCoords[0].toFloat(),  yQuadCoords[1].toFloat(),  0.0f,     // top left
-                    xQuadCoords[0].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom left
-                    xQuadCoords[1].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom right
-                    xQuadCoords[1].toFloat(),  yQuadCoords[1].toFloat(),  0.0f )    // top right
-            quadBuffer
-                    .put(quadCoords)
-                    .position(0)
-
-            // create float array of background quad coordinates
-            val bgQuadCoords = floatArrayOf(
-                    xBgQuadCoords[0].toFloat(),  yBgQuadCoords[1].toFloat(),  0.0f,     // top left
-                    xBgQuadCoords[0].toFloat(),  yBgQuadCoords[0].toFloat(),  0.0f,     // bottom left
-                    xBgQuadCoords[1].toFloat(),  yBgQuadCoords[0].toFloat(),  0.0f,     // bottom right
-                    xBgQuadCoords[1].toFloat(),  yBgQuadCoords[1].toFloat(),  0.0f )    // top right
-            bgQuadBuffer
-                    .put(bgQuadCoords)
-                    .position(0)
-
-            GL.glUniform1i(numColorsHandle, f.colorConfig.palette().size)
-            GL.glUniform3fv(paletteHandle, f.colorConfig.palette().size, f.colorConfig.palette().flatPalette, 0)
-            GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.colorConfig.frequency()), 0)
-            GL.glUniform1fv(phaseHandle, 1, floatArrayOf(f.colorConfig.phase()), 0)
-
-            GL.glEnableVertexAttribArray(viewCoordsColorHandle)
-            GL.glEnableVertexAttribArray(quadCoordsColorHandle)
-
-
-
-
-            //======================================================================================
-            // RENDER LOW-RES
-            //======================================================================================
-
-            GL.glUniform1i(textureColorHandle, 0)    // use GL_TEXTURE0
-            GL.glVertexAttribPointer(
-                    viewCoordsColorHandle,      // index
-                    3,                          // coordinates per vertex
-                    GL.GL_FLOAT,                // type
-                    false,                      // normalized
-                    12,                         // coordinates per vertex * bytes per float
-                    viewBuffer                  // coordinates
-            )
-            GL.glVertexAttribPointer(
-                    quadCoordsColorHandle,      // index
-                    3,                          // coordinates per vertex
-                    GL.GL_FLOAT,                // type
-                    false,                      // normalized
-                    12,                         // coordinates per vertex * bytes per float
-                    bgQuadBuffer                // coordinates
-            )
-
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-            GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-
-
-
-
-            //======================================================================================
-            // RENDER HIGH-RES
-            //======================================================================================
-
-            GL.glUniform1i(textureColorHandle, currIndex)
-            GL.glVertexAttribPointer(
-                    viewCoordsColorHandle,        // index
-                    3,                          // coordinates per vertex
-                    GL.GL_FLOAT,                // type
-                    false,                      // normalized
-                    12,                         // coordinates per vertex * bytes per float
-                    viewBuffer                  // coordinates
-            )
-            GL.glVertexAttribPointer(
-                    quadCoordsColorHandle,        // index
-                    3,                          // coordinates per vertex
-                    GL.GL_FLOAT,                // type
-                    false,                      // normalized
-                    12,                         // coordinates per vertex * bytes per float
-                    quadBuffer                  // coordinates
-            )
-
-            GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-
-
-
-
-            GL.glDisableVertexAttribArray(viewCoordsColorHandle)
-            GL.glDisableVertexAttribArray(quadCoordsColorHandle)
-
-//        Log.d("RENDER", "render from texture -- end")
-
-            context.findViewById<ProgressBar>(R.id.progressBar).progress = 0
-
-        }
-
-    }
-
-    var renderToTex = false
-    var ignoreTouch = false
-    private var hasTranslated = false
-    private var hasScaled = false
-    private val strictTranslate = { hasTranslated && !hasScaled }
-
-
-    private val xQuadCoords = doubleArrayOf(-1.0, 1.0)
-    private val yQuadCoords = doubleArrayOf(-1.0, 1.0)
-    private val quadLength = { xQuadCoords[1] - xQuadCoords[0] }
-    private val quadScale = { quadLength() / 2.0 }
-
-    private val bgScaleFloat = floatArrayOf(5.0f)
-    private val bgScaleDouble = 5.0
-
-    private val xBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
-    private val yBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
-
-    val quadAnchor = doubleArrayOf(0.0, 0.0)
-    val quadFocus = doubleArrayOf(0.0, 0.0)
-    val t = doubleArrayOf(0.0, 0.0)
-
-    lateinit var rr : RenderRoutine
-
-
-    fun setQuadAnchor(screenPos: FloatArray) {
-
-        val screenProp = doubleArrayOf(
-                screenPos[0].toDouble()/f.screenRes[0],
-                screenPos[1].toDouble()/f.screenRes[1]
-        )
-        quadAnchor[0] = screenProp[0]*2.0 - 1.0
-        quadAnchor[1] = 1.0 - screenProp[1]*2.0
-        // Log.d("RENDERER", "quadAnchor : (${quadAnchor[0]}, ${quadAnchor[1]})")
-
-    }
-
-    fun setQuadFocus(screenDist: FloatArray) {
-        // update texture quad coordinates
-        // convert focus coordinates from screen space to quad space
-        val screenProp = doubleArrayOf(
-                screenDist[0].toDouble() / f.screenRes[0],
-                screenDist[1].toDouble() / f.screenRes[1]
-        )
-
-        quadFocus[0] = quadAnchor[0] + screenProp[0]*(2.0/quadScale())
-        quadFocus[1] = quadAnchor[1] - screenProp[1]*(2.0/quadScale())
-
-//        quadFocus[0] = (xQuadCoords[0] - quadFocus[0])*(1.0 - screenProp[0]) + screenProp[0]*(xQuadCoords[1] - quadFocus[0])
-//        quadFocus[1] = (yQuadCoords[1] - quadFocus[1])*(1.0 - screenProp[1]) + screenProp[1]*(yQuadCoords[0] - quadFocus[1])
-//        Log.d("RENDERER", "quadFocus : (${quadFocus[0]}, ${quadFocus[1]})")
-    }
-
-    fun translate(dScreenPos: FloatArray) {
-
-        // update texture quad coordinates
-        val dQuadPos = doubleArrayOf(
-                dScreenPos[0].toDouble() / f.screenRes[0].toDouble() * 2.0,
-                dScreenPos[1].toDouble() / f.screenRes[1].toDouble() * 2.0
-        )
-
-        xQuadCoords[0] += dQuadPos[0]
-        xQuadCoords[1] += dQuadPos[0]
-        yQuadCoords[0] -= dQuadPos[1]
-        yQuadCoords[1] -= dQuadPos[1]
-
-        xBgQuadCoords[0] += dQuadPos[0]
-        xBgQuadCoords[1] += dQuadPos[0]
-        yBgQuadCoords[0] -= dQuadPos[1]
-        yBgQuadCoords[1] -= dQuadPos[1]
-
-        // still magic
-        t[0] += dQuadPos[0]
-        t[1] -= dQuadPos[1]
-
-        hasTranslated = true
-
-    }
-
-    fun scale(dScale: Float) {
-
-        val tQuadFocus = doubleArrayOf(quadFocus[0] + t[0], quadFocus[1] + t[1])
-
-        // translate quadFocus to origin in quad coordinates
-        xQuadCoords[0] -= tQuadFocus[0]
-        xQuadCoords[1] -= tQuadFocus[0]
-        yQuadCoords[0] -= tQuadFocus[1]
-        yQuadCoords[1] -= tQuadFocus[1]
-
-        // scale quad coordinates
-        xQuadCoords[0] *= dScale.toDouble()
-        xQuadCoords[1] *= dScale.toDouble()
-        yQuadCoords[0] *= dScale.toDouble()
-        yQuadCoords[1] *= dScale.toDouble()
-
-        // translate origin back to quadFocus in quad coordinates
-        xQuadCoords[0] += tQuadFocus[0]
-        xQuadCoords[1] += tQuadFocus[0]
-        yQuadCoords[0] += tQuadFocus[1]
-        yQuadCoords[1] += tQuadFocus[1]
-
-
-
-        // translate quadFocus to origin in quad coordinates
-        xBgQuadCoords[0] -= tQuadFocus[0]
-        xBgQuadCoords[1] -= tQuadFocus[0]
-        yBgQuadCoords[0] -= tQuadFocus[1]
-        yBgQuadCoords[1] -= tQuadFocus[1]
-
-        // scale quad coordinates
-        xBgQuadCoords[0] *= dScale.toDouble()
-        xBgQuadCoords[1] *= dScale.toDouble()
-        yBgQuadCoords[0] *= dScale.toDouble()
-        yBgQuadCoords[1] *= dScale.toDouble()
-
-        // translate origin back to quadFocus in quad coordinates
-        xBgQuadCoords[0] += tQuadFocus[0]
-        xBgQuadCoords[1] += tQuadFocus[0]
-        yBgQuadCoords[0] += tQuadFocus[1]
-        yBgQuadCoords[1] += tQuadFocus[1]
-
-        hasScaled = true
-
-        // Log.d("equationConfig.coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
-
-    }
-
-    private fun resetQuadParams() {
-
-        xQuadCoords[0] = -1.0
-        xQuadCoords[1] = 1.0
-        yQuadCoords[0] = -1.0
-        yQuadCoords[1] = 1.0
-
-        xBgQuadCoords[0] = -bgScaleDouble
-        xBgQuadCoords[1] = bgScaleDouble
-        yBgQuadCoords[0] = -bgScaleDouble
-        yBgQuadCoords[1] = bgScaleDouble
-
-        quadFocus[0] = 0.0
-        quadFocus[1] = 0.0
-
-        t[0] = 0.0
-        t[1] = 0.0
-
-    }
-
-
-
-    override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-
-        // get OpenGL ES version
-        Log.d("SURFACE VIEW", "OpenGL ES version: ${unused.glGetString(GL10.GL_VERSION)}")
-
-        // get fragment shader precision
-        val a : IntBuffer = IntBuffer.allocate(2)
-        val b : IntBuffer = IntBuffer.allocate(1)
-        GL.glGetShaderPrecisionFormat(GL.GL_FRAGMENT_SHADER, GL.GL_HIGH_FLOAT, a, b)
-        Log.d("SURFACE VIEW", "float precision: ${b[0]}")
-
-        rr = RenderRoutine()
-        rr.renderToTexture()
-
-        val buttonScroll = context.findViewById<HorizontalScrollView>(R.id.buttonScroll)
-        buttonScroll.fullScroll(HorizontalScrollView.FOCUS_RIGHT)
-
-    }
-
-    override fun onDrawFrame(unused: GL10) {
-
-        // Log.d("RENDER", "DRAW FRAME")
-
-        // render to texture on ACTION_UP
-        if (renderToTex) {
-
-            ignoreTouch = !f.settingsConfig.continuousRender()
-            rr.renderToTexture()
-            ignoreTouch = false
-
-            renderToTex = false
-            hasTranslated = false
-            hasScaled = false
-            resetQuadParams()
-
-        }
-
-        // render from texture
-        rr.renderFromTexture()
-
-    }
-
-    override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
-
-    }
-
-}
 
 class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
 
@@ -2456,6 +2491,7 @@ class MainActivity : AppCompatActivity(),
 
         val equationConfig = EquationConfig(mutableMapOf(
                 "map"               to  ComplexMap.mandelbrot(resources),
+                "paramSensitivity"  to  1.0,
                 "coords"            to  doubleArrayOf(0.0, 0.0),
                 "scale"             to  doubleArrayOf(1.0, 1.0*aspectRatio),
                 "maxIter"           to  255,
@@ -2686,7 +2722,7 @@ class MainActivity : AppCompatActivity(),
                 c.applyTo(overlay)
                 fractalView.y = -uiFull.height/2.0f
             }
-            anim.duration = 400
+            anim.duration = 300
             anim.start()
         }
 
@@ -2708,6 +2744,10 @@ class MainActivity : AppCompatActivity(),
         outState?.putFloat(   "bailoutRadius",  f.equationConfig.bailoutRadius()  )
         outState?.putInt(     "orientation",    orientation                       )
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
+        super.onSaveInstanceState(outState, outPersistentState)
     }
     override fun onAttachFragment(fragment: Fragment) {
         super.onAttachFragment(fragment)
