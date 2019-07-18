@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.opengl.GLSurfaceView
-import android.opengl.GLSurfaceView.Renderer
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.drawable.TransitionDrawable
@@ -20,7 +19,6 @@ import android.support.v4.app.FragmentPagerAdapter
 import android.support.design.widget.TabLayout
 import android.support.v4.view.ViewPager
 import android.opengl.GLES32 as GL
-import android.widget.FrameLayout.LayoutParams as LP
 import android.util.Log
 import android.view.*
 import android.view.animation.AlphaAnimation
@@ -316,15 +314,14 @@ class ColorPalette (
 class ComplexMap (
         val name            : String,
         val z0              : DoubleArray,
-        val coordsInit      : DoubleArray,
-        val scaleInit       : Double,
-        val params          : List<DoubleArray>,
-        val zInitSF         : String?,
+        val initJuliaMode   : Boolean,
+        val initCoords      : DoubleArray,
+        val initScale       : Double,
+        val initMapParams   : List<DoubleArray>,
         val conditionalSF   : String?,
         val initSF          : String?,
         val loopSF          : String?,
         val finalSF         : String?,
-        val zInitDF         : String?,
         val conditionalDF   : String?,
         val initDF          : String?,
         val loopDF          : String?,
@@ -336,11 +333,10 @@ class ComplexMap (
         val empty       = { ComplexMap(
                 "Empty",
                 doubleArrayOf(0.0, 0.0),
+                false,
                 doubleArrayOf(0.0, 0.0),
                 1.0,
                 listOf(),
-                "",
-                "",
                 "",
                 "",
                 "",
@@ -353,27 +349,26 @@ class ComplexMap (
         val mandelbrot  = { res: Resources -> ComplexMap(
                 "Mandelbrot",
                 doubleArrayOf(0.0, 0.0),
+                false,
                 doubleArrayOf(-0.75, 0.0),
                 3.5,
                 listOf(),
-                res.getString(R.string.constant_sf),
                 res.getString(R.string.escape_sf),
                 "",
                 res.getString(R.string.mandelbrot_loop_sf),
                 "",
-                res.getString(R.string.constant_df),
                 res.getString(R.string.escape_df),
                 "",
                 res.getString(R.string.mandelbrot_loop_df),
                 ""
         )}
         val mandelbrotCpow  = { res: Resources -> ComplexMap(
-                "Mandelbrot Complex Power",
+                "Mandelbrot Cpow",
                 doubleArrayOf(0.0, 0.0),
+                false,
                 doubleArrayOf(-0.75, 0.0),
                 3.5,
                 listOf(doubleArrayOf(2.0, 2.0)),
-                res.getString(R.string.constant_sf),
                 res.getString(R.string.escape_sf),
                 "",
                 res.getString(R.string.mandelbrotcpow_loop_sf),
@@ -381,38 +376,19 @@ class ComplexMap (
                 "",
                 "",
                 "",
-                "",
                 ""
         )}
-        val julia       = { res: Resources -> ComplexMap(
-                "Julia",
-                doubleArrayOf(0.0, 0.0),
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(doubleArrayOf(-1.0, 0.0)),
-                res.getString(R.string.julia_sf),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.julia_loop_sf),
-                "",
-                res.getString(R.string.julia_df),
-                res.getString(R.string.escape_df),
-                "",
-                res.getString(R.string.julia_loop_df),
-                ""
-        ) }
         val dualpow     = { res: Resources -> ComplexMap(
                 "Dual Power",
                 doubleArrayOf(1.0, 0.0),
+                false,
                 doubleArrayOf(0.0, 0.0),
                 3.0,
                 listOf(doubleArrayOf(0.0, 0.0)),
-                res.getString(R.string.constant_sf),
                 res.getString(R.string.escape_sf),
                 res.getString(R.string.dualpow_init_sf),
                 res.getString(R.string.dualpow_loop_sf),
                 "",
-                res.getString(R.string.constant_df),
                 res.getString(R.string.escape_df),
                 "",
                 "",
@@ -421,15 +397,14 @@ class ComplexMap (
         val sine1       = { res: Resources -> ComplexMap(
                 "Sine 1",
                 doubleArrayOf(1.0, 0.0),
+                false,
                 doubleArrayOf(0.0, 0.0),
                 3.5,
                 listOf(doubleArrayOf(0.31960705187983646, 0.0)),
-                res.getString(R.string.constant_sf),
                 res.getString(R.string.escape_sf),
                 "",
                 res.getString(R.string.sine1_loop_sf),
                 "",
-                res.getString(R.string.constant_df),
                 res.getString(R.string.escape_df),
                 "",
                 "",
@@ -438,32 +413,14 @@ class ComplexMap (
         val sine2       = { res: Resources -> ComplexMap(
                 "Sine 2",
                 doubleArrayOf(1.0, 0.0),
+                false,
                 doubleArrayOf(0.0, 0.0),
                 3.5,
                 listOf(doubleArrayOf(-0.26282883851642613, 2.042520182493586E-6)),
-                res.getString(R.string.constant_sf),
                 res.getString(R.string.escape_sf),
                 "",
                 res.getString(R.string.sine2_loop_sf),
                 "",
-                res.getString(R.string.constant_df),
-                res.getString(R.string.escape_df),
-                "",
-                "",
-                ""
-        )}
-        val sine3       = { res: Resources -> ComplexMap(
-                "Sine 3",
-                doubleArrayOf(1.0, 0.0),
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(doubleArrayOf(0.0, 0.0)),
-                res.getString(R.string.constant_sf),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.sine3_loop_sf),
-                "",
-                res.getString(R.string.constant_df),
                 res.getString(R.string.escape_df),
                 "",
                 "",
@@ -472,40 +429,23 @@ class ComplexMap (
         val sine4       = { res: Resources -> ComplexMap(
                 "Sine 4",
                 doubleArrayOf(1.0, 0.0),
+                false,
                 doubleArrayOf(0.0, 0.0),
                 3.5,
                 listOf(doubleArrayOf(1.0, 0.0)),
-                res.getString(R.string.julia_sf),
                 res.getString(R.string.escape_sf),
                 "",
                 res.getString(R.string.sine4_loop_sf),
                 "",
-                res.getString(R.string.constant_df),
                 res.getString(R.string.escape_df),
                 "",
                 "",
                 ""
         )}
-        val newton1     = { res: Resources -> ComplexMap(
-                "Newton 1",
-                doubleArrayOf(0.0, 0.0),
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(doubleArrayOf(0.0, 0.0)),
-                res.getString(R.string.julia_sf),
-                res.getString(R.string.converge_sf),
-                "",
-                res.getString(R.string.newton1_loop_sf),
-                "",
-                res.getString(R.string.julia_df),
-                res.getString(R.string.converge_df),
-                "",
-                "",
-                ""
-        ) }
         val newton2     = { res: Resources -> ComplexMap(
                 "Newton 2",
                 doubleArrayOf(0.0, 0.0),
+                true,
                 doubleArrayOf(0.0, 0.0),
                 3.5,
                 listOf(
@@ -513,34 +453,10 @@ class ComplexMap (
                     doubleArrayOf(-1.0, -1.0),
                     doubleArrayOf(2.0, -0.5)
                 ),
-                res.getString(R.string.julia_sf),
                 res.getString(R.string.converge_sf),
                 "",
                 res.getString(R.string.newton2_loop_sf),
                 "",
-                res.getString(R.string.julia_df),
-                res.getString(R.string.converge_df),
-                "",
-                "",
-                ""
-        ) }
-        val mobius      = { res: Resources -> ComplexMap(
-                "Mobius",
-                doubleArrayOf(0.0, 0.0),
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(
-                    doubleArrayOf(1.0, 0.0),
-                    doubleArrayOf(1.0, 0.0),
-                    doubleArrayOf(1.0, 0.0),
-                    doubleArrayOf(1.0, 0.0)
-                ),
-                res.getString(R.string.julia_sf),
-                res.getString(R.string.converge_sf),
-                res.getString(R.string.mobius_init_sf),
-                res.getString(R.string.mobius_loop_sf),
-                "",
-                res.getString(R.string.julia_df),
                 res.getString(R.string.converge_df),
                 "",
                 "",
@@ -548,15 +464,11 @@ class ComplexMap (
         ) }
         val all         = mapOf(
             "Mandelbrot"  to  mandelbrot,
-            "Mandelbrot Complex Power"  to  mandelbrotCpow,
-            "Julia"       to  julia,
+            "Mandelbrot Cpow"  to  mandelbrotCpow,
             "Dual Power"  to  dualpow,
             "Sine 1"      to  sine1,
             "Sine 2"      to  sine2,
-            "Sine 3"      to  sine3,
             "Sine 4"      to  sine4,
-            "Mobius"      to  mobius,
-            "Newton 1"    to  newton1,
             "Newton 2"    to  newton2
         )
         
@@ -708,12 +620,17 @@ enum class Resolution { LOW, MED, HIGH, ULTRA }
 
 class EquationConfig (val params : MutableMap<String, Any>) {
 
-    val map                 = { params["map"]              as ComplexMap  }
-    val paramSensitivity    = { params["paramSensitivity"] as Double      }
-    val coords              = { params["coords"]           as DoubleArray }
-    val scale               = { params["scale"]            as DoubleArray }
-    val maxIter             = { params["maxIter"]          as Int         }
-    val bailoutRadius       = { params["bailoutRadius"]    as Float       }
+    val map                 = { params["map"]              as ComplexMap        }
+    val p1                  = { params["p1"]               as DoubleArray       }
+    val p2                  = { params["p2"]               as DoubleArray       }
+    val p3                  = { params["p3"]               as DoubleArray       }
+    val p4                  = { params["p4"]               as DoubleArray       }
+    val juliaMode           = { params["juliaMode"]        as Boolean           }
+    val paramSensitivity    = { params["paramSensitivity"] as Double            }
+    val coords              = { params["coords"]           as DoubleArray       }
+    val scale               = { params["scale"]            as DoubleArray       }
+    val maxIter             = { params["maxIter"]          as Int               }
+    val bailoutRadius       = { params["bailoutRadius"]    as Float             }
 
 }
 
@@ -733,6 +650,7 @@ class SettingsConfig (val params: MutableMap<String, Any>) {
     val displayParams      = { params["displayParams"]     as Boolean    }
 
 }
+
 
 
 
@@ -814,7 +732,7 @@ class Fractal(
     private var colorPostIndex  : String = ""
 
 
-    private val precisionThreshold = 7e-5
+    private val precisionThreshold = 6e-5
     private val aspectRatio = screenRes[1].toDouble()/screenRes[0]
     var renderShaderChanged = false
     var colorShaderChanged = false
@@ -895,9 +813,7 @@ class Fractal(
 
 
     init {
-
-        resetPosition()
-
+        reset()
     }
 
 
@@ -907,13 +823,17 @@ class Fractal(
             Precision.SINGLE -> {
                 header      = res.getString(R.string.header_sf)
                 arithmetic  = res.getString(R.string.arithmetic_sf)
-                init        = res.getString(R.string.general_init_sf) + equationConfig.map().zInitSF
+                init        = res.getString(R.string.general_init_sf)
+                if (equationConfig.juliaMode()) { init += res.getString(R.string.julia_sf) }
+                else { init += res.getString(R.string.constant_sf) }
                 loop        = res.getString(R.string.general_loop_sf)
                 conditional = equationConfig.map().conditionalSF    ?: ""
-//                conditional = res.getString(R.string.escape_sf)
                 mapInit     = equationConfig.map().initSF           ?: ""
                 algInit     = colorConfig.algorithm().initSF        ?: ""
                 mapLoop     = equationConfig.map().loopSF           ?: ""
+                if (equationConfig.juliaMode()) {
+                    mapLoop = mapLoop.replace("C", "P${equationConfig.map().initMapParams.size + 1}", false)
+                }
                 algLoop     = colorConfig.algorithm().loopSF        ?: ""
                 mapFinal    = equationConfig.map().finalSF          ?: ""
                 algFinal    = colorConfig.algorithm().finalSF       ?: ""
@@ -921,16 +841,21 @@ class Fractal(
             Precision.DUAL -> {
 
                 header      = res.getString(R.string.header_df)
-                arithmetic  = res.getString(R.string.arithmetic_util) +
-                        res.getString(R.string.arithmetic_sf) +
-                        res.getString(R.string.arithmetic_df)
-                init        = res.getString(R.string.general_init_df) + equationConfig.map().zInitDF
+                arithmetic  = res.getString(R.string.arithmetic_util)
+                arithmetic += res.getString(R.string.arithmetic_sf)
+                arithmetic += res.getString(R.string.arithmetic_df)
+                init        = res.getString(R.string.general_init_df)
+                if (equationConfig.juliaMode()) { init += res.getString(R.string.julia_df) }
+                else { init += res.getString(R.string.constant_df) }
                 loop        = res.getString(R.string.general_loop_df)
                 conditional = equationConfig.map().conditionalDF    ?: ""
-//                conditional = res.getString(R.string.escape_df)
                 mapInit     = equationConfig.map().initDF           ?: ""
                 algInit     = colorConfig.algorithm().initDF        ?: ""
                 mapLoop     = equationConfig.map().loopDF           ?: ""
+                if (equationConfig.juliaMode()) {
+                    mapLoop = mapLoop.replace("A", "vec2(P${equationConfig.map().initMapParams.size + 1}.x, 0.0)", false)
+                    mapLoop = mapLoop.replace("B", "vec2(P${equationConfig.map().initMapParams.size + 1}.y, 0.0)", false)
+                }
                 algLoop     = colorConfig.algorithm().loopDF        ?: ""
                 mapFinal    = equationConfig.map().finalDF          ?: ""
                 algFinal    = colorConfig.algorithm().finalDF       ?: ""
@@ -954,13 +879,25 @@ class Fractal(
     }
 
     fun resetPosition() {
-        equationConfig.coords()[0] = equationConfig.map().coordsInit[0]
-        equationConfig.coords()[1] = equationConfig.map().coordsInit[1]
-        equationConfig.scale()[0] = equationConfig.map().scaleInit
-        equationConfig.scale()[1] = equationConfig.map().scaleInit * aspectRatio
-        updateEditTexts()
+        equationConfig.coords()[0] = equationConfig.map().initCoords[0]
+        equationConfig.coords()[1] = equationConfig.map().initCoords[1]
+        equationConfig.scale()[0] = equationConfig.map().initScale
+        equationConfig.scale()[1] = equationConfig.map().initScale * aspectRatio
+        updatePositionEditTexts()
     }
-    fun updateEditTexts() {
+    fun resetMapParams() {
+        for (i in 0 until equationConfig.map().initMapParams.size) {
+            (equationConfig.params["p${i + 1}"] as DoubleArray)[0] = equationConfig.map().initMapParams[i][0]
+            (equationConfig.params["p${i + 1}"] as DoubleArray)[1] = equationConfig.map().initMapParams[i][1]
+        }
+        updateMapParamEditTexts()
+    }
+    fun reset() {
+        resetPosition()
+        resetMapParams()
+        equationConfig.params["juliaMode"] = equationConfig.map().initJuliaMode
+    }
+    fun updatePositionEditTexts() {
 
         val xCoordEdit = context.findViewById<EditText>(R.id.xCoordEdit)
         val yCoordEdit = context.findViewById<EditText>(R.id.yCoordEdit)
@@ -979,6 +916,44 @@ class Fractal(
         bailoutExponentEdit?.setText(bailoutStrings[1])
 
     }
+    fun updateMapParamEditText(i: Int) {
+        // Log.d("FRACTAL", "updating map param EditText $i")
+
+        val xEdit : EditText?
+        val yEdit : EditText?
+
+        when (i) {
+            1 -> {
+                xEdit = context.findViewById(R.id.p1xEdit)
+                yEdit = context.findViewById(R.id.p1yEdit)
+            }
+            2 -> {
+                xEdit = context.findViewById(R.id.p2xEdit)
+                yEdit = context.findViewById(R.id.p2yEdit)
+            }
+            3 -> {
+                xEdit = context.findViewById(R.id.p3xEdit)
+                yEdit = context.findViewById(R.id.p3yEdit)
+            }
+            4 -> {
+                xEdit = context.findViewById(R.id.p4xEdit)
+                yEdit = context.findViewById(R.id.p4yEdit)
+            }
+            else -> {
+                xEdit = null
+                yEdit = null
+            }
+        }
+
+        xEdit?.setText("%.8f".format((equationConfig.params["p$i"] as DoubleArray)[0]))
+        yEdit?.setText("%.8f".format((equationConfig.params["p$i"] as DoubleArray)[1]))
+
+    }
+    fun updateMapParamEditTexts() {
+        for (i in 1..4) {
+            updateMapParamEditText(i)
+        }
+    }
     fun updateDisplayParams(reaction: Reaction, reactionChanged: Boolean) {
         val displayParams = context.findViewById<LinearLayout>(R.id.displayParams)
         if (settingsConfig.displayParams()) {
@@ -994,8 +969,8 @@ class Fractal(
                 }
                 else -> {
                     val i = reaction.ordinal - 2
-                    (displayParams.getChildAt(1) as TextView).text = "x: %.8f".format(equationConfig.map().params[i][0])
-                    (displayParams.getChildAt(2) as TextView).text = "y: %.8f".format(equationConfig.map().params[i][1])
+                    (displayParams.getChildAt(1) as TextView).text = "x: %.8f".format((equationConfig.params["p${i + 1}"] as DoubleArray)[0])
+                    (displayParams.getChildAt(2) as TextView).text = "y: %.8f".format((equationConfig.params["p${i + 1}"] as DoubleArray)[1])
                     (displayParams.getChildAt(3) as TextView).text = "sensitivity: %.4f".format(equationConfig.paramSensitivity())
                 }
             }
@@ -1030,31 +1005,40 @@ class Fractal(
 
 
     }
-    fun setMapParam(p: Int, dPos: FloatArray) {
+    fun setMapParam(i: Int, dPos: FloatArray) {
         // dx -- [0, screenWidth]
         val sensitivity =
             if (equationConfig.paramSensitivity() == -1.0) equationConfig.scale()[0]
             else equationConfig.paramSensitivity()
-        equationConfig.map().params[p - 1][0] += sensitivity*dPos[0]/screenRes[0]
-        equationConfig.map().params[p - 1][1] += sensitivity*dPos[1]/screenRes[1]
+        (equationConfig.params["p$i"] as DoubleArray)[0] += sensitivity*dPos[0]/screenRes[0]
+        (equationConfig.params["p$i"] as DoubleArray)[1] += sensitivity*dPos[1]/screenRes[1]
+
         // Log.d("FRACTAL", "setting map param ${p + 1} to (${equationConfig.map().params[p - 1][0]}, ${equationConfig.map().params[p - 1][1]})")
 
         // SINE2 :: (-0.26282883851642613, 2.042520182493586E-6)
         // SINE2 :: (-0.999996934286532, 9.232660318047263E-5)
         // SINE2 :: (-0.2287186333845716, 0.1340647963904784)
+
         // SINE1 :: -0.578539160583084
         // SINE1 :: -0.8717463705274795
         // SINE1 :: 0.2948570315666499
         // SINE1 :: 0.31960705187983646
+        // SINE1 :: -0.76977662
+        //      JULIA :: (-0.85828304, -0.020673078)
+        //      JULIA :: (-0.86083659, 0.0)
+        // SINE1 :: -1.0
+        //      JULIA :: (0.53298706, 0.00747937)
+
         // JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ !!!!!
 
-        updateDisplayParams(Reaction.valueOf("P$p"), false)
+        updateDisplayParams(Reaction.valueOf("P$i"), false)
+        updateMapParamEditText(i)
 
     }
-    fun setMapParamSensetivity(p: Int, dScale: Float) {
+    fun setMapParamSensetivity(i: Int, dScale: Float) {
         equationConfig.params["paramSensitivity"] = equationConfig.paramSensitivity() * dScale
-        updateEditTexts()
-        updateDisplayParams(Reaction.valueOf("P$p"), false)
+        updateMapParamEditText(i)
+        updateDisplayParams(Reaction.valueOf("P$i"), false)
     }
     fun translate(dScreenPos: FloatArray) {
 
@@ -1076,7 +1060,7 @@ class Fractal(
             }
         }
 
-        updateEditTexts()
+        updatePositionEditTexts()
         updateDisplayParams(Reaction.TRANSFORM, false)
 //        Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
 
@@ -1147,7 +1131,7 @@ class Fractal(
                     equationConfig.coords()[0] + (prop[0] - 0.5)*equationConfig.scale()[0],
                     equationConfig.coords()[1] - (prop[1] - 0.5)*equationConfig.scale()[1]
                 )
-                Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
+                // Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
 
                 translate(focus.negative())
                 equationConfig.coords()[0] = equationConfig.coords()[0] / dScale
@@ -1166,19 +1150,17 @@ class Fractal(
             Log.d("FRACTAL", "precision changed")
         }
 
-        updateEditTexts()
+        updatePositionEditTexts()
         updateDisplayParams(Reaction.TRANSFORM, false)
 //        Log.d("FRACTAL", "scale -- dscale: $dScale")
 
     }
     fun setFrequency(dScale: Float) {
         colorConfig.params["frequency"] = colorConfig.frequency() * dScale
-        updateEditTexts()
         updateDisplayParams(Reaction.COLOR, false)
     }
     fun setPhase(dx: Float) {
         colorConfig.params["phase"] = (colorConfig.phase() + dx/screenRes[0])
-        updateEditTexts()
         updateDisplayParams(Reaction.COLOR, false)
     }
 
@@ -1463,11 +1445,11 @@ class FractalSurfaceView(
                 GL.glUseProgram(renderProgram)
                 GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
-                for (i in 0..3) {
-                    val p = if (i < f.equationConfig.map().params.size) floatArrayOf(
-                            f.equationConfig.map().params[i][0].toFloat(),
-                            f.equationConfig.map().params[i][1].toFloat()
-                    ) else floatArrayOf(0.0f, 0.0f)
+                for (i in 0 until 4) {
+                    val p = floatArrayOf(
+                        (f.equationConfig.params["p${i + 1}"] as DoubleArray)[0].toFloat(),
+                        (f.equationConfig.params["p${i + 1}"] as DoubleArray)[1].toFloat())
+                    // Log.d("RENDER ROUTINE", "passing p${i + 1} in as (${p[0]}, ${p[1]})")
                     GL.glUniform2fv(paramHandles[i], 1, p, 0)
                 }
 
@@ -2215,7 +2197,7 @@ class FractalSurfaceView(
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
-                            Log.d("TRANSFORM", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("TRANSFORM", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
@@ -2228,12 +2210,12 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_POINTER_DOWN -> {
-                            Log.d("TRANSFORM", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("TRANSFORM", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             prevFocalLen = e.focalLength()
-                            Log.d("TRANSFORM", "focalLen: $prevFocalLen")
+                            // Log.d("TRANSFORM", "focalLen: $prevFocalLen")
                             if (!f.settingsConfig.continuousRender()) {
                                 r.setQuadFocus(floatArrayOf(
                                         focus[0] - e.getX(0),
@@ -2274,7 +2256,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            Log.d("TRANSFORM", "POINTER UP")
+                            // Log.d("TRANSFORM", "POINTER UP")
                             if (hasTranslated) {
                                 r.renderToTex = true
                                 requestRender()
@@ -2283,7 +2265,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
-                            Log.d("TRANSFORM", "POINTER ${e.actionIndex} UP")
+                            // Log.d("TRANSFORM", "POINTER ${e.actionIndex} UP")
                             if (e.getPointerId(e.actionIndex) == 0) {
                                 prevFocus[0] = e.getX(1)
                                 prevFocus[1] = e.getY(1)
@@ -2306,14 +2288,14 @@ class FractalSurfaceView(
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
-                            Log.d("COLOR", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("COLOR", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             return true
                         }
                         MotionEvent.ACTION_POINTER_DOWN -> {
-                            Log.d("COLOR", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("COLOR", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
@@ -2341,11 +2323,11 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
-                            Log.d("COLOR", "POINTER ${e.actionIndex} UP")
+                            // Log.d("COLOR", "POINTER ${e.actionIndex} UP")
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            Log.d("COLOR", "ACTION UP")
+                            // Log.d("COLOR", "ACTION UP")
                             return true
                         }
 
@@ -2356,19 +2338,19 @@ class FractalSurfaceView(
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
-                            Log.d("PARAMETER", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("PARAMETER", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             return true
                         }
                         MotionEvent.ACTION_POINTER_DOWN -> {
-                            Log.d("PARAMETER", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("PARAMETER", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             prevFocalLen = e.focalLength()
-                            Log.d("PARAMETER", "POINTER DOWN -- focalLen: $prevFocalLen")
+                            // Log.d("PARAMETER", "POINTER DOWN -- focalLen: $prevFocalLen")
                             return true
                         }
                         MotionEvent.ACTION_MOVE -> {
@@ -2394,14 +2376,14 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
-                            Log.d("PARAMETER", "POINTER ${e.actionIndex} UP")
+                            // Log.d("PARAMETER", "POINTER ${e.actionIndex} UP")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            Log.d("PARAMETER", "POINTER UP")
+                            // Log.d("PARAMETER", "POINTER UP")
                             return true
                         }
 
@@ -2491,6 +2473,11 @@ class MainActivity : AppCompatActivity(),
 
         val equationConfig = EquationConfig(mutableMapOf(
                 "map"               to  ComplexMap.mandelbrot(resources),
+                "p1"                to  doubleArrayOf(0.0, 0.0),
+                "p2"                to  doubleArrayOf(0.0, 0.0),
+                "p3"                to  doubleArrayOf(0.0, 0.0),
+                "p4"                to  doubleArrayOf(0.0, 0.0),
+                "juliaMode"         to  false,
                 "paramSensitivity"  to  1.0,
                 "coords"            to  doubleArrayOf(0.0, 0.0),
                 "scale"             to  doubleArrayOf(1.0, 1.0*aspectRatio),
@@ -2498,7 +2485,7 @@ class MainActivity : AppCompatActivity(),
                 "bailoutRadius"     to  1e5f
         ))
         val colorConfig = ColorConfig(mutableMapOf(
-                "algorithm"         to  ColorAlgorithm.escapeSmooth(resources),
+                "algorithm"         to  ColorAlgorithm.escape(resources),
                 "palette"           to  ColorPalette.p8,
                 "frequency"         to  frequency,
                 "phase"             to  phase
@@ -2588,7 +2575,7 @@ class MainActivity : AppCompatActivity(),
             b.background = TransitionDrawable(buttonBackgrounds)
             b.setOnClickListener(uiQuickButtonListener)
         }
-        val diff = f.equationConfig.map().params.size - uiQuick.childCount + 2
+        val diff = f.equationConfig.map().initMapParams.size - uiQuick.childCount + 2
         uiQuick.removeViews(0, abs(diff))
         uiQuick.bringToFront()
         uiQuickButtons[0].performClick()
@@ -2603,8 +2590,8 @@ class MainActivity : AppCompatActivity(),
             if (uiQuick.width > buttonScroll.width) {
                 val scrollX = buttonScroll.scrollX
                 val scrollEnd = uiQuick.width - buttonScroll.width
-                Log.d("MAIN ACTIVITY", "scrollX: $scrollX")
-                Log.d("MAIN ACTIVITY", "scrollEnd: $scrollEnd")
+                // Log.d("MAIN ACTIVITY", "scrollX: $scrollX")
+                // Log.d("MAIN ACTIVITY", "scrollEnd: $scrollEnd")
                 when {
                     scrollX > 5 -> leftArrow.alpha = 1f
                     scrollX < 5 -> leftArrow.alpha = 0f
@@ -2614,30 +2601,14 @@ class MainActivity : AppCompatActivity(),
                     scrollX > scrollEnd - 5 -> rightArrow.alpha = 0f
                 }
             }
+            else {
+                leftArrow.alpha = 0f
+                rightArrow.alpha = 0f
+            }
         }
 
 
         val uiFullTabs = findViewById<TabLayout>(R.id.uiFullTabs)
-        uiFullTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-
-            override fun onTabSelected(tab: TabLayout.Tab) {
-//                fractalView.reaction = when (tab.text.toString()) {
-//                    "Equation"  -> Reaction.TRANSFORM
-//                    "Color"     -> Reaction.COLOR
-//                    "Settings"  -> Reaction.TRANSFORM
-//                    else        -> Reaction.TRANSFORM
-//                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab) {
-
-            }
-
-            override fun onTabReselected(tab: TabLayout.Tab) {
-
-            }
-
-        })
         uiFullTabs.tabGravity = TabLayout.GRAVITY_FILL
 
 
@@ -2670,8 +2641,13 @@ class MainActivity : AppCompatActivity(),
         uiFullTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 viewPager.currentItem = tab.position
+                Log.d("MAIN ACTIVITY", "tab: ${tab.text}")
                 when (tab.text) {
-                    "Equation" -> f.updateEditTexts()
+                    "fractal" -> {
+                        Log.d("MAIN ACTIVITY", "Fractal tab selected")
+                        f.updatePositionEditTexts()
+                        f.updateMapParamEditTexts()
+                    }
                     else -> {}
                 }
             }
@@ -2715,7 +2691,6 @@ class MainActivity : AppCompatActivity(),
             val anim = ValueAnimator.ofInt(hStart, hEnd)
             anim.addUpdateListener { animation ->
                 val intermediateHeight = animation?.animatedValue as Int
-                Log.d("HEYYY", "intermediateHeight: $intermediateHeight")
                 val c = ConstraintSet()
                 c.clone(overlay)
                 c.constrainHeight(R.id.uiFull, intermediateHeight)
@@ -2732,9 +2707,19 @@ class MainActivity : AppCompatActivity(),
 
 
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        f.updateEditTexts()
+        f.updatePositionEditTexts()
+        f.updateMapParamEditTexts()
 
 
+    }
+
+    fun addMapParams(n: Int) {
+        val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
+        for (i in 1..n) { uiQuick.addView(uiQuickButtons[uiQuick.childCount], 0) }
+    }
+    fun removeMapParams(n: Int) {
+        val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
+        for (i in 1..n) { uiQuick.removeView(uiQuickButtons[uiQuick.childCount - 1]) }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -2745,7 +2730,6 @@ class MainActivity : AppCompatActivity(),
         outState?.putInt(     "orientation",    orientation                       )
         super.onSaveInstanceState(outState)
     }
-
     override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
         super.onSaveInstanceState(outState, outPersistentState)
     }
@@ -2763,23 +2747,20 @@ class MainActivity : AppCompatActivity(),
             f.equationConfig.params[key] = value
             when (key) {
                 "map" -> {
-                    f.resetPosition()
+                    f.reset()
                     f.renderShaderChanged = true
                     val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
-                    val prevChildCount = uiQuick.childCount
-                    val diff = f.equationConfig.map().params.size - prevChildCount + 2
-                    when {
-                        diff < 0 -> {  // remove unnecessary param buttons
-                            uiQuick.removeViews(0, abs(diff))
-                            uiQuickButtons[0].performClick()
-                        }
-                        diff > 0 -> {  // add missing param buttons
-                            for (i in 0 until diff) {
-                                uiQuick.addView(uiQuickButtons[prevChildCount + i], 0)
-                            }
-                        }
-                    }
-
+                    removeMapParams(uiQuick.childCount - 2)
+                    addMapParams(f.equationConfig.map().initMapParams.size)
+                }
+                "p1", "p2", "p3", "p4" -> {
+                    f.updateMapParamEditText(key[1].toString().toInt())
+                }
+                "juliaMode" -> {
+                    if (value as Boolean) { addMapParams(1) }
+                    else { removeMapParams(1) }
+                    f.updateMapParamEditTexts()
+                    f.renderShaderChanged = true
                 }
                 "coords" -> {
                     fractalView.requestFocus()
