@@ -19,12 +19,12 @@
     <style name="CardDark" parent="CardView.Dark">
         <item name="cardBackgroundColor">@color/colorPrimaryDark</item>
         <item name="cardCornerRadius">5dp</item>
-        <item name="cardUseCompatPadding">true</item>
+        <item name="android:layout_marginHorizontal">5dp</item>
         <item name="contentPaddingLeft">10dp</item>
         <item name="contentPaddingRight">10dp</item>
         <item name="contentPaddingTop">5dp</item>
         <item name="contentPaddingBottom">5dp</item>
-        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:layout_marginBottom">15dp</item>
     </style>
 
     <style name="TextDark" parent="android:style/Widget.Material.TextView">

@@ -21,6 +21,8 @@ class SettingsFragment : Fragment() {
     lateinit var config : SettingsConfig
     lateinit var resolutionTabs : TabLayout
     lateinit var precisionTabs : TabLayout
+    lateinit var continuousRenderSwitch : Switch
+    lateinit var displayParamsSwitch : Switch
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
@@ -77,7 +79,7 @@ class SettingsFragment : Fragment() {
         )?.select()
 
 
-        val continuousRenderSwitch = v.findViewById<Switch>(R.id.continuousRenderSwitch)
+        continuousRenderSwitch = v.findViewById<Switch>(R.id.continuousRenderSwitch)
         continuousRenderSwitch.setOnCheckedChangeListener {
             buttonView, isChecked -> callback.onSettingsParamsChanged("continuousRender", isChecked)
         }
@@ -85,7 +87,7 @@ class SettingsFragment : Fragment() {
                 savedInstanceState?.getBoolean("continuousRender")
                 ?: config.continuousRender()
 
-        val displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
+        displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
         displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
             callback.onSettingsParamsChanged("displayParams", isChecked)
         }
