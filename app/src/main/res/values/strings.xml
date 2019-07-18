@@ -445,7 +445,7 @@
 
     <!-- MANDELBROT -->
     <string name="mandelbrot_loop_sf">
-        Z = cSqrSF(Z) + C;
+        Z = cSqrSF(Z1) + C;
     </string>
     <string name="mandelbrot_loop_df">
         X = addDF(addDF(sqrDF(X1), -sqrDF(Y1)), A);
@@ -484,16 +484,16 @@
 
     <!-- SINE -->
     <string name="sine1_loop_sf">
-        Z = sine(cDivSF(cPow3(Z, P1.x), C));
+        Z = sine(cDivSF(cPow3(Z1, P1.x), C));
     </string>
     <string name="sine2_loop_sf">
-        Z = sine(cDivSF(cSqrSF(Z) + P1, C));
+        Z = sine(cDivSF(cSqrSF(Z1) + P1, C));
     </string>
     <string name="sine3_loop_sf">
-        Z = sine(cDivSF(cSqrSF(Z), C) + P1);
+        Z = sine(cDivSF(cSqrSF(Z1), C) + P1);
     </string>
     <string name="sine4_loop_sf">
-        Z = cPow4(Z, -Z) + P1;
+        Z = cPow4(Z1, -Z1) + P1;
     </string>
 
 
