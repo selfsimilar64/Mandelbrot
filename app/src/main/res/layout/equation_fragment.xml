@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0a0a0a"
-    android:orientation="vertical"
-    android:paddingTop="10dp">
+    android:orientation="vertical">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -14,7 +13,18 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:orientation="vertical"
+            android:paddingTop="15dp">
+
+            <TextView
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="algorithm"
+                android:textAllCaps="true"
+                android:textSize="15sp"
+                android:textStyle="normal" />
 
             <android.support.v7.widget.CardView
                 style="@style/CardDark"
@@ -22,43 +32,201 @@
                 android:layout_height="wrap_content">
 
                 <LinearLayout
+                    android:id="@+id/algContainer"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
 
-                    <TextView
-                        style="@style/TextDark"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Fractal"
-                        android:textAllCaps="true"
-                        android:textSize="18sp" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="horizontal">
+                        android:layout_marginVertical="3dp">
 
                         <TextView
                             style="@style/TextDark"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="Function" />
 
                         <Spinner
                             android:id="@+id/complexMapSpinner"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="35dp"
-                            android:layout_gravity="end"
-                            android:layout_marginStart="10dp"
-                            android:gravity="center_vertical|end"
-                            android:prompt="@string/equation"
+                            android:background="@drawable/display_params_bg_visible"
+                            android:backgroundTint="#3fff"
+                            android:minWidth="150dp"
                             android:spinnerMode="dialog" />
+
                     </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/p1EditRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginVertical="1dp"
+                        android:paddingStart="20dp">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="P1" />
+
+                        <EditText
+                            android:id="@+id/p1xEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="6dp"
+                            android:text="+ i" />
+
+                        <EditText
+                            android:id="@+id/p1yEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/p2EditRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginVertical="1dp"
+                        android:paddingStart="20dp">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="P2" />
+
+                        <EditText
+                            android:id="@+id/p2xEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="6dp"
+                            android:text="+ i" />
+
+                        <EditText
+                            android:id="@+id/p2yEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/p3EditRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginVertical="1dp"
+                        android:paddingStart="20dp">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="P3" />
+
+                        <EditText
+                            android:id="@+id/p3xEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="6dp"
+                            android:text="+ i" />
+
+                        <EditText
+                            android:id="@+id/p3yEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/p4EditRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginVertical="1dp"
+                        android:paddingStart="20dp">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="P4" />
+
+                        <EditText
+                            android:id="@+id/p4xEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="6dp"
+                            android:text="+ i" />
+
+                        <EditText
+                            android:id="@+id/p4yEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal" />
+                    </LinearLayout>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginVertical="3dp">
+
+                        <Switch
+                            android:id="@+id/juliaModeSwitch"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginVertical="5dp"
+                            android:layout_weight="1"
+                            android:text="Julia Mode" />
+                    </TableRow>
 
                 </LinearLayout>
 
             </android.support.v7.widget.CardView>
+
+            <TextView
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="Position"
+                android:textAllCaps="true"
+                android:textSize="15sp"
+                android:textStyle="normal" />
 
             <android.support.v7.widget.CardView
                 style="@style/CardDark"
@@ -69,15 +237,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
-
-                    <TextView
-                        style="@style/TextDark"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="5dp"
-                        android:text="Position"
-                        android:textAllCaps="true"
-                        android:textSize="16sp" />
 
                     <LinearLayout
                         android:id="@+id/positionParams"

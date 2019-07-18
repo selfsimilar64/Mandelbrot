@@ -17,6 +17,7 @@ class EquationFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
     private lateinit var complexMapSpinner : Spinner
+    private lateinit var juliaModeSwitch : Switch
 
     lateinit var config : EquationConfig
 
@@ -24,6 +25,14 @@ class EquationFragment : Fragment() {
 
         Log.d("EQUATION FRAGMENT", "creating...")
         val v = inflater.inflate(R.layout.equation_fragment, container, false)
+
+        val algContainer = v.findViewById<LinearLayout>(R.id.algContainer)
+        val paramEditRows = listOf<LinearLayout>(
+                v.findViewById(R.id.p1EditRow),
+                v.findViewById(R.id.p2EditRow),
+                v.findViewById(R.id.p3EditRow),
+                v.findViewById(R.id.p4EditRow)
+        )
 
         complexMapSpinner = v.findViewById(R.id.complexMapSpinner)
         complexMapSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -34,6 +43,17 @@ class EquationFragment : Fragment() {
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
+                val nextMap = ComplexMap.all[item]
+                if (nextMap != null && nextMap(resources) != config.map()) {
+                    for (i in 0 until 4) {
+                        Log.d("FRACTAL FRAGMENT", "MAP -- removing row ${i + 1}")
+                        algContainer.removeView(paramEditRows[i])
+                    }
+                    for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).initMapParams.size) {
+                        Log.d("FRACTAL FRAGMENT", "MAP -- adding row ${i + 1}")
+                        algContainer.addView(paramEditRows[i], algContainer.childCount)
+                    }
+                }
                 callback.onEquationParamsChanged(
                         "map",
                         ComplexMap.all[item]?.invoke(resources) ?: config.map()
@@ -42,7 +62,7 @@ class EquationFragment : Fragment() {
 
         }
 
-        val complexMapAdapter = ArrayAdapter<String>(
+        val complexMapAdapter = ArrayAdapter(
                 v.context,
                 android.R.layout.simple_spinner_item,
                 List(ComplexMap.all.size) { i: Int -> ComplexMap.all.keys.elementAt(i) }
@@ -53,12 +73,23 @@ class EquationFragment : Fragment() {
                 savedInstanceState?.getString("map") ?: config.map().name)
         )
 
+
+
         val xCoordEdit = v.findViewById<EditText>(R.id.xCoordEdit)
         val yCoordEdit = v.findViewById<EditText>(R.id.yCoordEdit)
         val scaleSignificandEdit = v.findViewById<EditText>(R.id.scaleSignificandEdit)
         val scaleExponentEdit = v.findViewById<EditText>(R.id.scaleExponentEdit)
         val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
         val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
+
+        val p1xEdit = v.findViewById<EditText>(R.id.p1xEdit)
+        val p1yEdit = v.findViewById<EditText>(R.id.p1yEdit)
+        val p2xEdit = v.findViewById<EditText>(R.id.p2xEdit)
+        val p2yEdit = v.findViewById<EditText>(R.id.p2yEdit)
+        val p3xEdit = v.findViewById<EditText>(R.id.p3xEdit)
+        val p3yEdit = v.findViewById<EditText>(R.id.p3yEdit)
+        val p4xEdit = v.findViewById<EditText>(R.id.p4xEdit)
+        val p4yEdit = v.findViewById<EditText>(R.id.p4yEdit)
 
         val editListenerNext = {
             editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)->Any -> TextView.OnEditorActionListener {
@@ -108,43 +139,90 @@ class EquationFragment : Fragment() {
             )
         }
         )
-        yCoordEdit.setOnEditorActionListener(editListenerNext(
-                yCoordEdit,
-                scaleSignificandEdit,
-                "coords") { w: TextView ->
+        yCoordEdit.setOnEditorActionListener(editListenerDone(yCoordEdit, "coords") { w: TextView ->
             doubleArrayOf(
                     config.coords()[0],
                     w.text.toString().toDouble()
             )
-        }
-        )
-        scaleSignificandEdit.setOnEditorActionListener(editListenerNext(
-                scaleSignificandEdit,
-                scaleExponentEdit,
-                "scale") { w: TextView ->
+        })
+
+        scaleSignificandEdit.setOnEditorActionListener(
+                editListenerNext(scaleSignificandEdit, scaleExponentEdit, "scale") { w: TextView ->
             val aspectRatio = config.scale()[1]/config.scale()[0]
             val s = "${w.text}e${scaleExponentEdit.text}".toDouble()
             doubleArrayOf(s, s*aspectRatio)
-        }
-        )
-        scaleExponentEdit.setOnEditorActionListener(editListenerNext(
-                scaleExponentEdit,
-                bailoutSignificandEdit,
-                "scale") { w: TextView ->
+        })
+        scaleExponentEdit.setOnEditorActionListener(
+                editListenerDone(scaleExponentEdit, "scale") { w: TextView ->
             val aspectRatio = config.scale()[1]/config.scale()[0]
             val s = "${scaleSignificandEdit.text}e${w.text}".toDouble()
             doubleArrayOf(s, s*aspectRatio)
+        })
+
+        bailoutSignificandEdit.setOnEditorActionListener(
+                editListenerNext(bailoutSignificandEdit, bailoutExponentEdit, "bailoutRadius") {
+            w: TextView -> "${w.text}e${bailoutExponentEdit.text}".toFloat()
+        })
+        bailoutExponentEdit.setOnEditorActionListener(
+                editListenerDone(bailoutExponentEdit, "bailoutRadius") {
+            w: TextView -> "${bailoutSignificandEdit.text}e${w.text}".toFloat()
+        })
+
+        p1xEdit.setOnEditorActionListener(editListenerNext(p1xEdit, p1yEdit, "p1") {
+            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p1yEdit.text}".toDouble())
+        })
+        p1yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p1") {
+            w: TextView -> doubleArrayOf("${p1xEdit.text}".toDouble(), "${w.text}".toDouble())
+        })
+
+        p2xEdit.setOnEditorActionListener(editListenerNext(p2xEdit, p2yEdit, "p2") {
+            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p2yEdit.text}".toDouble())
+        })
+        p2yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p2") {
+            w: TextView -> doubleArrayOf("${p2xEdit.text}".toDouble(), "${w.text}".toDouble())
+        })
+
+        p3xEdit.setOnEditorActionListener(editListenerNext(p3xEdit, p3yEdit, "p3") {
+            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p3yEdit.text}".toDouble())
+        })
+        p3yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p3") {
+            w: TextView -> doubleArrayOf("${p3xEdit.text}".toDouble(), "${w.text}".toDouble())
+        })
+
+        p4xEdit.setOnEditorActionListener(editListenerNext(p4xEdit, p4yEdit, "p4") {
+            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p4yEdit.text}".toDouble())
+        })
+        p4yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p4") {
+            w: TextView -> doubleArrayOf("${p4xEdit.text}".toDouble(), "${w.text}".toDouble())
+        })
+
+
+
+        for (i in 0 until 4) {
+            Log.d("FRACTAL FRAGMENT", "removing row ${i + 1}")
+            algContainer.removeView(paramEditRows[i])
         }
-        )
-        bailoutSignificandEdit.setOnEditorActionListener(editListenerNext(
-                bailoutSignificandEdit,
-                bailoutExponentEdit,
-                "bailoutRadius") { w: TextView -> "${w.text}e${bailoutExponentEdit.text}".toFloat() }
-        )
-        bailoutExponentEdit.setOnEditorActionListener(editListenerDone(
-                bailoutExponentEdit,
-                "bailoutRadius") { w: TextView -> "${bailoutSignificandEdit.text}e${w.text}".toFloat() }
-        )
+        for (i in 0 until config.map().initMapParams.size) {
+            Log.d("FRACTAL FRAGMENT", "adding row ${i + 1}")
+            algContainer.addView(paramEditRows[i], algContainer.childCount)
+        }
+
+
+
+        juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
+        juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            callback.onEquationParamsChanged("juliaMode", isChecked)
+            Log.d("FRACTAL FRAGMENT", "juliaModeSwitch checked: $isChecked")
+            val juliaParamIndex = config.map().initMapParams.size
+            if (isChecked) {
+                Log.d("FRACTAL FRAGMENT", "adding !!!!! $juliaParamIndex")
+                algContainer.addView(paramEditRows[juliaParamIndex], algContainer.childCount)
+            }
+            else { algContainer.removeView(paramEditRows[juliaParamIndex]) }
+        }
+        if (juliaModeSwitch.isChecked != config.juliaMode()) {
+            juliaModeSwitch.isChecked = savedInstanceState?.getBoolean("juliaMode") ?: false
+        }
 
 
 
@@ -187,6 +265,7 @@ class EquationFragment : Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("map", complexMapSpinner.selectedItem.toString())
+        outState.putBoolean("juliaMode", juliaModeSwitch.isChecked)
         super.onSaveInstanceState(outState)
     }
 
