@@ -234,21 +234,21 @@
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:text="@string/equation" />
+                    android:text="fractal" />
 
                 <android.support.design.widget.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:text="Color" />
+                    android:text="color" />
 
                 <android.support.design.widget.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:text="Settings" />
+                    android:text="settings" />
             </android.support.design.widget.TabLayout>
 
             <android.support.v4.view.ViewPager
