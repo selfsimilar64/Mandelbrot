@@ -405,6 +405,79 @@
             else { return a; }
         }
 
+        vec4 cAddDF(vec2 X, vec2 Y, vec2 A, vec2 B) {
+            return vec4(addDF(X, A), addDF(Y, B));
+        }
+
+        vec4 cMultDF(vec2 X, vec2 Y, vec2 A, vec2 B) {
+            vec2 U = addDF(multDF(X, A), -multDF(Y, B));
+            vec2 V = addDF(multDF(X, B), multDF(Y, A));
+            return vec4(U, V);
+        }
+
+        vec4 cSqrDF(vec2 X, vec2 Y) {
+            vec2 U = addDF(sqrDF(X), -sqrDF(Y));
+            vec2 V = multDF(vec2(2.0, 0.0), multDF(X, Y));
+            return vec4(U, V);
+        }
+
+        vec2 expDF(vec2 a, int n) {
+            vec2 sum = addDF(a, vec2(1.0, 0.0));
+            vec2 prod = a;
+            float coef = 1.0;
+            for (int i = 2; i &lt; n; i++) {
+                prod = multDF(prod, a);
+                coef = coef / float(i);
+                sum = addDF(sum, multDF(prod, vec2(coef, 0.0)));
+            }
+            return sum;
+        }
+
+        vec2 sine2DF(vec2 a, int n) {
+            vec2 sum = a;
+            vec2 prod = a;
+            float coef1 = 1.0;
+            float coef2 = 1.0;
+            for (int i = 1; i &lt; 2*n - 1; i = i+2) {
+                prod = multDF(sqrDF(a), prod);
+                coef1 = coef1 * -1.0;
+                coef2 = coef2 / float(i+1) / float(i+2);
+                sum = addDF(sum, multDF(prod, vec2(coef1*coef2, 0.0)));
+            }
+            return sum;
+        }
+
+        vec2 sineDF(vec2 a) {
+            vec2 p = multDF(vec2(sin(a.x), 0.0), vec2(cos(a.y), 0.0));
+            vec2 q = multDF(vec2(cos(a.x), 0.0), vec2(sin(a.y), 0.0));
+            return addDF(p, q);
+        }
+
+        vec2 cosineDF(vec2 a) {
+            return sqrtDF(addDF(vec2(1.0, 0.0), -sqrDF(sineDF(a))));
+        }
+
+
+
+        vec4 cSineDF(vec2 X, vec2 Y, int n) {
+            vec4 zSqr = cSqrDF(X, Y);
+            vec2 U = X;
+            vec2 V = Y;
+            vec4 prod = vec4(X, Y);
+            float coef1 = 1.0;
+            float coef2 = 1.0;
+            float coef3;
+            for (int i = 1; i &lt; 2*n - 1; i = i+2) {
+                prod = cMultDF(prod.xy, prod.zw, zSqr.xy, zSqr.zw);
+                coef1 = coef1 * -1.0;
+                coef2 = coef2 / float(i+1) / float(i+2);
+                coef3 = coef1 * coef2;
+                U = addDF(U, multDF(vec2(coef3, 0.0), prod.xy));
+                V = addDF(V, multDF(vec2(coef3, 0.0), prod.zw));
+            }
+            return vec4(U, V);
+        }
+
     </string>
 
     <string name="general_init_sf">
@@ -448,13 +521,14 @@
         Z = cSqrSF(Z1) + C;
     </string>
     <string name="mandelbrot_loop_df">
-        X = addDF(addDF(sqrDF(X1), -sqrDF(Y1)), A);
-        Y = addDF(multDF(vec2(2.0, 0.0), multDF(X1, Y1)), B);
+        vec4 Q = cSqrDF(X1, Y1);
+        X = addDF(Q.xy, A);
+        Y = addDF(Q.zw, B);
     </string>
 
     <!-- MANDELBROT CPOW -->
     <string name="mandelbrotcpow_loop_sf">
-        Z = cPow4(Z, P1) + C;
+        Z = cPow3(Z, P1.x) + C;
     </string>
     <string name="mandelbrotcpow_loop_df">
 
@@ -492,8 +566,14 @@
     <string name="sine3_loop_sf">
         Z = sine(cDivSF(cSqrSF(Z1), C) + P1);
     </string>
+
     <string name="sine4_loop_sf">
-        Z = cPow4(Z1, -Z1) + P1;
+        Z = sine(Z1) + C;
+    </string>
+    <string name="sine4_loop_df">
+        vec4 Q = cSineDF(X1, Y1, 10);
+        X = addDF(Q.xy, A);
+        Y = addDF(Q.zw, B);
     </string>
 
 
