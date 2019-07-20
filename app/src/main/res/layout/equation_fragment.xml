@@ -38,6 +38,7 @@
                     android:orientation="vertical">
 
                     <LinearLayout
+                        android:id="@+id/complexMapRow"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_marginVertical="3dp">
@@ -72,7 +73,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="P1" />
+                            android:text="Parameter 1" />
 
                         <EditText
                             android:id="@+id/p1xEdit"
@@ -106,7 +107,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="P2" />
+                            android:text="Parameter 2" />
 
                         <EditText
                             android:id="@+id/p2xEdit"
@@ -141,7 +142,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="P3" />
+                            android:text="Parameter 3" />
 
                         <EditText
                             android:id="@+id/p3xEdit"
@@ -176,7 +177,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="P4" />
+                            android:text="Parameter 4" />
 
                         <EditText
                             android:id="@+id/p4xEdit"
@@ -199,20 +200,39 @@
                             android:inputType="numberDecimal" />
                     </LinearLayout>
 
-                    <TableRow
+                    <LinearLayout
+                        android:id="@+id/textureRow"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginVertical="3dp">
+                        android:layout_marginTop="5dp"
+                        android:orientation="horizontal">
 
-                        <Switch
-                            android:id="@+id/juliaModeSwitch"
+                        <TextView
                             style="@style/TextDark"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginVertical="5dp"
                             android:layout_weight="1"
-                            android:text="Julia Mode" />
-                    </TableRow>
+                            android:text="Texture" />
+
+                        <Spinner
+                            android:id="@+id/textureAlgSpinner"
+                            android:layout_width="wrap_content"
+                            android:layout_height="35dp"
+                            android:background="@drawable/display_params_bg_visible"
+                            android:backgroundTint="#3fff"
+                            android:minWidth="150dp"
+                            android:spinnerMode="dialog" />
+
+                    </LinearLayout>
+
+                    <Switch
+                        android:id="@+id/juliaModeSwitch"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="5dp"
+                        android:layout_weight="1"
+                        android:text="Julia Mode" />
 
                 </LinearLayout>
 

@@ -14,7 +14,6 @@ import android.widget.Spinner
 class ColorFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
-    private lateinit var colorAlgSpinner : Spinner
     private lateinit var colorPaletteSpinner : Spinner
 
     lateinit var config : ColorConfig
@@ -23,35 +22,6 @@ class ColorFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.color_fragment, container, false)
-
-
-        colorAlgSpinner = v.findViewById(R.id.colorAlgSpinner)
-        colorAlgSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-
-            }
-
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val item = parent?.getItemAtPosition(position).toString()
-                callback.onColorParamsChanged(
-                        "algorithm",
-                        ColorAlgorithm.all[item]?.invoke(resources) ?: config.algorithm()
-                )
-            }
-
-        }
-
-        val colorAlgAdapter = ArrayAdapter<String>(
-                v.context,
-                android.R.layout.simple_spinner_item,
-                List(ColorAlgorithm.all.size) { i: Int -> ColorAlgorithm.all.keys.elementAt(i) }
-        )
-        colorAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        colorAlgSpinner.adapter = colorAlgAdapter
-        colorAlgSpinner.setSelection(ColorAlgorithm.all.keys.indexOf(
-                savedInstanceState?.getString("algorithm") ?: config.algorithm().name)
-        )
 
 
         colorPaletteSpinner = v.findViewById(R.id.colorPaletteSpinner)
@@ -71,7 +41,7 @@ class ColorFragment : Fragment() {
 
         }
 
-        val colorPaletteAdapter = ArrayAdapter<String>(
+        val colorPaletteAdapter = ArrayAdapter(
                 v.context,
                 android.R.layout.simple_spinner_item,
                 List(ColorPalette.all.size) { i: Int -> ColorPalette.all.keys.elementAt(i) }
@@ -86,10 +56,6 @@ class ColorFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString(
-                "algorithm",
-                colorAlgSpinner.selectedItem.toString()
-        )
         outState.putString(
                 "palette",
                 colorPaletteSpinner.selectedItem.toString()

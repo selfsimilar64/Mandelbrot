@@ -17,9 +17,10 @@ class EquationFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
     private lateinit var complexMapSpinner : Spinner
+    private lateinit var textureAlgSpinner : Spinner
     private lateinit var juliaModeSwitch : Switch
 
-    lateinit var config : EquationConfig
+    lateinit var config : FractalConfig
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
@@ -27,6 +28,8 @@ class EquationFragment : Fragment() {
         val v = inflater.inflate(R.layout.equation_fragment, container, false)
 
         val algContainer = v.findViewById<LinearLayout>(R.id.algContainer)
+        val complexMapRow = v.findViewById<LinearLayout>(R.id.complexMapRow)
+        val textureRow = v.findViewById<LinearLayout>(R.id.textureRow)
         val paramEditRows = listOf<LinearLayout>(
                 v.findViewById(R.id.p1EditRow),
                 v.findViewById(R.id.p2EditRow),
@@ -40,18 +43,18 @@ class EquationFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {
 
             }
-
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
                 val nextMap = ComplexMap.all[item]
                 if (nextMap != null && nextMap(resources) != config.map()) {
+                    val mapLayoutIndex = algContainer.indexOfChild(complexMapRow)
                     for (i in 0 until 4) {
                         Log.d("FRACTAL FRAGMENT", "MAP -- removing row ${i + 1}")
                         algContainer.removeView(paramEditRows[i])
                     }
                     for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).initMapParams.size) {
                         Log.d("FRACTAL FRAGMENT", "MAP -- adding row ${i + 1}")
-                        algContainer.addView(paramEditRows[i], algContainer.childCount)
+                        algContainer.addView(paramEditRows[i], mapLayoutIndex + i + 1)
                     }
                 }
                 callback.onEquationParamsChanged(
@@ -82,6 +85,8 @@ class EquationFragment : Fragment() {
         val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
         val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
 
+
+        // PARAMETER EDIT FIELDS
         val p1xEdit = v.findViewById<EditText>(R.id.p1xEdit)
         val p1yEdit = v.findViewById<EditText>(R.id.p1yEdit)
         val p2xEdit = v.findViewById<EditText>(R.id.p2xEdit)
@@ -129,16 +134,12 @@ class EquationFragment : Fragment() {
             }
         }
 
-        xCoordEdit.setOnEditorActionListener(editListenerNext(
-                xCoordEdit,
-                yCoordEdit,
-                "coords") { w: TextView ->
+        xCoordEdit.setOnEditorActionListener(editListenerNext(xCoordEdit, yCoordEdit, "coords") { w: TextView ->
             doubleArrayOf(
                     w.text.toString().toDouble(),
                     config.coords()[1]
             )
-        }
-        )
+        })
         yCoordEdit.setOnEditorActionListener(editListenerDone(yCoordEdit, "coords") { w: TextView ->
             doubleArrayOf(
                     config.coords()[0],
@@ -208,22 +209,58 @@ class EquationFragment : Fragment() {
         }
 
 
-
+        // JULIA MODE SWITCH
         juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
-        juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-            callback.onEquationParamsChanged("juliaMode", isChecked)
-            Log.d("FRACTAL FRAGMENT", "juliaModeSwitch checked: $isChecked")
-            val juliaParamIndex = config.map().initMapParams.size
-            if (isChecked) {
-                Log.d("FRACTAL FRAGMENT", "adding !!!!! $juliaParamIndex")
-                algContainer.addView(paramEditRows[juliaParamIndex], algContainer.childCount)
-            }
-            else { algContainer.removeView(paramEditRows[juliaParamIndex]) }
+        if (config.map().initJuliaMode) {
+            algContainer.removeView(juliaModeSwitch)
         }
-        if (juliaModeSwitch.isChecked != config.juliaMode()) {
-            juliaModeSwitch.isChecked = savedInstanceState?.getBoolean("juliaMode") ?: false
+        else {
+            juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+                callback.onEquationParamsChanged("juliaMode", isChecked)
+                Log.d("FRACTAL FRAGMENT", "juliaModeSwitch checked: $isChecked")
+                val juliaParamIndex = config.map().initMapParams.size
+                val juliaSwitchLayoutIndex = algContainer.indexOfChild(juliaModeSwitch)
+                if (isChecked) {
+                    Log.d("FRACTAL FRAGMENT", "adding !!!!! $juliaParamIndex")
+                    algContainer.addView(paramEditRows[juliaParamIndex], juliaSwitchLayoutIndex + 1)
+                } else {
+                    algContainer.removeView(paramEditRows[juliaParamIndex])
+                }
+            }
+            if (juliaModeSwitch.isChecked != config.juliaMode()) {
+                juliaModeSwitch.isChecked = savedInstanceState?.getBoolean("juliaMode") ?: false
+            }
         }
 
+
+        // TEXTURE SELECTION
+        textureAlgSpinner = v.findViewById(R.id.textureAlgSpinner)
+        textureAlgSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val item = parent?.getItemAtPosition(position).toString()
+                textureAlgSpinner.requestLayout()
+                callback.onEquationParamsChanged(
+                        "texture",
+                        TextureAlgorithm.all[item]?.invoke(resources) ?: config.texture()
+                )
+            }
+
+        }
+
+        val textureAlgAdapter = ArrayAdapter(
+                v.context,
+                android.R.layout.simple_spinner_item,
+                List(TextureAlgorithm.all.size) { i: Int -> TextureAlgorithm.all.keys.elementAt(i) }
+        )
+        textureAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        textureAlgSpinner.adapter = textureAlgAdapter
+        textureAlgSpinner.setSelection(TextureAlgorithm.all.keys.indexOf(
+                savedInstanceState?.getString("texture") ?: config.texture().name)
+        )
 
 
         val maxIterBar = v.findViewById<SeekBar>(R.id.maxIterBar)
@@ -265,6 +302,7 @@ class EquationFragment : Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("map", complexMapSpinner.selectedItem.toString())
+        outState.putString("texture", textureAlgSpinner.selectedItem.toString())
         outState.putBoolean("juliaMode", juliaModeSwitch.isChecked)
         super.onSaveInstanceState(outState)
     }
