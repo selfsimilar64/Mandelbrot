@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.Switch
@@ -79,7 +80,7 @@ class SettingsFragment : Fragment() {
         )?.select()
 
 
-        continuousRenderSwitch = v.findViewById<Switch>(R.id.continuousRenderSwitch)
+        continuousRenderSwitch = v.findViewById(R.id.continuousRenderSwitch)
         continuousRenderSwitch.setOnCheckedChangeListener {
             buttonView, isChecked -> callback.onSettingsParamsChanged("continuousRender", isChecked)
         }
@@ -87,7 +88,14 @@ class SettingsFragment : Fragment() {
                 savedInstanceState?.getBoolean("continuousRender")
                 ?: config.continuousRender()
 
-        displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
+
+        val saveToFileButton = v.findViewById<Button>(R.id.saveToFileButton)
+        saveToFileButton.setOnClickListener {
+            callback.onSettingsParamsChanged("saveToFile", true)
+        }
+
+
+        displayParamsSwitch = v.findViewById(R.id.displayParamsSwitch)
         displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
             callback.onSettingsParamsChanged("displayParams", isChecked)
         }
