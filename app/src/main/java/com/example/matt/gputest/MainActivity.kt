@@ -7,7 +7,7 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.content.res.Configuration
 import android.content.res.Resources
-import android.database.DataSetObserver
+import android.graphics.Bitmap
 import android.graphics.drawable.TransitionDrawable
 import android.os.*
 import javax.microedition.khronos.egl.EGLConfig
@@ -19,13 +19,15 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.design.widget.TabLayout
 import android.support.v4.view.ViewPager
-import android.util.AttributeSet
 import android.opengl.GLES32 as GL
 import android.util.Log
 import android.view.*
 import android.view.animation.AlphaAnimation
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.nio.ByteOrder
 import java.nio.ByteBuffer.allocateDirect
 import java.util.*
@@ -114,7 +116,6 @@ data class DualDouble (
     }
 
 }
-
 class Texture (
         val res         : IntArray,
         interpolation   : Int,
@@ -168,7 +169,6 @@ class Texture (
     fun delete() { GL.glDeleteTextures(1, intArrayOf(id), 0) }
 
 }
-
 
 
 class ColorPalette (
@@ -312,7 +312,6 @@ class ColorPalette (
     override fun hashCode(): Int { return name.hashCode() }
 
 }
-
 class ComplexMap (
         val name            : String,
         val z0              : DoubleArray,
@@ -332,7 +331,7 @@ class ComplexMap (
     
     companion object {
         
-        val empty       = { ComplexMap(
+        val empty           = { ComplexMap(
                 "Empty",
                 doubleArrayOf(0.0, 0.0),
                 false,
@@ -348,7 +347,7 @@ class ComplexMap (
                 "",
                 ""
         )}
-        val mandelbrot  = { res: Resources -> ComplexMap(
+        val mandelbrot      = { res: Resources -> ComplexMap(
                 "Mandelbrot",
                 doubleArrayOf(0.0, 0.0),
                 false,
@@ -380,7 +379,7 @@ class ComplexMap (
                 "",
                 ""
         )}
-        val dualpow     = { res: Resources -> ComplexMap(
+        val dualpow         = { res: Resources -> ComplexMap(
                 "Dual Power",
                 doubleArrayOf(1.0, 0.0),
                 false,
@@ -396,7 +395,7 @@ class ComplexMap (
                 "",
                 ""
         )}
-        val sine1       = { res: Resources -> ComplexMap(
+        val sine1           = { res: Resources -> ComplexMap(
                 "Sine 1",
                 doubleArrayOf(1.0, 0.0),
                 false,
@@ -412,7 +411,7 @@ class ComplexMap (
                 "",
                 ""
         ) }
-        val sine2       = { res: Resources -> ComplexMap(
+        val sine2           = { res: Resources -> ComplexMap(
                 "Sine 2",
                 doubleArrayOf(1.0, 0.0),
                 false,
@@ -428,23 +427,23 @@ class ComplexMap (
                 "",
                 ""
         )}
-        val sine4       = { res: Resources -> ComplexMap(
-                "Sine 4",
+        val horseshoeCrab   = { res: Resources -> ComplexMap(
+                "Horseshoe Crab",
                 doubleArrayOf(1.0, 0.0),
                 false,
                 doubleArrayOf(0.0, 0.0),
                 3.5,
-                listOf(doubleArrayOf(1.0, 1.0)),
+                listOf(doubleArrayOf(sqrt(2.0), 0.0)) ,
                 res.getString(R.string.escape_sf),
                 "",
-                res.getString(R.string.sine4_loop_sf),
+                res.getString(R.string.horseshoecrab_loop_sf),
                 "",
                 res.getString(R.string.escape_df),
                 "",
-                res.getString(R.string.sine4_loop_df),
+                res.getString(R.string.horseshoecrab_loop_df),
                 ""
         )}
-        val newton2     = { res: Resources -> ComplexMap(
+        val newton2         = { res: Resources -> ComplexMap(
                 "Newton 2",
                 doubleArrayOf(0.0, 0.0),
                 true,
@@ -464,14 +463,48 @@ class ComplexMap (
                 "",
                 ""
         ) }
+        val persianRug      = { res: Resources -> ComplexMap(
+                "Persian Rug",
+                doubleArrayOf(1.0, 0.0),
+                false,
+                doubleArrayOf(0.0, 0.0),
+                3.5,
+                listOf(doubleArrayOf(0.642, 0.0)),
+                res.getString(R.string.escape_sf),
+                "",
+                res.getString(R.string.persianrug_loop_sf),
+                "",
+                res.getString(R.string.escape_df),
+                "",
+                res.getString(R.string.persianrug_loop_df),
+                ""
+        )}
+        val test            = { res: Resources -> ComplexMap(
+                "Test",
+                doubleArrayOf(1.0, 0.0),
+                false,
+                doubleArrayOf(0.0, 0.0),
+                3.5,
+                listOf(doubleArrayOf(0.642, 0.0)),
+                res.getString(R.string.escape_sf),
+                "",
+                res.getString(R.string.test_loop_sf),
+                "",
+                res.getString(R.string.escape_df),
+                "",
+                "",
+                ""
+        )}
         val all         = mapOf(
-            "Mandelbrot"  to  mandelbrot,
-            "Mandelbrot Cpow"  to  mandelbrotCpow,
-            "Dual Power"  to  dualpow,
-            "Sine 1"      to  sine1,
-            "Sine 2"      to  sine2,
-            "Sine 4"      to  sine4,
-            "Newton 2"    to  newton2
+            "Mandelbrot"        to  mandelbrot,
+            "Mandelbrot Cpow"   to  mandelbrotCpow,
+            "Persian Rug"       to  persianRug,
+            "Dual Power"        to  dualpow,
+            "Sine 1"            to  sine1,
+            "Sine 2"            to  sine2,
+            "Horseshoe Crab"    to  horseshoeCrab,
+            "Newton 2"          to  newton2,
+            "Test"              to  test
         )
         
     }
@@ -485,7 +518,6 @@ class ComplexMap (
     }
 
 }
-
 class TextureAlgorithm (
         val name     : String,
         val initSF   : String?,
@@ -610,14 +642,9 @@ class TextureAlgorithm (
 }
 
 
-
 enum class Precision { SINGLE, DUAL, QUAD, AUTO }
-
 enum class Reaction { TRANSFORM, COLOR, P1, P2, P3, P4 }
-
-enum class Resolution { LOW, MED, HIGH, ULTRA }
-
-
+enum class Resolution { LOW, MED, HIGH }
 
 
 class FractalConfig (val params : MutableMap<String, Any>) {
@@ -636,14 +663,12 @@ class FractalConfig (val params : MutableMap<String, Any>) {
     val bailoutRadius       = { params["bailoutRadius"]    as Float             }
 
 }
-
 class ColorConfig (val params : MutableMap<String, Any>) {
 
     val palette            = { params["palette"]    as  ColorPalette   }
     val frequency          = { params["frequency"]  as  Float          }
     val phase              = { params["phase"]      as  Float          }
 }
-
 class SettingsConfig (val params: MutableMap<String, Any>) {
 
     val resolution         = { params["resolution"]        as Resolution }
@@ -654,8 +679,6 @@ class SettingsConfig (val params: MutableMap<String, Any>) {
 }
 
 
-
-
 fun MotionEvent.focalLength() : Float {
     val f = focus()
     val pos = floatArrayOf(x, y)
@@ -663,28 +686,22 @@ fun MotionEvent.focalLength() : Float {
     return sqrt(dist[0].toDouble().pow(2.0) +
             dist[1].toDouble().pow(2.0)).toFloat()
 }
-
 fun MotionEvent.focus() : FloatArray {
     return if (pointerCount == 1) floatArrayOf(x, y)
     else { floatArrayOf((getX(0) + getX(1))/2.0f, (getY(0) + getY(1))/2.0f) }
 }
-
 fun FloatArray.mult(s: Float) : FloatArray {
     return FloatArray(this.size) {i: Int -> s*this[i]}
 }
-
 fun FloatArray.invert() : FloatArray {
     return FloatArray(this.size) {i: Int -> 1.0f - this[i]}
 }
-
 fun DoubleArray.mult(s: Double) : DoubleArray {
     return DoubleArray(this.size) {i: Int -> s*this[i]}
 }
-
 fun DoubleArray.negative() : DoubleArray {
     return doubleArrayOf(-this[0], -this[1])
 }
-
 fun splitSD(a: Double) : FloatArray {
 
     val b = FloatArray(2)
@@ -693,7 +710,6 @@ fun splitSD(a: Double) : FloatArray {
     return b
 
 }
-
 fun splitDD(a: DualDouble) : FloatArray {
 
     val b = FloatArray(4)
@@ -753,7 +769,7 @@ class Fractal(
             Resolution.LOW -> intArrayOf(screenRes[0]/8, screenRes[1]/8)
             Resolution.MED -> intArrayOf(screenRes[0]/3, screenRes[1]/3)
             Resolution.HIGH -> screenRes
-            Resolution.ULTRA -> intArrayOf((7*screenRes[0])/4, (7*screenRes[1])/4)
+            // Resolution.ULTRA -> intArrayOf((7*screenRes[0])/4, (7*screenRes[1])/4)
         }
     }
 
@@ -1013,7 +1029,7 @@ class Fractal(
             if (fractalConfig.paramSensitivity() == -1.0) fractalConfig.scale()[0]
             else fractalConfig.paramSensitivity()
         (fractalConfig.params["p$i"] as DoubleArray)[0] += sensitivity*dPos[0]/screenRes[0]
-        (fractalConfig.params["p$i"] as DoubleArray)[1] += sensitivity*dPos[1]/screenRes[1]
+        (fractalConfig.params["p$i"] as DoubleArray)[1] -= sensitivity*dPos[1]/screenRes[1]
 
         // Log.d("FRACTAL", "setting map param ${p + 1} to (${fractalConfig.map().params[p - 1][0]}, ${fractalConfig.map().params[p - 1][1]})")
 
@@ -1031,16 +1047,29 @@ class Fractal(
         // SINE1 :: -1.0
         //      JULIA :: (0.53298706, 0.00747937)
 
-        // JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ !!!!!
+        // MANDELBROT
+        //      JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ !!!!!
 
         // MANDELBROT CPOW :: (1.31423213, 2.86942864)
         //      JULIA :: (-0.84765975, -0.02321229)
+
+        // SINE4 :: (1.41421356, 0.0)
+        //      JULIA :: (-2.16074089, 0.0)
+
+        // HORSESHOE CRAB :: (-0.02955925, 0.49291033)
+        //      JULIA :: (-0.75224080, -0.93949126)
+
+        // HORSESHOE CRAB :: (-0.02926709, 0.48591950)
+        //      JULIA :: (-0.74308518, -0.94826022)
+
+        // PERSIAN RUG :: (2.26988707, 0.0)
+        //      JULIA :: (-0.04956468, -0.00017392)
 
         updateDisplayParams(Reaction.valueOf("P$i"), false)
         updateMapParamEditText(i)
 
     }
-    fun setMapParamSensetivity(i: Int, dScale: Float) {
+    fun setMapParamSensitivity(i: Int, dScale: Float) {
         fractalConfig.params["paramSensitivity"] = fractalConfig.paramSensitivity() * dScale
         updateMapParamEditText(i)
         updateDisplayParams(Reaction.valueOf("P$i"), false)
@@ -1232,10 +1261,7 @@ class FractalSurfaceView(
             private val bgTexWidth = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[0]/8 }
             private val bgTexHeight = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[1]/8 }
 
-            private val interpolation = {
-                if (f.settingsConfig.resolution() == Resolution.ULTRA) GL.GL_LINEAR
-                else GL.GL_NEAREST
-            }
+            private val interpolation = { GL.GL_NEAREST }
 
             private val textures = arrayOf(
                     Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0),
@@ -1292,17 +1318,9 @@ class FractalSurfaceView(
                 val vSampleCode = Scanner(s).useDelimiter("\\Z").next()
                 s.close()
 
-//            s = context.resources.openRawResource(R.raw.render_qf)
-//            val fRenderCodeQF = Scanner(s).useDelimiter("\\Z").next()
-//            s.close()
-
                 s = context.resources.openRawResource(R.raw.sample)
                 val fSampleCode = Scanner(s).useDelimiter("\\Z").next()
                 s.close()
-
-//            s = context.resources.openRawResource(R.raw.color)
-//            val fColorCode = Scanner(s).useDelimiter("\\Z").next()
-//            s.close()
 
 
                 // create and compile shaders
@@ -1339,10 +1357,6 @@ class FractalSurfaceView(
                 paramHandles     =  IntArray(4) { i: Int ->
                     GL.glGetUniformLocation(renderProgram, "P${i+1}")
                 }
-//            p1Handle         =  GL.glGetUniformLocation(  renderProgram, "P1"          )
-//            p2Handle         =  GL.glGetUniformLocation(  renderProgram, "P2"          )
-//            p3Handle         =  GL.glGetUniformLocation(  renderProgram, "P3"          )
-//            p4Handle         =  GL.glGetUniformLocation(  renderProgram, "P4"          )
 
 
                 GL.glAttachShader(sampleProgram, vSampleShader)
@@ -1591,18 +1605,6 @@ class FractalSurfaceView(
                     }
 
 
-//                    val complementViewCoordsA = floatArrayOf(
-//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f,     // top left
-//                            xComplementViewCoordsA[0].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom left
-//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[0].toFloat(),  0.0f,     // bottom right
-//                            xComplementViewCoordsA[1].toFloat(),  yComplementViewCoordsA[1].toFloat(),  0.0f )    // top right
-//                    val complementViewCoordsB = floatArrayOf(
-//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f,     // top left
-//                            xComplementViewCoordsB[0].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom left
-//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[0].toFloat(),  0.0f,     // bottom right
-//                            xComplementViewCoordsB[1].toFloat(),  yComplementViewCoordsB[1].toFloat(),  0.0f )    // top right
-
-
 
 
                     //===================================================================================
@@ -1785,7 +1787,7 @@ class FractalSurfaceView(
 
 
             }
-            fun renderFromTexture() {
+            fun renderFromTexture(fitToScreen: Boolean) {
 
 //        Log.d("RENDER", "render from texture -- start")
 
@@ -1803,8 +1805,14 @@ class FractalSurfaceView(
                 //======================================================================================
 
                 GL.glUseProgram(colorProgram)
+
                 GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-                GL.glViewport(0, 0, f.screenRes[0], f.screenRes[1])
+                if (fitToScreen) {
+                    GL.glViewport(0, 0, f.screenRes[0], f.screenRes[1])
+                }
+                else {
+                    GL.glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
+                }
 
                 // create float array of quad coordinates
                 val quadCoords = floatArrayOf(
@@ -1900,14 +1908,49 @@ class FractalSurfaceView(
                 context.findViewById<ProgressBar>(R.id.progressBar).progress = 0
 
             }
+            fun migrateToBitmap() : Bitmap {
+                val bufferSize = textures[currIndex].res[0]*textures[currIndex].res[1]*4
+                val imBuffer = allocateDirect(bufferSize).order(ByteOrder.nativeOrder())
+
+                GL.glReadnPixels(
+                    0, 0,
+                    textures[currIndex].res[0],
+                    textures[currIndex].res[1],
+                    GL.GL_RGBA,
+                    GL.GL_UNSIGNED_BYTE,
+                    bufferSize,
+                    imBuffer
+                )
+                val e = GL.glGetError()
+                if (e != GL.GL_NO_ERROR) {
+                    val s = when (e) {
+                        GL.GL_INVALID_ENUM -> "invalid enum"
+                        GL.GL_INVALID_VALUE -> "invalid value"
+                        GL.GL_INVALID_OPERATION -> "invalid operation"
+                        GL.GL_INVALID_FRAMEBUFFER_OPERATION -> "invalid framebuffer operation"
+                        GL.GL_OUT_OF_MEMORY -> "out of memory"
+                        else -> "something else I guess"
+                    }
+                    Log.e("RENDER ROUTINE", s)
+                }
+
+                val imByteArray = imBuffer.array()
+                Log.d("RENDER ROUTINE", "imByteArray size: ${imByteArray.size}")
+                val bmp = Bitmap.createBitmap(textures[currIndex].res[0], textures[currIndex].res[1], Bitmap.Config.ARGB_8888)
+                bmp.copyPixelsFromBuffer(imBuffer)
+                Log.d("RENDER ROUTINE", "bmp is null: ${bmp == null}")
+                return bmp
+            }
 
         }
 
+
         var renderToTex = false
+        var isRendering = false
+        var migrateToBitmap = false
         private var hasTranslated = false
         private var hasScaled = false
         private val strictTranslate = { hasTranslated && !hasScaled }
-        var ignoreTouch = false
 
 
         private val xQuadCoords = doubleArrayOf(-1.0, 1.0)
@@ -2045,6 +2088,42 @@ class FractalSurfaceView(
             t[1] = 0.0
 
         }
+        private fun saveImage(im: Bitmap) {
+
+            // convert bitmap to png
+            val bos = ByteArrayOutputStream()
+            val compressed = im.compress(Bitmap.CompressFormat.PNG, 100, bos)
+
+            // app external storage directory
+            val dir = File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES), resources.getString(R.string.app_name))
+
+            // create directory if not already created
+            if (!dir.exists()) {
+                Log.d("MAIN ACTIVITY", "Directory does not exist")
+                if (!dir.mkdirs()) {
+                    Log.e("MAIN ACTIVITY", "Directory not created")
+                }
+            }
+
+            // get current date and time
+            val c = GregorianCalendar(TimeZone.getDefault())
+            Log.d("RENDERER", "${c[Calendar.YEAR]}, ${c[Calendar.MONTH]}, ${c[Calendar.DAY_OF_MONTH]}")
+            val year = c[Calendar.YEAR]
+            val month = c[Calendar.MONTH]
+            val day = c[Calendar.DAY_OF_MONTH]
+            val hour = c[Calendar.HOUR_OF_DAY]
+            val minute = c[Calendar.MINUTE]
+            val second = c[Calendar.SECOND]
+
+            // save image with unique filename
+            val file = File(dir, "/FS_%4d%02d%02d_%02d%02d%02d.png".format(year, month+1, day, hour, minute, second))
+            file.createNewFile()
+            val fos = FileOutputStream(file)
+            fos.write(bos.toByteArray())
+            fos.close()
+
+        }
 
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
 
@@ -2071,9 +2150,8 @@ class FractalSurfaceView(
             // render to texture on ACTION_UP
             if (renderToTex) {
 
-                ignoreTouch = !(f.settingsConfig.continuousRender() || reaction.name[0].toString() == "P")
+                isRendering = !(f.settingsConfig.continuousRender() || reaction.name[0].toString() == "P")
                 rr.renderToTexture()
-                ignoreTouch = false
 
                 renderToTex = false
                 hasTranslated = false
@@ -2083,7 +2161,17 @@ class FractalSurfaceView(
             }
 
             // render from texture
-            rr.renderFromTexture()
+            if (migrateToBitmap) {
+                Log.d("RENDERER", "migrating to bitmap")
+                rr.renderFromTexture(false)
+                val im = rr.migrateToBitmap()
+                saveImage(im)
+                migrateToBitmap = false
+            }
+
+            rr.renderFromTexture(true)
+            isRendering = false
+
 
         }
         override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
@@ -2143,6 +2231,7 @@ class FractalSurfaceView(
         r = FractalRenderer(f, context)             // create renderer
         setRenderer(r)                              // set renderer
         renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly
+
     }
 
     fun hideSystemUI() {
@@ -2174,7 +2263,7 @@ class FractalSurfaceView(
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent?): Boolean {
 
-        if (!r.ignoreTouch) {
+        if (!r.isRendering) {
 
             // monitor for long press
             when(e?.actionMasked) {
@@ -2374,7 +2463,7 @@ class FractalSurfaceView(
                                 2 -> {
                                     val focalLen = e.focalLength()
                                     val dFocalLen = focalLen / prevFocalLen
-                                    f.setMapParamSensetivity(reaction.name[1].toString().toInt(), dFocalLen)
+                                    f.setMapParamSensitivity(reaction.name[1].toString().toInt(), dFocalLen)
                                     prevFocalLen = focalLen
                                 }
                             }
@@ -2477,7 +2566,7 @@ class MainActivity : AppCompatActivity(),
 
 
         val equationConfig = FractalConfig(mutableMapOf(
-                "map"               to  ComplexMap.sine4(resources),
+                "map"               to  ComplexMap.test(resources),
                 "p1"                to  doubleArrayOf(0.0, 0.0),
                 "p2"                to  doubleArrayOf(0.0, 0.0),
                 "p3"                to  doubleArrayOf(0.0, 0.0),
@@ -2488,7 +2577,7 @@ class MainActivity : AppCompatActivity(),
                 "coords"            to  doubleArrayOf(0.0, 0.0),
                 "scale"             to  doubleArrayOf(1.0, 1.0*aspectRatio),
                 "maxIter"           to  255,
-                "bailoutRadius"     to  1e5f
+                "bailoutRadius"     to  4e0f
         ))
         val colorConfig = ColorConfig(mutableMapOf(
                 "palette"           to  ColorPalette.p8,
@@ -2499,7 +2588,8 @@ class MainActivity : AppCompatActivity(),
                 "resolution"        to Resolution.HIGH,
                 "precision"         to Precision.AUTO,
                 "continuousRender"  to false,
-                "displayParams"     to false
+                "displayParams"     to true,
+                "saveToFile"        to false
         ))
 
 
@@ -2624,6 +2714,7 @@ class MainActivity : AppCompatActivity(),
         val equationFragment = EquationFragment()
         val colorFragment = ColorFragment()
         val settingsFragment = SettingsFragment()
+        // val saveFragment = SaveFragment()
 
         equationFragment.config = f.fractalConfig
         colorFragment.config = f.colorConfig
@@ -2638,6 +2729,7 @@ class MainActivity : AppCompatActivity(),
         adapter.addFrag( equationFragment,  "Equation" )
         adapter.addFrag( colorFragment,     "Color"    )
         adapter.addFrag( settingsFragment,  "Settings" )
+        // adapter.addFrag( saveFragment,      "Save"     )
 
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
         viewPager.adapter = adapter
@@ -2650,8 +2742,8 @@ class MainActivity : AppCompatActivity(),
                 when (tab.text) {
                     "fractal" -> {
                         Log.d("MAIN ACTIVITY", "Fractal tab selected")
-                        f.updatePositionEditTexts()
-                        f.updateMapParamEditTexts()
+                        // f.updatePositionEditTexts()
+                        // f.updateMapParamEditTexts()
                     }
                     else -> {}
                 }
@@ -2670,10 +2762,10 @@ class MainActivity : AppCompatActivity(),
 
 
 
-        val phi = 0.5*(sqrt(5.0) + 1.0)
-//        val uiFullHeightOpen = (screenHeight*(1.0 - 1.0/phi)).toInt()
-        val uiFullHeightOpen = screenHeight/2 - 200
-        val uiFullHeightFullscreen = screenHeight - statusBarHeight
+        // val phi = 0.5*(sqrt(5.0) + 1.0)
+        // val uiFullHeightOpen = (screenHeight*(1.0 - 1.0/phi)).toInt()
+        // val uiFullHeightFullscreen = screenHeight - statusBarHeight
+        val uiFullHeightOpen = screenHeight/2
         fractalView.y = -uiFullHeightOpen/2f
 
         val uiFull = findViewById<LinearLayout>(R.id.uiFull)
@@ -2837,6 +2929,21 @@ class MainActivity : AppCompatActivity(),
                     else {
                         displayParams.removeViews(1, displayParams.childCount - 1)
                     }
+                }
+                "saveToFile" -> {
+                    if (fractalView.r.isRendering) {
+                        Log.d("MAIN ACTIVITY", "sorry bud still rendering this one")
+                    }
+                    else {
+                        fractalView.r.migrateToBitmap = true
+                        fractalView.requestRender()
+                        while (fractalView.r.isRendering) {
+                            Log.d("MAIN ACTIVITY", "waiting for render to finish...")
+                        }
+
+
+                    }
+                    f.settingsConfig.params[key] = false
                 }
             }
         }
