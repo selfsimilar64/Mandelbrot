@@ -17,14 +17,16 @@
 
 
     <style name="CardDark" parent="CardView.Dark">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="cardBackgroundColor">@color/colorPrimaryDark</item>
         <item name="cardCornerRadius">5dp</item>
         <item name="android:layout_marginHorizontal">5dp</item>
+        <item name="android:layout_marginBottom">30dp</item>
         <item name="contentPaddingLeft">10dp</item>
         <item name="contentPaddingRight">10dp</item>
         <item name="contentPaddingTop">5dp</item>
         <item name="contentPaddingBottom">5dp</item>
-        <item name="android:layout_marginBottom">15dp</item>
     </style>
 
     <style name="TextDark" parent="android:style/Widget.Material.TextView">
@@ -43,6 +45,21 @@
         <item name="android:textSize">15sp</item>
         <item name="android:inputType">numberDecimal|numberSigned</item>
         <item name="android:selectAllOnFocus">true</item>
+    </style>
+
+    <style name="SwitchDark" parent="@style/Widget.AppCompat.CompoundButton.Switch">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginVertical">5dp</item>
+        <item name="android:textColor">@color/colorDarkText</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColorPrimaryDisableOnly">#b71c1c</item>
+        <item name="android:colorControlActivated">#1b5e20</item>
+        <item name="android:colorForeground">#f57f17</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
+        <item name="android:thumb">@drawable/switch_thumb_custom</item>
+        <item name="android:track">@drawable/switch_track_custom</item>
     </style>
 
 </resources>
