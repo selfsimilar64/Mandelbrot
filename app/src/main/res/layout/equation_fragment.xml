@@ -35,176 +35,198 @@
                     android:id="@+id/algContainer"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingVertical="5dp">
 
                     <LinearLayout
-                        android:id="@+id/complexMapRow"
+                        android:id="@+id/functionLayout"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginVertical="3dp">
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Function" />
+                        <LinearLayout
+                            android:id="@+id/complexMapRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="3dp">
 
-                        <Spinner
-                            android:id="@+id/complexMapSpinner"
-                            android:layout_width="wrap_content"
-                            android:layout_height="35dp"
-                            android:background="@drawable/display_params_bg_visible"
-                            android:backgroundTint="#3fff"
-                            android:minWidth="150dp"
-                            android:spinnerMode="dialog" />
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Function" />
 
+                            <Spinner
+                                android:id="@+id/complexMapSpinner"
+                                android:layout_width="wrap_content"
+                                android:layout_height="32dp"
+                                android:background="@drawable/display_params_bg_visible"
+                                android:backgroundTint="#3fff"
+                                android:minWidth="150dp"
+                                android:spinnerMode="dialog" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/p1EditRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="1dp"
+                            android:paddingStart="20dp">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="P1" />
+
+                            <EditText
+                                android:id="@+id/p1xEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="6dp"
+                                android:text="+ i" />
+
+                            <EditText
+                                android:id="@+id/p1yEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/p2EditRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="1dp"
+                            android:paddingStart="20dp">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="P2" />
+
+                            <EditText
+                                android:id="@+id/p2xEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="numberDecimal" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="6dp"
+                                android:text="+ i" />
+
+                            <EditText
+                                android:id="@+id/p2yEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/p3EditRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="1dp"
+                            android:paddingStart="20dp">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="P3" />
+
+                            <EditText
+                                android:id="@+id/p3xEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="numberDecimal" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="6dp"
+                                android:text="+ i" />
+
+                            <EditText
+                                android:id="@+id/p3yEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/p4EditRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="1dp"
+                            android:paddingStart="20dp">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="P4" />
+
+                            <EditText
+                                android:id="@+id/p4xEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="numberDecimal" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginHorizontal="6dp"
+                                android:text="+ i" />
+
+                            <EditText
+                                android:id="@+id/p4yEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="numberDecimal" />
+                        </LinearLayout>
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:id="@+id/p1EditRow"
+                    <View
+                        android:id="@+id/divider"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginVertical="1dp"
-                        android:paddingStart="20dp">
-
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Parameter 1" />
-
-                        <EditText
-                            android:id="@+id/p1xEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="6dp"
-                            android:text="+ i" />
-
-                        <EditText
-                            android:id="@+id/p1yEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/p2EditRow"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginVertical="1dp"
-                        android:paddingStart="20dp">
-
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Parameter 2" />
-
-                        <EditText
-                            android:id="@+id/p2xEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="6dp"
-                            android:text="+ i" />
-
-                        <EditText
-                            android:id="@+id/p2yEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/p3EditRow"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginVertical="1dp"
-                        android:paddingStart="20dp">
-
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Parameter 3" />
-
-                        <EditText
-                            android:id="@+id/p3xEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="6dp"
-                            android:text="+ i" />
-
-                        <EditText
-                            android:id="@+id/p3yEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/p4EditRow"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginVertical="1dp"
-                        android:paddingStart="20dp">
-
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Parameter 4" />
-
-                        <EditText
-                            android:id="@+id/p4xEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="6dp"
-                            android:text="+ i" />
-
-                        <EditText
-                            android:id="@+id/p4yEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" />
-                    </LinearLayout>
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="15dp"
+                        android:background="#333" />
 
                     <LinearLayout
                         android:id="@+id/textureRow"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginTop="5dp"
                         android:orientation="horizontal">
 
                         <TextView
@@ -217,7 +239,7 @@
                         <Spinner
                             android:id="@+id/textureAlgSpinner"
                             android:layout_width="wrap_content"
-                            android:layout_height="35dp"
+                            android:layout_height="32dp"
                             android:background="@drawable/display_params_bg_visible"
                             android:backgroundTint="#3fff"
                             android:minWidth="150dp"
@@ -225,13 +247,16 @@
 
                     </LinearLayout>
 
+                    <View
+                        android:id="@+id/divider5"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="15dp"
+                        android:background="#333" />
+
                     <Switch
                         android:id="@+id/juliaModeSwitch"
-                        style="@style/TextDark"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="5dp"
-                        android:layout_weight="1"
+                        style="@style/SwitchDark"
                         android:text="Julia Mode" />
 
                 </LinearLayout>
@@ -294,7 +319,7 @@
                             <EditText
                                 android:id="@+id/yCoordEdit"
                                 style="@style/EditTextDark"
-                                android:imeOptions="actionNext" />
+                                android:imeOptions="actionDone" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -324,8 +349,8 @@
                                 android:id="@+id/scaleExponentEdit"
                                 style="@style/EditTextDark"
                                 android:digits="012345789"
-                                android:imeOptions="actionNext"
-                                android:inputType="number|numberSigned" />
+                                android:imeOptions="actionDone"
+                                android:inputType="numberSigned" />
                         </LinearLayout>
 
                     </LinearLayout>
