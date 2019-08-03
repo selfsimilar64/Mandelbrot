@@ -109,10 +109,13 @@
                         android:id="@+id/saveToFileButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="#1a1a1a"
+                        android:background="#0000"
+                        android:clickable="true"
                         android:drawableTop="@drawable/baseline_save_alt_black_36"
                         android:drawablePadding="5dp"
                         android:drawableTint="#ddd"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:paddingVertical="5dp"
                         android:text="Save" />
 
                 </LinearLayout>
