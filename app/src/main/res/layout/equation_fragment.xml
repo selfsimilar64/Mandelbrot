@@ -59,20 +59,14 @@
 
                             <Spinner
                                 android:id="@+id/complexMapSpinner"
-                                android:layout_width="wrap_content"
-                                android:layout_height="32dp"
-                                android:background="@drawable/display_params_bg_visible"
-                                android:backgroundTint="#3fff"
-                                android:minWidth="150dp"
-                                android:spinnerMode="dialog" />
+                                style="@style/SpinnerDark" />
 
                         </LinearLayout>
 
                         <LinearLayout
                             android:id="@+id/p1EditRow"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_marginVertical="1dp"
+                            android:layout_height="wrap_content"
                             android:paddingStart="20dp">
 
                             <TextView
@@ -100,15 +94,13 @@
                                 style="@style/EditTextDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionDone"
-                                android:inputType="numberDecimal" />
+                                android:imeOptions="actionDone" />
                         </LinearLayout>
 
                         <LinearLayout
                             android:id="@+id/p2EditRow"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_marginVertical="1dp"
                             android:paddingStart="20dp">
 
                             <TextView
@@ -123,8 +115,7 @@
                                 style="@style/EditTextDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionNext"
-                                android:inputType="numberDecimal" />
+                                android:imeOptions="actionNext" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -137,15 +128,13 @@
                                 style="@style/EditTextDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionDone"
-                                android:inputType="numberDecimal" />
+                                android:imeOptions="actionDone" />
                         </LinearLayout>
 
                         <LinearLayout
                             android:id="@+id/p3EditRow"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_marginVertical="1dp"
                             android:paddingStart="20dp">
 
                             <TextView
@@ -160,8 +149,7 @@
                                 style="@style/EditTextDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionNext"
-                                android:inputType="numberDecimal" />
+                                android:imeOptions="actionNext" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -174,15 +162,13 @@
                                 style="@style/EditTextDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionDone"
-                                android:inputType="numberDecimal" />
+                                android:imeOptions="actionDone" />
                         </LinearLayout>
 
                         <LinearLayout
                             android:id="@+id/p4EditRow"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_marginVertical="1dp"
                             android:paddingStart="20dp">
 
                             <TextView
@@ -197,8 +183,7 @@
                                 style="@style/EditTextDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionNext"
-                                android:inputType="numberDecimal" />
+                                android:imeOptions="actionNext" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -211,8 +196,7 @@
                                 style="@style/EditTextDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionDone"
-                                android:inputType="numberDecimal" />
+                                android:imeOptions="actionDone" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -224,26 +208,35 @@
                         android:background="#333" />
 
                     <LinearLayout
-                        android:id="@+id/textureRow"
+                        android:id="@+id/textureLayout"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Texture" />
+                        <LinearLayout
+                            android:id="@+id/textureRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal">
 
-                        <Spinner
-                            android:id="@+id/textureAlgSpinner"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:background="@drawable/display_params_bg_visible"
-                            android:backgroundTint="#3fff"
-                            android:minWidth="150dp"
-                            android:spinnerMode="dialog" />
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Texture" />
+
+                            <Spinner
+                                android:id="@+id/textureAlgSpinner"
+                                style="@style/SpinnerDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="32dp"
+                                android:background="@drawable/display_params_bg_visible"
+                                android:backgroundTint="#3fff"
+                                android:minWidth="150dp"
+                                android:spinnerMode="dialog" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
