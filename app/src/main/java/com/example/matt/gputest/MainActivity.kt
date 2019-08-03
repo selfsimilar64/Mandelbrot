@@ -4,11 +4,13 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.opengl.GLSurfaceView
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.TransitionDrawable
+import android.net.Uri
 import android.os.*
 import javax.microedition.khronos.egl.EGLConfig
 import android.support.v7.app.AppCompatActivity
@@ -178,28 +180,28 @@ class ColorPalette (
 
     companion object {
 
-        val RED         = floatArrayOf( 1.0f,  0.0f,  0.0f )
-        val GREEN       = floatArrayOf( 0.0f,  1.0f,  0.0f )
-        val BLUE        = floatArrayOf( 0.0f,  0.0f,  1.0f )
-        val YELLOW      = floatArrayOf( 1.0f,  1.0f,  0.0f )
-        val MAGENTA     = floatArrayOf( 1.0f,  0.0f,  1.0f )
-        val CYAN        = floatArrayOf( 0.0f,  1.0f,  1.0f )
-        val BLACK       = floatArrayOf( 0.0f,  0.0f,  0.0f )
-        val WHITE       = floatArrayOf( 1.0f,  1.0f,  1.0f )
+        private val RED         = floatArrayOf( 1.0f,  0.0f,  0.0f )
+        private val GREEN       = floatArrayOf( 0.0f,  1.0f,  0.0f )
+        private val BLUE        = floatArrayOf( 0.0f,  0.0f,  1.0f )
+        private val YELLOW      = floatArrayOf( 1.0f,  1.0f,  0.0f )
+        private val MAGENTA     = floatArrayOf( 1.0f,  0.0f,  1.0f )
+        private val CYAN        = floatArrayOf( 0.0f,  1.0f,  1.0f )
+        private val BLACK       = floatArrayOf( 0.0f,  0.0f,  0.0f )
+        private val WHITE       = floatArrayOf( 1.0f,  1.0f,  1.0f )
 
-        val PURPLE      = floatArrayOf( 0.3f,   0.0f,   0.5f  )
-        val PINK        = floatArrayOf( 1.0f,   0.3f,   0.4f  )
-        val DARKBLUE1   = floatArrayOf( 0.0f,   0.15f,  0.25f )
-        val DARKBLUE2   = floatArrayOf( 0.11f,  0.188f, 0.35f )
-        val ORANGE1     = floatArrayOf( 1.0f,   0.6f,   0.0f  )
-        val ORAGNE2     = floatArrayOf( 0.9f,   0.4f,   0.2f  )
-        val TURQUOISE   = floatArrayOf( 0.25f,  0.87f,  0.82f )
-        val TUSK        = floatArrayOf( 0.93f,  0.8f,   0.73f )
-        val YELLOWISH   = floatArrayOf( 1.0f,   0.95f,  0.75f )
-        val GRASS       = floatArrayOf( 0.31f,  0.53f,  0.45f )
-        val SOFTGREEN   = floatArrayOf( 0.6f,   0.82f,  0.9f  )
-        val DEEPRED     = floatArrayOf( 0.8f,   0.0f,   0.3f  )
-        val MAROON      = floatArrayOf( 0.4f,   0.1f,   0.2f  )
+        private val PURPLE      = floatArrayOf( 0.3f,   0.0f,   0.5f  )
+        private val PINK        = floatArrayOf( 1.0f,   0.3f,   0.4f  )
+        private val DARKBLUE1   = floatArrayOf( 0.0f,   0.15f,  0.25f )
+        private val DARKBLUE2   = floatArrayOf( 0.11f,  0.188f, 0.35f )
+        private val ORANGE1     = floatArrayOf( 1.0f,   0.6f,   0.0f  )
+        private val ORAGNE2     = floatArrayOf( 0.9f,   0.4f,   0.2f  )
+        private val TURQUOISE   = floatArrayOf( 0.25f,  0.87f,  0.82f )
+        private val TUSK        = floatArrayOf( 0.93f,  0.8f,   0.73f )
+        private val YELLOWISH   = floatArrayOf( 1.0f,   0.95f,  0.75f )
+        private val GRASS       = floatArrayOf( 0.31f,  0.53f,  0.45f )
+        private val SOFTGREEN   = floatArrayOf( 0.6f,   0.82f,  0.9f  )
+        private val DEEPRED     = floatArrayOf( 0.8f,   0.0f,   0.3f  )
+        private val MAROON      = floatArrayOf( 0.4f,   0.1f,   0.2f  )
 
 
         val beach   = ColorPalette("Beach", listOf(
@@ -211,13 +213,6 @@ class ColorPalette (
         ))
         val p1      = ColorPalette("P1", listOf(
                 WHITE,
-                PURPLE,
-                BLACK,
-                DEEPRED,
-                WHITE
-        ))
-        val p2      = ColorPalette("P2", listOf(
-                TURQUOISE, // 0.6
                 PURPLE,
                 BLACK,
                 DEEPRED,
@@ -245,24 +240,12 @@ class ColorPalette (
                 BLACK,
                 DARKBLUE1
         ))
-        val p6      = ColorPalette("P6", listOf(
-                YELLOWISH.mult(1.2f),
-                GRASS.mult(0.35f),
-                DARKBLUE1.mult(1.2f)
-        ))
         val royal   = ColorPalette("Royal", listOf(
                 YELLOWISH,
                 DARKBLUE1,
                 SOFTGREEN.mult(0.5f),
                 PURPLE.mult(0.35f),
                 MAROON
-        ))
-        val p7      = ColorPalette("P7", listOf(
-                floatArrayOf(75.0f, 115.0f, 115.0f).mult(1.0f/255.0f),
-                floatArrayOf(255.0f, 200.0f, 75.0f).mult(1.0f/255.0f),
-                WHITE,
-                floatArrayOf(255.0f, 118.0f, 111.0f).mult(1.0f/255.0f),
-                BLACK
         ))
         val p8      = ColorPalette("P8", listOf(
                 floatArrayOf(75.0f, 115.0f, 115.0f).mult(1.0f/255.0f),
@@ -280,13 +263,10 @@ class ColorPalette (
         val all     = mapOf(
                 beach.name   to  beach,
                 p1.name      to  p1,
-                p2.name      to  p2,
                 p3.name      to  p3,
                 p4.name      to  p4,
                 p5.name      to  p5,
-                p6.name      to  p6,
                 royal.name   to  royal,
-                p7.name      to  p7,
                 p8.name      to  p8,
                 canyon.name  to  canyon
         )
@@ -520,37 +500,31 @@ class ComplexMap (
 }
 class TextureAlgorithm (
         val name     : String,
-        val initSF   : String?,
-        val loopSF   : String?,
-        val finalSF  : String?,
-        val initDF   : String?,
-        val loopDF   : String?,
-        val finalDF  : String?
+        val initSF   : String = "",
+        val loopSF   : String = "",
+        val finalSF  : String = "",
+        val initDF   : String = "",
+        val loopDF   : String = "",
+        val finalDF  : String = "",
+        val params   : Map<String, Float> = mapOf(),
+        val layout   : (LinearLayout?) -> Unit = {}
 ) {
 
     companion object {
 
-        val empty                       = {
-            TextureAlgorithm("Empty", "", "", "", "", "", "")
+        val empty               = {
+            TextureAlgorithm(name = "Empty")
         }
         val escape              = { res: Resources -> TextureAlgorithm(
-                "Escape Time",
-                "",
-                "",
-                res.getString(R.string.escape_final),
-                "",
-                "",
-                res.getString(R.string.escape_final)
-        )}
+                name = "Escape Time",
+                finalSF = res.getString(R.string.escape_final),
+                finalDF = res.getString(R.string.escape_final) )
+        }
         val escapeSmooth        = { res: Resources -> TextureAlgorithm(
-                "Escape Time Smooth",
-                "",
-                "",
-                res.getString(R.string.mandelbrot_smooth_final_sf),
-                "",
-                "",
-                res.getString(R.string.mandelbrot_smooth_final_df)
-        )}
+                name = "Escape Time Smooth",
+                finalSF = res.getString(R.string.mandelbrot_smooth_final_sf),
+                finalDF = res.getString(R.string.mandelbrot_smooth_final_df) )
+        }
         val lighting            = { res: Resources -> TextureAlgorithm(
                 "Lighting",
                 res.getString(R.string.mandelbrot_light_init_sf),
@@ -558,8 +532,8 @@ class TextureAlgorithm (
                 res.getString(R.string.mandelbrot_light_final),
                 res.getString(R.string.mandelbrot_light_init_df),
                 res.getString(R.string.mandelbrot_light_loop_df),
-                res.getString(R.string.mandelbrot_light_final)
-        )}
+                res.getString(R.string.mandelbrot_light_final) ) {}
+        }
         val triangleIneqAvg     = { res: Resources -> TextureAlgorithm(
                 "Triangle Inequality Average",
                 res.getString(R.string.mandelbrot_triangle_init_sf),
@@ -567,8 +541,8 @@ class TextureAlgorithm (
                 res.getString(R.string.mandelbrot_triangle_final_sf),
                 res.getString(R.string.mandelbrot_triangle_init_df),
                 res.getString(R.string.mandelbrot_triangle_loop_df),
-                res.getString(R.string.mandelbrot_triangle_final_df)
-        )}
+                res.getString(R.string.mandelbrot_triangle_final_df) )
+        }
         val curvatureAvg        = { res: Resources -> TextureAlgorithm(
                 "Curvature Average",
                 res.getString(R.string.curvature_init),
@@ -576,8 +550,8 @@ class TextureAlgorithm (
                 res.getString(R.string.curvature_final_sf),
                 res.getString(R.string.curvature_init),
                 res.getString(R.string.curvature_loop_df),
-                res.getString(R.string.curvature_final_df)
-        )}
+                res.getString(R.string.curvature_final_df))
+        }
         val stripeAvg           = { res: Resources -> TextureAlgorithm(
                 "Stripe Average",
                 res.getString(R.string.stripe_init),
@@ -585,8 +559,12 @@ class TextureAlgorithm (
                 res.getString(R.string.stripe_final_sf),
                 res.getString(R.string.stripe_init),
                 res.getString(R.string.stripe_loop_df).format(5.0f),
-                res.getString(R.string.stripe_final_df)
-        )}
+                res.getString(R.string.stripe_final_df),
+                mapOf("stripeDensity" to 5.0f))
+                {
+                    
+                }
+        }
         val orbitTrap           = { res: Resources -> TextureAlgorithm(
                 "Orbit Trap",
                 res.getString(R.string.minmod_init),
@@ -594,8 +572,8 @@ class TextureAlgorithm (
                 res.getString(R.string.minmod_final),
                 res.getString(R.string.minmod_init),
                 res.getString(R.string.minmod_loop_df),
-                res.getString(R.string.minmod_final)
-        )}
+                res.getString(R.string.minmod_final) ) {}
+        }
         val overlayAvg          = { res: Resources -> TextureAlgorithm(
                 "Overlay Average",
                 res.getString(R.string.overlay_init),
@@ -603,8 +581,8 @@ class TextureAlgorithm (
                 res.getString(R.string.overlay_final_sf),
                 res.getString(R.string.overlay_init),
                 res.getString(R.string.overlay_loop_df),
-                res.getString(R.string.overlay_final_df)
-        )}
+                res.getString(R.string.overlay_final_df) ) {}
+        }
         val all = mapOf(
             "Escape Time"                  to  escape               ,
             "Escape Time Smooth"           to  escapeSmooth         ,
@@ -661,6 +639,13 @@ class FractalConfig (val params : MutableMap<String, Any>) {
     val scale               = { params["scale"]            as DoubleArray       }
     val maxIter             = { params["maxIter"]          as Int               }
     val bailoutRadius       = { params["bailoutRadius"]    as Float             }
+    val numParamsInUse = { 
+        val num1 = map().initMapParams.size
+        val num2 = if (juliaMode() && !map().initJuliaMode) 1 else 0
+        val num3 = texture().params.size
+        Log.d("MAIN ACTIVITY", "$num1, $num2, $num3")
+        num1 + num2 + num3
+    }
 
 }
 class ColorConfig (val params : MutableMap<String, Any>) {
@@ -847,14 +832,14 @@ class Fractal(
                 loop        = res.getString(R.string.general_loop_sf)
                 conditional = fractalConfig.map().conditionalSF    ?: ""
                 mapInit     = fractalConfig.map().initSF           ?: ""
-                algInit     = fractalConfig.texture().initSF        ?: ""
+                algInit     = fractalConfig.texture().initSF
                 mapLoop     = fractalConfig.map().loopSF           ?: ""
                 if (fractalConfig.juliaMode()) {
                     mapLoop = mapLoop.replace("C", "P${fractalConfig.map().initMapParams.size + 1}", false)
                 }
-                algLoop     = fractalConfig.texture().loopSF        ?: ""
+                algLoop     = fractalConfig.texture().loopSF
                 mapFinal    = fractalConfig.map().finalSF          ?: ""
-                algFinal    = fractalConfig.texture().finalSF       ?: ""
+                algFinal    = fractalConfig.texture().finalSF
             }
             Precision.DUAL -> {
 
@@ -868,15 +853,15 @@ class Fractal(
                 loop        = res.getString(R.string.general_loop_df)
                 conditional = fractalConfig.map().conditionalDF    ?: ""
                 mapInit     = fractalConfig.map().initDF           ?: ""
-                algInit     = fractalConfig.texture().initDF        ?: ""
+                algInit     = fractalConfig.texture().initDF
                 mapLoop     = fractalConfig.map().loopDF           ?: ""
                 if (fractalConfig.juliaMode()) {
                     mapLoop = mapLoop.replace("A", "vec2(P${fractalConfig.map().initMapParams.size + 1}.x, 0.0)", false)
                     mapLoop = mapLoop.replace("B", "vec2(P${fractalConfig.map().initMapParams.size + 1}.y, 0.0)", false)
                 }
-                algLoop     = fractalConfig.texture().loopDF        ?: ""
+                algLoop     = fractalConfig.texture().loopDF
                 mapFinal    = fractalConfig.map().finalDF          ?: ""
-                algFinal    = fractalConfig.texture().finalDF       ?: ""
+                algFinal    = fractalConfig.texture().finalDF
 
             }
             else -> {}
@@ -896,14 +881,14 @@ class Fractal(
 
     }
 
-    fun resetPosition() {
+    private fun resetPosition() {
         fractalConfig.coords()[0] = fractalConfig.map().initCoords[0]
         fractalConfig.coords()[1] = fractalConfig.map().initCoords[1]
         fractalConfig.scale()[0] = fractalConfig.map().initScale
         fractalConfig.scale()[1] = fractalConfig.map().initScale * aspectRatio
         updatePositionEditTexts()
     }
-    fun resetMapParams() {
+    private fun resetMapParams() {
         for (i in 0 until fractalConfig.map().initMapParams.size) {
             (fractalConfig.params["p${i + 1}"] as DoubleArray)[0] = fractalConfig.map().initMapParams[i][0]
             (fractalConfig.params["p${i + 1}"] as DoubleArray)[1] = fractalConfig.map().initMapParams[i][1]
@@ -915,6 +900,7 @@ class Fractal(
         resetMapParams()
         fractalConfig.params["juliaMode"] = fractalConfig.map().initJuliaMode
     }
+    @SuppressLint("SetTextI18n")
     fun updatePositionEditTexts() {
 
         val xCoordEdit = context.findViewById<EditText>(R.id.xCoordEdit)
@@ -934,6 +920,7 @@ class Fractal(
         bailoutExponentEdit?.setText(bailoutStrings[1])
 
     }
+    @SuppressLint("SetTextI18n")
     fun updateMapParamEditText(i: Int) {
         // Log.d("FRACTAL", "updating map param EditText $i")
 
@@ -1099,7 +1086,7 @@ class Fractal(
 //        Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
 
     }
-    fun translate(dPos: DoubleArray) {
+    private fun translate(dPos: DoubleArray) {
 
         // update complex coordinates
         when (settingsConfig.precision()) {
@@ -1947,7 +1934,7 @@ class FractalSurfaceView(
 
         var renderToTex = false
         var isRendering = false
-        var migrateToBitmap = false
+        var saveImage = false
         private var hasTranslated = false
         private var hasScaled = false
         private val strictTranslate = { hasTranslated && !hasScaled }
@@ -1964,9 +1951,9 @@ class FractalSurfaceView(
         private val xBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
         private val yBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
 
-        val quadAnchor = doubleArrayOf(0.0, 0.0)
-        val quadFocus = doubleArrayOf(0.0, 0.0)
-        val t = doubleArrayOf(0.0, 0.0)
+        private val quadAnchor = doubleArrayOf(0.0, 0.0)
+        private val quadFocus = doubleArrayOf(0.0, 0.0)
+        private val t = doubleArrayOf(0.0, 0.0)
 
         lateinit var rr : RenderRoutine
 
@@ -2093,6 +2080,7 @@ class FractalSurfaceView(
             // convert bitmap to png
             val bos = ByteArrayOutputStream()
             val compressed = im.compress(Bitmap.CompressFormat.PNG, 100, bos)
+            if (!compressed) { Log.e("RENDERER", "could not compress image") }
 
             // app external storage directory
             val dir = File(Environment.getExternalStoragePublicDirectory(
@@ -2122,6 +2110,17 @@ class FractalSurfaceView(
             val fos = FileOutputStream(file)
             fos.write(bos.toByteArray())
             fos.close()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                val contentUri = Uri.fromFile(file)
+                scanIntent.data = contentUri
+                context.sendBroadcast(scanIntent)
+            }
+            else {
+                val intent = Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory()))
+                context.sendBroadcast(intent)
+            }
 
         }
 
@@ -2161,12 +2160,12 @@ class FractalSurfaceView(
             }
 
             // render from texture
-            if (migrateToBitmap) {
+            if (saveImage) {
                 Log.d("RENDERER", "migrating to bitmap")
                 rr.renderFromTexture(false)
                 val im = rr.migrateToBitmap()
                 saveImage(im)
-                migrateToBitmap = false
+                saveImage = false
             }
 
             rr.renderFromTexture(true)
@@ -2252,11 +2251,6 @@ class FractalSurfaceView(
 
 
 
-    }
-    fun showSystemUI() {
-        systemUiVisibility = (
-                SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        )
     }
 
 
@@ -2556,8 +2550,8 @@ class MainActivity : AppCompatActivity(),
         val screenHeight = displayMetrics.heightPixels
         val aspectRatio = screenHeight.toDouble() / screenWidth
 
-        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
-        val statusBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
+        // val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        // val statusBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
 
 
         // get saved or default parameters
@@ -2935,12 +2929,15 @@ class MainActivity : AppCompatActivity(),
                         Log.d("MAIN ACTIVITY", "sorry bud still rendering this one")
                     }
                     else {
-                        fractalView.r.migrateToBitmap = true
+                        fractalView.r.saveImage = true
                         fractalView.requestRender()
                         while (fractalView.r.isRendering) {
                             Log.d("MAIN ACTIVITY", "waiting for render to finish...")
                         }
 
+                        // display save message
+                        val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
+                        toast.show()
 
                     }
                     f.settingsConfig.params[key] = false
