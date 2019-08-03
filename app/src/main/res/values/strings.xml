@@ -907,7 +907,7 @@
     </string>
 
 
-    <!-- PERPENDICULAR STRIPE -->
+    <!-- OVERLAY -->
     <string name="overlay_init">
         float argZ;
         float sum, sum1 = 0.0;

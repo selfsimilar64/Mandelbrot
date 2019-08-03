@@ -62,4 +62,13 @@
         <item name="android:track">@drawable/switch_track_custom</item>
     </style>
 
+    <style name="SpinnerDark">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:background">@drawable/display_params_bg_visible</item>
+        <item name="android:backgroundTint">#3fff</item>
+        <item name="android:minWidth">150dp</item>
+        <item name="android:spinnerMode">dialog</item>
+    </style>
+
 </resources>
