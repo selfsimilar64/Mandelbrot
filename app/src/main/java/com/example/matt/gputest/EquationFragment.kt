@@ -185,6 +185,26 @@ class EquationFragment : Fragment() {
         }
 
 
+
+        // JULIA MODE SWITCH
+         val juliaListener = CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+             callback.onEquationParamsChanged("juliaMode", isChecked)
+             val juliaParamIndex = config.numParamsInUse() - 1
+             Log.d("FRACTAL FRAGMENT", "juliaParamIndex: $juliaParamIndex")
+             val juliaSwitchLayoutIndex = algContainer.indexOfChild(juliaModeSwitch)
+             if (isChecked) {
+                 algContainer.removeView(paramEditRows[juliaParamIndex])
+                 algContainer.addView(paramEditRows[juliaParamIndex], juliaSwitchLayoutIndex + 1)
+             } else {
+                 algContainer.removeView(paramEditRows[juliaParamIndex + 1])
+             }
+         }
+        juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
+        if (config.map().initJuliaMode) { algContainer.removeView(juliaModeSwitch) }
+        else { juliaModeSwitch.setOnCheckedChangeListener(juliaListener) }
+
+
+        // COMPLEX MAP SELECTION
         complexMapSpinner = v.findViewById(R.id.complexMapSpinner)
         complexMapSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
@@ -194,6 +214,16 @@ class EquationFragment : Fragment() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
                 val nextMap = ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()
+                if (nextMap != config.map()) {
+                    if (juliaModeSwitch.isChecked && !config.map().initJuliaMode) {
+                        val juliaParamIndex = config.numParamsInUse() - 1
+                        juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->  }
+                        juliaModeSwitch.isChecked = false
+                        algContainer.removeView(paramEditRows[juliaParamIndex])
+                        config.params["juliaMode"] = false
+                        juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
+                    }
+                }
                 val mapLayoutIndex = functionLayout.indexOfChild(complexMapRow)
                 for (i in 0 until config.map().initMapParams.size) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- removing row ${i + 1}")
@@ -221,33 +251,6 @@ class EquationFragment : Fragment() {
         complexMapSpinner.setSelection(ComplexMap.all.keys.indexOf(
                 savedInstanceState?.getString("map") ?: config.map().name)
         )
-
-
-
-
-        // JULIA MODE SWITCH
-        juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
-        if (config.map().initJuliaMode) {
-            algContainer.removeView(juliaModeSwitch)
-        }
-        else {
-            juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-                callback.onEquationParamsChanged("juliaMode", isChecked)
-                Log.d("FRACTAL FRAGMENT", "juliaModeSwitch checked: $isChecked")
-                val juliaParamIndex = config.map().initMapParams.size
-                val juliaSwitchLayoutIndex = algContainer.indexOfChild(juliaModeSwitch)
-                if (isChecked) {
-                    algContainer.removeView(paramEditRows[juliaParamIndex])
-                    algContainer.addView(paramEditRows[juliaParamIndex], juliaSwitchLayoutIndex + 1)
-                } else {
-                    algContainer.removeView(paramEditRows[juliaParamIndex])
-                }
-            }
-            if (juliaModeSwitch.isChecked != config.juliaMode()) {
-                juliaModeSwitch.isChecked = savedInstanceState?.getBoolean("juliaMode") ?: false
-            }
-        }
-
 
         // TEXTURE SELECTION
         textureAlgSpinner = v.findViewById(R.id.textureAlgSpinner)
