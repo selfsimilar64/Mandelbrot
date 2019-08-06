@@ -58,7 +58,8 @@
                     style="@style/EditTextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionNext" />
+                    android:imeOptions="actionDone"
+                    android:selectAllOnFocus="true" />
 
             </LinearLayout>
 
@@ -79,7 +80,8 @@
                     style="@style/EditTextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionNext" />
+                    android:imeOptions="actionDone"
+                    android:selectAllOnFocus="true" />
 
             </LinearLayout>
 
