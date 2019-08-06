@@ -106,6 +106,7 @@
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
+        uniform float Q1;
         uniform vec2 xScale;
         uniform vec2 yScale;
         uniform vec2 xOffset;
@@ -128,6 +129,7 @@
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
+        uniform float Q1;
         uniform vec2 xScale;
         uniform vec2 yScale;
         uniform vec2 xOffset;
@@ -490,7 +492,7 @@
         vec2 Z, Z1, Z2 = vec2(0.0);
         float modZ = 0.0;
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + x0 + y0 + R;
     </string>
     <string name="general_init_df">
         vec4 colorParams = vec4(0.0);
@@ -500,7 +502,7 @@
         vec2 Y, Y1, Y2 = vec2(0.0, 0.0);
         vec2 modZ = vec2(0.0);
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + x0 + y0 + R;
     </string>
     <string name="general_loop_sf">
         Z2 = Z1;
@@ -741,14 +743,14 @@
 
 
     <!-- TRIANGLE INEQUALITY AVERAGE -->
-    <string name="mandelbrot_triangle_init_sf" tools:ignore="TypographyOther">
+    <string name="triangle_init_sf" tools:ignore="TypographyOther">
         float modC = modSF(C);
         float modSqrZ1 = 0.0;
         float sum, sum1 = 0.0;
         float il = 1.0/log(2.0);
         float llr = log(log(R)/2.0);
     </string>
-    <string name="mandelbrot_triangle_loop_sf">
+    <string name="triangle_loop_sf">
         if (n > 1) {
             sum1 = sum;
             modSqrZ1 = modSqrSF(Z1);
@@ -759,21 +761,21 @@
             sum += p / q;
         }
     </string>
-    <string name="mandelbrot_triangle_final_sf">
+    <string name="triangle_final_sf">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
     </string>
-    <string name="mandelbrot_triangle_init_df" tools:ignore="TypographyOther">
+    <string name="triangle_init_df" tools:ignore="TypographyOther">
         vec2 modC = modDF(A, B);
         vec2 modSqrZ1;
         vec2 sum, sum1 = vec2(0.0);
         float il = 1.0/log(2.0);
         float llr = log(log(R)/2.0);
     </string>
-    <string name="mandelbrot_triangle_loop_df">
+    <string name="triangle_loop_df">
         if (n > 0) {
             sum1 = sum;
             modSqrZ1 = modSqrDF(X1, Y1);
@@ -784,19 +786,19 @@
             sum = addDF(sum, divDF(p, q));
         }
     </string>
-    <string name="mandelbrot_triangle_final_df">
+    <string name="triangle_final_df">
         sum = multDF(sum, vec2(1.0/float(n), 0.0));
         sum1 = multDF(sum1, vec2(1.0/float(n - 1), 0.0));
         float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
         float s = sum1.x + (sum.x - sum1.x)*(r + 1.0);
         colorParams.z = s;
     </string>
-    <string name="mandelbrot_triangle_init_df2" tools:ignore="TypographyOther">
+    <string name="triangle_init_df2" tools:ignore="TypographyOther">
         float modC = modDF(A, B).x;
         float modSqrZ1;
         float sum, sum1 = 0.0;
     </string>
-    <string name="mandelbrot_triangle_loop_df2">
+    <string name="triangle_loop_df2">
         if (n > 0) {
             sum1 = sum;
             modSqrZ1 = modSqrDF(X1, Y1).x;
@@ -807,7 +809,7 @@
             sum += p / q;
         }
     </string>
-    <string name="mandelbrot_triangle_final_df2">
+    <string name="triangle_final_df2">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
@@ -862,7 +864,7 @@
     <string name="stripe_loop_sf">
         sum1 = sum;
         argZ = atan(Z.y, Z.x);
-        sum += 0.5*(sin(%f*argZ) + 1.0);
+        sum += 0.5*(sin(Q1*argZ) + 1.0);
     </string>
     <string name="stripe_final_sf">
         sum /= float(n) * pi;
@@ -874,7 +876,7 @@
     <string name="stripe_loop_df">
         sum1 = sum;
         argZ = atan(Y.x, X.x);
-        sum += 0.5*(sin(%f*argZ) + 1.0);
+        sum += 0.5*(sin(Q1*argZ) + 1.0);
     </string>
     <string name="stripe_final_df">
         sum /= float(n);
@@ -886,24 +888,30 @@
 
 
     <!-- MINMOD -->
-    <string name="minmod_init">
+    <string name="orbittrap_init">
         float minModZ = R;
         int m = 0;
     </string>
-    <string name="minmod_loop_sf">
+    <string name="orbittrap_loop_sf">
         if(modZ &lt; minModZ) {
             minModZ = modZ;
             m = n;
         }
     </string>
-    <string name="minmod_loop_df">
+    <string name="orbittrap_loop_df">
         if(modZ.x &lt; minModZ) {
             minModZ = modZ.x;
             m = n;
         }
     </string>
-    <string name="minmod_final">
-        colorParams.z = float(m)/float(maxIter);
+    <string name="orbittrap_final_radius">
+        minModZ
+    </string>
+    <string name="orbittrap_final_iteration">
+        float(m)/float(maxIter)
+    </string>
+    <string name="orbittrap_final">
+        colorParams.z = %s
     </string>
 
 
@@ -917,12 +925,12 @@
     <string name="overlay_loop_sf">
         sum1 = sum;
         argZ = atan(Z.y, Z.x);
-        sum += tan(0.495*argZ);
+        sum += tan(Q1*argZ);
     </string>
     <string name="overlay_loop_df">
         sum1 = sum;
         argZ = atan(Y.x, X.x);
-        sum += tan(0.49*argZ);
+        sum += tan(Q1*argZ);
     </string>
     <string name="overlay_final_sf">
         sum /= float(n) * pi;
