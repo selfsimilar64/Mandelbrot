@@ -30,15 +30,17 @@ class EquationFragment : Fragment() {
         val algContainer = v.findViewById<LinearLayout>(R.id.algContainer)
         val complexMapRow = v.findViewById<LinearLayout>(R.id.complexMapRow)
         val functionLayout = v.findViewById<LinearLayout>(R.id.functionLayout)
-        val textureRow = v.findViewById<LinearLayout>(R.id.textureRow)
-        val paramEditRows = listOf<LinearLayout>(
+        val mapParamEditRows = listOf<LinearLayout>(
                 v.findViewById(R.id.p1EditRow),
                 v.findViewById(R.id.p2EditRow),
                 v.findViewById(R.id.p3EditRow),
                 v.findViewById(R.id.p4EditRow)
         )
-
-
+        val textureLayout = v.findViewById<LinearLayout>(R.id.textureLayout)
+        val textureParamEditRows = listOf<LinearLayout>(
+                v.findViewById(R.id.q1EditRow),
+                v.findViewById(R.id.q2EditRow)
+        )
 
         val editListenerNext = {
             editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)-> Any -> TextView.OnEditorActionListener {
@@ -67,7 +69,6 @@ class EquationFragment : Fragment() {
                 imm.hideSoftInputFromWindow(v.windowToken, 0)
                 editText.clearFocus()
                 editText.isSelected = false
-                v.findViewById<LinearLayout>(R.id.positionParams).requestLayout()
                 true
             }
             else -> {
@@ -77,6 +78,9 @@ class EquationFragment : Fragment() {
         }
         }
         }
+
+
+
 
 
         // POSITION EDIT FIELDS
@@ -130,6 +134,9 @@ class EquationFragment : Fragment() {
                 })
 
 
+
+
+
         // PARAMETER EDIT FIELDS
         val p1xEdit = v.findViewById<EditText>(R.id.p1xEdit)
         val p1yEdit = v.findViewById<EditText>(R.id.p1yEdit)
@@ -177,12 +184,22 @@ class EquationFragment : Fragment() {
 
 
 
+        val q1Edit = v.findViewById<EditText>(R.id.q1Edit)
+        q1Edit.setText("%.3f".format(config.q1()))
+        q1Edit.setOnEditorActionListener(editListenerDone(q1Edit, "q1") {
+            w: TextView -> w.text.toString().toDouble()
+        })
+
+        val q2Edit = v.findViewById<EditText>(R.id.q2Edit)
+        q2Edit.setText("%.3f".format(config.q2()))
+        q2Edit.setOnEditorActionListener(editListenerDone(q2Edit, "q2") {
+            w: TextView -> w.text.toString().toDouble()
+        })
 
 
-        for (i in 0 until 4) {
-            // Log.d("FRACTAL FRAGMENT", "removing param row ${i + 1}")
-            functionLayout.removeView(paramEditRows[i])
-        }
+
+        for (i in 0 until NUM_MAP_PARAMS) { functionLayout.removeView(mapParamEditRows[i]) }
+        for (i in 0 until NUM_TEXTURE_PARAMS) { textureLayout.removeView(textureParamEditRows[i]) }
 
 
 
@@ -193,24 +210,25 @@ class EquationFragment : Fragment() {
              Log.d("FRACTAL FRAGMENT", "juliaParamIndex: $juliaParamIndex")
              val juliaSwitchLayoutIndex = algContainer.indexOfChild(juliaModeSwitch)
              if (isChecked) {
-                 algContainer.removeView(paramEditRows[juliaParamIndex])
-                 algContainer.addView(paramEditRows[juliaParamIndex], juliaSwitchLayoutIndex + 1)
+                 algContainer.removeView(mapParamEditRows[juliaParamIndex])
+                 algContainer.addView(mapParamEditRows[juliaParamIndex], juliaSwitchLayoutIndex + 1)
              } else {
-                 algContainer.removeView(paramEditRows[juliaParamIndex + 1])
+                 algContainer.removeView(mapParamEditRows[juliaParamIndex + 1])
              }
          }
         juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
-        if (config.map().initJuliaMode) { algContainer.removeView(juliaModeSwitch) }
+        if (config.map().initJuliaMode) { juliaModeSwitch.isClickable = false }
         else { juliaModeSwitch.setOnCheckedChangeListener(juliaListener) }
+
+
+
 
 
         // COMPLEX MAP SELECTION
         complexMapSpinner = v.findViewById(R.id.complexMapSpinner)
         complexMapSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-
-            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
                 val nextMap = ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()
@@ -219,19 +237,22 @@ class EquationFragment : Fragment() {
                         val juliaParamIndex = config.numParamsInUse() - 1
                         juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->  }
                         juliaModeSwitch.isChecked = false
-                        algContainer.removeView(paramEditRows[juliaParamIndex])
-                        config.params["juliaMode"] = false
+                        algContainer.removeView(mapParamEditRows[juliaParamIndex])
+                        config.params["juliaMode"] = nextMap.initJuliaMode
+                        if (nextMap.initJuliaMode) {
+                            juliaModeSwitch.isClickable = false
+                        }
                         juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
                     }
                 }
                 val mapLayoutIndex = functionLayout.indexOfChild(complexMapRow)
-                for (i in 0 until config.map().initMapParams.size) {
+                for (i in 0 until config.map().initParams.size) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- removing row ${i + 1}")
-                    functionLayout.removeView(paramEditRows[i])
+                    functionLayout.removeView(mapParamEditRows[i])
                 }
-                for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).initMapParams.size) {
+                for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).initParams.size) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- adding row ${i + 1} at index ${mapLayoutIndex + i + 1}")
-                    functionLayout.addView(paramEditRows[i], mapLayoutIndex + i + 1)
+                    functionLayout.addView(mapParamEditRows[i], mapLayoutIndex + i + 1)
                 }
                 callback.onEquationParamsChanged(
                         "map",
@@ -252,20 +273,50 @@ class EquationFragment : Fragment() {
                 savedInstanceState?.getString("map") ?: config.map().name)
         )
 
+
+
+
         // TEXTURE SELECTION
+
+        val q1BarListener = object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val p = progress / 100.0
+                val range = config.texture().initParams[0].second
+                val length = range.upper - range.lower
+                callback.onEquationParamsChanged("q1", p*length + range.lower)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+
+        }
+
         textureAlgSpinner = v.findViewById(R.id.textureAlgSpinner)
         textureAlgSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-
-            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position).toString()
-                textureAlgSpinner.requestLayout()
+                // textureAlgSpinner.requestLayout()
+
                 callback.onEquationParamsChanged(
                         "texture",
                         TextureAlgorithm.all[item]?.invoke(resources) ?: config.texture()
                 )
+                textureLayout.removeViews(1, textureLayout.childCount - 2)
+                for (i in 0 until config.texture().initParams.size) {
+                    textureLayout.addView(textureParamEditRows[i], textureLayout.childCount - 1)
+                    (textureParamEditRows[i].getChildAt(0) as TextView).text = config.texture().initParams[i].first
+                    if (i == 0) {
+                        val q1Bar = v.findViewById<SeekBar>(R.id.q1Bar)
+                        val range = config.texture().initParams[0].second
+                        val q = (range.clamp(config.q1()) - range.lower) / (range.upper - range.lower) * 100
+                        Log.d("FRACTAL FRAGMENT", "q: $q")
+                        q1Bar?.progress = q.toInt()
+                        q1Bar?.setOnSeekBarChangeListener(q1BarListener)
+                        q1Edit.setText("%.3f".format(config.q1()))
+                    }
+                }
             }
 
         }
@@ -282,15 +333,12 @@ class EquationFragment : Fragment() {
         )
 
 
+
         val maxIterBar = v.findViewById<SeekBar>(R.id.maxIterBar)
         maxIterBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
-            override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
-
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar) {
-
-            }
+            override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 val p = seekBar.progress.toFloat() / 100.0f
                 callback.onEquationParamsChanged(
