@@ -74,13 +74,13 @@ class ColorFragment : Fragment() {
         val frequencyEdit = v.findViewById<EditText>(R.id.frequencyEdit)
         frequencyEdit.setText("%.5f".format(config.frequency()))
         frequencyEdit.setOnEditorActionListener(editListenerDone(frequencyEdit, "frequency") {
-            it.text.toString().toDouble()
+            it.text.toString().toFloat()
         })
 
         val phaseEdit = v.findViewById<EditText>(R.id.phaseEdit)
         phaseEdit.setText("%.5f".format(config.phase()))
         phaseEdit.setOnEditorActionListener(editListenerDone(frequencyEdit, "phase") {
-            it.text.toString().toDouble()
+            it.text.toString().toFloat()
         })
 
         return v

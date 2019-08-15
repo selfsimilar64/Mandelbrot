@@ -50,7 +50,7 @@ class FractalSurfaceView(
             private val renderProgram = GLES32.glCreateProgram()
             private val viewCoordsHandle : Int
             private val iterHandle       : Int
-            private val rHandle          : Int
+            private val bailoutHandle    : Int
             private val xInitHandle      : Int
             private val yInitHandle      : Int
             private val xScaleHandle     : Int
@@ -172,7 +172,7 @@ class FractalSurfaceView(
 
                 viewCoordsHandle     =  GLES32.glGetAttribLocation(   renderProgram, "viewCoords"  )
                 iterHandle           =  GLES32.glGetUniformLocation(  renderProgram, "maxIter"     )
-                rHandle              =  GLES32.glGetUniformLocation(  renderProgram, "R"           )
+                bailoutHandle        =  GLES32.glGetUniformLocation(  renderProgram, "R"           )
                 xInitHandle          =  GLES32.glGetUniformLocation(  renderProgram, "x0"          )
                 yInitHandle          =  GLES32.glGetUniformLocation(  renderProgram, "y0"          )
                 xScaleHandle         =  GLES32.glGetUniformLocation(  renderProgram, "xScale"      )
@@ -305,8 +305,8 @@ class FractalSurfaceView(
                     GLES32.glUniform1fv(textureParamHandles[i], 1, floatArrayOf((f.fractalConfig.params["q${i + 1}"] as Double).toFloat()), 0)
                 }
 
-                val x0 = floatArrayOf(f.fractalConfig.map().z0[0].toFloat())
-                val y0 = floatArrayOf(f.fractalConfig.map().z0[1].toFloat())
+                val x0 = floatArrayOf(f.fractalConfig.map().initZ[0].toFloat())
+                val y0 = floatArrayOf(f.fractalConfig.map().initZ[1].toFloat())
 
 
                 val xScaleSD = f.fractalConfig.scale()[0] / 2.0
@@ -360,7 +360,7 @@ class FractalSurfaceView(
 
                 GLES32.glEnableVertexAttribArray(viewCoordsHandle)
                 GLES32.glUniform1i(iterHandle, f.fractalConfig.maxIter())
-                GLES32.glUniform1fv(rHandle, 1, floatArrayOf(f.fractalConfig.bailoutRadius()), 0)
+                GLES32.glUniform1fv(bailoutHandle, 1, floatArrayOf(f.fractalConfig.bailoutRadius()), 0)
                 GLES32.glUniform1fv(xInitHandle, 1, x0, 0)
                 GLES32.glUniform1fv(yInitHandle, 1, y0, 0)
 
@@ -1111,7 +1111,7 @@ class FractalSurfaceView(
                     val focus = e.focus()
                     prevFocus[0] = focus[0]
                     prevFocus[1] = focus[1]
-                    h.postDelayed(longPressed, 500)
+                    h.postDelayed(longPressed, 1000)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val focus = e.focus()
@@ -1200,17 +1200,20 @@ class FractalSurfaceView(
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
                             // Log.d("TRANSFORM", "POINTER ${e.actionIndex} UP")
-                            if (e.getPointerId(e.actionIndex) == 0) {
-                                prevFocus[0] = e.getX(1)
-                                prevFocus[1] = e.getY(1)
+                            when (e.getPointerId(e.actionIndex)) {
+                                0 -> {
+                                    prevFocus[0] = e.getX(1)
+                                    prevFocus[1] = e.getY(1)
 
-                                // change quad anchor to remaining pointer
-                                if (!f.settingsConfig.continuousRender()) {
-                                    r.setQuadAnchor(floatArrayOf(e.getX(1), e.getY(1)))
+                                    // change quad anchor to remaining pointer
+                                    if (!f.settingsConfig.continuousRender()) {
+                                        r.setQuadAnchor(floatArrayOf(e.getX(1), e.getY(1)))
+                                    }
                                 }
-                            } else if (e.getPointerId(e.actionIndex) == 1) {
-                                prevFocus[0] = e.getX(0)
-                                prevFocus[1] = e.getY(0)
+                                1 -> {
+                                    prevFocus[0] = e.getX(0)
+                                    prevFocus[1] = e.getY(0)
+                                }
                             }
                             return true
                         }
@@ -1258,6 +1261,16 @@ class FractalSurfaceView(
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
                             // Log.d("COLOR", "POINTER ${e.actionIndex} UP")
+                            when (e.getPointerId(e.actionIndex)) {
+                                0 -> {
+                                    prevFocus[0] = e.getX(1)
+                                    prevFocus[1] = e.getY(1)
+                                }
+                                1 -> {
+                                    prevFocus[0] = e.getX(0)
+                                    prevFocus[1] = e.getY(0)
+                                }
+                            }
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
@@ -1311,9 +1324,16 @@ class FractalSurfaceView(
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
                             // Log.d("PARAMETER", "POINTER ${e.actionIndex} UP")
-                            val focus = e.focus()
-                            prevFocus[0] = focus[0]
-                            prevFocus[1] = focus[1]
+                            when (e.getPointerId(e.actionIndex)) {
+                                0 -> {
+                                    prevFocus[0] = e.getX(1)
+                                    prevFocus[1] = e.getY(1)
+                                }
+                                1 -> {
+                                    prevFocus[0] = e.getX(0)
+                                    prevFocus[1] = e.getY(0)
+                                }
+                            }
                             return true
                         }
                         MotionEvent.ACTION_UP -> {

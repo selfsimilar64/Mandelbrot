@@ -186,6 +186,7 @@ class Fractal(
         fractalConfig.coords()[1] = fractalConfig.map().initCoords[1]
         fractalConfig.scale()[0] = fractalConfig.map().initScale
         fractalConfig.scale()[1] = fractalConfig.map().initScale * aspectRatio
+        fractalConfig.params["bailoutRadius"] = fractalConfig.map().initBailout
         updatePositionEditTexts()
     }
     private fun resetMapParams() {
@@ -202,8 +203,8 @@ class Fractal(
         updateTextureParamEditTexts()
     }
     private fun resetColorParams() {
-        colorConfig.params["frequency"] = 1.0f
-        colorConfig.params["phase"] = 0.0f
+        colorConfig.params["frequency"] = 3.5f
+        colorConfig.params["phase"] = 0f
     }
     fun reset() {
         resetPosition()
