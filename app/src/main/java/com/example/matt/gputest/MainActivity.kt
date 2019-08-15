@@ -337,7 +337,7 @@ class ComplexMap (
                 conditionalDF = res.getString(R.string.escape_df),
                 initDF = res.getString(R.string.burningship_init_df),
                 loopDF = res.getString(R.string.burningship_loop_df),
-                initCoords = doubleArrayOf(-0.3, 0.0),
+                initCoords = doubleArrayOf(-0.35, 0.0),
                 initScale = 3.5
         ) }
         val dualpow         = { res: Resources -> ComplexMap(
