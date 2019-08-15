@@ -284,196 +284,149 @@ class ColorPalette (
 }
 class ComplexMap (
         val name            : String,
-        val z0              : DoubleArray,
-        val initJuliaMode   : Boolean,
-        val initCoords      : DoubleArray,
-        val initScale       : Double,
-        val initParams      : List<DoubleArray>,
-        val conditionalSF   : String?,
-        val initSF          : String?,
-        val loopSF          : String?,
-        val finalSF         : String?,
-        val conditionalDF   : String?,
-        val initDF          : String?,
-        val loopDF          : String?,
-        val finalDF         : String?
+        val conditionalSF   : String?            = "",
+        val initSF          : String?            = "",
+        val loopSF          : String?            = "",
+        val finalSF         : String?            = "",
+        val conditionalDF   : String?            = "",
+        val initDF          : String?            = "",
+        val loopDF          : String?            = "",
+        val finalDF         : String?            = "",
+        val initCoords      : DoubleArray        = doubleArrayOf(0.0, 0.0),
+        val initScale       : Double             = 1.0,
+        val initParams      : List<DoubleArray>  = listOf(),
+        val initZ           : DoubleArray        = doubleArrayOf(0.0, 0.0),
+        val initJuliaMode   : Boolean            = false,
+        val initBailout     : Float              = 1e5f
 ) {
     
     companion object {
         
-        val empty           = { ComplexMap(
-                "Empty",
-                doubleArrayOf(0.0, 0.0),
-                false,
-                doubleArrayOf(0.0, 0.0),
-                1.0,
-                listOf(),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ""
-        )}
+        val empty           = { ComplexMap("Empty") }
         val mandelbrot      = { res: Resources -> ComplexMap(
                 "Mandelbrot",
-                doubleArrayOf(0.0, 0.0),
-                false,
-                doubleArrayOf(-0.75, 0.0),
-                3.5,
-                listOf(),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.mandelbrot_loop_sf),
-                "",
-                res.getString(R.string.escape_df),
-                "",
-                res.getString(R.string.mandelbrot_loop_df),
-                ""
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.mandelbrot_loop_sf),
+                conditionalDF = res.getString(R.string.escape_df),
+                loopDF = res.getString(R.string.mandelbrot_loop_df),
+                initCoords = doubleArrayOf(-0.75, 0.0),
+                initScale = 3.5
         )}
         val mandelbrotCpow  = { res: Resources -> ComplexMap(
                 "Mandelbrot Cpow",
-                doubleArrayOf(0.0, 0.0),
-                false,
-                doubleArrayOf(-0.75, 0.0),
-                3.5,
-                listOf(doubleArrayOf(2.0, 2.0)),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.mandelbrotcpow_loop_sf),
-                "",
-                "",
-                "",
-                "",
-                ""
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.mandelbrotcpow_loop_sf),
+                initScale = 3.5,
+                initParams = listOf(doubleArrayOf(2.0, 2.0))
         )}
+        val logistic        = { res: Resources -> ComplexMap(
+                "Logistic",
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.logistic_loop_sf),
+                conditionalDF = res.getString(R.string.escape_df),
+                loopDF = res.getString(R.string.logistic_loop_df),
+                initScale = 3.5,
+                initParams = listOf(doubleArrayOf(-1.0, 0.0)),
+                initZ = doubleArrayOf(0.5, 0.0)
+        ) }
+        val burningShip     = { res: Resources -> ComplexMap(
+                "Burning Ship",
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.burningship_loop_sf),
+                conditionalDF = res.getString(R.string.escape_df),
+                loopDF = res.getString(R.string.burningship_loop_df)
+        ) }
         val dualpow         = { res: Resources -> ComplexMap(
                 "Dual Power",
-                doubleArrayOf(1.0, 0.0),
-                false,
-                doubleArrayOf(0.0, 0.0),
-                3.0,
-                listOf(doubleArrayOf(0.0, 0.0)),
-                res.getString(R.string.escape_sf),
-                res.getString(R.string.dualpow_init_sf),
-                res.getString(R.string.dualpow_loop_sf),
-                "",
-                res.getString(R.string.escape_df),
-                "",
-                "",
-                ""
+                initParams = listOf(doubleArrayOf(0.0, 0.0)),
+                conditionalSF = res.getString(R.string.escape_sf),
+                initSF = res.getString(R.string.dualpow_init_sf),
+                loopSF = res.getString(R.string.dualpow_loop_sf),
+                initScale = 3.0,
+                initZ = doubleArrayOf(1.0, 0.0)
         )}
         val sine1           = { res: Resources -> ComplexMap(
                 "Sine 1",
-                doubleArrayOf(1.0, 0.0),
-                false,
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(doubleArrayOf(0.31960705187983646, 0.0)),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.sine1_loop_sf),
-                "",
-                res.getString(R.string.escape_df),
-                "",
-                "",
-                ""
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.sine1_loop_sf),
+                initScale = 3.5,
+                initParams = listOf(doubleArrayOf(0.31960705187983646, 0.0)),
+                initZ = doubleArrayOf(1.0, 0.0)
         ) }
         val sine2           = { res: Resources -> ComplexMap(
                 "Sine 2",
-                doubleArrayOf(1.0, 0.0),
-                false,
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(doubleArrayOf(-0.26282883851642613, 2.042520182493586E-6)),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.sine2_loop_sf),
-                "",
-                res.getString(R.string.escape_df),
-                "",
-                "",
-                ""
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.sine2_loop_sf),
+                initScale = 3.5,
+                initParams = listOf(doubleArrayOf(-0.26282883851642613, 2.042520182493586E-6)),
+                initZ = doubleArrayOf(1.0, 0.0)
         )}
         val horseshoeCrab   = { res: Resources -> ComplexMap(
                 "Horseshoe Crab",
-                doubleArrayOf(1.0, 0.0),
-                false,
-                doubleArrayOf(0.0, 0.0),
-                4.0,
-                listOf(doubleArrayOf(sqrt(2.0), 0.0)) ,
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.horseshoecrab_loop_sf),
-                "",
-                res.getString(R.string.escape_df),
-                "",
-                res.getString(R.string.horseshoecrab_loop_df),
-                ""
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.horseshoecrab_loop_sf),
+                conditionalDF = res.getString(R.string.escape_df),
+                loopDF = res.getString(R.string.horseshoecrab_loop_df),
+                initScale = 5.0,
+                initParams = listOf(doubleArrayOf(sqrt(2.0), 0.0)),
+                initZ = doubleArrayOf(1.0, 0.0)
         )}
         val newton2         = { res: Resources -> ComplexMap(
                 "Newton 2",
-                doubleArrayOf(0.0, 0.0),
-                true,
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(
-                    doubleArrayOf(1.0, 1.0),
-                    doubleArrayOf(-1.0, -1.0),
-                    doubleArrayOf(2.0, -0.5)
+                conditionalSF = res.getString(R.string.converge_sf),
+                loopSF = res.getString(R.string.newton2_loop_sf),
+                initScale = 3.5,
+                initParams = listOf(
+                        doubleArrayOf(1.0, 1.0),
+                        doubleArrayOf(-1.0, -1.0),
+                        doubleArrayOf(2.0, -0.5)
                 ),
-                res.getString(R.string.converge_sf),
-                "",
-                res.getString(R.string.newton2_loop_sf),
-                "",
-                res.getString(R.string.converge_df),
-                "",
-                "",
-                ""
+                initJuliaMode = true
         ) }
         val persianRug      = { res: Resources -> ComplexMap(
                 "Persian Rug",
-                doubleArrayOf(1.0, 0.0),
-                false,
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(doubleArrayOf(0.642, 0.0)),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.persianrug_loop_sf),
-                "",
-                res.getString(R.string.escape_df),
-                "",
-                res.getString(R.string.persianrug_loop_df),
-                ""
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.persianrug_loop_sf),
+                conditionalDF = res.getString(R.string.escape_df),
+                loopDF = res.getString(R.string.persianrug_loop_df),
+                initScale = 3.5,
+                initParams = listOf(doubleArrayOf(0.642, 0.0)),
+                initZ = doubleArrayOf(1.0, 0.0),
+                initBailout = 1e1f
+        )}
+        val kleinian        = { res: Resources -> ComplexMap(
+                "Kleinian",
+                conditionalSF = res.getString(R.string.escape_sf),
+                initSF = res.getString(R.string.kleinian_init_sf),
+                loopSF = res.getString(R.string.kleinian_loop_sf),
+                initScale = 1.1,
+                initCoords = doubleArrayOf(0.0, -0.5),
+                initParams = listOf(
+                    doubleArrayOf(2.0, 0.0),
+                    doubleArrayOf(0.0, -1.0)
+                ),
+                initJuliaMode = true
         )}
         val test            = { res: Resources -> ComplexMap(
                 "Test",
-                doubleArrayOf(1.0, 0.0),
-                false,
-                doubleArrayOf(0.0, 0.0),
-                3.5,
-                listOf(doubleArrayOf(0.642, 0.0)),
-                res.getString(R.string.escape_sf),
-                "",
-                res.getString(R.string.test_loop_sf),
-                "",
-                res.getString(R.string.escape_df),
-                "",
-                "",
-                ""
+                conditionalSF = res.getString(R.string.escape_sf),
+                initSF = res.getString(R.string.test_init_sf),
+                loopSF = res.getString(R.string.test_loop_sf),
+                initScale = 3.5,
+                initParams = listOf(doubleArrayOf(1.0, 1.0))
         )}
         val all         = mapOf(
             "Mandelbrot"        to  mandelbrot,
             "Mandelbrot Cpow"   to  mandelbrotCpow,
+            "Logistic"          to  logistic,
+            "Burning Ship"      to  burningShip,
             "Persian Rug"       to  persianRug,
             "Dual Power"        to  dualpow,
             "Sine 1"            to  sine1,
             "Sine 2"            to  sine2,
             "Horseshoe Crab"    to  horseshoeCrab,
             "Newton 2"          to  newton2,
+            "Kleinian"          to  kleinian,
             "Test"              to  test
         )
         
@@ -555,10 +508,10 @@ class TextureAlgorithm (
                 "Orbit Trap",
                 res.getString(R.string.orbittrap_init),
                 res.getString(R.string.orbittrap_loop_sf),
-                res.getString(R.string.orbittrap_final_iteration),
+                res.getString(R.string.orbittrap_final_radius),
                 res.getString(R.string.orbittrap_init),
                 res.getString(R.string.orbittrap_loop_df),
-                res.getString(R.string.orbittrap_final_iteration))
+                res.getString(R.string.orbittrap_final_radius))
         }
         val overlayAvg          = { res: Resources -> TextureAlgorithm(
                 "Overlay Average",
@@ -755,12 +708,12 @@ class MainActivity : AppCompatActivity(),
 
 
         // get saved or default parameters
-        val frequency = savedInstanceState?.getFloat("frequency") ?: 1.0f
+        val frequency = savedInstanceState?.getFloat("frequency") ?: 2.0f
         val phase = savedInstanceState?.getFloat("phase") ?: 0.0f
 
 
         val fractalConfig = FractalConfig(mutableMapOf(
-                "map"               to  ComplexMap.horseshoeCrab(resources),
+                "map"               to  ComplexMap.test(resources),
                 "p1"                to  doubleArrayOf(0.0, 0.0),
                 "p2"                to  doubleArrayOf(0.0, 0.0),
                 "p3"                to  doubleArrayOf(0.0, 0.0),
@@ -1064,13 +1017,13 @@ class MainActivity : AppCompatActivity(),
                     f.renderShaderChanged = true
                 }
                 "coords" -> {
-                    fractalView.requestFocus()
+                    f.updatePositionEditTexts()
                 }
                 "maxIter" -> {
 
                 }
                 "bailoutRadius" -> {
-
+                    f.updatePositionEditTexts()
                 }
             }
             fractalView.r.renderToTex = true
@@ -1085,10 +1038,11 @@ class MainActivity : AppCompatActivity(),
             Log.d("MAIN ACTIVITY", "$key set from ${f.colorConfig.params[key]} to $value")
             f.colorConfig.params[key] = value
             when (key) {
-                "palette" -> {
-                    fractalView.requestRender()
-                }
+                "palette" -> {}
+                "frequency" -> { f.updateColorParamEditTexts() }
+                "phase" -> { f.updateColorParamEditTexts() }
             }
+            fractalView.requestRender()
         }
         else {
             Log.d("MAIN ACTIVITY", "$key already set to $value")
