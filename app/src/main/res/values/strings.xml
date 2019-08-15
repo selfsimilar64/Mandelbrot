@@ -1,79 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Fracture</string>
+    <string name="app_name">Fractal Eye</string>
     <string name="title_activity_settings">Settings</string>
-
-    <!-- Strings related to Settings -->
-
-    <!-- Example General settings -->
-    <string name="pref_header_general">General</string>
-
-    <string name="pref_title_social_recommendations">Enable social recommendations</string>
-    <string name="pref_description_social_recommendations">Recommendations for people to contact
-        based on your message history
-    </string>
-
-    <string name="pref_title_display_name">Display name</string>
-    <string name="pref_default_display_name">John Smith</string>
-
-    <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
-    <string-array name="pref_example_list_titles">
-        <item>Always</item>
-        <item>When possible</item>
-        <item>Never</item>
-    </string-array>
-    <string-array name="pref_example_list_values">
-        <item>1</item>
-        <item>0</item>
-        <item>-1</item>
-    </string-array>
-
-    <!-- Example settings for Data & Sync -->
-    <string name="pref_header_data_sync">Data &amp; sync</string>
-
-    <string name="pref_title_sync_frequency">Sync frequency</string>
-    <string-array name="pref_sync_frequency_titles">
-        <item>15 minutes</item>
-        <item>30 minutes</item>
-        <item>1 hour</item>
-        <item>3 hours</item>
-        <item>6 hours</item>
-        <item>Never</item>
-    </string-array>
-    <string-array name="pref_sync_frequency_values">
-        <item>15</item>
-        <item>30</item>
-        <item>60</item>
-        <item>180</item>
-        <item>360</item>
-        <item>-1</item>
-    </string-array>
-
-    <string-array name="list_preference_entries">
-        <item>Entry 1</item>
-        <item>Entry 2</item>
-        <item>Entry 3</item>
-    </string-array>
-
-    <string-array name="list_preference_entry_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
-
-    <string-array name="multi_select_list_preference_default_value" />
-
-    <string name="pref_title_system_sync_settings">System sync settings</string>
-
-    <!-- Example settings for Notifications -->
-    <string name="pref_header_notifications">Notifications</string>
-
-    <string name="pref_title_new_message_notifications">New message notifications</string>
-
-    <string name="pref_title_ringtone">Ringtone</string>
-    <string name="pref_ringtone_silent">Silent</string>
-
-    <string name="pref_title_vibrate">Vibrate</string>
-
 
 
 
@@ -253,6 +180,10 @@
     </string>
     <string name="arithmetic_sf">
 
+        vec2 cConjSF(vec2 w) {
+            return vec2(w.x, -w.y);
+        }
+
         vec2 cMultSF(vec2 w1, vec2 w2) {
            return vec2(w1.x*w2.x - w1.y*w2.y, w1.x*w2.y + w2.x*w1.y);
         }
@@ -278,7 +209,13 @@
             return u/dot(w2, w2);
         }
 
-        vec2 cExp(vec2 w) {
+        vec2 cSqrtSF(vec2 w) {
+            float p = sqrt(modSF(w));
+            float phi = atan(w.y, w.x) / 2.0;
+            return p*vec2(cos(phi), sin(phi));
+        }
+
+        vec2 cExpSF(vec2 w) {
             return exp(w.x)*vec2(cos(w.y), sin(w.y));
         }
 
@@ -534,12 +471,34 @@
 
     <!-- MANDELBROT CPOW -->
     <string name="mandelbrotcpow_loop_sf">
-        Z = cPow3(Z, P1.x) + C;
+        Z = cPow3(Z1, P1.x) + C;
     </string>
     <string name="mandelbrotcpow_loop_df">
 
     </string>
 
+    <!-- LOGISTIC -->
+    <string name="logistic_loop_sf">
+        Z = cDivSF(Z1 - cSqrSF(Z1), C);
+    </string>
+    <string name="logistic_loop_df">
+        vec4 Q1 = cSqrDF(X1, Y1);
+        vec2 Q2 = addDF(X1, -Q1.xy);
+        vec2 Q3 = addDF(Y1, -Q1.zw);
+        vec4 Q4 = cDivDF(Q2, Q3, A, B);
+        X = Q4.xy;
+        Y = Q4.zw;
+    </string>
+
+    <!-- BURNING SHIP -->
+    <string name="burningship_loop_sf">
+        Z = cSqrSF(abs(Z)) + C;
+    </string>
+    <string name="burningship_loop_df">
+        vec4 Q = cSqrDF(abs(X1), abs(Y1));
+        X = addDF(Q.xy, A);
+        Y = addDF(Q.zw, B);
+    </string>
 
     <!-- DUALPOW -->
     <string name="dualpow_init_sf">
@@ -563,6 +522,7 @@
         Z = cSinSF(cDivSF(cSqrSF(Z1) + P1, C));
     </string>
 
+    <!-- HORSESHOE CRAB -->
     <string name="horseshoecrab_loop_sf">
         Z = cSinSF(cDivSF(P1, Z1) + cDivSF(Z1, C));
     </string>
@@ -575,6 +535,8 @@
         X = Q.xy;
         Y = Q.zw;
     </string>
+
+    <!-- PERSIAN RUG -->
     <string name="persianrug_loop_sf">
         Z = cMultSF(Z1, cSinSF(cTanSF(P1 - cDivSF(C, Z1))) + Z1 + cTanSF(Z1));
     </string>
@@ -596,10 +558,48 @@
         Y = Q.zw;
     </string>
 
-    <string name="test_loop_sf">
-        Z = cMultSF(Z1, cSinSF(cTanSF(P1 - cDivSF(C, Z1))) + Z1 + cTanSF(Z1));
+    <!-- KLEINIAN -->
+    <string name="kleinian_init_sf">
+        vec2 P = P2;
+        vec2 q = Z - P;
+        float h = atan(q.y, q.x);
+        Z = P + vec2(cos(h), sin(h))/modSF(q);
     </string>
-
+    <string name="kleinian_loop_sf">
+        if (Z.y &lt; 0.0 || Z.y &gt; P1.x) {
+            break;
+        }
+        else {
+            Z.x = mod(Z1.x + 2.0*float(maxIter) - 1.0, 2.0) - 1.0;
+        }
+        if (Z.y &lt; P1.x/2.0) {
+            Z = cDivSF(cMultSF(vec2(P1.x, 0.0), Z) + vec2(0.0, -1.0), cMultSF(vec2(0.0, -1.0), Z));
+        }
+        else {
+            Z = cDivSF(vec2(0.0, 1.0), cMultSF(vec2(0.0, 1.0), Z) + vec2(P1.x, 0.0));
+        }
+    </string>
+    <string name="kleinian_init_df">
+        vec2 P = P2;
+        vec2 q = vec2(X.x, Y.x) - P;
+        float h = atan(q.y, q.x);
+        X = vec2(P.x + cos(h)/modSF(q), 0.0);
+        Y = vec2(P.y + sin(h)/modSF(q), 0.0);
+    </string>
+    <string name="kleinian_loop_df">
+        if (Y.x &lt; 0.0 || Y.x &gt; P1.x) {
+            break;
+        }
+        else {
+            X = vec2(mod(addDF(addDF(X1, vec2(2.0*float(maxIter), 0.0), vec2(-1.0, 0.0).x), 2.0) - 1.0, 0.0);
+        }
+        if (Z.y &lt; t.x/2.0) {
+            Z = cDivSF(cMultSF(t, Z) + vec2(0.0, -1.0), cMultSF(vec2(0.0, -1.0), Z));
+        }
+        else {
+            Z = cDivSF(vec2(0.0, 1.0), cMultSF(vec2(0.0, 1.0), Z) + t);
+        }
+    </string>
 
     <!-- NEWTON 1 -->
     <string name="newton1_loop_sf">
@@ -612,15 +612,17 @@
         Z = Z - cDivSF(numerator, denominator);
     </string>
 
-
     <!-- MOBIUS -->
-    <string name="mobius_init_sf">
-
-    </string>
     <string name="mobius_loop_sf">
         Z = cDivSF(cMultSF(P1, Z) + P2, cMultSF(P3, Z) + P4);
     </string>
 
+    <!-- TEST -->
+    <string name="test_init_sf">
+    </string>
+    <string name="test_loop_sf">
+        Z = vec2(atan(Z1.y, Z1.x), abs(Z1.x)*abs(Z1.y)) + C;
+    </string>
 
 
 
@@ -675,8 +677,10 @@
 
 
 
-    <!-- COLORING ALGORITHMS -->
+    <!-- TEXTURE ALGORITHMS -->
     <!-- ===================================================================================== -->
+
+    <!--  -->
 
     <!-- CONDITIONAL ITERATION -->
     <string name="escape_final">
@@ -889,29 +893,31 @@
 
     <!-- MINMOD -->
     <string name="orbittrap_init">
-        float minModZ = R;
+        float minMod = R;
+        float minX = R;
+        float minY = R;
+        float dist = 0.0;
         int m = 0;
     </string>
     <string name="orbittrap_loop_sf">
-        if(modZ &lt; minModZ) {
-            minModZ = modZ;
+        dist = abs(Z.x);
+        if(dist &lt; minX) {
+            minX = dist;
             m = n;
         }
     </string>
     <string name="orbittrap_loop_df">
-        if(modZ.x &lt; minModZ) {
-            minModZ = modZ.x;
+        dist = abs(X.x);
+        if(dist &lt; minX) {
+            minX = dist;
             m = n;
         }
     </string>
     <string name="orbittrap_final_radius">
-        minModZ
+        colorParams.z = minX;
     </string>
     <string name="orbittrap_final_iteration">
-        float(m)/float(maxIter)
-    </string>
-    <string name="orbittrap_final">
-        colorParams.z = %s
+        colorParams.z = float(m)/float(maxIter);
     </string>
 
 
