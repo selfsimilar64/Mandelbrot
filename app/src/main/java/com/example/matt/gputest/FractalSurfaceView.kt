@@ -69,6 +69,7 @@ class FractalSurfaceView(
             private val colorProgram = GLES32.glCreateProgram()
             private val viewCoordsColorHandle : Int
             private val quadCoordsColorHandle : Int
+            private val yOrientHandle         : Int
             private val numColorsHandle       : Int
             private val textureColorHandle    : Int
             private val paletteHandle         : Int
@@ -203,6 +204,7 @@ class FractalSurfaceView(
                 viewCoordsColorHandle = GLES32.glGetAttribLocation(   colorProgram, "viewCoords"   )
                 quadCoordsColorHandle = GLES32.glGetAttribLocation(   colorProgram, "quadCoords"   )
                 textureColorHandle    = GLES32.glGetUniformLocation(  colorProgram, "tex"          )
+                yOrientHandle         = GLES32.glGetUniformLocation(  colorProgram, "yOrient"      )
                 numColorsHandle       = GLES32.glGetUniformLocation(  colorProgram, "numColors"    )
                 paletteHandle         = GLES32.glGetUniformLocation(  colorProgram, "palette"      )
                 frequencyHandle       = GLES32.glGetUniformLocation(  colorProgram, "frequency"    )
@@ -520,6 +522,7 @@ class FractalSurfaceView(
 
                     GLES32.glEnableVertexAttribArray(viewCoordsSampleHandle)
                     GLES32.glEnableVertexAttribArray(quadCoordsSampleHandle)
+                    GLES32.glUniform1fv(yOrientHandle, 1, floatArrayOf(1f), 0)
                     GLES32.glUniform1i(textureSampleHandle, currIndex)
                     GLES32.glVertexAttribPointer(
                             viewCoordsSampleHandle,        // index
@@ -620,7 +623,7 @@ class FractalSurfaceView(
 
 
             }
-            fun renderFromTexture(fitToScreen: Boolean) {
+            fun renderFromTexture(fitToScreen: Boolean = true, yOrient: Float = 1f) {
 
 //        Log.d("RENDER", "render from texture -- start")
 
@@ -667,6 +670,7 @@ class FractalSurfaceView(
                         .put(bgQuadCoords)
                         .position(0)
 
+                GLES32.glUniform1fv(yOrientHandle, 1, floatArrayOf(yOrient), 0)
                 GLES32.glUniform1i(numColorsHandle, f.colorConfig.palette().size)
                 GLES32.glUniform3fv(paletteHandle, f.colorConfig.palette().size, f.colorConfig.palette().flatPalette, 0)
                 GLES32.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.colorConfig.frequency()), 0)
@@ -1008,13 +1012,16 @@ class FractalSurfaceView(
             // render from texture
             if (saveImage) {
                 Log.d("RENDERER", "migrating to bitmap")
-                rr.renderFromTexture(false)
+                rr.renderFromTexture(
+                    fitToScreen = true,
+                    yOrient = -1f
+                )
                 val im = rr.migrateToBitmap()
                 saveImage(im)
                 saveImage = false
             }
 
-            rr.renderFromTexture(true)
+            rr.renderFromTexture()
             isRendering = false
 
 
