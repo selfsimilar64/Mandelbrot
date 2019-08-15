@@ -332,9 +332,13 @@ class ComplexMap (
         val burningShip     = { res: Resources -> ComplexMap(
                 "Burning Ship",
                 conditionalSF = res.getString(R.string.escape_sf),
+                initSF = res.getString(R.string.burningship_init_sf),
                 loopSF = res.getString(R.string.burningship_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.burningship_loop_df)
+                initDF = res.getString(R.string.burningship_init_df),
+                loopDF = res.getString(R.string.burningship_loop_df),
+                initCoords = doubleArrayOf(-0.3, 0.0),
+                initScale = 3.5
         ) }
         val dualpow         = { res: Resources -> ComplexMap(
                 "Dual Power",

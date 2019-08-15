@@ -491,11 +491,17 @@
     </string>
 
     <!-- BURNING SHIP -->
+    <string name="burningship_init_sf">
+        C = vec2(C.x, -C.y);
+    </string>
     <string name="burningship_loop_sf">
-        Z = cSqrSF(abs(Z)) + C;
+        Z = cSqrSF(abs(Z1)) + C;
+    </string>
+    <string name="burningship_init_df">
+        B = -B;
     </string>
     <string name="burningship_loop_df">
-        vec4 Q = cSqrDF(abs(X1), abs(Y1));
+        vec4 Q = cSqrDF(absDF(X1), absDF(Y1));
         X = addDF(Q.xy, A);
         Y = addDF(Q.zw, B);
     </string>
