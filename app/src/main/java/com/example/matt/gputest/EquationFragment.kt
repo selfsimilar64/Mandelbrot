@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.*
 import android.content.Context.INPUT_METHOD_SERVICE
 import android.view.inputmethod.InputMethodManager
+import kotlinx.android.synthetic.main.equation_fragment.*
 import kotlin.math.pow
 
 
@@ -29,6 +30,7 @@ class EquationFragment : Fragment() {
 
         val algContainer = v.findViewById<LinearLayout>(R.id.algContainer)
         val complexMapRow = v.findViewById<LinearLayout>(R.id.complexMapRow)
+        val textureRow = v.findViewById<LinearLayout>(R.id.textureRow)
         val functionLayout = v.findViewById<LinearLayout>(R.id.functionLayout)
         val mapParamEditRows = listOf<LinearLayout>(
                 v.findViewById(R.id.p1EditRow),
@@ -41,6 +43,7 @@ class EquationFragment : Fragment() {
                 v.findViewById(R.id.q1EditRow),
                 v.findViewById(R.id.q2EditRow)
         )
+        val juliaLayout = v.findViewById<LinearLayout>(R.id.juliaLayout)
 
         val editListenerNext = {
             editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)-> Any -> TextView.OnEditorActionListener {
@@ -208,16 +211,16 @@ class EquationFragment : Fragment() {
              callback.onEquationParamsChanged("juliaMode", isChecked)
              val juliaParamIndex = config.numParamsInUse() - 1
              Log.d("FRACTAL FRAGMENT", "juliaParamIndex: $juliaParamIndex")
-             val juliaSwitchLayoutIndex = algContainer.indexOfChild(juliaModeSwitch)
+             val juliaLayoutIndex = juliaLayout.indexOfChild(juliaModeSwitch)
              if (isChecked) {
-                 algContainer.removeView(mapParamEditRows[juliaParamIndex])
-                 algContainer.addView(mapParamEditRows[juliaParamIndex], juliaSwitchLayoutIndex + 1)
+                 juliaLayout.removeView(mapParamEditRows[juliaParamIndex])
+                 juliaLayout.addView(mapParamEditRows[juliaParamIndex], juliaLayoutIndex + 1)
              } else {
-                 algContainer.removeView(mapParamEditRows[juliaParamIndex + 1])
+                 juliaLayout.removeView(mapParamEditRows[juliaParamIndex + 1])
              }
          }
         juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
-        if (config.map().initJuliaMode) { juliaModeSwitch.isClickable = false }
+        if (config.map().initJuliaMode) { algContainer.removeView(juliaLayout) }
         else { juliaModeSwitch.setOnCheckedChangeListener(juliaListener) }
 
 
@@ -235,13 +238,15 @@ class EquationFragment : Fragment() {
                 if (nextMap != config.map()) {
                     if (juliaModeSwitch.isChecked && !config.map().initJuliaMode) {
                         val juliaParamIndex = config.numParamsInUse() - 1
+                        Log.d("FRACTAL FRAGMENT", "params in use: ${config.numParamsInUse()}")
                         juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->  }
                         juliaModeSwitch.isChecked = false
-                        algContainer.removeView(mapParamEditRows[juliaParamIndex])
+                        juliaLayout.removeView(mapParamEditRows[juliaParamIndex])
                         config.params["juliaMode"] = nextMap.initJuliaMode
-                        if (nextMap.initJuliaMode) {
-                            juliaModeSwitch.isClickable = false
-                        }
+                    }
+                    if (nextMap.initJuliaMode) { algContainer.removeView(juliaLayout) }
+                    else {
+                        if (algContainer.indexOfChild(juliaLayout) == -1) { algContainer.addView(juliaLayout) }
                         juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
                     }
                 }
@@ -303,9 +308,12 @@ class EquationFragment : Fragment() {
                         "texture",
                         TextureAlgorithm.all[item]?.invoke(resources) ?: config.texture()
                 )
-                textureLayout.removeViews(1, textureLayout.childCount - 2)
+                for (i in 0 until NUM_TEXTURE_PARAMS) { textureLayout.removeView(textureParamEditRows[i]) }
+                val textureLayoutIndex = textureLayout.indexOfChild(textureRow)
                 for (i in 0 until config.texture().initParams.size) {
-                    textureLayout.addView(textureParamEditRows[i], textureLayout.childCount - 1)
+                    if (textureLayout.indexOfChild(textureParamEditRows[i]) == -1) {
+                        textureLayout.addView(textureParamEditRows[i], textureLayoutIndex + i + 1)
+                    }
                     (textureParamEditRows[i].getChildAt(0) as TextView).text = config.texture().initParams[i].first
                     if (i == 0) {
                         val q1Bar = v.findViewById<SeekBar>(R.id.q1Bar)
