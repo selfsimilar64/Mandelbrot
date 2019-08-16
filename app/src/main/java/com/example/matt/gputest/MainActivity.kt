@@ -1,7 +1,9 @@
 package com.example.matt.gputest
 
+import android.Manifest
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.drawable.TransitionDrawable
@@ -13,6 +15,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.design.widget.TabLayout
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewPager
 import android.opengl.GLES32 as GL
 import android.util.Log
@@ -31,6 +35,7 @@ import java.nio.ByteBuffer
 const val SPLIT = 8193.0
 const val NUM_MAP_PARAMS = 4
 const val NUM_TEXTURE_PARAMS = 2
+const val WRITE_STORAGE_REQUEST_CODE = 0
 
 
 
@@ -317,7 +322,7 @@ class ComplexMap (
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbrotcpow_loop_sf),
                 initScale = 3.5,
-                initParams = listOf(doubleArrayOf(2.0, 2.0))
+                initParams = listOf(doubleArrayOf(3.0, 0.0))
         )}
         val logistic        = { res: Resources -> ComplexMap(
                 "Logistic",
@@ -342,12 +347,12 @@ class ComplexMap (
         ) }
         val dualpow         = { res: Resources -> ComplexMap(
                 "Dual Power",
-                initParams = listOf(doubleArrayOf(0.0, 0.0)),
                 conditionalSF = res.getString(R.string.escape_sf),
                 initSF = res.getString(R.string.dualpow_init_sf),
                 loopSF = res.getString(R.string.dualpow_loop_sf),
                 initScale = 3.0,
-                initZ = doubleArrayOf(1.0, 0.0)
+                initZ = doubleArrayOf(1.0, 0.0),
+                initParams = listOf(doubleArrayOf(2.0, 2.0))
         )}
         val sine1           = { res: Resources -> ComplexMap(
                 "Sine 1",
@@ -389,13 +394,13 @@ class ComplexMap (
         ) }
         val persianRug      = { res: Resources -> ComplexMap(
                 "Persian Rug",
+                initSF = res.getString(R.string.persianrug_init_sf),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.persianrug_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.persianrug_loop_df),
                 initScale = 3.5,
                 initParams = listOf(doubleArrayOf(0.642, 0.0)),
-                initZ = doubleArrayOf(1.0, 0.0),
                 initBailout = 1e1f
         )}
         val kleinian        = { res: Resources -> ComplexMap(
@@ -1086,19 +1091,22 @@ class MainActivity : AppCompatActivity(),
                 }
                 "saveToFile" -> {
                     if (fractalView.r.isRendering) {
-                        Log.d("MAIN ACTIVITY", "sorry bud still rendering this one")
+                        val toast = Toast.makeText(baseContext, "Please wait for the image to finish rendering", Toast.LENGTH_SHORT)
+                        toast.show()
                     }
                     else {
-                        fractalView.r.saveImage = true
-                        fractalView.requestRender()
-                        while (fractalView.r.isRendering) {
-                            Log.d("MAIN ACTIVITY", "waiting for render to finish...")
+                        if (ContextCompat.checkSelfPermission(baseContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(this,
+                                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                                    WRITE_STORAGE_REQUEST_CODE)
                         }
-
-                        // display save message
-                        val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
-                        toast.show()
-
+                        else {
+                            fractalView.r.saveImage = true
+                            fractalView.requestRender()
+                            val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
+                            toast.show()
+                        }
                     }
                     f.settingsConfig.params[key] = false
                 }
@@ -1106,6 +1114,24 @@ class MainActivity : AppCompatActivity(),
         }
         else {
             Log.d("MAIN ACTIVITY", "$key already set to $value")
+        }
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when (requestCode) {
+            WRITE_STORAGE_REQUEST_CODE -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    fractalView.r.saveImage = true
+                    fractalView.requestRender()
+                    val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
+                    toast.show()
+                } else {
+                    val toast = Toast.makeText(baseContext, "Image not saved - storage permission required", Toast.LENGTH_LONG)
+                    toast.show()
+                }
+                return
+            }
+            else -> {}
         }
     }
 
