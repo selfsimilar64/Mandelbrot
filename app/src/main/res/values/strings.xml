@@ -543,6 +543,9 @@
     </string>
 
     <!-- PERSIAN RUG -->
+    <string name="persianrug_init_sf">
+        Z = C;
+    </string>
     <string name="persianrug_loop_sf">
         Z = cMultSF(Z1, cSinSF(cTanSF(P1 - cDivSF(C, Z1))) + Z1 + cTanSF(Z1));
     </string>
