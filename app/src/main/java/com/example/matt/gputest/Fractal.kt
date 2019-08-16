@@ -390,6 +390,9 @@ class Fractal(
         // PERSIAN RUG :: (2.26988707, 0.0)
         //      JULIA :: (-0.04956468, -0.00017392)
 
+        // BURNING SHIP
+        //      JULIA :: (0.56311972, -0.88230390)
+
         updateDisplayParams(Reaction.valueOf("P$i"), false)
         updateMapParamEditText(i)
 

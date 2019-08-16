@@ -955,7 +955,7 @@ class FractalSurfaceView(
             val second = c[Calendar.SECOND]
 
             // save image with unique filename
-            val file = File(dir, "/FS_%4d%02d%02d_%02d%02d%02d.png".format(year, month+1, day, hour, minute, second))
+            val file = File(dir, "/FE_%4d%02d%02d_%02d%02d%02d.png".format(year, month+1, day, hour, minute, second))
             file.createNewFile()
             val fos = FileOutputStream(file)
             fos.write(bos.toByteArray())
@@ -1013,7 +1013,7 @@ class FractalSurfaceView(
             if (saveImage) {
                 Log.d("RENDERER", "migrating to bitmap")
                 rr.renderFromTexture(
-                    fitToScreen = true,
+                    fitToScreen = false,
                     yOrient = -1f
                 )
                 val im = rr.migrateToBitmap()
