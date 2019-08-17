@@ -25,7 +25,6 @@ class EquationFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
-        Log.d("EQUATION FRAGMENT", "creating...")
         val v = inflater.inflate(R.layout.equation_fragment, container, false)
 
         val algContainer = v.findViewById<LinearLayout>(R.id.algContainer)
