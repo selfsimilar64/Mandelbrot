@@ -18,7 +18,7 @@ import android.support.design.widget.TabLayout
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewPager
-import android.opengl.GLES32 as GL
+import android.opengl.GLES30 as GL
 import android.util.Log
 import android.util.Range
 import android.view.*
@@ -111,59 +111,6 @@ data class DualDouble (
         return DualDouble(yn, 0.0) + prod
 
     }
-
-}
-class Texture (
-        val res         : IntArray,
-        interpolation   : Int,
-        format          : Int,
-        index           : Int
-) {
-
-    val id : Int
-    private val buffer : ByteBuffer
-
-    init {
-        // create texture id
-        val b = IntBuffer.allocate(1)
-        GL.glGenTextures(1, b)
-        id = b[0]
-
-        // allocate texture memory
-        buffer = when(format) {
-            GL.GL_RGBA8 -> allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
-            GL.GL_RGBA16F -> allocateDirect(res[0] * res[1] * 8).order(ByteOrder.nativeOrder())
-            GL.GL_RGBA32F -> allocateDirect(res[0] * res[1] * 16).order(ByteOrder.nativeOrder())
-            else -> allocateDirect(0)
-        }
-
-        // bind and set texture parameters
-        GL.glActiveTexture(GL.GL_TEXTURE0 + index)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, id)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, interpolation)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, interpolation)
-
-        val type = when(format) {
-            GL.GL_RGBA8 -> GL.GL_UNSIGNED_BYTE
-            GL.GL_RGBA16F -> GL.GL_HALF_FLOAT
-            GL.GL_RGBA32F -> GL.GL_FLOAT
-            else -> 0
-        }
-
-        // define texture specs
-        GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                format,                     // internal format
-                res[0], res[1],              // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                type,                       // type
-                buffer                      // memory pointer
-        )
-    }
-
-    fun delete() { GL.glDeleteTextures(1, intArrayOf(id), 0) }
 
 }
 
@@ -578,9 +525,9 @@ class FractalConfig (val params : MutableMap<String, Any>) {
     val p2                  = { params["p2"]               as DoubleArray       }
     val p3                  = { params["p3"]               as DoubleArray       }
     val p4                  = { params["p4"]               as DoubleArray       }
+    val texture             = { params["texture"]          as TextureAlgorithm  }
     val q1                  = { params["q1"]               as Double            }
     val q2                  = { params["q2"]               as Double            }
-    val texture             = { params["texture"]          as TextureAlgorithm  }
     val juliaMode           = { params["juliaMode"]        as Boolean           }
     val paramSensitivity    = { params["paramSensitivity"] as Double            }
     val coords              = { params["coords"]           as DoubleArray       }
@@ -701,9 +648,9 @@ class MainActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
 
 
-        orientation = baseContext.resources.configuration.orientation
-        Log.d("MAIN ACTIVITY", "orientation: $orientation")
-        val orientationChanged = (savedInstanceState?.getInt("orientation") ?: orientation) != orientation
+//        orientation = baseContext.resources.configuration.orientation
+//        Log.d("MAIN ACTIVITY", "orientation: $orientation")
+//        val orientationChanged = (savedInstanceState?.getInt("orientation") ?: orientation) != orientation
 
         // get screen dimensions
         val displayMetrics = baseContext.resources.displayMetrics
@@ -722,14 +669,14 @@ class MainActivity : AppCompatActivity(),
 
 
         val fractalConfig = FractalConfig(mutableMapOf(
-                "map"               to  ComplexMap.test(resources),
+                "map"               to  ComplexMap.burningShip(resources),
                 "p1"                to  doubleArrayOf(0.0, 0.0),
                 "p2"                to  doubleArrayOf(0.0, 0.0),
                 "p3"                to  doubleArrayOf(0.0, 0.0),
                 "p4"                to  doubleArrayOf(0.0, 0.0),
+                "texture"           to  TextureAlgorithm.escape(resources),
                 "q1"                to  0.0,
                 "q2"                to  0.0,
-                "texture"           to  TextureAlgorithm.escape(resources),
                 "juliaMode"         to  false,
                 "paramSensitivity"  to  1.0,
                 "coords"            to  doubleArrayOf(0.0, 0.0),
@@ -760,10 +707,10 @@ class MainActivity : AppCompatActivity(),
                 intArrayOf(screenWidth, screenHeight)
         )
 
-        if (orientationChanged) {
-            f.switchOrientation()
-            Log.d("MAIN", "orientation changed")
-        }
+//        if (orientationChanged) {
+//            f.switchOrientation()
+//            Log.d("MAIN", "orientation changed")
+//        }
 
 
         fractalView = FractalSurfaceView(f, this)
@@ -974,11 +921,34 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
-        outState?.putString(  "colorAlgName",   f.fractalConfig.texture().name    )
-        outState?.putFloat(   "frequency",      f.colorConfig.frequency()         )
-        outState?.putFloat(   "phase",          f.colorConfig.phase()             )
-        outState?.putFloat(   "bailoutRadius",  f.fractalConfig.bailoutRadius()  )
-        outState?.putInt(     "orientation",    orientation                       )
+
+        // save FractalConfig values
+        outState?.putString(        "map",               f.fractalConfig.map().name          )
+        outState?.putDoubleArray(   "p1",                f.fractalConfig.p1()                )
+        outState?.putDoubleArray(   "p2",                f.fractalConfig.p2()                )
+        outState?.putDoubleArray(   "p3",                f.fractalConfig.p3()                )
+        outState?.putDoubleArray(   "p4",                f.fractalConfig.p4()                )
+        outState?.putString(        "texture",           f.fractalConfig.texture().name      )
+        outState?.putDouble(        "q1",                f.fractalConfig.q1()                )
+        outState?.putDouble(        "q2",                f.fractalConfig.q2()                )
+        outState?.putBoolean(       "juliaMode",         f.fractalConfig.juliaMode()         )
+        outState?.putDouble(        "paramSensitivity",  f.fractalConfig.paramSensitivity()  )
+        outState?.putDoubleArray(   "coords",            f.fractalConfig.coords()            )
+        outState?.putDoubleArray(   "scale",             f.fractalConfig.scale()             )
+        outState?.putInt(           "maxIter",           f.fractalConfig.maxIter()           )
+        outState?.putFloat(         "bailoutRadius",     f.fractalConfig.bailoutRadius()     )
+
+        // save ColorConfig values
+        outState?.putString(   "palette",    f.colorConfig.palette().name  )
+        outState?.putFloat(    "frequency",  f.colorConfig.frequency()     )
+        outState?.putFloat(    "phase",      f.colorConfig.phase()         )
+
+        // save SettingsConfig values
+        outState?.putString(    "resolution",        f.settingsConfig.resolution().name   )
+        outState?.putBoolean(   "continuousRender",  f.settingsConfig.continuousRender()  )
+        outState?.putBoolean(   "displayParams",     f.settingsConfig.displayParams()     )
+        outState?.putString(    "precision",         f.settingsConfig.precision().name    )
+
         super.onSaveInstanceState(outState)
     }
     override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
