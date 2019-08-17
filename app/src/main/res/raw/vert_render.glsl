@@ -1,4 +1,4 @@
-#version 320 es
+#version 300 es
 
 uniform float bgScale;
 in vec4 viewCoords;
