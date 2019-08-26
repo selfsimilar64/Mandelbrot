@@ -468,6 +468,9 @@
         X = addDF(Q.xy, A);
         Y = addDF(Q.zw, B);
     </string>
+    <string name="mandelbrot_katex">
+        $f(z) = z^2 + c$
+    </string>
 
     <!-- MANDELBROT CPOW -->
     <string name="mandelbrotcpow_loop_sf">
@@ -475,6 +478,14 @@
     </string>
     <string name="mandelbrotcpow_loop_df">
 
+    </string>
+    <string name="mandelbrotcpow_katex">
+        $f(z) = z^{\\operatorname{Re}(P1)} + c$
+    </string>
+
+    <!-- MANDELBAR -->
+    <string name="mandelbar_loop_sf">
+        Z = cSqrSF(conjSF(Z1)) + C;
     </string>
 
     <!-- LOGISTIC -->
@@ -488,6 +499,9 @@
         vec4 Q4 = cDivDF(Q2, Q3, A, B);
         X = Q4.xy;
         Y = Q4.zw;
+    </string>
+    <string name="logistic_katex">
+        $f(z) = \\frac{z - z^2}{c}$
     </string>
 
     <!-- BURNING SHIP -->
@@ -505,6 +519,9 @@
         X = addDF(Q.xy, A);
         Y = addDF(Q.zw, B);
     </string>
+    <string name="burningship_katex">
+        $f(z) = \\big(|\\operatorname{Re}(z)| + i|\\operatorname{Im}(z)|\\big)^2 + c$
+    </string>
 
     <!-- DUALPOW -->
     <string name="dualpow_init_sf">
@@ -513,19 +530,34 @@
         vec2 gamma = P1;
     </string>
     <string name="dualpow_loop_sf">
-        Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, -gamma.y)));
+        Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, gamma.y)));
     </string>
-
+    <string name="dualpow_katex">
+        $f(z) = c \\cdot (z^{\\operatorname{Re}(P1)} + z^{\\operatorname{Im}(P1)})$
+    </string>
 
     <!-- SINE -->
     <string name="sine1_loop_sf">
         Z = cSinSF(cDivSF(cPow3(Z1, P1.x), C));
     </string>
-    <string name="sine1_loop_df">
-        vec
+    <string name="sine1_katex">
+        $f(z) = \\sin(\\frac{z^{\\operatorname{Re}(P1)}}{c})$
     </string>
+
     <string name="sine2_loop_sf">
         Z = cSinSF(cDivSF(cSqrSF(Z1) + P1, C));
+    </string>
+    <string name="sine2_loop_df">
+        vec4 Q1 = cSqrDF(X1, Y1);
+        vec2 Q2 = addDF(Q1.xy, vec2(P1.x, 0.0));
+        vec2 Q3 = addDF(Q1.zw, vec2(P1.y, 0.0));
+        vec4 Q4 = cDivDF(Q2, Q3, A, B);
+        vec4 Q5 = cSinDF(Q4.xy, Q4.zw, 8);
+        X = Q5.xy;
+        Y = Q5.zw;
+    </string>
+    <string name="sine2_katex">
+        $f(z) = \\sin(\\frac{z^2 + P1}{c})$
     </string>
 
     <!-- HORSESHOE CRAB -->
@@ -540,6 +572,9 @@
         vec4 Q = cSinDF(U, V, 8);
         X = Q.xy;
         Y = Q.zw;
+    </string>
+    <string name="horseshoecrab_katex">
+        $f(z) = \\sin (\\frac{P1}{z} + \\frac{z}{c})$
     </string>
 
     <!-- PERSIAN RUG -->
@@ -565,6 +600,9 @@
         vec4 Q = cMultDF(X1, Y1, S11, S12);
         X = Q.xy;
         Y = Q.zw;
+    </string>
+    <string name="persianrug_katex">
+        $f(z) = z \\cdot \\bigg(\\sin\\Big(\\tan\\big(P1 - \\frac{c}{z}\\big)\\Big) + z + \\tan(z)\\bigg)$
     </string>
 
     <!-- KLEINIAN -->
@@ -630,7 +668,7 @@
     <string name="test_init_sf">
     </string>
     <string name="test_loop_sf">
-        Z = vec2(atan(Z1.y, Z1.x), abs(Z1.x)*abs(Z1.y)) + C;
+        Z = cDivSF(cMultSF(vec2(0.0, 1.0), Z1), cTanSF(Z1 + P1)) + C;
     </string>
 
 
@@ -643,6 +681,10 @@
     <string name="escape_sf">
         modZ = modSF(Z);
         if (modZ > R)
+    </string>
+    <string name="escape_df_2">
+        modZ = modDF(X, Y);
+        if (modZ.x > R || !(modZ.x &lt; 0.0 || 0.0 &lt; modZ.x))
     </string>
     <string name="escape_df">
         modZ = modDF(X, Y);
