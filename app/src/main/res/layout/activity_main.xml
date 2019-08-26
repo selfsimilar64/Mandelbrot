@@ -205,7 +205,7 @@
             android:id="@+id/progressBar"
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
-            android:layout_height="3dip"
+            android:layout_height="5dp"
             android:background="@color/colorHalfTransparent"
             android:progressBackgroundTint="@color/colorTransparent"
             app:layout_constraintBottom_toTopOf="@id/uiFull" />
@@ -235,13 +235,6 @@
                     android:clickable="false"
                     android:focusable="false"
                     android:text="fractal" />
-
-                <android.support.design.widget.TabItem
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:text="color" />
 
                 <android.support.design.widget.TabItem
                     android:layout_width="wrap_content"

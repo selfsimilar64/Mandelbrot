@@ -21,8 +21,9 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="cardBackgroundColor">@color/colorPrimaryDark</item>
         <item name="cardCornerRadius">5dp</item>
-        <item name="android:layout_marginHorizontal">5dp</item>
-        <item name="android:layout_marginBottom">30dp</item>
+        <item name="android:layout_marginStart">5dp</item>
+        <item name="android:layout_marginEnd">5dp</item>
+        <item name="android:layout_marginBottom">7dp</item>
         <item name="contentPaddingLeft">10dp</item>
         <item name="contentPaddingRight">10dp</item>
         <item name="contentPaddingTop">5dp</item>
@@ -35,12 +36,12 @@
         <item name="android:layout_gravity">start|center_vertical</item>
         <item name="android:textColor">@color/colorDarkText</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="EditTextDark" parent="android:style/Widget.Material.TextView">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">match_parent</item>
+        <item name="android:textColor">@color/colorDarkText</item>
         <item name="android:gravity">end</item>
         <item name="android:textSize">15sp</item>
         <item name="android:inputType">numberDecimal|numberSigned</item>
@@ -50,10 +51,10 @@
     <style name="SwitchDark" parent="@style/Widget.AppCompat.CompoundButton.Switch">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginVertical">5dp</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
         <item name="android:textColor">@color/colorDarkText</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
         <item name="android:textColorPrimaryDisableOnly">#b71c1c</item>
         <item name="android:colorControlActivated">#1b5e20</item>
         <item name="android:colorForeground">#f57f17</item>
@@ -64,11 +65,50 @@
 
     <style name="SpinnerDark">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">32dp</item>
-        <item name="android:background">@drawable/display_params_bg_visible</item>
-        <item name="android:backgroundTint">#3fff</item>
-        <item name="android:minWidth">150dp</item>
-        <item name="android:spinnerMode">dialog</item>
+        <item name="android:layout_height">37dp</item>
+        <item name="android:backgroundTint">@color/colorDarkText</item>
+        <item name="android:spinnerMode">dropdown</item>
+        <item name="android:popupBackground">#0a0a0a</item>
+    </style>
+
+    <style name="CardHeaderTextDark" parent="TextDark">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:paddingEnd">5dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:drawableEnd">@drawable/arrow_collapse</item>
+    </style>
+
+    <style name="CardSubHeaderDark" parent="TextDark">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:textColor">@color/colorDarkText2</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="dividerDark">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginBottom">20dp</item>
+        <item name="android:background">@color/colorDarkSelected</item>
+    </style>
+
+    <style name="cardHeaderButtonDark">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:paddingTop">7dp</item>
+        <item name="android:paddingBottom">7dp</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:drawableRight">@drawable/arrow_expand</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:textAppearance">@style/CardHeaderTextDark</item>
     </style>
 
 </resources>

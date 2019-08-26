@@ -30,18 +30,17 @@ import kotlin.math.ceil
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
-private const val glVersion = 3.0
 private class ContextFactory : GLSurfaceView.EGLContextFactory {
 
     override fun createContext(egl: EGL10, display: EGLDisplay, eglConfig: EGLConfig): EGLContext {
 
-        Log.w("SURFACE VIEW", "creating OpenGL ES $glVersion context")
         return egl.eglCreateContext(
                 display,
                 eglConfig,
                 EGL10.EGL_NO_CONTEXT,
-                intArrayOf(EGL_CONTEXT_CLIENT_VERSION, glVersion.toInt(), EGL10.EGL_NONE)
+                intArrayOf(EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE)
         ) // returns null if 3.0 is not supported
+
     }
     override fun destroyContext(egl: EGL10?, display: EGLDisplay?, context: EGLContext?) {
         egl?.eglDestroyContext(display, context)
@@ -70,7 +69,7 @@ class Texture (
             GL.GL_RGBA8 -> ByteBuffer.allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
             GL.GL_RGBA16F -> ByteBuffer.allocateDirect(res[0] * res[1] * 8).order(ByteOrder.nativeOrder())
             GL.GL_RGBA32F -> ByteBuffer.allocateDirect(res[0] * res[1] * 16).order(ByteOrder.nativeOrder())
-//            GL.GL_RGBA -> ByteBuffer.allocateDirect(res[0] * res[1] * 16).order(ByteOrder.nativeOrder())
+//            GL.GL_RGBA -> ByteBuffer.allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
             else -> ByteBuffer.allocateDirect(0)
         }
 
@@ -84,7 +83,7 @@ class Texture (
             GL.GL_RGBA8 -> GL.GL_UNSIGNED_BYTE
             GL.GL_RGBA16F -> GL.GL_HALF_FLOAT
             GL.GL_RGBA32F -> GL.GL_FLOAT
-//            GL.GL_RGBA -> GL.GL_FLOAT
+//            GL.GL_RGBA -> GL.GL_UNSIGNED_BYTE
             else -> 0
         }
 
@@ -143,11 +142,12 @@ class FractalSurfaceView(
             private val viewCoordsSampleHandle : Int
             private val quadCoordsSampleHandle : Int
             private val textureSampleHandle    : Int
+            private val yOrientSampleHandle    : Int
 
             private val colorProgram = GL.glCreateProgram()
             private val viewCoordsColorHandle : Int
             private val quadCoordsColorHandle : Int
-            private val yOrientHandle         : Int
+            private val yOrientColorHandle    : Int
             private val numColorsHandle       : Int
             private val textureColorHandle    : Int
             private val paletteHandle         : Int
@@ -277,6 +277,7 @@ class FractalSurfaceView(
                 viewCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "viewCoords"  )
                 quadCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "quadCoords"  )
                 textureSampleHandle    = GL.glGetUniformLocation( sampleProgram, "tex"         )
+                yOrientSampleHandle    = GL.glGetUniformLocation( sampleProgram, "yOrient"     )
 
                 GL.glAttachShader(colorProgram, vSampleShader)
                 GL.glAttachShader(colorProgram, fColorShader)
@@ -285,7 +286,7 @@ class FractalSurfaceView(
                 viewCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "viewCoords"   )
                 quadCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "quadCoords"   )
                 textureColorHandle    = GL.glGetUniformLocation(  colorProgram, "tex"          )
-                yOrientHandle         = GL.glGetUniformLocation(  colorProgram, "yOrient"      )
+                yOrientColorHandle    = GL.glGetUniformLocation(  colorProgram, "yOrient"      )
                 numColorsHandle       = GL.glGetUniformLocation(  colorProgram, "numColors"    )
                 paletteHandle         = GL.glGetUniformLocation(  colorProgram, "palette"      )
                 frequencyHandle       = GL.glGetUniformLocation(  colorProgram, "frequency"    )
@@ -606,7 +607,7 @@ class FractalSurfaceView(
 
                     GL.glEnableVertexAttribArray(viewCoordsSampleHandle)
                     GL.glEnableVertexAttribArray(quadCoordsSampleHandle)
-                    GL.glUniform1fv(yOrientHandle, 1, floatArrayOf(1f), 0)
+                    GL.glUniform1fv(yOrientSampleHandle, 1, floatArrayOf(1f), 0)
                     GL.glUniform1i(textureSampleHandle, currIndex)
                     GL.glVertexAttribPointer(
                             viewCoordsSampleHandle,        // index
@@ -754,11 +755,11 @@ class FractalSurfaceView(
                         .put(bgQuadCoords)
                         .position(0)
 
-                GL.glUniform1fv(yOrientHandle, 1, floatArrayOf(yOrient), 0)
-                GL.glUniform1i(numColorsHandle, f.colorConfig.palette().size)
-                GL.glUniform3fv(paletteHandle, f.colorConfig.palette().size, f.colorConfig.palette().flatPalette, 0)
-                GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.colorConfig.frequency()), 0)
-                GL.glUniform1fv(phaseHandle, 1, floatArrayOf(f.colorConfig.phase()), 0)
+                GL.glUniform1fv(yOrientColorHandle, 1, floatArrayOf(yOrient), 0)
+                GL.glUniform1i(numColorsHandle, f.fractalConfig.palette().size)
+                GL.glUniform3fv(paletteHandle, f.fractalConfig.palette().size, f.fractalConfig.palette().flatPalette, 0)
+                GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.fractalConfig.frequency()), 0)
+                GL.glUniform1fv(phaseHandle, 1, floatArrayOf(f.fractalConfig.phase()), 0)
 
                 GL.glEnableVertexAttribArray(viewCoordsColorHandle)
                 GL.glEnableVertexAttribArray(quadCoordsColorHandle)
@@ -863,6 +864,8 @@ class FractalSurfaceView(
             }
 
         }
+
+
 
 
         var renderToTex = false
@@ -1060,7 +1063,10 @@ class FractalSurfaceView(
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
 
             // get OpenGL ES version
-            Log.d("SURFACE VIEW", unused.glGetString(GL10.GL_VERSION))
+            val glVersion = unused.glGetString(GL10.GL_VERSION).split(" ")[2].toFloat()
+            Log.d("SURFACE VIEW", "$glVersion")
+            Log.d("SURFACE VIEW", "${glVersion > 2f}")
+            f.glVersion = glVersion
 
             // get fragment shader precision
 //            val a : IntBuffer = IntBuffer.allocate(2)
@@ -1115,6 +1121,9 @@ class FractalSurfaceView(
 
     }
 
+
+
+
     val r : FractalRenderer
     var hasTranslated = false
     private val h = Handler()
@@ -1163,8 +1172,8 @@ class FractalSurfaceView(
     init {
 
 
-        setEGLContextClientVersion(3)               // create OpenGL ES 3.0 context
-        // setEGLContextFactory(ContextFactory())
+        // setEGLContextClientVersion(2)               // create OpenGL ES 3.0 context
+        setEGLContextFactory(ContextFactory())
         r = FractalRenderer(f, context)             // create renderer
         setRenderer(r)                              // set renderer
         renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly

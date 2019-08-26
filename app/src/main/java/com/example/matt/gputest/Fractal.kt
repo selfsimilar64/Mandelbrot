@@ -11,11 +11,12 @@ import android.widget.TextView
 
 class Fractal(
         private val context     : Activity,
-        val fractalConfig      : FractalConfig,
-        val colorConfig         : ColorConfig,
+        val fractalConfig       : FractalConfig,
         val settingsConfig      : SettingsConfig,
         val screenRes           : IntArray
 ) {
+
+    var glVersion : Float = 0f
 
     private var header       : String = ""
     private var arithmetic   : String = ""
@@ -203,8 +204,8 @@ class Fractal(
         updateTextureParamEditTexts()
     }
     private fun resetColorParams() {
-        colorConfig.params["frequency"] = 3.5f
-        colorConfig.params["phase"] = 0f
+        fractalConfig.params["frequency"] = 3.5f
+        fractalConfig.params["phase"] = 0f
     }
     fun reset() {
         resetPosition()
@@ -293,8 +294,8 @@ class Fractal(
         val frequencyEdit = context.findViewById<EditText>(R.id.frequencyEdit)
         val phaseEdit = context.findViewById<EditText>(R.id.phaseEdit)
 
-        frequencyEdit?.setText("%.5f".format(colorConfig.frequency()))
-        phaseEdit?.setText("%.5f".format(colorConfig.phase()))
+        frequencyEdit?.setText("%.5f".format(fractalConfig.frequency()))
+        phaseEdit?.setText("%.5f".format(fractalConfig.phase()))
 
     }
     fun updateDisplayParams(reaction: Reaction, reactionChanged: Boolean) {
@@ -307,8 +308,8 @@ class Fractal(
                     (displayParams.getChildAt(3) as TextView).text = "scale: %e".format(fractalConfig.scale()[0])
                 }
                 Reaction.COLOR -> {
-                    (displayParams.getChildAt(1) as TextView).text = "frequency: %.4f".format(colorConfig.frequency())
-                    (displayParams.getChildAt(2) as TextView).text = "phase: %.4f".format(colorConfig.phase())
+                    (displayParams.getChildAt(1) as TextView).text = "frequency: %.4f".format(fractalConfig.frequency())
+                    (displayParams.getChildAt(2) as TextView).text = "phase: %.4f".format(fractalConfig.phase())
                 }
                 else -> {
                     val i = reaction.ordinal - 2
@@ -392,6 +393,9 @@ class Fractal(
 
         // BURNING SHIP
         //      JULIA :: (0.56311972, -0.88230390)
+        //      JULIA :: (0.82628826, -1.15622855)
+        //      JULIA :: (0.78515850, -1.14163868)
+        //      JULIA :: (-1.75579063, -0.00825099)
 
         updateDisplayParams(Reaction.valueOf("P$i"), false)
         updateMapParamEditText(i)
@@ -524,12 +528,12 @@ class Fractal(
 
     }
     fun setFrequency(dScale: Float) {
-        colorConfig.params["frequency"] = colorConfig.frequency() * dScale
+        fractalConfig.params["frequency"] = fractalConfig.frequency() * dScale
         updateDisplayParams(Reaction.COLOR, false)
         updateColorParamEditTexts()
     }
     fun setPhase(dx: Float) {
-        colorConfig.params["phase"] = (colorConfig.phase() + dx/screenRes[0])
+        fractalConfig.params["phase"] = (fractalConfig.phase() + dx/screenRes[0])
         updateDisplayParams(Reaction.COLOR, false)
         updateColorParamEditTexts()
     }
