@@ -1,6 +1,7 @@
 #version 300 es
 
 uniform float bgScale;
+
 in vec4 viewCoords;
 out vec4 viewPos;
 
