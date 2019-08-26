@@ -9,8 +9,9 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import android.content.Context.INPUT_METHOD_SERVICE
+import android.support.v7.widget.CardView
 import android.view.inputmethod.InputMethodManager
-import kotlinx.android.synthetic.main.equation_fragment.*
+import katex.hourglass.`in`.mathlib.MathView
 import kotlin.math.pow
 
 
@@ -19,6 +20,7 @@ class EquationFragment : Fragment() {
     private lateinit var callback : OnParamChangeListener
     private lateinit var complexMapSpinner : Spinner
     private lateinit var textureAlgSpinner : Spinner
+    private lateinit var colorPaletteSpinner : Spinner
     private lateinit var juliaModeSwitch : Switch
 
     lateinit var config : FractalConfig
@@ -27,22 +29,51 @@ class EquationFragment : Fragment() {
 
         val v = inflater.inflate(R.layout.equation_fragment, container, false)
 
-        val algContainer = v.findViewById<LinearLayout>(R.id.algContainer)
-        val complexMapRow = v.findViewById<LinearLayout>(R.id.complexMapRow)
-        val textureRow = v.findViewById<LinearLayout>(R.id.textureRow)
-        val functionLayout = v.findViewById<LinearLayout>(R.id.functionLayout)
         val mapParamEditRows = listOf<LinearLayout>(
                 v.findViewById(R.id.p1EditRow),
                 v.findViewById(R.id.p2EditRow),
                 v.findViewById(R.id.p3EditRow),
                 v.findViewById(R.id.p4EditRow)
         )
-        val textureLayout = v.findViewById<LinearLayout>(R.id.textureLayout)
+        val juliaLayout = v.findViewById<LinearLayout>(R.id.juliaLayout)
+        val complexMapKatexLayout = v.findViewById<LinearLayout>(R.id.complexMapKatexLayout)
+        val complexMapKatex = v.findViewById<MathView>(R.id.complexMapKatex)
+
+        val textureSpinnerLayout = v.findViewById<LinearLayout>(R.id.textureSpinnerLayout)
         val textureParamEditRows = listOf<LinearLayout>(
                 v.findViewById(R.id.q1EditRow),
                 v.findViewById(R.id.q2EditRow)
         )
-        val juliaLayout = v.findViewById<LinearLayout>(R.id.juliaLayout)
+
+        val cardHeaderListener = { cardBody: LinearLayout -> View.OnClickListener {
+            if (cardBody.layoutParams.height == 0) {
+                cardBody.layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_collapse, null), null)
+                Log.w("FRACTAL", "was 0")
+            }
+            else {
+                cardBody.layoutParams.height = 0
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_expand, null), null)
+                Log.w("FRACTAL", "was open")
+            }
+            cardBody.requestLayout()
+            cardBody.invalidate()
+        }}
+
+        val functionLayoutBody = v.findViewById<LinearLayout>(R.id.functionLayoutBody)
+        val textureLayoutBody = v.findViewById<LinearLayout>(R.id.textureLayoutBody)
+        val positionLayoutBody = v.findViewById<LinearLayout>(R.id.positionLayoutBody)
+        val colorLayoutBody = v.findViewById<LinearLayout>(R.id.colorLayoutBody)
+
+        val functionHeaderButton = v.findViewById<Button>(R.id.functionHeaderButton)
+        val textureHeaderButton = v.findViewById<Button>(R.id.textureHeaderButton)
+        val positionHeaderButton = v.findViewById<Button>(R.id.positionHeaderButton)
+        val colorHeaderButton = v.findViewById<Button>(R.id.colorHeaderButton)
+
+        functionHeaderButton.setOnClickListener(cardHeaderListener(functionLayoutBody))
+        textureHeaderButton.setOnClickListener(cardHeaderListener(textureLayoutBody))
+        positionHeaderButton.setOnClickListener(cardHeaderListener(positionLayoutBody))
+        colorHeaderButton.setOnClickListener(cardHeaderListener(colorLayoutBody))
 
         val editListenerNext = {
             editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)-> Any -> TextView.OnEditorActionListener {
@@ -199,27 +230,69 @@ class EquationFragment : Fragment() {
         })
 
 
+        colorPaletteSpinner = v.findViewById(R.id.colorPaletteSpinner)
+        colorPaletteSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
-        for (i in 0 until NUM_MAP_PARAMS) { functionLayout.removeView(mapParamEditRows[i]) }
-        for (i in 0 until NUM_TEXTURE_PARAMS) { textureLayout.removeView(textureParamEditRows[i]) }
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val item = parent?.getItemAtPosition(position).toString()
+                callback.onEquationParamsChanged(
+                        "palette",
+                        ColorPalette.all[item] ?: config.palette()
+                )
+            }
+
+        }
+
+        val colorPaletteAdapter = ArrayAdapter(
+                v.context,
+                android.R.layout.simple_spinner_item,
+                List(ColorPalette.all.size) { i: Int -> ColorPalette.all.keys.elementAt(i) }
+        )
+        colorPaletteAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        colorPaletteSpinner.adapter = colorPaletteAdapter
+        colorPaletteSpinner.setSelection(ColorPalette.all.keys.indexOf(
+                savedInstanceState?.getString("palette") ?: config.palette().name)
+        )
+
+        val frequencyEdit = v.findViewById<EditText>(R.id.frequencyEdit)
+        frequencyEdit.setText("%.5f".format(config.frequency()))
+        frequencyEdit.setOnEditorActionListener(editListenerDone(frequencyEdit, "frequency") {
+            it.text.toString().toFloat()
+        })
+
+        val phaseEdit = v.findViewById<EditText>(R.id.phaseEdit)
+        phaseEdit.setText("%.5f".format(config.phase()))
+        phaseEdit.setOnEditorActionListener(editListenerDone(frequencyEdit, "phase") {
+            it.text.toString().toFloat()
+        })
+
+
+        for (i in 0 until NUM_MAP_PARAMS) { functionLayoutBody.removeView(mapParamEditRows[i]) }
+        for (i in 0 until NUM_TEXTURE_PARAMS) { textureLayoutBody.removeView(textureParamEditRows[i]) }
 
 
 
         // JULIA MODE SWITCH
          val juliaListener = CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-             callback.onEquationParamsChanged("juliaMode", isChecked)
-             val juliaParamIndex = config.numParamsInUse() - 1
+             val juliaParamIndex = config.numParamsInUse()
              Log.d("FRACTAL FRAGMENT", "juliaParamIndex: $juliaParamIndex")
              val juliaLayoutIndex = juliaLayout.indexOfChild(juliaModeSwitch)
              if (isChecked) {
                  juliaLayout.removeView(mapParamEditRows[juliaParamIndex])
                  juliaLayout.addView(mapParamEditRows[juliaParamIndex], juliaLayoutIndex + 1)
+                 complexMapKatex.setDisplayText(config.map().katex.replace(Regex("(?<!a)c"), "P${juliaParamIndex + 1}"))
              } else {
-                 juliaLayout.removeView(mapParamEditRows[juliaParamIndex + 1])
+                 juliaLayout.removeView(mapParamEditRows[juliaParamIndex - 1])
+                 complexMapKatex.setDisplayText(config.map().katex)
              }
+             callback.onEquationParamsChanged("juliaMode", isChecked)
          }
         juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
-        if (config.map().initJuliaMode) { algContainer.removeView(juliaLayout) }
+        if (config.map().initJuliaMode) { functionLayoutBody.removeView(juliaLayout) }
         else { juliaModeSwitch.setOnCheckedChangeListener(juliaListener) }
 
 
@@ -232,7 +305,9 @@ class EquationFragment : Fragment() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+
                 val item = parent?.getItemAtPosition(position).toString()
+
                 val nextMap = ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()
                 if (nextMap != config.map()) {
                     if (juliaModeSwitch.isChecked && !config.map().initJuliaMode) {
@@ -243,25 +318,32 @@ class EquationFragment : Fragment() {
                         juliaLayout.removeView(mapParamEditRows[juliaParamIndex])
                         config.params["juliaMode"] = nextMap.initJuliaMode
                     }
-                    if (nextMap.initJuliaMode) { algContainer.removeView(juliaLayout) }
+                    if (nextMap.initJuliaMode) { functionLayoutBody.removeView(juliaLayout) }
                     else {
-                        if (algContainer.indexOfChild(juliaLayout) == -1) { algContainer.addView(juliaLayout) }
+                        if (functionLayoutBody.indexOfChild(juliaLayout) == -1) { functionLayoutBody.addView(juliaLayout) }
                         juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
                     }
+
                 }
-                val mapLayoutIndex = functionLayout.indexOfChild(complexMapRow)
+
+                val mapLayoutIndex = functionLayoutBody.indexOfChild(complexMapKatexLayout)
                 for (i in 0 until config.map().initParams.size) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- removing row ${i + 1}")
-                    functionLayout.removeView(mapParamEditRows[i])
+                    functionLayoutBody.removeView(mapParamEditRows[i])
                 }
                 for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).initParams.size) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- adding row ${i + 1} at index ${mapLayoutIndex + i + 1}")
-                    functionLayout.addView(mapParamEditRows[i], mapLayoutIndex + i + 1)
+                    functionLayoutBody.addView(mapParamEditRows[i], mapLayoutIndex + i + 1)
                 }
+
                 callback.onEquationParamsChanged(
                         "map",
                         ComplexMap.all[item]?.invoke(resources) ?: config.map()
                 )
+
+                complexMapKatex.setDisplayText(nextMap.katex)
+                complexMapKatex.setTextSize((nextMap.katexSize * resources.displayMetrics.scaledDensity).toInt())
+
             }
 
         }
@@ -307,11 +389,11 @@ class EquationFragment : Fragment() {
                         "texture",
                         TextureAlgorithm.all[item]?.invoke(resources) ?: config.texture()
                 )
-                for (i in 0 until NUM_TEXTURE_PARAMS) { textureLayout.removeView(textureParamEditRows[i]) }
-                val textureLayoutIndex = textureLayout.indexOfChild(textureRow)
+                for (i in 0 until NUM_TEXTURE_PARAMS) { textureLayoutBody.removeView(textureParamEditRows[i]) }
+                val textureLayoutIndex = textureLayoutBody.indexOfChild(textureSpinnerLayout)
                 for (i in 0 until config.texture().initParams.size) {
-                    if (textureLayout.indexOfChild(textureParamEditRows[i]) == -1) {
-                        textureLayout.addView(textureParamEditRows[i], textureLayoutIndex + i + 1)
+                    if (textureLayoutBody.indexOfChild(textureParamEditRows[i]) == -1) {
+                        textureLayoutBody.addView(textureParamEditRows[i], textureLayoutIndex + i + 1)
                     }
                     (textureParamEditRows[i].getChildAt(0) as TextView).text = config.texture().initParams[i].first
                     if (i == 0) {
