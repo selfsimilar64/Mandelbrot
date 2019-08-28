@@ -226,12 +226,17 @@ class Fractal(
         val bailoutExponentEdit = context.findViewById<EditText>(R.id.bailoutExponentEdit)
         val bailoutStrings = "%e".format(fractalConfig.bailoutRadius()).split("e")
 
+//        Log.w("FRACTAL", "scaleExponent: %d".format(scaleStrings[1].toInt()))
+//        Log.w("FRACTAL", "bailoutExponent: %d".format(bailoutStrings[1].toInt()))
+
         xCoordEdit?.setText("%.17f".format(fractalConfig.coords()[0]))
         yCoordEdit?.setText("%.17f".format(fractalConfig.coords()[1]))
-        scaleSignificandEdit?.setText(scaleStrings[0])
-        scaleExponentEdit?.setText(scaleStrings[1])
-        bailoutSignificandEdit?.setText(bailoutStrings[0])
-        bailoutExponentEdit?.setText(bailoutStrings[1])
+
+        scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
+        scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
+
+        bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
+        bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
 
     }
     @SuppressLint("SetTextI18n")
@@ -396,21 +401,22 @@ class Fractal(
         //      JULIA :: (0.82628826, -1.15622855)
         //      JULIA :: (0.78515850, -1.14163868)
         //      JULIA :: (-1.75579063, -0.00825099)
+        //      JULIA :: (-1.21314957, 0.00826136) + TRIANGLE INEQ / STRIPE
 
         updateDisplayParams(Reaction.valueOf("P$i"), false)
-        updateMapParamEditText(i)
+        // updateMapParamEditText(i)
 
     }
     fun setMapParamSensitivity(i: Int, dScale: Float) {
         fractalConfig.params["paramSensitivity"] = fractalConfig.paramSensitivity() * dScale
-        updateMapParamEditText(i)
+        // updateMapParamEditText(i)
         updateDisplayParams(Reaction.valueOf("P$i"), false)
     }
     fun setTextureParam(i: Int, dPos: FloatArray) {
         // dx -- [0, screenWidth]
         fractalConfig.params["q$i"] = fractalConfig.q1() + dPos[0]/screenRes[0]
         // updateDisplayParams(Reaction.valueOf("P$i"), false)
-        updateTextureParamEditText(i)
+        // updateTextureParamEditText(i)
     }
     fun translate(dScreenPos: FloatArray) {
 
@@ -432,7 +438,7 @@ class Fractal(
             }
         }
 
-        updatePositionEditTexts()
+        // updatePositionEditTexts()
         updateDisplayParams(Reaction.TRANSFORM, false)
 //        Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
 
@@ -522,7 +528,7 @@ class Fractal(
             Log.d("FRACTAL", "precision changed")
         }
 
-        updatePositionEditTexts()
+        // updatePositionEditTexts()
         updateDisplayParams(Reaction.TRANSFORM, false)
 //        Log.d("FRACTAL", "scale -- dscale: $dScale")
 
@@ -530,12 +536,12 @@ class Fractal(
     fun setFrequency(dScale: Float) {
         fractalConfig.params["frequency"] = fractalConfig.frequency() * dScale
         updateDisplayParams(Reaction.COLOR, false)
-        updateColorParamEditTexts()
+        // updateColorParamEditTexts()
     }
     fun setPhase(dx: Float) {
         fractalConfig.params["phase"] = (fractalConfig.phase() + dx/screenRes[0])
         updateDisplayParams(Reaction.COLOR, false)
-        updateColorParamEditTexts()
+        // updateColorParamEditTexts()
     }
 
 }
