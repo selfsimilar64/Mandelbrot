@@ -388,7 +388,7 @@ class FractalSurfaceView(
                     GL.glUniform2fv(mapParamHandles[i], 1, p, 0)
                 }
                 for (i in 0 until NUM_TEXTURE_PARAMS) {
-                    Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.fractalConfig.params["q${i + 1}"]}")
+                    // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.fractalConfig.params["q${i + 1}"]}")
                     GL.glUniform1fv(textureParamHandles[i], 1, floatArrayOf((f.fractalConfig.params["q${i + 1}"] as Double).toFloat()), 0)
                 }
 
@@ -1125,7 +1125,7 @@ class FractalSurfaceView(
 
 
     val r : FractalRenderer
-    var hasTranslated = false
+//    var hasTranslated = false
     private val h = Handler()
     private val longPressed = Runnable {
         Log.d("SURFACE VIEW", "wow u pressed that so long")
@@ -1200,7 +1200,6 @@ class FractalSurfaceView(
 
     }
 
-
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent?): Boolean {
 
@@ -1266,7 +1265,6 @@ class FractalSurfaceView(
 
                             // Log.d("TRANSFORM", "MOVE -- dx: $dx, dy: $dy")
                             f.translate(floatArrayOf(dx, dy))
-                            hasTranslated = true
                             if (!f.settingsConfig.continuousRender()) {
                                 r.translate(floatArrayOf(dx, dy))
                             }
@@ -1292,11 +1290,9 @@ class FractalSurfaceView(
                         }
                         MotionEvent.ACTION_UP -> {
                             // Log.d("TRANSFORM", "POINTER UP")
-                            if (hasTranslated) {
-                                r.renderToTex = true
-                                requestRender()
-                            }
-                            hasTranslated = false
+                            f.updatePositionEditTexts()
+                            r.renderToTex = true
+                            requestRender()
                             return true
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
@@ -1375,6 +1371,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
+                            f.updateColorParamEditTexts()
                             // Log.d("COLOR", "ACTION UP")
                             return true
                         }
@@ -1438,6 +1435,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
+                            f.updateMapParamEditTexts()
                             // Log.d("PARAMETER", "POINTER UP")
                             return true
                         }
