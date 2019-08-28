@@ -23,7 +23,7 @@
         <item name="cardCornerRadius">5dp</item>
         <item name="android:layout_marginStart">5dp</item>
         <item name="android:layout_marginEnd">5dp</item>
-        <item name="android:layout_marginBottom">7dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
         <item name="contentPaddingLeft">10dp</item>
         <item name="contentPaddingRight">10dp</item>
         <item name="contentPaddingTop">5dp</item>

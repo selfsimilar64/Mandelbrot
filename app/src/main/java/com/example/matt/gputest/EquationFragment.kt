@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import android.content.Context.INPUT_METHOD_SERVICE
-import android.support.v7.widget.CardView
 import android.view.inputmethod.InputMethodManager
 import katex.hourglass.`in`.mathlib.MathView
 import kotlin.math.pow
@@ -60,10 +59,10 @@ class EquationFragment : Fragment() {
             cardBody.invalidate()
         }}
 
-        val functionLayoutBody = v.findViewById<LinearLayout>(R.id.functionLayoutBody)
-        val textureLayoutBody = v.findViewById<LinearLayout>(R.id.textureLayoutBody)
-        val positionLayoutBody = v.findViewById<LinearLayout>(R.id.positionLayoutBody)
-        val colorLayoutBody = v.findViewById<LinearLayout>(R.id.colorLayoutBody)
+        val functionLayoutBody = v.findViewById<LinearLayout>(R.id.functionCardBody)
+        val textureLayoutBody = v.findViewById<LinearLayout>(R.id.textureCardBody)
+        val positionLayoutBody = v.findViewById<LinearLayout>(R.id.positionCardBody)
+        val colorLayoutBody = v.findViewById<LinearLayout>(R.id.colorCardBody)
 
         val functionHeaderButton = v.findViewById<Button>(R.id.functionHeaderButton)
         val textureHeaderButton = v.findViewById<Button>(R.id.textureHeaderButton)
@@ -138,7 +137,7 @@ class EquationFragment : Fragment() {
         val scaleSignificandEdit = v.findViewById<EditText>(R.id.scaleSignificandEdit)
         val scaleExponentEdit = v.findViewById<EditText>(R.id.scaleExponentEdit)
         scaleSignificandEdit.setText(scaleStrings[0])
-        scaleExponentEdit.setText(scaleStrings[1])
+        scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
         scaleSignificandEdit.setOnEditorActionListener(
                 editListenerNext(scaleSignificandEdit, scaleExponentEdit, "scale") { w: TextView ->
                     val aspectRatio = config.scale()[1]/config.scale()[0]
@@ -156,7 +155,7 @@ class EquationFragment : Fragment() {
         val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
         val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
         bailoutSignificandEdit.setText(bailoutStrings[0])
-        bailoutExponentEdit.setText(bailoutStrings[1])
+        bailoutExponentEdit.setText("%d".format(bailoutStrings[1].toInt()))
         bailoutSignificandEdit.setOnEditorActionListener(
                 editListenerNext(bailoutSignificandEdit, bailoutExponentEdit, "bailoutRadius") {
                     w: TextView -> "${w.text}e${bailoutExponentEdit.text}".toFloat()

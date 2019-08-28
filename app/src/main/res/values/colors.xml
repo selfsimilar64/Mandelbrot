@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#fff</color>
-    <color name="colorPrimaryDark">#181818</color>
+    <color name="colorPrimaryDark">#1c1c1c</color>
     <color name="colorPrimaryDark2">#555</color>
     <color name="colorDarkSelected">#383838</color>
-    <color name="colorDarkUnselected">#1a1a1a</color>
+    <color name="colorDarkUnselected">#171717</color>
     <color name="colorDarkText">#fff</color>
     <color name="colorDarkText2">#ddd</color>
     <color name="colorHalfTransparent">#a000</color>
