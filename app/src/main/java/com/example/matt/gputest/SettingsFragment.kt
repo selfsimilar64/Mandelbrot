@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.constraint.ConstraintSet
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +29,30 @@ class SettingsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.settings_fragment, container, false)
+
+        val cardHeaderListener = { cardBody: LinearLayout -> View.OnClickListener {
+            if (cardBody.layoutParams.height == 0) {
+                cardBody.layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_collapse, null), null)
+                Log.w("FRACTAL", "was 0")
+            }
+            else {
+                cardBody.layoutParams.height = 0
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_expand, null), null)
+                Log.w("FRACTAL", "was open")
+            }
+            cardBody.requestLayout()
+            cardBody.invalidate()
+        }}
+
+        val renderCardBody = v.findViewById<LinearLayout>(R.id.renderCardBody)
+        val uiCardBody = v.findViewById<LinearLayout>(R.id.uiCardBody)
+
+        val renderHeaderButton = v.findViewById<Button>(R.id.renderHeaderButton)
+        val uiHeaderButton = v.findViewById<Button>(R.id.uiHeaderButton)
+
+        renderHeaderButton.setOnClickListener(cardHeaderListener(renderCardBody))
+        uiHeaderButton.setOnClickListener(cardHeaderListener(uiCardBody))
 
 
         resolutionTabs = v.findViewById(R.id.resolutionTabs)
