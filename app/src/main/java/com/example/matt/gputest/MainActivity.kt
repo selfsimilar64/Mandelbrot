@@ -31,6 +31,8 @@ const val SPLIT = 8193.0
 const val NUM_MAP_PARAMS = 4
 const val NUM_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
+const val PLUS_UNICODE = '\u002B'
+const val MINUS_UNICODE = '\u2212'
 
 
 
@@ -140,36 +142,40 @@ class ColorPalette (
         private val DEEPRED     = floatArrayOf( 0.8f,   0.0f,   0.3f  )
         private val MAROON      = floatArrayOf( 0.4f,   0.1f,   0.2f  )
 
+        private val PURPLE2     = floatArrayOf( 115f/255f, 45f/255f, 90f/255f )
+        private val MINT        = floatArrayOf( 189f/255f, 1f, 209f/255f )
+        private val TANGERINE   = floatArrayOf( 246f/255f, 170f/255f, 26f/255f )
 
-        val beach   = ColorPalette("Beach", listOf(
+
+        val beach   = ColorPalette("Beach",  listOf(
                 YELLOWISH,
                 DARKBLUE1,
                 BLACK,
                 TURQUOISE,
                 TUSK
         ))
-        val p1      = ColorPalette("P1", listOf(
+        val p1      = ColorPalette("P1",     listOf(
                 WHITE,
                 PURPLE,
                 BLACK,
                 DEEPRED,
                 WHITE
         ))
-        val p3      = ColorPalette("P3", listOf(
+        val p3      = ColorPalette("P3",     listOf(
                 floatArrayOf(0.0f, 0.1f, 0.2f),
                 DARKBLUE1,
                 WHITE,
                 ORAGNE2,
                 PURPLE
         ))
-        val p4      = ColorPalette("P4", listOf(
+        val p4      = ColorPalette("P4",     listOf(
                 YELLOWISH,
                 DARKBLUE2,
                 BLACK,
                 PURPLE.mult(0.7f),
                 DEEPRED
         ))
-        val p5      = ColorPalette("P5", listOf(
+        val p5      = ColorPalette("P5",     listOf(
                 YELLOWISH.mult(1.1f),
                 MAGENTA.mult(0.4f),
                 WHITE,
@@ -177,14 +183,14 @@ class ColorPalette (
                 BLACK,
                 DARKBLUE1
         ))
-        val royal   = ColorPalette("Royal", listOf(
+        val royal   = ColorPalette("Royal",  listOf(
                 YELLOWISH,
                 DARKBLUE1,
                 SOFTGREEN.mult(0.5f),
                 PURPLE.mult(0.35f),
                 MAROON
         ))
-        val p8      = ColorPalette("P8", listOf(
+        val p8      = ColorPalette("P8",     listOf(
                 floatArrayOf(75.0f, 115.0f, 115.0f).mult(1.0f/255.0f),
                 floatArrayOf(255.0f, 170.0f, 28.0f).mult(1.0f/255.0f),
                 floatArrayOf(255.0f, 118.0f, 111.0f).mult(1.0f/255.0f),
@@ -197,6 +203,14 @@ class ColorPalette (
                 floatArrayOf(75.0f, 130.0f, 115.0f).mult(1.0f/255.0f),
                 PURPLE.mult(0.3f)
         ))
+        val anubis = ColorPalette("Anubis", listOf(
+                BLACK,
+                PURPLE2,
+                MINT,
+                YELLOWISH,
+                floatArrayOf(1f, 1f, 0.6f),
+                floatArrayOf(240f, 120f, 10f).mult(1f/255f)
+        ))
         val all     = mapOf(
                 beach.name   to  beach,
                 p1.name      to  p1,
@@ -205,7 +219,8 @@ class ColorPalette (
                 p5.name      to  p5,
                 royal.name   to  royal,
                 p8.name      to  p8,
-                canyon.name  to  canyon
+                canyon.name  to  canyon,
+                anubis.name  to  anubis
         )
 
     }
@@ -397,6 +412,8 @@ class ComplexMap (
             "Mandelbrot Cpow"   to  mandelbrotCpow,
             "Logistic"          to  logistic,
             "Burning Ship"      to  burningShip,
+            "Persian Rug"       to  persianRug,
+            "Dualpow"           to  dualpow,
             "Sine 1"            to  sine1,
             "Sine 2"            to  sine2,
             "Horseshoe Crab"    to  horseshoeCrab,
@@ -714,7 +731,7 @@ class MainActivity : AppCompatActivity(),
                 "resolution"        to Resolution.HIGH,
                 "precision"         to Precision.AUTO,
                 "continuousRender"  to false,
-                "displayParams"     to true,
+                "displayParams"     to false,
                 "saveToFile"        to false
         ))
 
@@ -1036,6 +1053,10 @@ class MainActivity : AppCompatActivity(),
                     f.updatePositionEditTexts()
                     fractalView.r.renderToTex = true
                 }
+                "scale" -> {
+                    f.updatePositionEditTexts()
+                    fractalView.r.renderToTex = true
+                }
                 "maxIter" -> {
                     fractalView.r.renderToTex = true
                 }
@@ -1044,8 +1065,12 @@ class MainActivity : AppCompatActivity(),
                     fractalView.r.renderToTex = true
                 }
                 "palette" -> {}
-                "frequency" -> { f.updateColorParamEditTexts() }
-                "phase" -> { f.updateColorParamEditTexts() }
+                "frequency" -> {
+                    f.updateColorParamEditTexts()
+                }
+                "phase" -> {
+                    f.updateColorParamEditTexts()
+                }
             }
             fractalView.requestRender()
         }
