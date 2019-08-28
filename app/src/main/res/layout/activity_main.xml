@@ -159,8 +159,8 @@
                         android:layout_marginStart="5dp"
                         android:background="@drawable/round_button_unselected"
                         android:contentDescription="COLOR"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/baseline_color_lens_black_36"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/color"
                         android:tint="#fff" />
 
                     <ImageButton
@@ -170,8 +170,8 @@
                         android:layout_marginStart="5dp"
                         android:background="@drawable/round_button_unselected"
                         android:contentDescription="TRANSFORM"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/baseline_open_with_black_36"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/transform"
                         android:tint="#fff" />
 
                 </LinearLayout>
@@ -194,8 +194,8 @@
                 android:layout_marginBottom="5dp"
                 android:background="@drawable/round_button_unselected"
                 android:contentDescription="SETTINGS"
-                android:scaleType="centerInside"
-                android:src="@drawable/baseline_menu_black_36"
+                android:scaleType="fitCenter"
+                android:src="@drawable/menu"
                 android:tint="#fff" />
 
         </LinearLayout>

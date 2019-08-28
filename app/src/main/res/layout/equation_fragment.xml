@@ -39,10 +39,11 @@
                         android:text="Changes the shape of the fractal" />
 
                     <LinearLayout
-                        android:id="@+id/functionLayoutBody"
+                        android:id="@+id/functionCardBody"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:paddingBottom="10dp">
 
                         <View
                             android:id="@+id/view2"
@@ -70,8 +71,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
                             android:layout_marginBottom="10dp"
-                            android:background="@drawable/display_params_bg_visible"
-                            android:backgroundTint="@color/colorDarkSelected"
+                            android:background="@color/colorDarkUnselected"
                             android:gravity="center"
                             android:orientation="horizontal"
                             android:padding="10dp"
@@ -97,7 +97,7 @@
 
                             <TextView
                                 style="@style/TextDark"
-                                android:layout_width="wrap_content"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="P1" />
@@ -327,10 +327,11 @@
                         android:text="Changes the appearance of the fractal" />
 
                     <LinearLayout
-                        android:id="@+id/textureLayoutBody"
+                        android:id="@+id/textureCardBody"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:paddingBottom="10dp">
 
                         <View
                             android:id="@+id/view3"
@@ -408,6 +409,102 @@
             </android.support.v7.widget.CardView>
 
             <android.support.v7.widget.CardView
+                android:id="@+id/colorCard"
+                style="@style/CardDark"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:id="@+id/colorCardLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/colorHeaderButton"
+                        style="@style/cardHeaderButtonDark"
+                        android:text="Color" />
+
+                    <TextView
+                        android:id="@+id/textView10"
+                        style="@style/CardSubHeaderDark"
+                        android:text="Changes how the colors get mapped onto the fractal" />
+
+                    <LinearLayout
+                        android:id="@+id/colorCardBody"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:paddingBottom="10dp">
+
+                        <View
+                            android:id="@+id/view5"
+                            style="@style/dividerDark" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/display_params_bg_visible"
+                            android:backgroundTint="@color/colorDarkSelected"
+                            android:orientation="vertical">
+
+                            <Spinner
+                                android:id="@+id/colorPaletteSpinner"
+                                style="@style/SpinnerDark"
+                                android:layout_width="match_parent" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="1dp">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Frequency" />
+
+                            <EditText
+                                android:id="@+id/frequencyEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:selectAllOnFocus="true" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="1dp">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Offset" />
+
+                            <EditText
+                                android:id="@+id/phaseEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:selectAllOnFocus="true" />
+
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
                 android:id="@+id/positionCard"
                 style="@style/CardDark"
                 android:layout_width="match_parent"
@@ -430,10 +527,11 @@
                         android:text="Changes which part of the fractal is visible" />
 
                     <LinearLayout
-                        android:id="@+id/positionLayoutBody"
+                        android:id="@+id/positionCardBody"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:paddingBottom="10dp">
 
                         <View
                             android:id="@+id/view4"
@@ -513,101 +611,6 @@
                                     android:layout_height="wrap_content"
                                     android:imeOptions="actionDone" />
                             </LinearLayout>
-
-                        </LinearLayout>
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </android.support.v7.widget.CardView>
-
-            <android.support.v7.widget.CardView
-                android:id="@+id/colorCard"
-                style="@style/CardDark"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <LinearLayout
-                    android:id="@+id/colorCardLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/colorHeaderButton"
-                        style="@style/cardHeaderButtonDark"
-                        android:text="Color" />
-
-                    <TextView
-                        android:id="@+id/textView10"
-                        style="@style/CardSubHeaderDark"
-                        android:text="Changes how the colors get mapped onto the fractal" />
-
-                    <LinearLayout
-                        android:id="@+id/colorLayoutBody"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical">
-
-                        <View
-                            android:id="@+id/view5"
-                            style="@style/dividerDark" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/display_params_bg_visible"
-                            android:backgroundTint="@color/colorDarkSelected"
-                            android:orientation="vertical">
-
-                            <Spinner
-                                android:id="@+id/colorPaletteSpinner"
-                                style="@style/SpinnerDark"
-                                android:layout_width="match_parent" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_marginVertical="1dp">
-
-                            <TextView
-                                style="@style/TextDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Frequency" />
-
-                            <EditText
-                                android:id="@+id/frequencyEdit"
-                                style="@style/EditTextDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:imeOptions="actionDone"
-                                android:selectAllOnFocus="true" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_marginVertical="1dp">
-
-                            <TextView
-                                style="@style/TextDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Offset" />
-
-                            <EditText
-                                android:id="@+id/phaseEdit"
-                                style="@style/EditTextDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:imeOptions="actionDone"
-                                android:selectAllOnFocus="true" />
 
                         </LinearLayout>
                     </LinearLayout>
