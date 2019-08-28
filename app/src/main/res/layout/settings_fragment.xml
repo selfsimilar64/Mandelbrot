@@ -5,9 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0a0a0a"
-    android:orientation="vertical"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp">
+    android:orientation="vertical">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -16,224 +14,213 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
-
-            <TextView
-                android:id="@+id/textView2"
-                style="@style/TextDark"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="render"
-                android:textAllCaps="true"
-                android:textSize="15sp"
-                android:textStyle="normal" />
+            android:orientation="vertical"
+            android:paddingTop="15dp">
 
             <android.support.v7.widget.CardView
+                android:id="@+id/renderCard"
                 style="@style/CardDark"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <LinearLayout
+                    android:id="@+id/renderCardLayout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:paddingVertical="5dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="90dp"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="start|center_vertical"
-                            android:text="Resolution"
-                            android:textColor="@color/colorDarkText"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <android.support.design.widget.TabLayout
-                            android:id="@+id/resolutionTabs"
-                            android:layout_width="match_parent"
-                            android:layout_height="40dp"
-                            app:tabBackground="@drawable/tab_color_selector"
-                            app:tabIndicatorColor="@android:color/transparent"
-                            app:tabIndicatorFullWidth="true"
-                            app:tabIndicatorGravity="bottom"
-                            app:tabPaddingEnd="10dp"
-                            app:tabPaddingStart="10dp">
-
-                            <android.support.design.widget.TabItem
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="LOW" />
-
-                            <android.support.design.widget.TabItem
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="MED" />
-
-                            <android.support.design.widget.TabItem
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="HIGH" />
-
-                        </android.support.design.widget.TabLayout>
-                    </LinearLayout>
-
-                    <View
-                        android:id="@+id/divider2"
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="15dp"
-                        android:background="#333" />
-
-                    <Switch
-                        android:id="@+id/continuousRenderSwitch"
-                        style="@style/SwitchDark"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Continuous Render" />
-
-                    <View
-                        android:id="@+id/divider3"
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="15dp"
-                        android:background="#333" />
+                    android:orientation="vertical">
 
                     <Button
-                        android:id="@+id/saveToFileButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="#0000"
-                        android:clickable="true"
-                        android:drawableTop="@drawable/baseline_save_alt_black_36"
-                        android:drawablePadding="5dp"
-                        android:drawableTint="#ddd"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:paddingVertical="5dp"
-                        android:text="Save" />
+                        android:id="@+id/renderHeaderButton"
+                        style="@style/cardHeaderButtonDark"
+                        android:text="Render"
+                        android:textAllCaps="false" />
+
+                    <LinearLayout
+                        android:id="@+id/renderCardBody"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:paddingBottom="10dp">
+
+                        <View
+                            android:id="@+id/divider"
+                            style="@style/dividerDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginBottom="5dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="start|center_vertical"
+                                android:text="Resolution"
+                                android:textColor="@color/colorDarkText"
+                                android:textSize="14sp" />
+
+                            <android.support.design.widget.TabLayout
+                                android:id="@+id/resolutionTabs"
+                                android:layout_width="match_parent"
+                                android:layout_height="42dp"
+                                app:tabBackground="@drawable/tab_color_selector"
+                                app:tabIndicatorColor="@android:color/transparent"
+                                app:tabIndicatorFullWidth="true"
+                                app:tabIndicatorGravity="bottom"
+                                app:tabPaddingEnd="10dp"
+                                app:tabPaddingStart="10dp">
+
+                                <android.support.design.widget.TabItem
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="LOW" />
+
+                                <android.support.design.widget.TabItem
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="MED" />
+
+                                <android.support.design.widget.TabItem
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="HIGH" />
+
+                            </android.support.design.widget.TabLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginBottom="5dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="start|center_vertical"
+                                android:text="Precision"
+                                android:textColor="@color/colorDarkText" />
+
+                            <android.support.design.widget.TabLayout
+                                android:id="@+id/precisionTabs"
+                                android:layout_width="match_parent"
+                                android:layout_height="42dp"
+                                app:tabBackground="@drawable/tab_color_selector"
+                                app:tabIndicatorColor="@android:color/transparent"
+                                app:tabIndicatorFullWidth="true"
+                                app:tabIndicatorGravity="bottom"
+                                app:tabPaddingEnd="10dp"
+                                app:tabPaddingStart="10dp">
+
+                                <android.support.design.widget.TabItem
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="SINGLE" />
+
+                                <android.support.design.widget.TabItem
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="DUAL" />
+
+                                <android.support.design.widget.TabItem
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="AUTO" />
+                            </android.support.design.widget.TabLayout>
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/continuousRenderSwitch"
+                            style="@style/SwitchDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Continuous Render" />
+
+                        <Button
+                            android:id="@+id/saveToFileButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="15dp"
+                            android:background="#0000"
+                            android:clickable="true"
+                            android:drawableTop="@drawable/save"
+                            android:drawablePadding="10dp"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackgroundBorderless"
+                            android:paddingTop="15dp"
+                            android:paddingBottom="10dp"
+                            android:text="Save" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
             </android.support.v7.widget.CardView>
 
-            <TextView
-                android:id="@+id/textView4"
-                style="@style/TextDark"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="UI"
-                android:textAllCaps="true"
-                android:textSize="15sp"
-                android:textStyle="normal" />
-
             <android.support.v7.widget.CardView
+                android:id="@+id/uiCard"
                 style="@style/CardDark"
                 android:layout_width="match_parent">
 
                 <LinearLayout
+                    android:id="@+id/uiCardLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingVertical="5dp">
+                    android:orientation="vertical">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/textView3"
-                            style="@style/TextDark"
-                            android:layout_width="90dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Display Parameters" />
-
-                        <Switch
-                            android:id="@+id/displayParamsSwitch"
-                            style="@style/SwitchDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:layout_weight="1"
-                            android:paddingStart="10dip"
-                            android:textColor="@color/colorDarkText"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
-            </android.support.v7.widget.CardView>
-
-            <TextView
-                android:id="@+id/textView"
-                style="@style/TextDark"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="advanced"
-                android:textAllCaps="true"
-                android:textSize="15sp"
-                android:textStyle="normal" />
-
-            <android.support.v7.widget.CardView
-                style="@style/CardDark"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:paddingVertical="5dp">
-
-                    <LinearLayout
+                    <Button
+                        android:id="@+id/uiHeaderButton"
+                        style="@style/cardHeaderButtonDark"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:text="UI" />
 
-                        <TextView
-                            style="@style/TextDark"
-                            android:layout_width="90dip"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="start|center_vertical"
-                            android:text="Precision"
-                            android:textColor="@color/colorDarkText"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                    <LinearLayout
+                        android:id="@+id/uiCardBody"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:paddingBottom="10dp">
 
-                        <android.support.design.widget.TabLayout
-                            android:id="@+id/precisionTabs"
+                        <View
+                            android:id="@+id/divider2"
+                            style="@style/dividerDark"
                             android:layout_width="match_parent"
-                            android:layout_height="40dp"
-                            app:tabBackground="@drawable/tab_color_selector"
-                            app:tabIndicatorColor="@android:color/transparent"
-                            app:tabIndicatorFullWidth="true"
-                            app:tabIndicatorGravity="bottom"
-                            app:tabPaddingEnd="10dp"
-                            app:tabPaddingStart="10dp">
+                            android:layout_height="1dp" />
 
-                            <android.support.design.widget.TabItem
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/textView3"
+                                style="@style/TextDark"
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Display Parameters" />
+
+                            <Switch
+                                android:id="@+id/displayParamsSwitch"
+                                style="@style/SwitchDark"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="SINGLE" />
-
-                            <android.support.design.widget.TabItem
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="DUAL" />
-
-                            <android.support.design.widget.TabItem
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="AUTO" />
-                        </android.support.design.widget.TabLayout>
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="1"
+                                android:textColor="@color/colorDarkText"
+                                android:textStyle="bold" />
+                        </LinearLayout>
                     </LinearLayout>
+
                 </LinearLayout>
             </android.support.v7.widget.CardView>
 
