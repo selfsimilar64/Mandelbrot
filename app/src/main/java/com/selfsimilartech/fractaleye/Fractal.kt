@@ -588,9 +588,19 @@ class Fractal(
 //        Log.d("FRACTAL", "scale -- dscale: $dScale")
 
 
-        if ((!fractalConfig.map().hasDualFloat && fractalConfig.scale()[0] < 5e-5 && prevScale > 5e-5) ||
-                (fractalConfig.map().hasDualFloat && fractalConfig.scale()[0] < 1e-12 && prevScale > 1e-12)) {
-            val toast = Toast.makeText(context.baseContext, "Zoom limit reached", Toast.LENGTH_LONG)
+        val singleThresholdCrossed = fractalConfig.scale()[0] < precisionThreshold && prevScale > precisionThreshold
+        val dualThresholdCrossed = fractalConfig.scale()[0] < 1e-12 && prevScale > 1e-12
+        if ((!fractalConfig.map().hasDualFloat && singleThresholdCrossed) ||
+                (fractalConfig.map().hasDualFloat && dualThresholdCrossed)) {
+            val toast = Toast.makeText(context.baseContext, "Zoom limit reached", 2*Toast.LENGTH_LONG)
+            val toastHeight = context.findViewById<LinearLayout>(R.id.buttons).height +
+                    context.findViewById<LinearLayout>(R.id.uiFull).height +
+                    context.findViewById<ProgressBar>(R.id.progressBar).height + 30
+            toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
+            toast.show()
+        }
+        if (fractalConfig.map().hasDualFloat && singleThresholdCrossed) {
+            val toast = Toast.makeText(context.baseContext, "Switching to dual-precision\nImage generation will be slower", Toast.LENGTH_LONG)
             val toastHeight = context.findViewById<LinearLayout>(R.id.buttons).height +
                     context.findViewById<LinearLayout>(R.id.uiFull).height +
                     context.findViewById<ProgressBar>(R.id.progressBar).height + 30
