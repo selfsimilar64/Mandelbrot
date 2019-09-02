@@ -112,8 +112,6 @@ class FractalSurfaceView(
 
         inner class RenderRoutine {
 
-            private val maxPixelsPerChunk = f.screenRes[0]*f.screenRes[1]/8
-
             // coordinates of default view boundaries
             private val viewCoords = floatArrayOf(
                     -1.0f,   1.0f,   0.0f,     // top left
@@ -321,6 +319,11 @@ class FractalSurfaceView(
                 val texRes = f.texRes()
                 val xPixels = xLength / 2.0f * texRes[0]
                 val yPixels = yLength / 2.0f * texRes[1]
+                val maxPixelsPerChunk = when (f.autoPrecision()) {
+                    Precision.SINGLE -> f.screenRes[0]*f.screenRes[1]/4
+                    Precision.DUAL -> f.screenRes[0]*f.screenRes[1]/8
+                    else -> f.screenRes[0]*f.screenRes[1]
+                }
                 val numChunks = ceil((xPixels*yPixels) / maxPixelsPerChunk).toInt()
                 val chunkInc = if (xLength >= yLength) xLength/numChunks else yLength/numChunks
 
