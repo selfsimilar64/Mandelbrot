@@ -3,10 +3,9 @@ package com.selfsimilartech.fractaleye
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.util.Log
+import android.view.Gravity
 import android.view.animation.AlphaAnimation
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 
 
 class Fractal(
@@ -45,7 +44,7 @@ class Fractal(
     private var innerColor = "1.0"
 
     val autoPrecision = {
-        if (fractalConfig.scale()[0] > precisionThreshold) Precision.SINGLE else Precision.DUAL
+        if (!fractalConfig.map().hasDualFloat || fractalConfig.scale()[0] > precisionThreshold) Precision.SINGLE else Precision.DUAL
     }
     val precision = {
         if (settingsConfig.precision() == Precision.AUTO) autoPrecision() else settingsConfig.precision()
@@ -197,15 +196,22 @@ class Fractal(
         updatePositionEditTexts()
     }
     private fun resetMapParams() {
-        for (i in 0 until fractalConfig.map().initParams.size) {
-            (fractalConfig.params["p${i + 1}"] as DoubleArray)[0] = fractalConfig.map().initParams[i][0]
-            (fractalConfig.params["p${i + 1}"] as DoubleArray)[1] = fractalConfig.map().initParams[i][1]
+        for (i in 1..fractalConfig.map().initParams.size) {
+            (fractalConfig.params["p$i"] as DoubleArray)[0] = fractalConfig.map().initParams[i - 1][0]
+            (fractalConfig.params["p$i"] as DoubleArray)[1] = fractalConfig.map().initParams[i - 1][1]
+        }
+        for (i in (fractalConfig.map().initParams.size + 1)..NUM_MAP_PARAMS) {
+            (fractalConfig.params["p$i"] as DoubleArray)[0] = 0.0
+            (fractalConfig.params["p$i"] as DoubleArray)[1] = 0.0
         }
         updateMapParamEditTexts()
     }
     fun resetTextureParams() {
-        for (i in 0 until fractalConfig.texture().initParams.size) {
-            fractalConfig.params["q${i + 1}"] = fractalConfig.texture().initParams[i].third
+        for (i in 1..fractalConfig.texture().initParams.size) {
+            fractalConfig.params["q$i"] = fractalConfig.texture().initParams[i - 1].third
+        }
+        for (i in (fractalConfig.texture().initParams.size + 1)..NUM_TEXTURE_PARAMS) {
+            fractalConfig.params["q$i"] = 0.0
         }
         updateTextureParamEditTexts()
     }
@@ -515,6 +521,8 @@ class Fractal(
     }
     fun scale(dScale: Float, screenFocus: FloatArray) {
 
+        val prevScale = fractalConfig.scale()[0]
+
         // update complex coordinates
         // convert focus coordinates from screen space to complex space
         val prop = doubleArrayOf(
@@ -578,6 +586,17 @@ class Fractal(
         // updatePositionEditTexts()
         updateDisplayParams(Reaction.POSITION, false)
 //        Log.d("FRACTAL", "scale -- dscale: $dScale")
+
+
+        if ((!fractalConfig.map().hasDualFloat && fractalConfig.scale()[0] < 5e-5 && prevScale > 5e-5) ||
+                (fractalConfig.map().hasDualFloat && fractalConfig.scale()[0] < 1e-12 && prevScale > 1e-12)) {
+            val toast = Toast.makeText(context.baseContext, "Zoom limit reached", Toast.LENGTH_LONG)
+            val toastHeight = context.findViewById<LinearLayout>(R.id.buttons).height +
+                    context.findViewById<LinearLayout>(R.id.uiFull).height +
+                    context.findViewById<ProgressBar>(R.id.progressBar).height + 30
+            toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
+            toast.show()
+        }
 
     }
     fun setFrequency(dScale: Float) {
