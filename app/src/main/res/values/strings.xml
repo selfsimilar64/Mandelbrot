@@ -55,8 +55,15 @@
     <string name="ui">UI</string>
     <string name="left_arrow">left arrow</string>
     <string name="right_arrow">right arrow</string>
-
     <string name="equation">Equation</string>
+
+    <string name="welcome_message">Welcome to Fractal Eye!</string>
+    <string name="tutorial_position1" tools:ignore="ExtraTranslation">To move around and explore the fractal, click the POSITION button.</string>
+    <string name="tutorial_position2">Swipe in any direction to move</string>
+    <string name="tutorial_position3">Pinch to zoom in or out!</string>
+    <string name="tutorial_color1">To change how the fractal is colored, click the COLOR button.</string>
+    <string name="tutorial_color2">Swipe left or right to shift the colors</string>
+    <string name="tutorial_color3">Pinch to make the colors change more or less frequently!</string>
 
 
 
@@ -514,7 +521,7 @@
         Y = addDF(Q.zw, B);
     </string>
     <string name="mandelbrot_katex">
-        $f(z) = z^2 + c$
+        $f(z) = z^2 + %s$
     </string>
 
     <!-- MANDELBROT CPOW -->
@@ -525,7 +532,7 @@
 
     </string>
     <string name="mandelbrotcpow_katex">
-        $f(z) = z^{\\operatorname{Re}(P1)} + c$
+        $f(z) = z^{\\operatorname{Re}(P1)} + %s$
     </string>
 
     <!-- MANDELBAR -->
@@ -546,7 +553,7 @@
         Y = Q4.zw;
     </string>
     <string name="logistic_katex">
-        $f(z) = \\frac{z - z^2}{c}$
+        $f(z) = \\frac{z - z^2}{%s}$
     </string>
 
     <!-- BURNING SHIP -->
@@ -565,7 +572,7 @@
         Y = addDF(Q.zw, B);
     </string>
     <string name="burningship_katex">
-        $f(z) = \\big(|\\operatorname{Re}(z)| + i|\\operatorname{Im}(z)|\\big)^2 + c$
+        $f(z) = \\big(|\\operatorname{Re}(z)| + i|\\operatorname{Im}(z)|\\big)^2 + %s$
     </string>
 
     <!-- DUALPOW -->
@@ -578,7 +585,7 @@
         Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, gamma.y)));
     </string>
     <string name="dualpow_katex">
-        $f(z) = c \\cdot (z^{\\operatorname{Re}(P1)} + z^{\\operatorname{Im}(P1)})$
+        $f(z) = %s \\cdot (z^{\\operatorname{Re}(P1)} + z^{\\operatorname{Im}(P1)})$
     </string>
 
     <!-- SINE -->
@@ -591,14 +598,14 @@
         Y = addDF(Q1.zw, B);
     </string>
     <string name="sine_katex">
-        $f(z) = \\sin(z) + c$
+        $f(z) = \\sin(z) + %s$
     </string>
 
     <string name="sine1_loop_sf">
         Z = cSinSF(cDivSF(cPow3(Z1, P1.x), C));
     </string>
     <string name="sine1_katex">
-        $f(z) = \\sin(\\frac{z^{\\operatorname{Re}(P1)}}{c})$
+        $f(z) = \\sin(\\frac{z^{\\operatorname{Re}(P1)}}{%s})$
     </string>
 
     <string name="sine2_loop_sf">
@@ -614,7 +621,7 @@
         Y = Q5.zw;
     </string>
     <string name="sine2_katex">
-        $f(z) = \\sin(\\frac{z^2 + P1}{c})$
+        $f(z) = \\sin(\\frac{z^2 + P1}{%s})$
     </string>
 
     <!-- HORSESHOE CRAB -->
@@ -631,7 +638,7 @@
         Y = Q.zw;
     </string>
     <string name="horseshoecrab_katex">
-        $f(z) = \\sin (\\frac{P1}{z} + \\frac{z}{c})$
+        $f(z) = \\sin (\\frac{P1}{z} + \\frac{z}{%s})$
     </string>
 
     <!-- PERSIAN RUG -->
@@ -648,7 +655,7 @@
         vec4 S4 = cSinDF(S2, S3, 8);
         vec4 S5 = cCosDF(S2, S3, 8);
         vec4 S6 = cDivDF(S4.xy, S4.zw, S5.xy, S5.zw);
-        vec4 S7 = cSinDF(S6.xy, S6.zw);
+        vec4 S7 = cSinDF(S6.xy, S6.zw, 8);
         vec4 S8 = cSinDF(X1, Y1, 8);
         vec4 S9 = cCosDF(X1, Y1, 8);
         vec4 S10 = cDivDF(S8.xy, S8.zw, S9.xy, S9.zw);
@@ -659,7 +666,7 @@
         Y = Q.zw;
     </string>
     <string name="persianrug_katex">
-        $f(z) = z \\cdot \\bigg(\\sin\\Big(\\tan\\big(P1 - \\frac{c}{z}\\big)\\Big) + z + \\tan(z)\\bigg)$
+        $f(z) = z \\cdot \\bigg(\\sin\\Big(\\tan\\big(P1 - \\frac{%s}{z}\\big)\\Big) + z + \\tan(z)\\bigg)$
     </string>
 
     <!-- KLEINIAN -->
@@ -725,7 +732,7 @@
     <string name="test_init_sf">
     </string>
     <string name="test_loop_sf">
-        Z = cDivSF(cMultSF(vec2(0.0, 1.0), Z1), cTanSF(Z1 + P1)) + C;
+        Z = cMultSF(Z1, Z1 - round(Z1)) + C;
     </string>
 
 
