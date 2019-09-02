@@ -7,9 +7,54 @@
 
     <!-- LAYOUT -->
     <!-- ===================================================================================== -->
-    <string name="transform">Transform</string>
+    <string name="tab_fractal">fractal</string>
+    <string name="tab_settings">settings</string>
+    <string name="menu">menu</string>
+    <string name="function">Function</string>
+    <string name="shape">Shape</string>
+    <string name="texture">Texture</string>
     <string name="color">Color</string>
-    <string name="param1">Param1</string>
+    <string name="position">Position</string>
+    <string name="render">Render</string>
+    <string name="resolution">Resolution</string>
+    <string name="precision">Precision</string>
+    <string name="transform">transform</string>
+    <string name="reaction">REACTION</string>
+    <string name="reaction_position">POSITION</string>
+    <string name="reaction_color">COLOR</string>
+    <string name="resolution_low">LOW</string>
+    <string name="resolution_med">MED</string>
+    <string name="resolution_high">HIGH</string>
+    <string name="precision_single">SINGLE</string>
+    <string name="precision_dual">DUAL</string>
+    <string name="precision_auto">AUTO</string>
+    <string name="save">save</string>
+    <string name="continuous_render">Continuous Render</string>
+    <string name="display_params">Display Parameters</string>
+    <string name="display_param1">param1</string>
+    <string name="display_param2">param2</string>
+    <string name="display_param3">param3</string>
+    <string name="display_param4">param4</string>
+    <string name="param1">P1</string>
+    <string name="param2">P2</string>
+    <string name="param3">P3</string>
+    <string name="param4">P4</string>
+    <string name="tex_param1">Q1</string>
+    <string name="tex_param2">Q2</string>
+    <string name="x">x</string>
+    <string name="y">y</string>
+    <string name="detail">Detail</string>
+    <string name="juliaMode">Julia Mode</string>
+    <string name="scale">Scale</string>
+    <string name="bailout">Bailout Radius</string>
+    <string name="frequency">Frequency</string>
+    <string name="offset">Offset</string>
+    <string name="sensitivity">Sensitivity</string>
+    <string name="complex_i">+ i</string>
+    <string name="e">e</string>
+    <string name="ui">UI</string>
+    <string name="left_arrow">left arrow</string>
+    <string name="right_arrow">right arrow</string>
 
     <string name="equation">Equation</string>
 
@@ -537,6 +582,18 @@
     </string>
 
     <!-- SINE -->
+    <string name="sine_loop_sf">
+        Z = cSinSF(Z1) + C;
+    </string>
+    <string name="sine_loop_df">
+        vec4 Q1 = cSinDF(X1, Y1, 10);
+        X = addDF(Q1.xy, A);
+        Y = addDF(Q1.zw, B);
+    </string>
+    <string name="sine_katex">
+        $f(z) = \\sin(z) + c$
+    </string>
+
     <string name="sine1_loop_sf">
         Z = cSinSF(cDivSF(cPow3(Z1, P1.x), C));
     </string>
