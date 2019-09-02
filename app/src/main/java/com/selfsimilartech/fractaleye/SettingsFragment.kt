@@ -1,7 +1,6 @@
-package com.example.matt.gputest
+package com.selfsimilartech.fractaleye
 
 import android.os.Bundle
-import android.support.constraint.ConstraintSet
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.util.Log
@@ -10,10 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.SeekBar
 import android.widget.Switch
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.settings_fragment.*
 
 
 class SettingsFragment : Fragment() {
@@ -21,10 +17,10 @@ class SettingsFragment : Fragment() {
     private lateinit var callback : OnParamChangeListener
     
     lateinit var config : SettingsConfig
-    lateinit var resolutionTabs : TabLayout
-    lateinit var precisionTabs : TabLayout
-    lateinit var continuousRenderSwitch : Switch
-    lateinit var displayParamsSwitch : Switch
+    private lateinit var resolutionTabs : TabLayout
+    private lateinit var precisionTabs : TabLayout
+    private lateinit var continuousRenderSwitch : Switch
+    private lateinit var displayParamsSwitch : Switch
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
@@ -54,6 +50,9 @@ class SettingsFragment : Fragment() {
         renderHeaderButton.setOnClickListener(cardHeaderListener(renderCardBody))
         uiHeaderButton.setOnClickListener(cardHeaderListener(uiCardBody))
 
+        renderHeaderButton.performClick()
+        uiHeaderButton.performClick()
+
 
         resolutionTabs = v.findViewById(R.id.resolutionTabs)
         resolutionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -80,34 +79,9 @@ class SettingsFragment : Fragment() {
         )?.select()
 
 
-        precisionTabs = v.findViewById(R.id.precisionTabs)
-        precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                val p = tab.text.toString()
-                callback.onSettingsParamsChanged("precision", Precision.valueOf(p))
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab) {
-
-            }
-
-            override fun onTabReselected(tab: TabLayout.Tab) {
-
-            }
-
-        })
-        precisionTabs.getTabAt(
-            Precision.valueOf(
-                    savedInstanceState?.getString("precision")
-                    ?: config.precision().name
-            ).ordinal
-        )?.select()
-
-
         continuousRenderSwitch = v.findViewById(R.id.continuousRenderSwitch)
         continuousRenderSwitch.setOnCheckedChangeListener {
-            buttonView, isChecked -> callback.onSettingsParamsChanged("continuousRender", isChecked)
+            _, isChecked -> callback.onSettingsParamsChanged("continuousRender", isChecked)
         }
         continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
@@ -127,6 +101,31 @@ class SettingsFragment : Fragment() {
         displayParamsSwitch.isChecked =
                 savedInstanceState?.getBoolean("displayParams")
                 ?: config.displayParams()
+
+
+        precisionTabs = v.findViewById(R.id.precisionTabs)
+        precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                val p = tab.text.toString()
+                callback.onSettingsParamsChanged("precision", Precision.valueOf(p))
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) {
+
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab) {
+
+            }
+
+        })
+        precisionTabs.getTabAt(
+                Precision.valueOf(
+                        savedInstanceState?.getString("precision")
+                                ?: config.precision().name
+                ).ordinal
+        )?.select()
 
         return v
     }

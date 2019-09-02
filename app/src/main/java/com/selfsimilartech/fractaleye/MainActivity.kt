@@ -1,4 +1,4 @@
-package com.example.matt.gputest
+package com.selfsimilartech.fractaleye
 
 import android.Manifest
 import android.animation.ValueAnimator
@@ -31,8 +31,8 @@ const val SPLIT = 8193.0
 const val NUM_MAP_PARAMS = 4
 const val NUM_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
-const val PLUS_UNICODE = '\u002B'
-const val MINUS_UNICODE = '\u2212'
+//const val PLUS_UNICODE = '\u002B'
+//const val MINUS_UNICODE = '\u2212'
 
 
 
@@ -267,7 +267,7 @@ class ComplexMap (
     companion object {
         
         val empty           = { ComplexMap("Empty", "$$") }
-        val mandelbrot      = { res: Resources -> ComplexMap(
+        val mandelbrot          = { res: Resources -> ComplexMap(
                 "Mandelbrot",
                 katex = res.getString(R.string.mandelbrot_katex),
                 conditionalSF = res.getString(R.string.escape_sf),
@@ -277,21 +277,31 @@ class ComplexMap (
                 initCoords = doubleArrayOf(-0.75, 0.0),
                 initScale = 3.5
         )}
-        val mandelbrotCpow  = { res: Resources -> ComplexMap(
-                "Mandelbrot Cpow",
+        val mandelbrotPower     = { res: Resources -> ComplexMap(
+                "Mandelbrot Power",
                 katex = res.getString(R.string.mandelbrotcpow_katex),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbrotcpow_loop_sf),
                 initScale = 3.5,
                 initParams = listOf(doubleArrayOf(3.0, 0.0))
         )}
-        val mandelbar       = { res: Resources -> ComplexMap(
+        val mandelbrotDualPower = { res: Resources -> ComplexMap(
+                "Dual Power",
+                katex = res.getString(R.string.dualpow_katex),
+                conditionalSF = res.getString(R.string.escape_sf),
+                initSF = res.getString(R.string.dualpow_init_sf),
+                loopSF = res.getString(R.string.dualpow_loop_sf),
+                initScale = 3.0,
+                initZ = doubleArrayOf(1.0, 0.0),
+                initParams = listOf(doubleArrayOf(2.0, -2.0))
+        )}
+        val mandelbar           = { res: Resources -> ComplexMap(
                 "Mandelbar",
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbar_loop_sf),
                 initScale = 3.5
         )}
-        val logistic        = { res: Resources -> ComplexMap(
+        val logistic            = { res: Resources -> ComplexMap(
                 "Logistic",
                 katex = res.getString(R.string.logistic_katex),
                 conditionalSF = res.getString(R.string.escape_sf),
@@ -301,7 +311,7 @@ class ComplexMap (
                 initScale = 3.5,
                 initZ = doubleArrayOf(0.5, 0.0)
         ) }
-        val burningShip     = { res: Resources -> ComplexMap(
+        val burningShip         = { res: Resources -> ComplexMap(
                 "Burning Ship",
                 katex = res.getString(R.string.burningship_katex),
                 katexSize = 3.5f,
@@ -314,17 +324,16 @@ class ComplexMap (
                 initCoords = doubleArrayOf(-0.35, 0.25),
                 initScale = 3.5
         ) }
-        val dualpow         = { res: Resources -> ComplexMap(
-                "Dual Power",
-                katex = res.getString(R.string.dualpow_katex),
+        val sine                = { res: Resources -> ComplexMap(
+                "Sine",
+                katex = res.getString(R.string.sine_katex),
                 conditionalSF = res.getString(R.string.escape_sf),
-                initSF = res.getString(R.string.dualpow_init_sf),
-                loopSF = res.getString(R.string.dualpow_loop_sf),
-                initScale = 3.0,
-                initZ = doubleArrayOf(1.0, 0.0),
-                initParams = listOf(doubleArrayOf(2.0, 2.0))
+                loopSF = res.getString(R.string.sine_loop_sf),
+                conditionalDF = res.getString(R.string.escape_df),
+                loopDF = res.getString(R.string.sine_loop_df),
+                initScale = 3.5
         )}
-        val sine1           = { res: Resources -> ComplexMap(
+        val sine1               = { res: Resources -> ComplexMap(
                 "Sine 1",
                 katex = res.getString(R.string.sine1_katex),
                 katexSize = 5f,
@@ -334,7 +343,7 @@ class ComplexMap (
                 initParams = listOf(doubleArrayOf(0.31960705187983646, 0.0)),
                 initZ = doubleArrayOf(1.0, 0.0)
         ) }
-        val sine2           = { res: Resources -> ComplexMap(
+        val sine2               = { res: Resources -> ComplexMap(
                 "Sine 2",
                 katex = res.getString(R.string.sine2_katex),
                 katexSize = 5f,
@@ -343,10 +352,11 @@ class ComplexMap (
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.sine2_loop_df),
                 initScale = 3.5,
+                initBailout = 1e1f,
                 initParams = listOf(doubleArrayOf(-0.26282883851642613, 2.042520182493586E-6)),
                 initZ = doubleArrayOf(1.0, 0.0)
         )}
-        val horseshoeCrab   = { res: Resources -> ComplexMap(
+        val horseshoeCrab       = { res: Resources -> ComplexMap(
                 "Horseshoe Crab",
                 katex = res.getString(R.string.horseshoecrab_katex),
                 katexSize = 5f,
@@ -358,7 +368,7 @@ class ComplexMap (
                 initParams = listOf(doubleArrayOf(sqrt(2.0), 0.0)),
                 initZ = doubleArrayOf(1.0, 0.0)
         )}
-        val newton2         = { res: Resources -> ComplexMap(
+        val newton2             = { res: Resources -> ComplexMap(
                 "Newton 2",
                 conditionalSF = res.getString(R.string.converge_sf),
                 loopSF = res.getString(R.string.newton2_loop_sf),
@@ -370,7 +380,7 @@ class ComplexMap (
                 ),
                 initJuliaMode = true
         ) }
-        val persianRug      = { res: Resources -> ComplexMap(
+        val persianRug          = { res: Resources -> ComplexMap(
                 "Persian Rug",
                 katex = res.getString(R.string.persianrug_katex),
                 katexSize = 3f,
@@ -383,7 +393,7 @@ class ComplexMap (
                 initParams = listOf(doubleArrayOf(0.642, 0.0)),
                 initBailout = 1e1f
         )}
-        val kleinian        = { res: Resources -> ComplexMap(
+        val kleinian            = { res: Resources -> ComplexMap(
                 "Kleinian",
                 conditionalSF = res.getString(R.string.escape_sf),
                 initSF = res.getString(R.string.kleinian_init_sf),
@@ -396,7 +406,7 @@ class ComplexMap (
                 ),
                 initJuliaMode = true
         )}
-        val test            = { res: Resources -> ComplexMap(
+        val test                = { res: Resources -> ComplexMap(
                 "Test",
                 conditionalSF = res.getString(R.string.escape_sf),
                 initSF = res.getString(R.string.test_init_sf),
@@ -408,21 +418,22 @@ class ComplexMap (
                 )
         )}
         val all         = mapOf(
-            "Mandelbrot"        to  mandelbrot,
-            "Mandelbrot Cpow"   to  mandelbrotCpow,
-            "Logistic"          to  logistic,
-            "Burning Ship"      to  burningShip,
-            "Persian Rug"       to  persianRug,
-            "Dualpow"           to  dualpow,
-            "Sine 1"            to  sine1,
-            "Sine 2"            to  sine2,
-            "Horseshoe Crab"    to  horseshoeCrab,
-            "Kleinian"          to  kleinian,
-            "Test"              to  test
+            "Mandelbrot"            to  mandelbrot,
+            "Mandelbrot Power"      to  mandelbrotPower,
+            "Mandelbrot Dual Power" to  mandelbrotDualPower,
+            "Logistic"              to  logistic,
+            "Burning Ship"          to  burningShip,
+            "Persian Rug"           to  persianRug,
+            "Sine"                  to  sine,
+            "Sine 2"                to  sine2,
+            "Horseshoe Crab"        to  horseshoeCrab,
+            "Kleinian"              to  kleinian,
+            "Test"                  to  test
         )
         
     }
 
+    val hasDualFloat = { loopDF != "" }
     override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
         return other is ComplexMap && name == other.name
@@ -520,7 +531,6 @@ class TextureAlgorithm (
         val all                 = mapOf(
             "Escape Time"                  to  escape               ,
             "Escape Time Smooth"           to  escapeSmooth         ,
-            "Escape Time Smooth with Lighting"                     to  escapeSmoothLight    ,
             "Triangle Inequality Average"  to  triangleIneqAvg      ,
             "Curvature Average"            to  curvatureAvg         ,
             "Stripe Average"               to  stripeAvg            ,
@@ -553,7 +563,7 @@ class TextureAlgorithm (
 
 
 enum class Precision { SINGLE, DUAL, QUAD, AUTO }
-enum class Reaction { TRANSFORM, COLOR, P1, P2, P3, P4 }
+enum class Reaction { POSITION, COLOR, P1, P2, P3, P4 }
 enum class Resolution { LOW, MED, HIGH }
 
 
@@ -675,7 +685,7 @@ class MainActivity : AppCompatActivity(),
     private lateinit var f : Fractal
     private lateinit var fractalView : FractalSurfaceView
     private lateinit var uiQuickButtons : List<View>
-    private lateinit var displayParamTextViews : List<TextView>
+    private lateinit var displayParamRows : List<LinearLayout>
 
     private var orientation = Configuration.ORIENTATION_UNDEFINED
 
@@ -702,36 +712,59 @@ class MainActivity : AppCompatActivity(),
 
 
         // get saved or default parameters
+
+        val map = ComplexMap.all[savedInstanceState?.getString("map")]?.invoke(resources)
+                ?: ComplexMap.mandelbrot(resources)
+        val p1 = savedInstanceState?.getDoubleArray("p1") ?: doubleArrayOf(0.0, 0.0)
+        val p2 = savedInstanceState?.getDoubleArray("p2") ?: doubleArrayOf(0.0, 0.0)
+        val p3 = savedInstanceState?.getDoubleArray("p3") ?: doubleArrayOf(0.0, 0.0)
+        val p4 = savedInstanceState?.getDoubleArray("p4") ?: doubleArrayOf(0.0, 0.0)
+        val texture = TextureAlgorithm.all[savedInstanceState?.getString("texture")]?.invoke(resources)
+                ?: TextureAlgorithm.escape(resources)
+        val q1 = savedInstanceState?.getDouble("q1") ?: 0.0
+        val q2 = savedInstanceState?.getDouble("q2") ?: 0.0
+        val juliaMode = savedInstanceState?.getBoolean("juliaMode") ?: false
+        val paramSensitivity = savedInstanceState?.getDouble("paramSensitivity") ?: 1.0
+        val coords = savedInstanceState?.getDoubleArray("coords") ?: doubleArrayOf(0.0, 0.0)
+        val savedCoords = savedInstanceState?.getDoubleArray("savedCoords") ?: doubleArrayOf(0.0, 0.0)
+        val scale = savedInstanceState?.getDoubleArray("scale") ?: doubleArrayOf(1.0, aspectRatio)
+        val savedScale = savedInstanceState?.getDoubleArray("savedScale") ?: doubleArrayOf(1.0, aspectRatio)
+        val maxIter = savedInstanceState?.getInt("maxIter") ?: 255
+        val bailoutRadius = savedInstanceState?.getFloat("bailoutRadius") ?: 1e5f
+        val palette = ColorPalette.all[savedInstanceState?.getString("palette")] ?: ColorPalette.p5
         val frequency = savedInstanceState?.getFloat("frequency") ?: 2.0f
         val phase = savedInstanceState?.getFloat("phase") ?: 0.0f
-
+        val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: "HIGH")
+        val precision = Precision.valueOf(savedInstanceState?.getString("precision") ?: "AUTO")
+        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: false
+        val displayParamsBoolean = savedInstanceState?.getBoolean("displayParams") ?: true
 
         val fractalConfig = FractalConfig(mutableMapOf(
-                "map"               to  ComplexMap.burningShip(resources),
-                "p1"                to  doubleArrayOf(0.0, 0.0),
-                "p2"                to  doubleArrayOf(0.0, 0.0),
-                "p3"                to  doubleArrayOf(0.0, 0.0),
-                "p4"                to  doubleArrayOf(0.0, 0.0),
-                "texture"           to  TextureAlgorithm.escape(resources),
-                "q1"                to  0.0,
-                "q2"                to  0.0,
-                "juliaMode"         to  false,
-                "paramSensitivity"  to  1.0,
-                "coords"            to  doubleArrayOf(0.0, 0.0),
-                "savedCoords"       to  doubleArrayOf(0.0, 0.0),
-                "scale"             to  doubleArrayOf(1.0, 1.0*aspectRatio),
-                "savedScale"        to  doubleArrayOf(1.0, 1.0*aspectRatio),
-                "maxIter"           to  255,
-                "bailoutRadius"     to  1e5f,
-                "palette"           to  ColorPalette.p8,
+                "map"               to  map,
+                "p1"                to  p1,
+                "p2"                to  p2,
+                "p3"                to  p3,
+                "p4"                to  p4,
+                "texture"           to  texture,
+                "q1"                to  q1,
+                "q2"                to  q2,
+                "juliaMode"         to  juliaMode,
+                "paramSensitivity"  to  paramSensitivity,
+                "coords"            to  coords,
+                "savedCoords"       to  savedCoords,
+                "scale"             to  scale,
+                "savedScale"        to  savedScale,
+                "maxIter"           to  maxIter,
+                "bailoutRadius"     to  bailoutRadius,
+                "palette"           to  palette,
                 "frequency"         to  frequency,
                 "phase"             to  phase
         ))
         val settingsConfig = SettingsConfig(mutableMapOf(
-                "resolution"        to Resolution.HIGH,
-                "precision"         to Precision.AUTO,
-                "continuousRender"  to false,
-                "displayParams"     to false,
+                "resolution"        to resolution,
+                "precision"         to precision,
+                "continuousRender"  to continuousRender,
+                "displayParams"     to displayParamsBoolean,
                 "saveToFile"        to false
         ))
 
@@ -761,10 +794,10 @@ class MainActivity : AppCompatActivity(),
 
 
         val displayParams = findViewById<LinearLayout>(R.id.displayParams)
-        displayParamTextViews = listOf(
-            findViewById(R.id.displayParam1),
-            findViewById(R.id.displayParam2),
-            findViewById(R.id.displayParam3)
+        displayParamRows = listOf(
+            findViewById(R.id.displayParamRow1),
+            findViewById(R.id.displayParamRow2),
+            findViewById(R.id.displayParamRow3)
         )
         displayParams.removeViews(1, displayParams.childCount - 1)
 
@@ -790,14 +823,14 @@ class MainActivity : AppCompatActivity(),
             }
             fractalView.reaction = Reaction.valueOf(s)
             (displayParams.getChildAt(0) as TextView).text = when (fractalView.reaction) {
-                Reaction.TRANSFORM, Reaction.COLOR -> s
+                Reaction.POSITION, Reaction.COLOR -> s
                 else -> "PARAMETER ${s[1]}"
             }
 
             if (fractalView.f.settingsConfig.displayParams()) {
                 displayParams.removeViews(1, displayParams.childCount - 1)
                 for (i in 0 until fractalView.numDisplayParams()) {
-                    displayParams.addView(displayParamTextViews[i])
+                    displayParams.addView(displayParamRows[i])
                 }
             }
 
@@ -902,10 +935,10 @@ class MainActivity : AppCompatActivity(),
         // val uiFullHeightOpen = (screenHeight*(1.0 - 1.0/phi)).toInt()
         // val uiFullHeightFullscreen = screenHeight - statusBarHeight
         val uiFullHeightOpen = screenHeight/2
-        fractalView.y = -uiFullHeightOpen/2f
+        // fractalView.y = -uiFullHeightOpen/2f
 
         val uiFull = findViewById<LinearLayout>(R.id.uiFull)
-        uiFull.layoutParams.height = uiFullHeightOpen
+        uiFull.layoutParams.height = 1
         uiFull.bringToFront()
 
         val uiFullButton = findViewById<ImageButton>(R.id.uiFullButton)
@@ -934,7 +967,6 @@ class MainActivity : AppCompatActivity(),
             anim.start()
         }
 
-
         val overlay = findViewById<ConstraintLayout>(R.id.overlay)
         overlay.bringToFront()
 
@@ -944,11 +976,11 @@ class MainActivity : AppCompatActivity(),
 
     }
 
-    fun addMapParams(n: Int) {
+    private fun addMapParams(n: Int) {
         val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
         for (i in 1..n) { uiQuick.addView(uiQuickButtons[uiQuick.childCount], 0) }
     }
-    fun removeMapParams(n: Int) {
+    private fun removeMapParams(n: Int) {
         val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
         for (i in 1..n) { uiQuick.removeView(uiQuickButtons[uiQuick.childCount - 1]) }
     }
@@ -967,12 +999,14 @@ class MainActivity : AppCompatActivity(),
         outState?.putBoolean(       "juliaMode",         f.fractalConfig.juliaMode()         )
         outState?.putDouble(        "paramSensitivity",  f.fractalConfig.paramSensitivity()  )
         outState?.putDoubleArray(   "coords",            f.fractalConfig.coords()            )
+        outState?.putDoubleArray(   "savedCoords",       f.fractalConfig.savedCoords()       )
         outState?.putDoubleArray(   "scale",             f.fractalConfig.scale()             )
+        outState?.putDoubleArray(   "savedScale",        f.fractalConfig.savedScale()        )
         outState?.putInt(           "maxIter",           f.fractalConfig.maxIter()           )
         outState?.putFloat(         "bailoutRadius",     f.fractalConfig.bailoutRadius()     )
         outState?.putString(        "palette",           f.fractalConfig.palette().name      )
-        outState?.putFloat(         "frequency",         f.fractalConfig.frequency()        )
-        outState?.putFloat(         "phase",             f.fractalConfig.phase()            )
+        outState?.putFloat(         "frequency",         f.fractalConfig.frequency()         )
+        outState?.putFloat(         "phase",             f.fractalConfig.phase()             )
 
         // save SettingsConfig values
         outState?.putString(    "resolution",        f.settingsConfig.resolution().name   )
@@ -1102,7 +1136,7 @@ class MainActivity : AppCompatActivity(),
                     val displayParams = findViewById<LinearLayout>(R.id.displayParams)
                     if (value as Boolean) {
                         for (i in 0 until fractalView.numDisplayParams()) {
-                            displayParams.addView(displayParamTextViews[i])
+                            displayParams.addView(displayParamRows[i])
                         }
                         fractalView.f.updateDisplayParams(fractalView.reaction, false)
                     }

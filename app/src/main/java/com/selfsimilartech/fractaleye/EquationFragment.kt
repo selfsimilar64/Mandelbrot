@@ -1,5 +1,6 @@
-package com.example.matt.gputest
+package com.selfsimilartech.fractaleye
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
@@ -24,6 +25,7 @@ class EquationFragment : Fragment() {
 
     lateinit var config : FractalConfig
 
+    @SuppressLint("SetTextI18n")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.equation_fragment, container, false)
@@ -74,9 +76,14 @@ class EquationFragment : Fragment() {
         positionHeaderButton.setOnClickListener(cardHeaderListener(positionLayoutBody))
         colorHeaderButton.setOnClickListener(cardHeaderListener(colorLayoutBody))
 
+        functionHeaderButton.performClick()
+        textureHeaderButton.performClick()
+        colorHeaderButton.performClick()
+        positionHeaderButton.performClick()
+
         val editListenerNext = {
             editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)-> Any -> TextView.OnEditorActionListener {
-            w, actionId, event -> when (actionId) {
+            w, actionId, _ -> when (actionId) {
             EditorInfo.IME_ACTION_NEXT -> {
                 callback.onEquationParamsChanged(key, value(w))
                 editText.clearFocus()
@@ -94,7 +101,7 @@ class EquationFragment : Fragment() {
         }
         val editListenerDone = {
             editText: EditText, key: String, value: (w: TextView)->Any -> TextView.OnEditorActionListener {
-            w, actionId, event -> when (actionId) {
+            w, actionId, _ -> when (actionId) {
             EditorInfo.IME_ACTION_DONE -> {
                 callback.onEquationParamsChanged(key, value(w))
                 val imm = v.context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -276,7 +283,7 @@ class EquationFragment : Fragment() {
 
 
         // JULIA MODE SWITCH
-         val juliaListener = CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+         val juliaListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
              val juliaParamIndex = config.numParamsInUse()
              Log.d("FRACTAL FRAGMENT", "juliaParamIndex: $juliaParamIndex")
              val juliaLayoutIndex = juliaLayout.indexOfChild(juliaModeSwitch)
@@ -312,7 +319,7 @@ class EquationFragment : Fragment() {
                     if (juliaModeSwitch.isChecked && !config.map().initJuliaMode) {
                         val juliaParamIndex = config.numParamsInUse() - 1
                         Log.d("FRACTAL FRAGMENT", "params in use: ${config.numParamsInUse()}")
-                        juliaModeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->  }
+                        juliaModeSwitch.setOnCheckedChangeListener { _, _ ->  }
                         juliaModeSwitch.isChecked = false
                         juliaLayout.removeView(mapParamEditRows[juliaParamIndex])
                         config.params["juliaMode"] = nextMap.initJuliaMode

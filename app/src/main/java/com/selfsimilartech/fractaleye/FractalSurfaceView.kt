@@ -1,8 +1,7 @@
-package com.example.matt.gputest
+package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -12,7 +11,6 @@ import android.os.*
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.HorizontalScrollView
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -106,8 +104,8 @@ class Texture (
 
 @SuppressLint("ViewConstructor")
 class FractalSurfaceView(
-        var f                 : Fractal,
-        private val context   : Activity
+        var f     : Fractal,
+        context   : Activity
 ) : GLSurfaceView(context) {
 
     inner class FractalRenderer(var f: Fractal, val context: Activity) : Renderer {
@@ -891,7 +889,7 @@ class FractalSurfaceView(
         private val quadFocus = doubleArrayOf(0.0, 0.0)
         private val t = doubleArrayOf(0.0, 0.0)
 
-        lateinit var rr : RenderRoutine
+        private lateinit var rr : RenderRoutine
 
 
         fun setQuadAnchor(screenPos: FloatArray) {
@@ -1047,16 +1045,10 @@ class FractalSurfaceView(
             fos.write(bos.toByteArray())
             fos.close()
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-                val contentUri = Uri.fromFile(file)
-                scanIntent.data = contentUri
-                context.sendBroadcast(scanIntent)
-            }
-            else {
-                val intent = Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory()))
-                context.sendBroadcast(intent)
-            }
+            val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+            val contentUri = Uri.fromFile(file)
+            scanIntent.data = contentUri
+            context.sendBroadcast(scanIntent)
 
         }
 
@@ -1088,7 +1080,11 @@ class FractalSurfaceView(
             // render to texture on ACTION_UP
             if (renderToTex) {
 
-                isRendering = !(f.settingsConfig.continuousRender() || reaction.name[0].toString() == "P")
+                isRendering = !(f.settingsConfig.continuousRender()
+                        || reaction == Reaction.P1
+                        || reaction == Reaction.P2
+                        || reaction == Reaction.P3
+                        || reaction == Reaction.P4)
                 rr.renderToTexture()
 
                 renderToTex = false
@@ -1126,47 +1122,47 @@ class FractalSurfaceView(
 
     val r : FractalRenderer
 //    var hasTranslated = false
-    private val h = Handler()
-    private val longPressed = Runnable {
-        Log.d("SURFACE VIEW", "wow u pressed that so long")
+//    private val h = Handler()
+//    private val longPressed = Runnable {
+//        Log.d("SURFACE VIEW", "wow u pressed that so long")
+//
+//        // vibrate
+//        val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            vib.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
+//        }
+//        else {
+//            //deprecated in API 26
+//            vib.vibrate(15)
+//        }
+//
+//        // toggle uiQuick
+//        val uiQuick = context.findViewById<LinearLayout>(R.id.uiQuick)
+//        val v : Int
+//        if (uiQuick.visibility == LinearLayout.VISIBLE) {
+//            v = LinearLayout.INVISIBLE
+//        }
+//        else {
+//            v = LinearLayout.VISIBLE
+//            uiQuick.bringToFront()
+//        }
+//        uiQuick.visibility = v
+//
+//    }
 
-        // vibrate
-        val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
-        }
-        else {
-            //deprecated in API 26
-            vib.vibrate(15)
-        }
-
-        // toggle uiQuick
-        val uiQuick = context.findViewById<LinearLayout>(R.id.uiQuick)
-        val v : Int
-        if (uiQuick.visibility == LinearLayout.VISIBLE) {
-            v = LinearLayout.INVISIBLE
-        }
-        else {
-            v = LinearLayout.VISIBLE
-            uiQuick.bringToFront()
-        }
-        uiQuick.visibility = v
-
-    }
-
-    var reaction = Reaction.TRANSFORM
+    var reaction = Reaction.POSITION
     val numDisplayParams = {
         when (reaction) {
-            Reaction.TRANSFORM -> 3
+            Reaction.POSITION -> 3
             Reaction.COLOR -> 2
             else -> 3
         }
     }
 
     private val prevFocus = floatArrayOf(0.0f, 0.0f)
-    private val edgeRightSize = 150
+    // private val edgeRightSize = 150
     private var prevFocalLen = 1.0f
-    private val minPixelMove = 5f
+    // private val minPixelMove = 5f
 
 
     init {
@@ -1225,13 +1221,13 @@ class FractalSurfaceView(
 //            }
 
             when (reaction) {
-                Reaction.TRANSFORM -> {
+                Reaction.POSITION -> {
 
                     // actions change fractal
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
-                            // Log.d("TRANSFORM", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("POSITION", "POINTER DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
@@ -1244,12 +1240,12 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_POINTER_DOWN -> {
-                            // Log.d("TRANSFORM", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
+                            // Log.d("POSITION", "POINTER ${e.actionIndex} DOWN -- x: ${e.x}, y: ${e.y}")
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             prevFocalLen = e.focalLength()
-                            // Log.d("TRANSFORM", "focalLen: $prevFocalLen")
+                            // Log.d("POSITION", "focalLen: $prevFocalLen")
                             if (!f.settingsConfig.continuousRender()) {
                                 r.setQuadFocus(floatArrayOf(
                                         focus[0] - e.getX(0),
@@ -1263,7 +1259,7 @@ class FractalSurfaceView(
                             val dx: Float = focus[0] - prevFocus[0]
                             val dy: Float = focus[1] - prevFocus[1]
 
-                            // Log.d("TRANSFORM", "MOVE -- dx: $dx, dy: $dy")
+                            // Log.d("POSITION", "MOVE -- dx: $dx, dy: $dy")
                             f.translate(floatArrayOf(dx, dy))
                             if (!f.settingsConfig.continuousRender()) {
                                 r.translate(floatArrayOf(dx, dy))
@@ -1272,7 +1268,7 @@ class FractalSurfaceView(
                             prevFocus[1] = focus[1]
                             if (e.pointerCount > 1) {   // MULTI-TOUCH
                                 val focalLen = e.focalLength()
-                                // Log.d("TRANSFORM", "MOVE -- prevFocalLen: $prevFocalLen, focalLen: $focalLen")
+                                // Log.d("POSITION", "MOVE -- prevFocalLen: $prevFocalLen, focalLen: $focalLen")
                                 val dFocalLen = focalLen / prevFocalLen
                                 f.scale(dFocalLen, focus)
                                 if (!f.settingsConfig.continuousRender()) {
@@ -1289,14 +1285,14 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            // Log.d("TRANSFORM", "POINTER UP")
+                            // Log.d("POSITION", "POINTER UP")
                             f.updatePositionEditTexts()
                             r.renderToTex = true
                             requestRender()
                             return true
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
-                            // Log.d("TRANSFORM", "POINTER ${e.actionIndex} UP")
+                            // Log.d("POSITION", "POINTER ${e.actionIndex} UP")
                             when (e.getPointerId(e.actionIndex)) {
                                 0 -> {
                                     prevFocus[0] = e.getX(1)

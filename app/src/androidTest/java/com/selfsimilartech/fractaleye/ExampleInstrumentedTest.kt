@@ -1,4 +1,4 @@
-package com.example.matt.gputest
+package com.selfsimilartech.fractaleye
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
