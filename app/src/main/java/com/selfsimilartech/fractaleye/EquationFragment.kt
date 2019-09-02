@@ -290,10 +290,10 @@ class EquationFragment : Fragment() {
              if (isChecked) {
                  juliaLayout.removeView(mapParamEditRows[juliaParamIndex])
                  juliaLayout.addView(mapParamEditRows[juliaParamIndex], juliaLayoutIndex + 1)
-                 complexMapKatex.setDisplayText(config.map().katex.replace(Regex("(?<!a)c"), "P${juliaParamIndex + 1}"))
+                 complexMapKatex.setDisplayText(config.map().katex.format("P${juliaParamIndex + 1}"))
              } else {
                  juliaLayout.removeView(mapParamEditRows[juliaParamIndex - 1])
-                 complexMapKatex.setDisplayText(config.map().katex)
+                 complexMapKatex.setDisplayText(config.map().katex.format("c"))
              }
              callback.onEquationParamsChanged("juliaMode", isChecked)
          }
@@ -347,7 +347,7 @@ class EquationFragment : Fragment() {
                         ComplexMap.all[item]?.invoke(resources) ?: config.map()
                 )
 
-                complexMapKatex.setDisplayText(nextMap.katex)
+                complexMapKatex.setDisplayText(nextMap.katex.format("c"))
                 complexMapKatex.setTextSize((nextMap.katexSize * resources.displayMetrics.scaledDensity).toInt())
 
             }
