@@ -147,6 +147,10 @@ class ColorPalette (
         private val TANGERINE   = floatArrayOf( 246f/255f, 170f/255f, 26f/255f )
 
 
+        val bw      = ColorPalette("Yin Yang", listOf(
+                BLACK,
+                WHITE
+        ))
         val beach   = ColorPalette("Beach",  listOf(
                 YELLOWISH,
                 DARKBLUE1,
@@ -165,17 +169,17 @@ class ColorPalette (
                 floatArrayOf(0.0f, 0.1f, 0.2f),
                 DARKBLUE1,
                 WHITE,
-                ORAGNE2,
-                PURPLE
+                floatArrayOf(0.1f, 0.7f, 0.8f),
+                floatArrayOf(0.85f, 0.5f, 0.2f)
         ))
-        val p4      = ColorPalette("P4",     listOf(
+        val p4      = ColorPalette("Vascular",     listOf(
                 YELLOWISH,
                 DARKBLUE2,
                 BLACK,
                 PURPLE.mult(0.7f),
                 DEEPRED
         ))
-        val p5      = ColorPalette("P5",     listOf(
+        val p5      = ColorPalette("Flora",     listOf(
                 YELLOWISH.mult(1.1f),
                 MAGENTA.mult(0.4f),
                 WHITE,
@@ -190,7 +194,7 @@ class ColorPalette (
                 PURPLE.mult(0.35f),
                 MAROON
         ))
-        val p8      = ColorPalette("P8",     listOf(
+        val p8      = ColorPalette("Groovy", listOf(
                 floatArrayOf(75.0f, 115.0f, 115.0f).mult(1.0f/255.0f),
                 floatArrayOf(255.0f, 170.0f, 28.0f).mult(1.0f/255.0f),
                 floatArrayOf(255.0f, 118.0f, 111.0f).mult(1.0f/255.0f),
@@ -203,7 +207,7 @@ class ColorPalette (
                 floatArrayOf(75.0f, 130.0f, 115.0f).mult(1.0f/255.0f),
                 PURPLE.mult(0.3f)
         ))
-        val anubis = ColorPalette("Anubis", listOf(
+        val anubis = ColorPalette("Anubis",  listOf(
                 BLACK,
                 PURPLE2,
                 MINT,
@@ -212,9 +216,8 @@ class ColorPalette (
                 floatArrayOf(240f, 120f, 10f).mult(1f/255f)
         ))
         val all     = mapOf(
+                bw.name      to  bw,
                 beach.name   to  beach,
-                p1.name      to  p1,
-                p3.name      to  p3,
                 p4.name      to  p4,
                 p5.name      to  p5,
                 royal.name   to  royal,
@@ -383,12 +386,10 @@ class ComplexMap (
         val persianRug          = { res: Resources -> ComplexMap(
                 "Persian Rug",
                 katex = res.getString(R.string.persianrug_katex),
-                katexSize = 3f,
+                katexSize = 4f,
                 initSF = res.getString(R.string.persianrug_init_sf),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.persianrug_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.persianrug_loop_df),
                 initScale = 1.5,
                 initParams = listOf(doubleArrayOf(0.642, 0.0)),
                 initBailout = 1e1f
@@ -427,13 +428,12 @@ class ComplexMap (
             "Sine"                  to  sine,
             "Sine 2"                to  sine2,
             "Horseshoe Crab"        to  horseshoeCrab,
-            "Kleinian"              to  kleinian,
-            "Test"                  to  test
+            "Kleinian"              to  kleinian
         )
         
     }
 
-    val hasDualFloat = { loopDF != "" }
+    val hasDualFloat = loopDF != ""
     override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
         return other is ComplexMap && name == other.name
@@ -970,7 +970,6 @@ class MainActivity : AppCompatActivity(),
         val overlay = findViewById<ConstraintLayout>(R.id.overlay)
         overlay.bringToFront()
 
-
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
 
@@ -986,6 +985,8 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
+
+        Log.d("MAIN ACTIVITY", "saving instance state !!")
 
         // save FractalConfig values
         outState?.putString(        "map",               f.fractalConfig.map().name          )
@@ -1015,9 +1016,6 @@ class MainActivity : AppCompatActivity(),
         outState?.putString(    "precision",         f.settingsConfig.precision().name    )
 
         super.onSaveInstanceState(outState)
-    }
-    override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
-        super.onSaveInstanceState(outState, outPersistentState)
     }
     override fun onAttachFragment(fragment: Fragment) {
         super.onAttachFragment(fragment)
