@@ -334,6 +334,23 @@
             return c*vec2(cos(f), sin(f));
         }
 
+        vec2 boxFoldSF(vec2 z) {
+            vec2 w = z;
+            if (z.x &lt; -1.0) { w.x = -2.0 - z.x; }
+            else if (z.x > 1.0) { w.x = 2.0 - z.x; }
+            if (z.y &lt; -1.0) { w.y = -2.0 - z.y; }
+            else if (z.y > 1.0) { w.y = 2.0 - z.y; }
+            return w;
+        }
+
+        vec2 ballFoldSF(vec2 z) {
+            float modZ = modSF(z);
+            float coef = 1.0;
+            if (modZ &lt; 0.5) { coef = 4.0; }
+            else if (modZ > 0.5 &amp;&amp; modZ &lt; 1.0) { coef = 1.0/(modZ*modZ); }
+            return coef*z;
+        }
+
     </string>
     <string name="arithmetic_df">
 
@@ -473,6 +490,32 @@
             return vec4(U, V);
         }
 
+        vec4 boxFoldDF(vec2 X, vec2 Y) {
+            vec2 U = X;
+            vec2 V = Y;
+            if (X.x &lt; -1.0) { U = addDF(vec2(-2.0, 0.0), -X); }
+            else if (X.x > 1.0) { U = addDF(vec2(2.0, 0.0), -X); }
+            if (Y.x &lt; -1.0) { V = addDF(vec2(-2.0, 0.0), -Y); }
+            else if (Y.x > 1.0) { V = addDF(vec2(2.0, 0.0), -Y); }
+            return vec4(U, V);
+        }
+
+        vec4 ballFoldDF(vec2 X, vec2 Y) {
+            vec2 modZ = modDF(X, Y);
+            vec2 U = X;
+            vec2 V = Y;
+            if (modZ.x &lt; 0.5) {
+                U = multDF(vec2(4.0, 0.0), X);
+                V = multDF(vec2(4.0, 0.0), Y);
+            }
+            else if (modZ.x > 0.5 &amp;&amp; modZ.x &lt; 1.0) {
+                vec2 modSqrZ = modSqrDF(X, Y);
+                U = divDF(X, modSqrZ);
+                V = divDF(Y, modSqrZ);
+            }
+            return vec4(U, V);
+        }
+
     </string>
 
     <string name="general_init_sf">
@@ -535,6 +578,40 @@
         $f(z) = z^{\\operatorname{Re}(P1)} + %s$
     </string>
 
+    <!-- DUALPOW -->
+    <string name="dualpow_init_sf">
+        vec2 alpha = vec2(1.0, 0.0);
+        vec2 beta = vec2(1.0, 0.0);
+        vec2 gamma = P1;
+    </string>
+    <string name="dualpow_loop_sf">
+        Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, gamma.y)));
+    </string>
+    <string name="dualpow_katex">
+        $f(z) = %s \\cdot (z^{\\operatorname{Re}(P1)} + z^{\\operatorname{Im}(P1)})$
+    </string>
+
+    <!-- MANDELBOX -->
+    <string name="mandelbox_loop_sf">
+        Z = cMultSF(P1, ballFoldSF(boxFoldSF(Z1))) + C;
+    </string>
+    <string name="mandelbox_loop_df">
+        vec4 Q1 = boxFoldDF(X1, Y1);
+        vec4 Q2 = ballFoldDF(Q1.xy, Q1.zw);
+        vec4 Q3 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), Q2.xy, Q2.zw);
+        X = addDF(Q3.xy, A);
+        Y = addDF(Q3.zw, B);
+    </string>
+
+    <!-- KALI -->
+    <string name="kali_loop_sf">
+        vec2 Q = abs(Z1);
+        Z = Q/modSqrSF(Q) + C;
+    </string>
+    <string name="kalisquare_loop_sf">
+        Z = abs(Z1)/(Z1.x*Z1.y) + C;
+    </string>
+
     <!-- MANDELBAR -->
     <string name="mandelbar_loop_sf">
         Z = cSqrSF(conjSF(Z1)) + C;
@@ -573,19 +650,6 @@
     </string>
     <string name="burningship_katex">
         $f(z) = \\big(|\\operatorname{Re}(z)| + i|\\operatorname{Im}(z)|\\big)^2 + %s$
-    </string>
-
-    <!-- DUALPOW -->
-    <string name="dualpow_init_sf">
-        vec2 alpha = vec2(1.0, 0.0);
-        vec2 beta = vec2(1.0, 0.0);
-        vec2 gamma = P1;
-    </string>
-    <string name="dualpow_loop_sf">
-        Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, gamma.y)));
-    </string>
-    <string name="dualpow_katex">
-        $f(z) = %s \\cdot (z^{\\operatorname{Re}(P1)} + z^{\\operatorname{Im}(P1)})$
     </string>
 
     <!-- SINE -->
@@ -647,23 +711,6 @@
     </string>
     <string name="persianrug_loop_sf">
         Z = cMultSF(Z1, cSinSF(cTanSF(P1 - cDivSF(C, Z1))) + Z1 + cTanSF(Z1));
-    </string>
-    <string name="persianrug_loop_df">
-        vec4 S1 = cDivDF(A, B, X1, Y1);
-        vec2 S2 = addDF(vec2(P1.x, 0.0), -S1.xy);
-        vec2 S3 = addDF(vec2(P1.y, 0.0), -S1.zw);
-        vec4 S4 = cSinDF(S2, S3, 8);
-        vec4 S5 = cCosDF(S2, S3, 8);
-        vec4 S6 = cDivDF(S4.xy, S4.zw, S5.xy, S5.zw);
-        vec4 S7 = cSinDF(S6.xy, S6.zw, 8);
-        vec4 S8 = cSinDF(X1, Y1, 8);
-        vec4 S9 = cCosDF(X1, Y1, 8);
-        vec4 S10 = cDivDF(S8.xy, S8.zw, S9.xy, S9.zw);
-        vec2 S11 = addDF(addDF(S7.xy, S10.xy), X1);
-        vec2 S12 = addDF(addDF(S7.zw, S10.zw), Y1);
-        vec4 Q = cMultDF(X1, Y1, S11, S12);
-        X = Q.xy;
-        Y = Q.zw;
     </string>
     <string name="persianrug_katex">
         $f(z) = z \\cdot \\bigg(\\sin\\Big(\\tan\\big(P1 - \\frac{%s}{z}\\big)\\Big) + z + \\tan(z)\\bigg)$
@@ -732,7 +779,15 @@
     <string name="test_init_sf">
     </string>
     <string name="test_loop_sf">
-        Z = cMultSF(Z1, Z1 - round(Z1)) + C;
+        Z = ballFoldSF(cSqrSF(Z1) + P1) + C;
+    </string>
+    <string name="test_loop_df">
+        vec4 Q1 = cSqrDF(X1, Y1);
+        vec2 Q2 = addDF(Q1.xy, vec2(P1.x, 0.0));
+        vec2 Q3 = addDF(Q1.zw, vec2(P1.y, 0.0));
+        vec4 Q4 = ballFoldDF(Q2, Q3);
+        X = addDF(Q4.xy, A);
+        Y = addDF(Q4.zw, B);
     </string>
 
 
@@ -809,6 +864,7 @@
 
     </string>
 
+
     <!-- ESCAPE SMOOTH -->
     <string name="mandelbrot_smooth_final_sf">
         float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
@@ -821,6 +877,19 @@
         colorParams.z = j;
     </string>
 
+    <!-- EXPONENTIAL SMOOTHING -->
+    <string name="exponential_smooth_init">
+        float sum = 0.0;
+    </string>
+    <string name="exponential_smooth_loop_sf">
+        sum = sum + exp(-modZ);
+    </string>
+    <string name="exponential_smooth_loop_df">
+        sum = sum + exp(-modZ.x);
+    </string>
+    <string name="exponential_smooth_final">
+        colorParams.z = sum;
+    </string>
 
     <!-- LIGHTING -->
     <string name="mandelbrot_light_init_sf">
