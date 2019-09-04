@@ -381,12 +381,12 @@ class FractalSurfaceView(
                 GL.glUseProgram(renderProgram)
                 GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
-                for (i in 0 until NUM_MAP_PARAMS) {
+                for (i in 1..NUM_MAP_PARAMS) {
                     val p = floatArrayOf(
-                            (f.fractalConfig.params["p${i + 1}"] as DoubleArray)[0].toFloat(),
-                            (f.fractalConfig.params["p${i + 1}"] as DoubleArray)[1].toFloat())
+                            (f.fractalConfig.params["p$i"] as ComplexMapParam).getU().toFloat(),
+                            (f.fractalConfig.params["p$i"] as ComplexMapParam).getV().toFloat())
                     // Log.d("RENDER ROUTINE", "passing p${i + 1} in as (${p[0]}, ${p[1]})")
-                    GL.glUniform2fv(mapParamHandles[i], 1, p, 0)
+                    GL.glUniform2fv(mapParamHandles[i - 1], 1, p, 0)
                 }
                 for (i in 0 until NUM_TEXTURE_PARAMS) {
                     // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.fractalConfig.params["q${i + 1}"]}")

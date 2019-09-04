@@ -197,12 +197,12 @@ class Fractal(
     }
     private fun resetMapParams() {
         for (i in 1..fractalConfig.map().initParams.size) {
-            (fractalConfig.params["p$i"] as DoubleArray)[0] = fractalConfig.map().initParams[i - 1][0]
-            (fractalConfig.params["p$i"] as DoubleArray)[1] = fractalConfig.map().initParams[i - 1][1]
+            (fractalConfig.params["p$i"] as ComplexMapParam).setU(fractalConfig.map().initParams[i - 1].getU(), false)
+            (fractalConfig.params["p$i"] as ComplexMapParam).setV(fractalConfig.map().initParams[i - 1].getV(), false)
         }
         for (i in (fractalConfig.map().initParams.size + 1)..NUM_MAP_PARAMS) {
-            (fractalConfig.params["p$i"] as DoubleArray)[0] = 0.0
-            (fractalConfig.params["p$i"] as DoubleArray)[1] = 0.0
+            (fractalConfig.params["p$i"] as ComplexMapParam).setU(0.0, false)
+            (fractalConfig.params["p$i"] as ComplexMapParam).setV(0.0, false)
         }
         updateMapParamEditTexts()
     }
@@ -281,8 +281,8 @@ class Fractal(
             }
         }
 
-        xEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as DoubleArray)[0]))
-        yEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as DoubleArray)[1]))
+        xEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMapParam).getU()))
+        yEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMapParam).getV()))
 
     }
     fun updateMapParamEditTexts() {
@@ -358,8 +358,8 @@ class Fractal(
                     displayParamName1.text = "u"
                     displayParamName2.text = "v"
                     displayParamName3.text = res.getString(R.string.sensitivity)
-                    displayParam1.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as DoubleArray)[0])
-                    displayParam2.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as DoubleArray)[1])
+                    displayParam1.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMapParam).getU())
+                    displayParam2.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMapParam).getV())
                     displayParam3.text = "%.4f".format(fractalConfig.paramSensitivity())
                     w = (80f * density).toInt()
 
@@ -412,8 +412,10 @@ class Fractal(
         val sensitivity =
                 if (fractalConfig.paramSensitivity() == -1.0) fractalConfig.scale()[0]
                 else fractalConfig.paramSensitivity()
-        (fractalConfig.params["p$i"] as DoubleArray)[0] += sensitivity*dPos[0]/screenRes[0]
-        (fractalConfig.params["p$i"] as DoubleArray)[1] -= sensitivity*dPos[1]/screenRes[1]
+//        (fractalConfig.params["p$i"] as DoubleArray)[0] += sensitivity*dPos[0]/screenRes[0]
+//        (fractalConfig.params["p$i"] as DoubleArray)[1] -= sensitivity*dPos[1]/screenRes[1]
+        (fractalConfig.params["p$i"] as ComplexMapParam).setU(sensitivity*dPos[0]/screenRes[0])
+        (fractalConfig.params["p$i"] as ComplexMapParam).setV(-sensitivity*dPos[1]/screenRes[1])
 
         // Log.d("FRACTAL", "setting map param ${p + 1} to (${fractalConfig.map().params[p - 1][0]}, ${fractalConfig.map().params[p - 1][1]})")
 
@@ -455,6 +457,16 @@ class Fractal(
         //      JULIA :: (0.78515850, -1.14163868)
         //      JULIA :: (-1.75579063, -0.00825099)
         //      JULIA :: (-1.21314957, 0.00826136) + TRIANGLE INEQ / STRIPE
+
+        // MANDELBOX :: (1.58564605, 0.06087502)
+        //      JULIA :: (5.75040877, 5.75041244)
+
+        // MANDELBOX :: (0.60267262, 0.94995500)
+        //      JULIA :: (-15.00327866, 43.11857865)
+
+        // BALLFOLD(Z^2 + P1) + C :: (1.23172118, 0.0)
+        //      JULIA :: (-0.96727896, 0.0)
+
 
         updateDisplayParams(Reaction.valueOf("P$i"), false)
         // updateMapParamEditText(i)
