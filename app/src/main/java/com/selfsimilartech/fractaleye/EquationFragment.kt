@@ -117,6 +117,15 @@ class EquationFragment : Fragment() {
         }
         }
         }
+        val lockListener = { i: Int, j: Int -> View.OnClickListener {
+            val lock = it as ImageButton
+            val isLocked = lock.alpha == 0.15f  // cause we're about to change it ya freak
+            lock.alpha = if (isLocked) 1f else 0.15f
+            when (j) {
+                0 -> (config.params["p$i"] as ComplexMapParam).uLocked = isLocked
+                1 -> (config.params["p$i"] as ComplexMapParam).vLocked = isLocked
+            }
+        }}
 
 
 
@@ -177,50 +186,58 @@ class EquationFragment : Fragment() {
 
 
         // PARAMETER EDIT FIELDS
-        val p1xEdit = v.findViewById<EditText>(R.id.p1xEdit)
-        val p1yEdit = v.findViewById<EditText>(R.id.p1yEdit)
-        p1xEdit.setText("%.8f".format(config.p1()[0]))
-        p1yEdit.setText("%.8f".format(config.p1()[1]))
-        p1xEdit.setOnEditorActionListener(editListenerNext(p1xEdit, p1yEdit, "p1") {
-            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p1yEdit.text}".toDouble())
-        })
-        p1yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p1") {
-            w: TextView -> doubleArrayOf("${p1xEdit.text}".toDouble(), "${w.text}".toDouble())
-        })
-
-        val p2xEdit = v.findViewById<EditText>(R.id.p2xEdit)
-        val p2yEdit = v.findViewById<EditText>(R.id.p2yEdit)
-        p2xEdit.setText("%.8f".format(config.p2()[0]))
-        p2yEdit.setText("%.8f".format(config.p2()[1]))
-        p2xEdit.setOnEditorActionListener(editListenerNext(p2xEdit, p2yEdit, "p2") {
-            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p2yEdit.text}".toDouble())
-        })
-        p2yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p2") {
-            w: TextView -> doubleArrayOf("${p2xEdit.text}".toDouble(), "${w.text}".toDouble())
-        })
-
-        val p3xEdit = v.findViewById<EditText>(R.id.p3xEdit)
-        val p3yEdit = v.findViewById<EditText>(R.id.p3yEdit)
-        p3xEdit.setText("%.8f".format(config.p3()[0]))
-        p3yEdit.setText("%.8f".format(config.p3()[1]))
-        p3xEdit.setOnEditorActionListener(editListenerNext(p3xEdit, p3yEdit, "p3") {
-            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p3yEdit.text}".toDouble())
-        })
-        p3yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p3") {
-            w: TextView -> doubleArrayOf("${p3xEdit.text}".toDouble(), "${w.text}".toDouble())
-        })
-
-        val p4xEdit = v.findViewById<EditText>(R.id.p4xEdit)
-        val p4yEdit = v.findViewById<EditText>(R.id.p4yEdit)
-        p4xEdit.setText("%.8f".format(config.p4()[0]))
-        p4yEdit.setText("%.8f".format(config.p4()[1]))
-        p4xEdit.setOnEditorActionListener(editListenerNext(p4xEdit, p4yEdit, "p4") {
-            w: TextView -> doubleArrayOf("${w.text}".toDouble(), "${p4yEdit.text}".toDouble())
-        })
-        p4yEdit.setOnEditorActionListener(editListenerDone(p1yEdit, "p4") {
-            w: TextView -> doubleArrayOf("${p4xEdit.text}".toDouble(), "${w.text}".toDouble())
-        })
-
+        val mapParamEditTexts = listOf(
+                Pair(
+                    Pair(
+                        v.findViewById<EditText>(R.id.p1xEdit),
+                        v.findViewById<EditText>(R.id.p1yEdit)), 
+                    Pair(
+                        v.findViewById<ImageButton>(R.id.p1uLock),
+                        v.findViewById<ImageButton>(R.id.p1vLock))),
+                Pair(
+                    Pair(
+                        v.findViewById<EditText>(R.id.p2xEdit),
+                        v.findViewById<EditText>(R.id.p2yEdit)),
+                    Pair(
+                        v.findViewById<ImageButton>(R.id.p2uLock),
+                        v.findViewById<ImageButton>(R.id.p2vLock))),
+                Pair(
+                    Pair(
+                        v.findViewById<EditText>(R.id.p3xEdit),
+                        v.findViewById<EditText>(R.id.p3yEdit)),
+                    Pair(
+                        v.findViewById<ImageButton>(R.id.p3uLock),
+                        v.findViewById<ImageButton>(R.id.p3vLock))),
+                Pair(
+                    Pair(
+                        v.findViewById<EditText>(R.id.p4xEdit),
+                        v.findViewById<EditText>(R.id.p4yEdit)),
+                    Pair(
+                        v.findViewById<ImageButton>(R.id.p4uLock),
+                        v.findViewById<ImageButton>(R.id.p4vLock)))
+        )
+        mapParamEditTexts.forEachIndexed { i, pair1 ->
+            pair1.first.first.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMapParam).getU()))
+            pair1.first.second.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMapParam).getV()))
+            pair1.first.first.setOnEditorActionListener(editListenerNext(pair1.first.first, pair1.first.second, "p${i + 1}") {
+                w: TextView -> ComplexMapParam(
+                    "${w.text}".toDouble(),
+                    "${pair1.first.second.text}".toDouble(),
+                    (config.params["p${i + 1}"] as ComplexMapParam).uLocked,
+                    (config.params["p${i + 1}"] as ComplexMapParam).vLocked
+                )
+            })
+            pair1.first.second.setOnEditorActionListener(editListenerDone(pair1.first.second, "p${i + 1}") {
+                w: TextView -> ComplexMapParam(
+                    "${pair1.first.first.text}".toDouble(),
+                    "${w.text}".toDouble(),
+                    (config.params["p${i + 1}"] as ComplexMapParam).uLocked,
+                    (config.params["p${i + 1}"] as ComplexMapParam).vLocked
+                )
+            })
+            pair1.second.first.setOnClickListener(lockListener(i + 1, 0))
+            pair1.second.second.setOnClickListener(lockListener(i + 1, 1))
+        }
 
 
         val q1Edit = v.findViewById<EditText>(R.id.q1Edit)
