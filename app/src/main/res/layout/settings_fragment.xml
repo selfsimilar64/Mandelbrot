@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settingsScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black">
@@ -139,21 +139,47 @@
                         android:layout_height="wrap_content"
                         android:text="@string/continuous_render" />
 
-                    <Button
-                        android:id="@+id/saveToFileButton"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_marginTop="15dp"
-                        android:background="#0000"
-                        android:clickable="true"
-                        android:drawableTop="@drawable/save"
-                        android:drawablePadding="10dp"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:paddingTop="15dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/save" />
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/renderButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="15dp"
+                            android:layout_weight="1"
+                            android:background="#0000"
+                            android:clickable="true"
+                            android:drawableTop="@drawable/render"
+                            android:drawablePadding="10dp"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackgroundBorderless"
+                            android:paddingTop="15dp"
+                            android:paddingBottom="10dp"
+                            android:text="@string/render" />
+
+                        <Button
+                            android:id="@+id/saveToFileButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="15dp"
+                            android:layout_weight="1"
+                            android:background="#0000"
+                            android:clickable="true"
+                            android:drawableTop="@drawable/save"
+                            android:drawablePadding="10dp"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackgroundBorderless"
+                            android:paddingTop="15dp"
+                            android:paddingBottom="10dp"
+                            android:text="@string/save" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
