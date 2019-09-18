@@ -15,16 +15,17 @@ import android.widget.ProgressBar
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.IntBuffer
+import java.nio.*
 import java.util.*
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
 import javax.microedition.khronos.egl.EGLDisplay
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.atan2
 import kotlin.math.ceil
+import kotlin.math.log
+import kotlin.math.sqrt
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
@@ -49,12 +50,12 @@ private class ContextFactory : GLSurfaceView.EGLContextFactory {
 class Texture (
         val res         : IntArray,
         interpolation   : Int,
-        format          : Int,
+        internalFormat  : Int,
         index           : Int
 ) {
 
     val id : Int
-    private val buffer : ByteBuffer
+    val buffer : FloatBuffer
 
     init {
         // create texture id
@@ -63,13 +64,16 @@ class Texture (
         id = b[0]
 
         // allocate texture memory
-        buffer = when(format) {
-            GL.GL_RGBA8 -> ByteBuffer.allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
-            GL.GL_RGBA16F -> ByteBuffer.allocateDirect(res[0] * res[1] * 8).order(ByteOrder.nativeOrder())
-            GL.GL_RGBA32F -> ByteBuffer.allocateDirect(res[0] * res[1] * 16).order(ByteOrder.nativeOrder())
+        val bytesPerTexel = when(internalFormat) {
+                           // # of components   # of bytes per component
+            GL.GL_RGBA8 ->    4                 * 1
+            GL.GL_RGBA16F ->  4                 * 2
+            GL.GL_RGBA32F ->  4                 * 4
+            GL.GL_RG32F ->    2                 * 4
 //            GL.GL_RGBA -> ByteBuffer.allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
-            else -> ByteBuffer.allocateDirect(0)
+            else -> 0
         }
+        buffer = ByteBuffer.allocateDirect(res[0] * res[1] * bytesPerTexel).order(ByteOrder.nativeOrder()).asFloatBuffer()
 
         // bind and set texture parameters
         GL.glActiveTexture(GL.GL_TEXTURE0 + index)
@@ -77,24 +81,30 @@ class Texture (
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, interpolation)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, interpolation)
 
-        val type = when(format) {
+        val type = when(internalFormat) {
             GL.GL_RGBA8 -> GL.GL_UNSIGNED_BYTE
             GL.GL_RGBA16F -> GL.GL_HALF_FLOAT
             GL.GL_RGBA32F -> GL.GL_FLOAT
+            GL.GL_RG32F -> GL.GL_FLOAT
 //            GL.GL_RGBA -> GL.GL_UNSIGNED_BYTE
             else -> 0
         }
 
+        val format = when(internalFormat) {
+            GL.GL_RG32F -> GL.GL_RG
+            else -> GL.GL_RGBA
+        }
+
         // define texture specs
         GL.glTexImage2D(
-                GL.GL_TEXTURE_2D,           // target
-                0,                          // mipmap level
-                format,                     // internal format
-                res[0], res[1],              // texture resolution
-                0,                          // border
-                GL.GL_RGBA,                 // format
-                type,                       // type
-                buffer                      // memory pointer
+            GL.GL_TEXTURE_2D,           // target
+            0,                          // mipmap level
+            internalFormat,             // internal format
+            res[0], res[1],             // texture resolution
+            0,                          // border
+            format,                     // internalFormat
+            type,                       // type
+            buffer                      // memory pointer
         )
     }
 
@@ -104,11 +114,11 @@ class Texture (
 
 @SuppressLint("ViewConstructor")
 class FractalSurfaceView(
-        var f     : Fractal,
-        context   : Activity
+        var f           : Fractal,
+        val context     : Activity
 ) : GLSurfaceView(context) {
 
-    inner class FractalRenderer(var f: Fractal, val context: Activity) : Renderer {
+    inner class FractalRenderer : Renderer {
 
         inner class RenderRoutine {
 
@@ -133,6 +143,10 @@ class FractalSurfaceView(
             private val bgScaleHandle    : Int
             private val mapParamHandles  : IntArray
             private val textureParamHandles : IntArray
+
+
+            private val orbitHandle : Int
+
 
             private val sampleProgram = GL.glCreateProgram()
             private val viewCoordsSampleHandle : Int
@@ -167,7 +181,8 @@ class FractalSurfaceView(
             private val textures = arrayOf(
                     Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0),
                     Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 1),
-                    Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 2)
+                    Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 2),
+                    Texture(intArrayOf(f.fractalConfig.maxIter(), 1), GL.GL_NEAREST, GL.GL_RG32F, 3)    // perturbation texture
 //                    Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA, 0),
 //                    Texture(f.texRes(), interpolation(), GL.GL_RGBA, 1),
 //                    Texture(f.texRes(), interpolation(), GL.GL_RGBA, 2)
@@ -187,6 +202,7 @@ class FractalSurfaceView(
             private val fboIDs : IntBuffer = IntBuffer.allocate(1)
             private var currIndex = 1      // current high-res texture ID index
             private var intIndex = 2       // intermediate high-res texture ID index
+            private val perturbationIndex = 3
 
             // initialize byte buffer for the draw list
             // num coord values * 2 bytes/short
@@ -227,11 +243,18 @@ class FractalSurfaceView(
                 s.close()
 
 
+                s = context.resources.openRawResource(R.raw.perturbation)
+                val perturbationCode = Scanner(s).useDelimiter("\\Z").next()
+                s.close()
+
+
                 // create and compile shaders
                 vRenderShader = loadShader(GL.GL_VERTEX_SHADER, vRenderCode)
                 vSampleShader = loadShader(GL.GL_VERTEX_SHADER, vSampleCode)
 
                 fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, f.renderShader())
+//                fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, perturbationCode)
+
                 fSampleShader = loadShader(GL.GL_FRAGMENT_SHADER, fSampleCode)
                 fColorShader  = loadShader(GL.GL_FRAGMENT_SHADER, f.colorShader())
 
@@ -264,6 +287,9 @@ class FractalSurfaceView(
                 textureParamHandles  =  IntArray(NUM_TEXTURE_PARAMS) { i: Int ->
                     GL.glGetUniformLocation(renderProgram, "Q${i+1}")
                 }
+
+                orbitHandle          =  GL.glGetUniformLocation(  renderProgram, "orbit"       )
+
 
 
                 GL.glAttachShader(sampleProgram, vSampleShader)
@@ -380,6 +406,111 @@ class FractalSurfaceView(
 
                 GL.glUseProgram(renderProgram)
                 GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
+
+
+
+                // TESTING PERTURBATION
+//                val numProbes = 25
+//                var orbitArray : FloatArray = floatArrayOf()
+//                var z : Complex
+//                var c = Complex(f.fractalConfig.coords()[0], f.fractalConfig.coords()[1])
+//                var modZ = 0.0
+//                var alpha : Complex
+//                var beta : Complex
+//                val iterations = IntArray(numProbes)
+//                val distances = DoubleArray(numProbes)
+//                val gradientAngles = DoubleArray(numProbes)
+//
+//                var maxIterFound = false
+//
+//
+//
+//                for (j in 0 until numProbes) {
+//
+//                    Log.d("RENDER ROUTINE", "j: $j")
+//
+//                    orbitArray = FloatArray(f.fractalConfig.maxIter()*2) { 0f }
+//                    z = Complex(0.0, 0.0)
+//                    alpha = Complex(0.0, 0.0)
+//                    beta = Complex(0.0, 0.0)
+//
+//                    for (i in 0 until f.fractalConfig.maxIter()) {
+//
+//                        orbitArray[2 * i] = z.x.toFloat()
+//                        orbitArray[2 * i + 1] = z.y.toFloat()
+//
+//                        // iterate second derivative
+//                        beta = 2.0*beta*z + alpha*alpha
+//
+//                        // iterate first derivative
+//                        alpha = 2.0*alpha*z + Complex(1.0, 0.0)
+//
+//                        // iterate z
+//                        z = z*z + c
+//                        modZ = z.mod()
+//                        //Log.d("RENDER ROUTINE", "x: $x, y: $y")
+//
+//                        if (i == f.fractalConfig.maxIter() - 1) {
+//                            Log.d("RENDER ROUTINE", "maxIter !!!!!")
+//                            maxIterFound = true
+//                            iterations[j] = i
+//                        }
+//                        if (modZ > f.fractalConfig.bailoutRadius()) {
+//                            Log.d("RENDER ROUTINE", "i: $i")
+//                            iterations[j] = i
+//                            break
+//                        }
+//
+//                    }
+//
+//                    if (maxIterFound) {
+//                        break
+//                    }
+//
+//
+//                    var grad = z/alpha
+//                    grad /= grad.mod()
+//                    grad = -grad
+//                    distances[j] = modZ*log(modZ, Math.E)/alpha.mod()
+//                    gradientAngles[j] = atan2(grad.y, grad.x)
+//
+//                    c += 1.5*distances[j]*grad
+//                    Log.d("RENDER ROUTINE", "c_prime: $c")
+//
+//
+//                }
+//
+//                var s = ""
+//                gradientAngles.forEach { s += "$it   " }
+//                Log.d("RENDER ROUTINE", "\ngradientAngles: $s")
+//
+//                s = ""
+//                iterations.forEach { s += "$it   " }
+//                Log.d("RENDER ROUTINE", "\niterations: $s")
+//
+//                textures[perturbationIndex].buffer.position(0)
+//                textures[perturbationIndex].buffer.put(orbitArray)
+//                textures[perturbationIndex].buffer.position(0)
+//
+//                // define texture specs
+//                GL.glTexImage2D(
+//                        GL.GL_TEXTURE_2D,           // target
+//                        0,                          // mipmap level
+//                        GL.GL_RG32F,                // internal format
+//                        f.fractalConfig.maxIter(), 1, // texture resolution
+//                        0,                          // border
+//                        GL.GL_RG,                     // internalFormat
+//                        GL.GL_FLOAT,                       // type
+//                        textures[perturbationIndex].buffer                      // memory pointer
+//                )
+//
+//                GL.glUniform1i(orbitHandle, perturbationIndex)
+//                val xOffsetSD = f.fractalConfig.coords()[0] - c.x
+//                val yOffsetSD = f.fractalConfig.coords()[1] - c.y
+
+
+
+
 
                 for (i in 1..NUM_MAP_PARAMS) {
                     val p = floatArrayOf(
@@ -1171,9 +1302,9 @@ class FractalSurfaceView(
     init {
 
 
-        // setEGLContextClientVersion(2)               // create OpenGL ES 3.0 context
+        // setEGLContextClientVersion(2)              // create OpenGL ES 3.0 context
         setEGLContextFactory(ContextFactory())
-        r = FractalRenderer(f, context)             // create renderer
+        r = FractalRenderer()                       // create renderer
         setRenderer(r)                              // set renderer
         renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly
 
