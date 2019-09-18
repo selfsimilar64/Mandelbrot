@@ -1,14 +1,21 @@
 package com.selfsimilartech.fractaleye
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
+import android.graphics.Rect
 import android.os.Bundle
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
+import android.support.v7.widget.CardView
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.Switch
 
 
@@ -26,19 +33,84 @@ class SettingsFragment : Fragment() {
 
         val v = inflater.inflate(R.layout.settings_fragment, container, false)
 
+        val settingsScroll = v.findViewById<ScrollView>(R.id.settingsScroll)
         val cardHeaderListener = { cardBody: LinearLayout -> View.OnClickListener {
+
+            val card = cardBody.parent.parent as CardView
+            val initScrollY = settingsScroll.scrollY
+            val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 15f, context?.resources?.displayMetrics).toInt()
+
+            val hStart : Int
+            val hEnd : Int
+
+
             if (cardBody.layoutParams.height == 0) {
-                cardBody.layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
+
+                // measure card body height
+                val matchParentMeasureSpec = View.MeasureSpec.makeMeasureSpec((cardBody.parent as View).width, View.MeasureSpec.EXACTLY)
+                val wrapContentMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                cardBody.measure(matchParentMeasureSpec, wrapContentMeasureSpec)
+
+                hStart = 0
+                hEnd = cardBody.measuredHeight
                 (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_collapse, null), null)
-                Log.w("FRACTAL", "was 0")
+
             }
             else {
-                cardBody.layoutParams.height = 0
+
+                hStart = cardBody.height
+                hEnd = 0
                 (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_expand, null), null)
-                Log.w("FRACTAL", "was open")
+
             }
-            cardBody.requestLayout()
-            cardBody.invalidate()
+
+            val anim = ValueAnimator.ofInt(hStart, hEnd)
+            anim.addUpdateListener { animation ->
+                val intermediateHeight = animation?.animatedValue as Int
+                Log.d("FRACTAL FRAGMENT", "intermediate height: $intermediateHeight")
+                cardBody.layoutParams.height = intermediateHeight
+                cardBody.requestLayout()
+
+                if (hStart == 0) {  // only scroll on card expansion
+
+                    // get scrollView dimensions and card coordinates in scrollView
+                    val scrollBounds = Rect()
+                    settingsScroll.getDrawingRect(scrollBounds)
+                    var top = 0f
+                    var temp = card as View
+                    while (temp !is ScrollView){
+                        top += (temp).y
+                        temp = temp.parent as View
+                    }
+                    val bottom = (top + card.height).toInt()
+
+                    if (scrollBounds.top > top - px) {  // card top is not visible
+                        settingsScroll.scrollY = ((1f - animation.animatedFraction)*initScrollY).toInt() + (animation.animatedFraction*(top - px)).toInt()  // scroll to top of card
+                    }
+                    else {  // card top is visible
+                        if (scrollBounds.bottom < bottom && card.height < settingsScroll.height - px) { // card bottom is not visible and there is space between card top and scrollView top
+                            settingsScroll.scrollY = bottom - settingsScroll.height  // scroll to show bottom
+                        }
+                    }
+                    Log.d("FRACTAL FRAGMENT", "scroll to: ${(cardBody.parent.parent as CardView).y.toInt()}")
+                }
+
+
+            }
+
+            // change cardBody height back to wrap_content after expansion
+            if (cardBody.layoutParams.height == 0) {
+                anim.addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator?) {
+                        super.onAnimationEnd(animation)
+                        cardBody.layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
+                    }
+                })
+            }
+
+            anim.duration = 250
+            anim.start()
+
         }}
 
         val renderCardBody = v.findViewById<LinearLayout>(R.id.renderCardBody)
@@ -50,8 +122,8 @@ class SettingsFragment : Fragment() {
         renderHeaderButton.setOnClickListener(cardHeaderListener(renderCardBody))
         uiHeaderButton.setOnClickListener(cardHeaderListener(uiCardBody))
 
-        renderHeaderButton.performClick()
-        uiHeaderButton.performClick()
+        renderCardBody.layoutParams.height = 0
+        uiCardBody.layoutParams.height = 0
 
 
         resolutionTabs = v.findViewById(R.id.resolutionTabs)
@@ -91,6 +163,10 @@ class SettingsFragment : Fragment() {
         val saveToFileButton = v.findViewById<Button>(R.id.saveToFileButton)
         saveToFileButton.setOnClickListener {
             callback.onSettingsParamsChanged("saveToFile", true)
+        }
+        val renderButton = v.findViewById<Button>(R.id.renderButton)
+        renderButton.setOnClickListener {
+            callback.onSettingsParamsChanged("render", true)
         }
 
 
