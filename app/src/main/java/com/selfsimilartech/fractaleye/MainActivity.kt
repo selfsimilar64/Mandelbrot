@@ -36,6 +36,57 @@ const val WRITE_STORAGE_REQUEST_CODE = 0
 
 
 
+operator fun Double.times(w: Complex) : Complex {
+    return Complex(this*w.x, this*w.y)
+}
+
+data class Complex(
+        val x : Double,
+        val y : Double
+) {
+
+    override fun toString(): String {
+        return "($x, $y)"
+    }
+
+    fun conj() : Complex{
+        return Complex(x, -y)
+    }
+
+    fun mod() : Double {
+        return sqrt(x*x + y*y)
+    }
+
+    operator fun unaryMinus() : Complex {
+        return Complex(-x, -y)
+    }
+
+    operator fun plus(w: Complex) : Complex {
+        return Complex(x + w.x, y + w.y)
+    }
+
+    operator fun minus(w: Complex) : Complex {
+        return Complex(x - w.x, y - w.y)
+    }
+
+    operator fun times(s: Double) : Complex {
+        return Complex(s*x, s*y)
+    }
+
+    operator fun times(w: Complex) : Complex {
+        return Complex(x*w.x - y*w.y, x*w.y + y*w.x)
+    }
+
+    operator fun div(s: Double) : Complex {
+        return Complex(x/s, y/s)
+    }
+
+    operator fun div(w: Complex) : Complex {
+        return (this*w.conj())/mod()
+    }
+
+}
+
 data class DualDouble (
         var hi : Double,
         var lo : Double
@@ -250,7 +301,6 @@ class ColorPalette (
 class ComplexMap (
         val name            : String,
         val katex           : String             = "$$",
-        val katexSize       : Float              = 4.5f,
         val conditionalSF   : String?            = "",
         val initSF          : String?            = "",
         val loopSF          : String?            = "",
@@ -259,6 +309,7 @@ class ComplexMap (
         val initDF          : String?            = "",
         val loopDF          : String?            = "",
         val finalDF         : String?            = "",
+        val textures        : List<String>       = TextureAlgorithm.arbitrary.keys.toList(),
         val initCoords      : DoubleArray        = doubleArrayOf(0.0, 0.0),
         val initScale       : Double             = 1.0,
         val initParams      : List<ComplexMapParam>  = listOf(),
@@ -277,6 +328,7 @@ class ComplexMap (
                 loopSF = res.getString(R.string.mandelbrot_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.mandelbrot_loop_df),
+                textures = TextureAlgorithm.all.keys.toList(),
                 initCoords = doubleArrayOf(-0.75, 0.0),
                 initScale = 3.5
         )}
@@ -286,7 +338,7 @@ class ComplexMap (
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbrotcpow_loop_sf),
                 initScale = 3.5,
-                initParams = listOf(ComplexMapParam(3.0, vLocked = true))
+                initParams = listOf(ComplexMapParam(5.0, vLocked = true))
         )}
         val mandelbrotDualPower = { res: Resources -> ComplexMap(
                 "Dual Power",
@@ -296,28 +348,35 @@ class ComplexMap (
                 loopSF = res.getString(R.string.dualpow_loop_sf),
                 initScale = 3.0,
                 initZ = doubleArrayOf(1.0, 0.0),
-                initParams = listOf(ComplexMapParam(2.0, -2.0))
+                initParams = listOf(ComplexMapParam(2.0, 0.0, vLocked = true))
         )}
         val mandelbox           = { res: Resources -> ComplexMap(
                 "Mandelbox",
+                katex = res.getString(R.string.mandelbox_katex),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbox_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.mandelbox_loop_df),
-                initScale = 4.0,
-                initParams = listOf(ComplexMapParam(-1.5, 0.0))
+                initScale = 5.0,
+                initParams = listOf(ComplexMapParam(-2.66421354, 0.0, vLocked = true))
         ) }
         val kali                = { res: Resources -> ComplexMap(
                 "Kali",
+                katex = res.getString(R.string.kali_katex),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.kali_loop_sf),
+                conditionalDF = res.getString(R.string.escape_df),
+                loopDF = res.getString(R.string.kali_loop_df),
+                initJuliaMode = true,
                 initBailout = 4e0f,
-                initScale = 4.0
+                initScale = 4.0,
+                initParams = listOf(ComplexMapParam(-0.255, -0.14))
         ) }
-        val kaliSquare                = { res: Resources -> ComplexMap(
+        val kaliSquare          = { res: Resources -> ComplexMap(
                 "Kali Square",
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.kalisquare_loop_sf),
+                initJuliaMode = true,
                 initBailout = 4e0f,
                 initScale = 4.0
         ) }
@@ -340,7 +399,6 @@ class ComplexMap (
         val burningShip         = { res: Resources -> ComplexMap(
                 "Burning Ship",
                 katex = res.getString(R.string.burningship_katex),
-                katexSize = 3.5f,
                 conditionalSF = res.getString(R.string.escape_sf),
                 initSF = res.getString(R.string.burningship_init_sf),
                 loopSF = res.getString(R.string.burningship_loop_sf),
@@ -349,6 +407,16 @@ class ComplexMap (
                 loopDF = res.getString(R.string.burningship_loop_df),
                 initCoords = doubleArrayOf(-0.35, 0.25),
                 initScale = 3.5
+        ) }
+        val magnet              = { res: Resources -> ComplexMap(
+                "Magnet",
+                conditionalSF = res.getString(R.string.escape_sf),
+                loopSF = res.getString(R.string.magnet_loop_sf),
+                initScale = 3.5,
+                initBailout = 4e0f,
+                initParams = listOf(
+                    ComplexMapParam(-1.0, 0.0, vLocked = true),
+                    ComplexMapParam(-2.0, 0.0, vLocked = true))
         ) }
         val sine                = { res: Resources -> ComplexMap(
                 "Sine",
@@ -362,7 +430,6 @@ class ComplexMap (
         val sine1               = { res: Resources -> ComplexMap(
                 "Sine 1",
                 katex = res.getString(R.string.sine1_katex),
-                katexSize = 5f,
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.sine1_loop_sf),
                 initScale = 3.5,
@@ -372,7 +439,6 @@ class ComplexMap (
         val sine2               = { res: Resources -> ComplexMap(
                 "Sine 2",
                 katex = res.getString(R.string.sine2_katex),
-                katexSize = 5f,
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.sine2_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
@@ -385,7 +451,6 @@ class ComplexMap (
         val horseshoeCrab       = { res: Resources -> ComplexMap(
                 "Horseshoe Crab",
                 katex = res.getString(R.string.horseshoecrab_katex),
-                katexSize = 5f,
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.horseshoecrab_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
@@ -409,7 +474,6 @@ class ComplexMap (
         val persianRug          = { res: Resources -> ComplexMap(
                 "Persian Rug",
                 katex = res.getString(R.string.persianrug_katex),
-                katexSize = 4f,
                 initSF = res.getString(R.string.persianrug_init_sf),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.persianrug_loop_sf),
@@ -440,15 +504,14 @@ class ComplexMap (
                 initScale = 3.5,
                 initParams = listOf(ComplexMapParam(1.0, 0.0))
         )}
-        val all         = mapOf(
+        val all                 = mapOf(
             "Mandelbrot"            to  mandelbrot,
             "Mandelbrot Power"      to  mandelbrotPower,
             "Mandelbrot Dual Power" to  mandelbrotDualPower,
+            "Burning Ship"          to  burningShip,
             "Mandelbox"             to  mandelbox,
             "Kali"                  to  kali,
-            "Kali Square"           to  kaliSquare,
             "Logistic"              to  logistic,
-            "Burning Ship"          to  burningShip,
             "Persian Rug"           to  persianRug,
             "Sine"                  to  sine,
             "Sine 2"                to  sine2,
@@ -495,14 +558,52 @@ class TextureAlgorithm (
                 finalSF = res.getString(R.string.mandelbrot_smooth_final_sf),
                 finalDF = res.getString(R.string.mandelbrot_smooth_final_df) )
         }
+        val distanceEstimation    = { res: Resources -> TextureAlgorithm(
+                name = "Distance Estimation",
+                initSF = res.getString(R.string.mandelbrot_dist_init_sf),
+                loopSF = res.getString(R.string.mandelbrot_dist_loop_sf),
+                finalSF = res.getString(R.string.mandelbrot_dist_final_sf),
+                initDF = res.getString(R.string.mandelbrot_dist_init_df),
+                loopDF = res.getString(R.string.mandelbrot_dist_loop_df),
+                finalDF = res.getString(R.string.mandelbrot_dist_final_df) )
+        }
+        val normalMap1 = { res: Resources ->
+            TextureAlgorithm(
+                    name = "Normal Map 1",
+                    initSF = res.getString(R.string.mandelbrot_normal1_init_sf),
+                    loopSF = res.getString(R.string.mandelbrot_normal1_loop_sf),
+                    finalSF = res.getString(R.string.mandelbrot_normal1_final_sf),
+                    initDF = res.getString(R.string.mandelbrot_normal1_init_df),
+                    loopDF = res.getString(R.string.mandelbrot_normal1_loop_df),
+                    finalDF = res.getString(R.string.mandelbrot_normal1_final_df))
+        }
+
+        val normalMap2 = { res: Resources -> TextureAlgorithm(
+                    name = "Normal Map 2",
+                    initSF = res.getString(R.string.mandelbrot_normal2_init_sf),
+                    loopSF = res.getString(R.string.mandelbrot_normal2_loop_sf),
+                    finalSF = res.getString(R.string.mandelbrot_normal2_final_sf),
+                    initDF = res.getString(R.string.mandelbrot_normal2_init_df),
+                    loopDF = res.getString(R.string.mandelbrot_normal2_loop_df),
+                    finalDF = res.getString(R.string.mandelbrot_normal2_final_df) )
+        }
+        val distanceGradient      = { res: Resources -> TextureAlgorithm(
+                name = "Distance Gradient",
+                initSF = res.getString(R.string.mandelbrot_distgrad_init_sf),
+                loopSF = res.getString(R.string.mandelbrot_distgrad_loop_sf),
+                finalSF = res.getString(R.string.mandelbrot_distgrad_final_sf),
+                initDF = res.getString(R.string.mandelbrot_distgrad_init_df),
+                loopDF = res.getString(R.string.mandelbrot_distgrad_loop_df),
+                finalDF = res.getString(R.string.mandelbrot_distgrad_final_df)
+        ) }
         val lighting              = { res: Resources -> TextureAlgorithm(
                 "Lighting",
                 res.getString(R.string.mandelbrot_light_init_sf),
                 res.getString(R.string.mandelbrot_light_loop_sf),
-                res.getString(R.string.mandelbrot_light_final),
+                res.getString(R.string.mandelbrot_light_final_sf),
                 res.getString(R.string.mandelbrot_light_init_df),
                 res.getString(R.string.mandelbrot_light_loop_df),
-                res.getString(R.string.mandelbrot_light_final)
+                res.getString(R.string.mandelbrot_light_final_df)
         )}
         val escapeSmoothLight     = {
             res: Resources -> escapeSmooth(res).add(lighting(res))
@@ -563,14 +664,25 @@ class TextureAlgorithm (
                 loopDF = res.getString(R.string.exponential_smooth_loop_df),
                 finalDF = res.getString(R.string.exponential_smooth_final)
         ) }
+        val arbitrary           = mapOf(
+            "Escape Time"                  to  escape               ,
+            "Curvature Average"            to  curvatureAvg         ,
+            "Stripe Average"               to  stripeAvg            ,
+            "Overlay Average"              to  overlayAvg           ,
+            "Orbit Trap"                   to  orbitTrap            ,
+            "Exponential Smoothing"        to  exponentialSmoothing
+        )
         val all                 = mapOf(
             "Escape Time"                  to  escape               ,
             "Escape Time Smooth"           to  escapeSmooth         ,
+            "Distance Estimation"          to  distanceEstimation   ,
+            "Normal Map 1"                 to  normalMap1           ,
+            "Normal Map 2"                 to  normalMap2           ,
             "Triangle Inequality Average"  to  triangleIneqAvg      ,
             "Curvature Average"            to  curvatureAvg         ,
             "Stripe Average"               to  stripeAvg            ,
-            "Orbit Trap"                   to  orbitTrap            ,
             "Overlay Average"              to  overlayAvg           ,
+            "Orbit Trap"                   to  orbitTrap            ,
             "Exponential Smoothing"        to  exponentialSmoothing
         )
 
@@ -831,7 +943,8 @@ class MainActivity : AppCompatActivity(),
                 "precision"         to precision,
                 "continuousRender"  to continuousRender,
                 "displayParams"     to displayParamsBoolean,
-                "saveToFile"        to false
+                "saveToFile"        to false,
+                "render"            to false
         ))
 
 
@@ -1096,6 +1209,9 @@ class MainActivity : AppCompatActivity(),
             f.fractalConfig.params[key] = value
             when (key) {
                 "map" -> {
+                    if (!f.fractalConfig.map().textures.contains(f.fractalConfig.texture().name)) {
+                        f.fractalConfig.params["texture"] = TextureAlgorithm.escape(resources)
+                    }
                     f.reset()
                     f.renderShaderChanged = true
                     val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
@@ -1227,6 +1343,11 @@ class MainActivity : AppCompatActivity(),
                             toast.show()
                         }
                     }
+                    f.settingsConfig.params[key] = false
+                }
+                "render" -> {
+                    fractalView.r.renderToTex = true
+                    fractalView.requestRender()
                     f.settingsConfig.params[key] = false
                 }
             }
