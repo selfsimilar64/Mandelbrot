@@ -75,6 +75,9 @@
     <string name="header_sf">
         #version 300 es\n
         #define pi 3.141592654\n
+        #define Sn 1e-8\n
+        #define Sp 1e8\n
+        #define Sh 1e4\n
 
         precision highp float;
         uniform int maxIter;
@@ -98,6 +101,9 @@
         #version 300 es\n
         #define SPLIT 8193.\n
         #define pi 3.141592654\n
+        #define Sn 1e-8\n
+        #define Sp 1e8\n
+        #define Sh 1e4\n
 
         precision highp float;
         uniform int maxIter;
@@ -272,8 +278,8 @@
         }
 
         vec2 cSinSF(vec2 z) {
-            float u = 0.5*(exp(z.y)+exp(-z.y))*sin(z.x);
-            float v = 0.5*(exp(z.y)-exp(-z.y))*cos(z.x);
+            float u = sin(z.x)*cosh(z.y);
+            float v = cos(z.x)*sinh(z.y);
             return vec2(u, v);
         }
 
@@ -349,6 +355,26 @@
             if (modZ &lt; 0.5) { coef = 4.0; }
             else if (modZ > 0.5 &amp;&amp; modZ &lt; 1.0) { coef = 1.0/(modZ*modZ); }
             return coef*z;
+        }
+
+        float _m(float _a, float _b) {
+            return (_a*_b) * Sp;
+        }
+
+        vec2 _cMultSF(vec2 _a, vec2 _b) {
+            return vec2(_m(_a.x, _b.x) - _m(_a.y, _b.y), _m(_a.x, _b.y) + _m(_b.x, _a.y));
+        }
+
+        vec2 _sqr(vec2 _a) {
+            return vec2(_m(_a.x, _a.x) - _m(_a.y, _a.y), 2.0*_m(_a.x, _a.y));
+        }
+
+        float _modSF(vec2 _a) {
+            return sqrt(_m(_a.x, _a.x) + _m(_a.y, _a.y)) * Sh;
+        }
+
+        float _modSqrSF(vec2 _a) {
+            return _m(_a.x, _a.x) + _m(_a.y, _a.y);
         }
 
     </string>
@@ -564,31 +590,27 @@
         Y = addDF(Q.zw, B);
     </string>
     <string name="mandelbrot_katex">
-        $f(z) = z^2 + %s$
+        $z_{n+1} = z_{n}^2 + %s$
     </string>
 
     <!-- MANDELBROT CPOW -->
     <string name="mandelbrotcpow_loop_sf">
-        Z = cPow3(Z1, P1.x) + C;
-    </string>
-    <string name="mandelbrotcpow_loop_df">
-
+        Z = cPow4(Z1, P1) + C;
     </string>
     <string name="mandelbrotcpow_katex">
-        $f(z) = z^{\\operatorname{Re}(P1)} + %s$
+        $z_{n+1} = z_{n}^{P1} + %s$
     </string>
 
     <!-- DUALPOW -->
     <string name="dualpow_init_sf">
         vec2 alpha = vec2(1.0, 0.0);
         vec2 beta = vec2(1.0, 0.0);
-        vec2 gamma = P1;
     </string>
     <string name="dualpow_loop_sf">
-        Z = cMultSF(C, cMultSF(alpha, cPow3(Z, gamma.x)) + cMultSF(beta, cPow3(Z, gamma.y)));
+        Z = cMultSF(C, cMultSF(alpha, cPow4(Z, P1)) + cMultSF(beta, cPow4(Z, -P1)));
     </string>
     <string name="dualpow_katex">
-        $f(z) = %s \\cdot (z^{\\operatorname{Re}(P1)} + z^{\\operatorname{Im}(P1)})$
+        $z_{n+1} = %s \\cdot (z_{n}^{P1} + z_{n}^{-P1})$
     </string>
 
     <!-- MANDELBOX -->
@@ -602,14 +624,28 @@
         X = addDF(Q3.xy, A);
         Y = addDF(Q3.zw, B);
     </string>
+    <string name="mandelbox_katex">
+        $z_{n+1} = \\small \\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) + %s$
+    </string>
 
     <!-- KALI -->
     <string name="kali_loop_sf">
         vec2 Q = abs(Z1);
-        Z = Q/modSqrSF(Q) + C;
+        Z = Q/modSqrSF(Q) + P1;
     </string>
+    <string name="kali_loop_df">
+        vec2 Q1 = absDF(X1);
+        vec2 Q2 = absDF(Y1);
+        vec2 Q3 = modSqrDF(Q1, Q2);
+        X = addDF(divDF(Q1, Q3), vec2(P1.x, 0.0));
+        Y = addDF(divDF(Q2, Q3), vec2(P1.y, 0.0));
+    </string>
+    <string name="kali_katex">
+        $z_{n+1} = \\large\\frac{\\textrm{abs}(z_n)}{|\\textrm{abs}(z_n)|^2} +\\small P1$
+    </string>
+
     <string name="kalisquare_loop_sf">
-        Z = abs(Z1)/(Z1.x*Z1.y) + C;
+        Z = abs(Z1)/(Z1.x*Z1.y) + P1;
     </string>
 
     <!-- MANDELBAR -->
@@ -630,7 +666,7 @@
         Y = Q4.zw;
     </string>
     <string name="logistic_katex">
-        $f(z) = \\frac{z - z^2}{%s}$
+        $z_{n+1} = \\Large \\frac{z_n - z_n^2}{%s}$
     </string>
 
     <!-- BURNING SHIP -->
@@ -649,7 +685,12 @@
         Y = addDF(Q.zw, B);
     </string>
     <string name="burningship_katex">
-        $f(z) = \\big(|\\operatorname{Re}(z)| + i|\\operatorname{Im}(z)|\\big)^2 + %s$
+        $z_{n+1} = \\textrm{abs}(z_n)^2 + %s$
+    </string>
+
+    <!-- MAGNET -->
+    <string name="magnet_loop_sf">
+        Z = cSqrSF(cDivSF(cSqrSF(Z1) + C + P1, 2.0*Z1 + C + P2));
     </string>
 
     <!-- SINE -->
@@ -662,14 +703,14 @@
         Y = addDF(Q1.zw, B);
     </string>
     <string name="sine_katex">
-        $f(z) = \\sin(z) + %s$
+        $z_{n+1} = \\sin(z_n) + %s$
     </string>
 
     <string name="sine1_loop_sf">
         Z = cSinSF(cDivSF(cPow3(Z1, P1.x), C));
     </string>
     <string name="sine1_katex">
-        $f(z) = \\sin(\\frac{z^{\\operatorname{Re}(P1)}}{%s})$
+        $z_{n+1} = \\sin(\\frac{z_n^{\\operatorname{Re}(P1)}}{%s})$
     </string>
 
     <string name="sine2_loop_sf">
@@ -685,7 +726,7 @@
         Y = Q5.zw;
     </string>
     <string name="sine2_katex">
-        $f(z) = \\sin(\\frac{z^2 + P1}{%s})$
+        $z_{n+1} = \\sin(\\large\\frac{z_n^2 + P1}{%s}\\normalsize)$
     </string>
 
     <!-- HORSESHOE CRAB -->
@@ -713,7 +754,7 @@
         Z = cMultSF(Z1, cSinSF(cTanSF(P1 - cDivSF(C, Z1))) + Z1 + cTanSF(Z1));
     </string>
     <string name="persianrug_katex">
-        $f(z) = z \\cdot \\bigg(\\sin\\Big(\\tan\\big(P1 - \\frac{%s}{z}\\big)\\Big) + z + \\tan(z)\\bigg)$
+        $z_{n+1} = z \\cdot \\big(\\sin\\big(\\tan(P1 - \\large\\frac{%s}{z_n}\\normalsize)\\big) + z_n + \\tan(z_n)\\big)$
     </string>
 
     <!-- KLEINIAN -->
@@ -779,7 +820,7 @@
     <string name="test_init_sf">
     </string>
     <string name="test_loop_sf">
-        Z = ballFoldSF(cSqrSF(Z1) + P1) + C;
+        Z = abs(cSinSF(cSqrSF(Z1) - vec2(-Z1.y, Z1.x))) + C;
     </string>
     <string name="test_loop_df">
         vec4 Q1 = cSqrDF(X1, Y1);
@@ -799,7 +840,7 @@
     <!-- ESCAPE -->
     <string name="escape_sf">
         modZ = modSF(Z);
-        if (modZ > R)
+        if (modZ > R || isinf(Z.x*Z.x) || isinf(Z.y*Z.y) || isinf(modSqrSF(Z)))
     </string>
     <string name="escape_df_2">
         modZ = modDF(X, Y);
@@ -873,9 +914,126 @@
     </string>
     <string name="mandelbrot_smooth_final_df">
         float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
+        colorParams.z = i;
+    </string>
+    <string name="mandelbrot_smooth_final_df2">
+        float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
         colorParams.z = j;
     </string>
+
+
+    <!-- DISTANCE ESTIMATION -->
+    <string name="mandelbrot_dist_init_sf">
+        vec2 alpha = vec2(0.0);
+    </string>
+    <string name="mandelbrot_dist_loop_sf">
+        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_dist_final_sf">
+        colorParams.z = modZ*log(modZ)/modSF(alpha);
+    </string>
+    <string name="mandelbrot_dist_init_df">
+        vec2 alpha = vec2(0.0);
+        vec2 Z, Z1;
+    </string>
+    <string name="mandelbrot_dist_loop_df">
+        Z1 = vec2(X1.x, Y1.x);
+        Z = vec2(X.x, Y.x);
+        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_dist_final_df">
+        colorParams.z = modZ.x*log(modZ.x)/modSF(alpha);
+    </string>
+
+    <string name="mandelbrot_normal1_init_sf">
+        vec2 alpha = vec2(0.0);
+    </string>
+    <string name="mandelbrot_normal1_loop_sf">
+        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_normal1_final_sf">
+        vec2 u = cDivSF(Z, alpha);
+        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+    </string>
+    <string name="mandelbrot_normal1_init_df">
+        vec2 alpha = vec2(0.0);
+        vec2 Z, Z1;
+    </string>
+    <string name="mandelbrot_normal1_loop_df">
+        Z1 = vec2(X1.x, Y1.x);
+        Z = vec2(X.x, Y.x);
+        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_normal1_final_df">
+        vec2 u = cDivSF(Z, alpha);
+        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+    </string>
+
+    <string name="mandelbrot_normal2_init_sf">
+        vec2 alpha = vec2(0.0);
+        vec2 beta = vec2(0.0);
+    </string>
+    <string name="mandelbrot_normal2_loop_sf">
+        beta = 2.0*(cMultSF(Z1, beta) + cSqrSF(alpha));
+        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_normal2_final_sf">
+        float logModZ = log(modZ);
+        vec2 u = cMultSF(cMultSF(Z, alpha), (logModZ + 1.0)*cConjSF(cSqrSF(alpha)) - logModZ*cConjSF(cMultSF(Z, beta)));
+        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+    </string>
+    <string name="mandelbrot_normal2_init_df">
+        vec2 alpha = vec2(0.0);
+        vec2 beta = vec2(0.0);
+        vec2 Z, Z1;
+    </string>
+    <string name="mandelbrot_normal2_loop_df">
+        Z1 = vec2(X1.x, Y1.x);
+        Z = vec2(X.x, Y.x);
+        beta = 2.0*(cMultSF(Z1, beta) + cSqrSF(alpha));
+        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_normal2_final_df">
+        float logModZ = log(modZ.x);
+        vec2 u = cMultSF(cMultSF(Z, alpha), (logModZ + 1.0)*cConjSF(cSqrSF(alpha)) - logModZ*cConjSF(cMultSF(Z, beta)));
+        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+    </string>
+
+    <string name="mandelbrot_distgrad_init_sf">
+        vec2 alpha = vec2(0.0);
+        vec2 beta = vec2(0.0);
+    </string>
+    <string name="mandelbrot_distgrad_loop_sf">
+        beta = 2.0*(cMultSF(beta, Z1) + cSqrSF(alpha));
+        alpha = 2.0*cMultSF(alpha, Z1) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_distgrad_final_sf">
+        float logModZ = log(modZ);
+        float modAlpha = modSF(alpha);
+        float dist = 2.0*modZ*logModZ/modAlpha;
+        vec2 grad = 2.0*cMultSF(alpha/modAlpha, (logModZ + 1.0)/modZ*Z - modZ*logModZ/(modAlpha*modAlpha)*beta);
+        colorParams.z = atan(grad.y, grad.x)/(2.0*pi) + 1.0;
+    </string>
+    <string name="mandelbrot_distgrad_init_df">
+        vec2 alpha = vec2(0.0);
+        vec2 beta = vec2(0.0);
+        vec2 Z, Z1 = vec2(0.0);
+    </string>
+    <string name="mandelbrot_distgrad_loop_df">
+        Z = vec2(X.x, Y.x);
+        Z1 = vec2(X1.x, Y1.x);
+        beta = 2.0*(cMultSF(beta, Z) + cSqrSF(alpha));
+        alpha = 2.0*cMultSF(alpha, Z) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_distgrad_final_df">
+        float logModZ = log(modZ.x);
+        float modAlpha = modSF(alpha);
+        float dist = 2.0*modZ.x*logModZ/modAlpha;
+        vec2 grad = 2.0*cMultSF(alpha, (logModZ + 1.0)*modAlpha/modZ.x*Z - modZ*logModZ/modAlpha*beta)/modSqrSF(beta);
+        colorParams.z = atan(grad.y, grad.x)/(2.0*pi) + 1.0;
+    </string>
+
 
     <!-- EXPONENTIAL SMOOTHING -->
     <string name="exponential_smooth_init">
@@ -891,17 +1049,38 @@
         colorParams.z = sum;
     </string>
 
+
     <!-- LIGHTING -->
     <string name="mandelbrot_light_init_sf">
         vec2 a = vec2(0.0);
+        vec2 b = vec2(0.0);
     </string>
     <string name="mandelbrot_light_loop_sf">
-        a = 2.0*cMultSF(a, Z1);
-        a.x += 1.0;
+        b = 2.0*(cMultSF(b, Z1) + cSqrSF(a));
+        a = 2.0*cMultSF(a, Z1) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_light_final">
+    <string name="mandelbrot_light_final_sf">
         vec2 u = cDivSF(Z, a);
         float theta = atan(u.y, u.x);
+        colorParams.x = theta;
+    </string>
+    <string name="mandelbrot_light_final2_sf">
+        vec2 u = cMultSF(cMultSF(Z, a), (log(modZ) + 1.0)*cConjSF(cSqrSF(a)) - log(modZ)*cConjSF(cMultSF(Z, b)));
+        float theta = atan(u.y, u.x);
+        colorParams.x = theta;
+    </string>
+    <string name="mandelbrot_light_init_df">
+        vec4 a = vec4(0.0);
+    </string>
+    <string name="mandelbrot_light_loop_df">
+        a = cMultDF(a.xy, a.zw, X1, Y1);
+        a.xy = multDF(vec2(2.0, 0.0), a.xy);
+        a.zw = multDF(vec2(2.0, 0.0), a.zw);
+        a.xy = addDF(a.xy, vec2(1.0, 0.0));
+    </string>
+    <string name="mandelbrot_light_final_df">
+        vec4 u = cDivDF(X1, Y1, a.xy, a.zw);
+        float theta = atan(u.z, u.x);
         colorParams.x = theta;
     </string>
     <string name="mandelbrot_light_color_sf">
@@ -918,33 +1097,23 @@
         specular = 0.75*(specular + 0.01);
         color = diffuse*color + specular;
     </string>
-    <string name="mandelbrot_light_init_df">
-        vec2 a = vec2(0.0);
-        vec2 Z, Z1;
-    </string>
-    <string name="mandelbrot_light_loop_df">
-        Z = vec2(X.x, Y.x);
-        Z1 = vec2(X1.x, Y1.x);
-        a = 2.0*cMultSF(a, Z1);
-        a.x += 1.0;
-    </string>
 
 
     <!-- TRIANGLE INEQUALITY AVERAGE -->
     <string name="triangle_init_sf" tools:ignore="TypographyOther">
         float modC = modSF(C);
-        float modSqrZ1 = 0.0;
+        float modSqrZ2 = 0.0;
         float sum, sum1 = 0.0;
         float il = 1.0/log(2.0);
         float llr = log(log(R)/2.0);
     </string>
     <string name="triangle_loop_sf">
-        if (n > 1) {
+        if (n > 2) {
             sum1 = sum;
-            modSqrZ1 = modSqrSF(Z1);
-            float m = abs(modSqrZ1 - modC);
-            float M = modSqrZ1 + modC;
-            float p = modZ - m;
+            modSqrZ2 = modSqrSF(Z2);
+            float m = abs(modSqrZ2 - modC);
+            float M = modSqrZ2 + modC;
+            float p = modSF(Z1) - m;
             float q = M - m;
             sum += p / q;
         }
@@ -956,20 +1125,45 @@
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.z = s;
     </string>
+    <string name="triangle_init_sf2" tools:ignore="TypographyOther">
+        float _modC = modSF(C)*Sn;
+        float _modSqrZ2 = 0.0;
+        float sum, sum1 = 0.0;
+        float il = 1.0/log(2.0);
+        float llr = log(log(R)/2.0);
+    </string>
+    <string name="triangle_loop_sf2">
+        if (n > 2) {
+            sum1 = sum;
+            _modSqrZ2 = _modSqrSF(Z2*Sn);
+            float _m = abs(_modSqrZ2 - _modC);
+            float _M = _modSqrZ2 + _modC;
+            float _p = _modSF(Z1*Sn) - _m;
+            float _q = _M - _m;
+            sum += _p / _q;
+        }
+    </string>
+    <string name="triangle_final_sf2">
+        sum /= float(n);
+        sum1 /= float(n - 1);
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.z = s;
+    </string>
     <string name="triangle_init_df" tools:ignore="TypographyOther">
         vec2 modC = modDF(A, B);
-        vec2 modSqrZ1;
+        vec2 modSqrZ2;
         vec2 sum, sum1 = vec2(0.0);
         float il = 1.0/log(2.0);
         float llr = log(log(R)/2.0);
     </string>
     <string name="triangle_loop_df">
-        if (n > 0) {
+        if (n > 2) {
             sum1 = sum;
-            modSqrZ1 = modSqrDF(X1, Y1);
-            vec2 m = absDF(addDF(modSqrZ1, -modC));
-            vec2 M = addDF(modSqrZ1, modC);
-            vec2 p = addDF(modZ, -m);
+            modSqrZ2 = modSqrDF(X2, Y2);
+            vec2 m = absDF(addDF(modSqrZ2, -modC));
+            vec2 M = addDF(modSqrZ2, modC);
+            vec2 p = addDF(modDF(X1, Y1), -m);
             vec2 q = addDF(M, -m);
             sum = addDF(sum, divDF(p, q));
         }
@@ -1044,6 +1238,13 @@
 
     <!-- STRIPE AVERAGE -->
     <string name="stripe_init">
+        float pow;
+        if (P1.x == 0.0) {
+            pow = 2.0;
+        }
+        else {
+            pow = P1.x;
+        }
         float argZ;
         float sum, sum1 = 0.0;
         float il = 1.0/log(2.0);
