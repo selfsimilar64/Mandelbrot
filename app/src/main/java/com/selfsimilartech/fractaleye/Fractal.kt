@@ -73,17 +73,17 @@ class Fractal(
             for (int n = 0; n < maxIter; n++) {
                 if (n == maxIter - 1) {
                     $algFinal
-                    colorParams.w = -2.0;
+                    colorParams.w = -1.0;
                     break;
                 }
                 $loop
                 $mapLoop
+                $algLoop
                 $conditional {
                     $mapFinal
                     $algFinal
                     break;
                 }
-                $algLoop
             }
             fragmentColor = colorParams;
         }
@@ -197,12 +197,10 @@ class Fractal(
     }
     private fun resetMapParams() {
         for (i in 1..fractalConfig.map().initParams.size) {
-            (fractalConfig.params["p$i"] as ComplexMapParam).setU(fractalConfig.map().initParams[i - 1].getU(), false)
-            (fractalConfig.params["p$i"] as ComplexMapParam).setV(fractalConfig.map().initParams[i - 1].getV(), false)
+            fractalConfig.params["p$i"] = fractalConfig.map().initParams[i - 1]
         }
         for (i in (fractalConfig.map().initParams.size + 1)..NUM_MAP_PARAMS) {
-            (fractalConfig.params["p$i"] as ComplexMapParam).setU(0.0, false)
-            (fractalConfig.params["p$i"] as ComplexMapParam).setV(0.0, false)
+            fractalConfig.params["p$i"] = ComplexMapParam(0.0, 0.0)
         }
         updateMapParamEditTexts()
     }
@@ -260,20 +258,20 @@ class Fractal(
 
         when (i) {
             1 -> {
-                xEdit = context.findViewById(R.id.p1xEdit)
-                yEdit = context.findViewById(R.id.p1yEdit)
+                xEdit = context.findViewById(R.id.u1Edit)
+                yEdit = context.findViewById(R.id.v1Edit)
             }
             2 -> {
-                xEdit = context.findViewById(R.id.p2xEdit)
-                yEdit = context.findViewById(R.id.p2yEdit)
+                xEdit = context.findViewById(R.id.u2Edit)
+                yEdit = context.findViewById(R.id.v2Edit)
             }
             3 -> {
-                xEdit = context.findViewById(R.id.p3xEdit)
-                yEdit = context.findViewById(R.id.p3yEdit)
+                xEdit = context.findViewById(R.id.u3Edit)
+                yEdit = context.findViewById(R.id.v3Edit)
             }
             4 -> {
-                xEdit = context.findViewById(R.id.p4xEdit)
-                yEdit = context.findViewById(R.id.p4yEdit)
+                xEdit = context.findViewById(R.id.u4Edit)
+                yEdit = context.findViewById(R.id.v4Edit)
             }
             else -> {
                 xEdit = null
@@ -466,6 +464,15 @@ class Fractal(
 
         // BALLFOLD(Z^2 + P1) + C :: (1.23172118, 0.0)
         //      JULIA :: (-0.96727896, 0.0)
+
+        // BALLFOLD(Z^2 + P1) + C :: (0.50611401, 0.0)
+        //      JULIA :: (-0.28616842, -0.20683480)
+
+        // KALI
+        //      JULIA :: (-0.96665798, -0.02109066)
+
+        // ABS(SIN(Z^2 - i*Z)) + C
+        //      JULIA :: (0.19371092, 0.53478799)
 
 
         updateDisplayParams(Reaction.valueOf("P$i"), false)
