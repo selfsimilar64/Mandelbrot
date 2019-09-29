@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fractalScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="15dp">
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/functionCard"
+            style="@style/CardDark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/functionCardLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/functionHeaderButton"
+                    style="@style/cardHeaderButtonDark"
+                    android:text="@string/shape" />
+
+
+                <LinearLayout
+                    android:id="@+id/functionCardBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="10dp">
+
+                    <View
+                        android:id="@+id/view2"
+                        style="@style/dividerDark" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/colorDarkUnselected"
+                        android:orientation="horizontal">
+
+                        <Spinner
+                            android:id="@+id/complexMapSpinner"
+                            style="@style/SpinnerDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:popupBackground="#0a0a0a" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/complexMapKatexLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:background="@color/colorDarkUnselected"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingStart="10dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="10dp">
+
+                        <katex.hourglass.in.mathlib.MathView
+                            android:id="@+id/complexMapKatex"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            app:setClickable="true"
+                            app:setTextColor="@color/colorPrimary" />
+                    </LinearLayout>
+
+                    <android.support.constraint.ConstraintLayout
+                        android:id="@+id/p1Layout"
+                        style="@style/mapParamLayoutDark">
+
+                        <TextView
+                            android:id="@+id/p1Header"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/param1"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/u1Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:text="u"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p1Header" />
+
+                        <TextView
+                            android:id="@+id/v1Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:paddingTop="5dp"
+                            android:paddingBottom="5dp"
+                            android:text="v"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u1Label" />
+
+                        <ToggleButton
+                            android:id="@+id/u1Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p1Header" />
+
+                        <ToggleButton
+                            android:id="@+id/v1Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u1Lock" />
+
+                        <EditText
+                            android:id="@+id/u1Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionNext"
+                            app:layout_constraintEnd_toStartOf="@id/u1Lock"
+                            app:layout_constraintTop_toBottomOf="@id/p1Header" />
+
+                        <EditText
+                            android:id="@+id/v1Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionDone"
+                            app:layout_constraintEnd_toStartOf="@id/v1Lock"
+                            app:layout_constraintTop_toBottomOf="@id/u1Edit" />
+                    </android.support.constraint.ConstraintLayout>
+
+                    <android.support.constraint.ConstraintLayout
+                        android:id="@+id/p2Layout"
+                        style="@style/mapParamLayoutDark">
+
+                        <TextView
+                            android:id="@+id/p2Header"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/param2"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/u2Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:text="u"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p2Header" />
+
+                        <TextView
+                            android:id="@+id/v2Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:paddingTop="5dp"
+                            android:paddingBottom="5dp"
+                            android:text="v"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u2Label" />
+
+                        <ToggleButton
+                            android:id="@+id/u2Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p2Header" />
+
+                        <ToggleButton
+                            android:id="@+id/v2Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u2Lock" />
+
+                        <EditText
+                            android:id="@+id/u2Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionNext"
+                            app:layout_constraintEnd_toStartOf="@id/u2Lock"
+                            app:layout_constraintTop_toBottomOf="@id/p2Header" />
+
+                        <EditText
+                            android:id="@+id/v2Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionDone"
+                            app:layout_constraintEnd_toStartOf="@id/v2Lock"
+                            app:layout_constraintTop_toBottomOf="@id/u2Edit" />
+                    </android.support.constraint.ConstraintLayout>
+
+                    <android.support.constraint.ConstraintLayout
+                        android:id="@+id/p3Layout"
+                        style="@style/mapParamLayoutDark">
+
+                        <TextView
+                            android:id="@+id/p3Header"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/param3"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/u3Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:text="u"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p3Header" />
+
+                        <TextView
+                            android:id="@+id/v3Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:paddingTop="5dp"
+                            android:paddingBottom="5dp"
+                            android:text="v"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u3Label" />
+
+                        <ToggleButton
+                            android:id="@+id/u3Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p3Header" />
+
+                        <ToggleButton
+                            android:id="@+id/v3Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u3Lock" />
+
+                        <EditText
+                            android:id="@+id/u3Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionNext"
+                            app:layout_constraintEnd_toStartOf="@id/u3Lock"
+                            app:layout_constraintTop_toBottomOf="@id/p3Header" />
+
+                        <EditText
+                            android:id="@+id/v3Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionDone"
+                            app:layout_constraintEnd_toStartOf="@id/v3Lock"
+                            app:layout_constraintTop_toBottomOf="@id/u3Edit" />
+                    </android.support.constraint.ConstraintLayout>
+
+                    <android.support.constraint.ConstraintLayout
+                        android:id="@+id/p4Layout"
+                        style="@style/mapParamLayoutDark">
+
+                        <TextView
+                            android:id="@+id/p4Header"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/param4"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/u4Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:text="u"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p4Header" />
+
+                        <TextView
+                            android:id="@+id/v4Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:gravity="center_vertical"
+                            android:paddingTop="5dp"
+                            android:paddingBottom="5dp"
+                            android:text="v"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u4Label" />
+
+                        <ToggleButton
+                            android:id="@+id/u4Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/p4Header" />
+
+                        <ToggleButton
+                            android:id="@+id/v4Lock"
+                            style="@style/LockDark"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/u4Lock" />
+
+                        <EditText
+                            android:id="@+id/u4Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionNext"
+                            app:layout_constraintEnd_toStartOf="@id/u4Lock"
+                            app:layout_constraintTop_toBottomOf="@id/p4Header" />
+
+                        <EditText
+                            android:id="@+id/v4Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:imeOptions="actionDone"
+                            app:layout_constraintEnd_toStartOf="@id/v4Lock"
+                            app:layout_constraintTop_toBottomOf="@id/u4Edit" />
+                    </android.support.constraint.ConstraintLayout>
+
+                    <LinearLayout
+                        android:id="@+id/juliaLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:orientation="vertical">
+
+                        <Switch
+                            android:id="@+id/juliaModeSwitch"
+                            style="@style/SwitchDark"
+                            android:text="@string/juliaMode"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/textView"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/maxIter" />
+
+                        <SeekBar
+                            android:id="@+id/maxIterBar"
+                            android:layout_width="225dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:progress="25" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/textView2"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/bailout" />
+
+                        <EditText
+                            android:id="@+id/bailoutSignificandEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionNext"
+                            android:selectAllOnFocus="true" />
+
+                        <TextView
+                            android:id="@+id/textView4"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/e" />
+
+                        <EditText
+                            android:id="@+id/bailoutExponentEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionDone" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/textureCard"
+            style="@style/CardDark"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/textureCardLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/textureHeaderButton"
+                    style="@style/cardHeaderButtonDark"
+                    android:text="@string/texture" />
+
+                <LinearLayout
+                    android:id="@+id/textureCardBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:paddingBottom="10dp">
+
+                    <View
+                        android:id="@+id/view3"
+                        style="@style/dividerDark" />
+
+                    <LinearLayout
+                        android:id="@+id/textureSpinnerLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/display_params_bg_visible"
+                        android:backgroundTint="#333"
+                        android:orientation="horizontal">
+
+                        <Spinner
+                            android:id="@+id/textureAlgSpinner"
+                            style="@style/SpinnerDark"
+                            android:layout_width="match_parent" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/q1EditRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:paddingStart="10dp"
+                        tools:ignore="RtlSymmetry">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/tex_param1" />
+
+                        <SeekBar
+                            android:id="@+id/q1Bar"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="5dp"
+                            android:layout_weight="1" />
+
+                        <EditText
+                            android:id="@+id/q1Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionDone"
+                            android:selectAllOnFocus="true" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/q2EditRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:paddingStart="10dp"
+                        tools:ignore="RtlSymmetry">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/tex_param2" />
+
+                        <EditText
+                            android:id="@+id/q2Edit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionDone"
+                            android:selectAllOnFocus="true" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/colorCard"
+            style="@style/CardDark"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/colorCardLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/colorHeaderButton"
+                    style="@style/cardHeaderButtonDark"
+                    android:text="@string/color" />
+
+                <LinearLayout
+                    android:id="@+id/colorCardBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:paddingBottom="10dp">
+
+                    <View
+                        android:id="@+id/view5"
+                        style="@style/dividerDark" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/colorDarkUnselected"
+                        android:orientation="vertical">
+
+                        <Spinner
+                            android:id="@+id/colorPaletteSpinner"
+                            style="@style/SpinnerDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:layout_marginBottom="1dp">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/frequency" />
+
+                        <EditText
+                            android:id="@+id/frequencyEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionDone"
+                            android:selectAllOnFocus="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="1dp"
+                        android:layout_marginBottom="1dp">
+
+                        <TextView
+                            style="@style/TextDark"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/offset" />
+
+                        <EditText
+                            android:id="@+id/phaseEdit"
+                            style="@style/EditTextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionDone"
+                            android:selectAllOnFocus="true" />
+
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/positionCard"
+            style="@style/CardDark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/positionCardLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/positionHeaderButton"
+                    style="@style/cardHeaderButtonDark"
+                    android:text="@string/position" />
+
+                <LinearLayout
+                    android:id="@+id/positionCardBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="10dp">
+
+                    <View
+                        android:id="@+id/view4"
+                        style="@style/dividerDark" />
+
+                    <LinearLayout
+                        android:id="@+id/positionParams"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_weight="1"
+                                android:text="@string/x" />
+
+                            <EditText
+                                android:id="@+id/xCoordEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_weight="1"
+                                android:text="@string/y" />
+
+                            <EditText
+                                android:id="@+id/yCoordEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/TextDark"
+                                android:layout_weight="1"
+                                android:text="@string/scale" />
+
+                            <EditText
+                                android:id="@+id/scaleSignificandEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:selectAllOnFocus="true" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/e" />
+
+                            <EditText
+                                android:id="@+id/scaleExponentEdit"
+                                style="@style/EditTextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </android.support.v7.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>
