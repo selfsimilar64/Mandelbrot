@@ -43,7 +43,7 @@
     <string name="tex_param2">Q2</string>
     <string name="x">x</string>
     <string name="y">y</string>
-    <string name="detail">Detail</string>
+    <string name="maxIter">Max Iterations</string>
     <string name="juliaMode">Julia Mode</string>
     <string name="scale">Scale</string>
     <string name="bailout">Bailout Radius</string>
@@ -277,20 +277,52 @@
             return exp(w.x)*vec2(cos(w.y), sin(w.y));
         }
 
-        vec2 cSinSF(vec2 z) {
-            float u = sin(z.x)*cosh(z.y);
-            float v = cos(z.x)*sinh(z.y);
-            return vec2(u, v);
+        vec2 sinSF(vec2 z) {
+            return vec2(sin(z.x)*cosh(z.y), cos(z.x)*sinh(z.y));
         }
 
-        vec2 cCosSF(vec2 z) {
-            float u = 0.5*(exp(-z.y) + exp(z.y))*cos(z.x);
-            float v = 0.5*(exp(-z.y) - exp(z.y))*sin(z.x);
-            return vec2(u, v);
+        vec2 cosSF(vec2 z) {
+            return vec2(cos(z.x)*cosh(z.y), -sin(z.x)*sinh(z.y));
         }
 
-        vec2 cTanSF(vec2 z) {
-            return cDivSF(cSinSF(z), cCosSF(z));
+        vec2 tanSF(vec2 z) {
+            return cDivSF(sinSF(z), cosSF(z));
+        }
+
+        vec2 cscSF(vec2 z) {
+            return cDivSF(vec2(1.0, 0.0), sinSF(z));
+        }
+
+        vec2 secSF(vec2 z) {
+            return cDivSF(vec2(1.0, 0.0), cosSF(z));
+        }
+
+        vec2 cotSF(vec2 z) {
+            return cDivSF(vec2(1.0, 0.0), tanSF(z));
+        }
+
+        vec2 sinhSF(vec2 z) {
+            return vec2(sinh(z.x)*cos(z.y), cosh(z.x)*sin(z.y));
+        }
+
+        vec2 coshSF(vec2 z) {
+            return vec2(cosh(z.x)*cos(z.y), sinh(z.x)*sin(z.y));
+        }
+
+        vec2 tanhSF(vec2 z) {
+            return cDivSF(sinhSF(z), coshSF(z));
+        }
+
+        vec2 cschSF(vec2 z) {
+            return cDivSF(vec2(1.0, 0.0), sinhSF(z));
+        }
+
+        vec2 sechSF(vec2 z) {
+            return cDivSF(vec2(1.0, 0.0), coshSF(z));
+        }
+
+        vec2 cothSF(vec2 z) {
+            return cDivSF(vec2(1.0, 0.0), tanhSF(z));
         }
 
         vec2 cLog(vec2 z) {
@@ -355,6 +387,25 @@
             if (modZ &lt; 0.5) { coef = 4.0; }
             else if (modZ > 0.5 &amp;&amp; modZ &lt; 1.0) { coef = 1.0/(modZ*modZ); }
             return coef*z;
+        }
+
+        float triWave(float x) {
+            return 1.0 - 4.0*abs(0.5 - fract(1.0/(2.0*pi)*x + 0.25));
+        }
+
+        float sqrWave(float x) {
+            return sign(sin(x));
+        }
+
+        vec2 polygon(float theta, float n) {
+            float m = 0.5*n*(theta/pi + 1.0);
+            float k = ceil(m) - 1.0;
+            float frac = fract(m);
+            float phi1 = 2.0*k*pi/n;
+            float phi2 = 2.0*(k + 1.0)*pi/n;
+            vec2 root1 = vec2(cos(phi1), sin(phi1));
+            vec2 root2 = vec2(cos(phi2), sin(phi2));
+            return -(frac*root1 + (1.0 - frac)*root2);
         }
 
         float _m(float _a, float _b) {
@@ -694,27 +745,20 @@
     </string>
 
     <!-- SINE -->
-    <string name="sine_loop_sf">
-        Z = cSinSF(Z1) + C;
+    <string name="sine1_loop_sf">
+        Z = sinSF(Z1) + C;
     </string>
-    <string name="sine_loop_df">
+    <string name="sine1_loop_df">
         vec4 Q1 = cSinDF(X1, Y1, 10);
         X = addDF(Q1.xy, A);
         Y = addDF(Q1.zw, B);
     </string>
-    <string name="sine_katex">
+    <string name="sine1_katex">
         $z_{n+1} = \\sin(z_n) + %s$
     </string>
 
-    <string name="sine1_loop_sf">
-        Z = cSinSF(cDivSF(cPow3(Z1, P1.x), C));
-    </string>
-    <string name="sine1_katex">
-        $z_{n+1} = \\sin(\\frac{z_n^{\\operatorname{Re}(P1)}}{%s})$
-    </string>
-
     <string name="sine2_loop_sf">
-        Z = cSinSF(cDivSF(cSqrSF(Z1) + P1, C));
+        Z = sinSF(cDivSF(cSqrSF(Z1) + P1, C));
     </string>
     <string name="sine2_loop_df">
         vec4 Q1 = cSqrDF(X1, Y1);
@@ -729,9 +773,16 @@
         $z_{n+1} = \\sin(\\large\\frac{z_n^2 + P1}{%s}\\normalsize)$
     </string>
 
+    <string name="sine3_loop_sf">
+        Z = sinSF(cDivSF(cPow3(Z1, P1.x), C));
+    </string>
+    <string name="sine3_katex">
+        $z_{n+1} = \\sin(\\frac{z_n^{\\operatorname{Re}(P1)}}{%s})$
+    </string>
+
     <!-- HORSESHOE CRAB -->
     <string name="horseshoecrab_loop_sf">
-        Z = cSinSF(cDivSF(P1, Z1) + cDivSF(Z1, C));
+        Z = sinSF(cDivSF(P1, Z1) + cDivSF(Z1, C));
     </string>
     <string name="horseshoecrab_loop_df">
         vec4 S1 = cDivDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), X1, Y1);
@@ -751,7 +802,7 @@
         Z = C;
     </string>
     <string name="persianrug_loop_sf">
-        Z = cMultSF(Z1, cSinSF(cTanSF(P1 - cDivSF(C, Z1))) + Z1 + cTanSF(Z1));
+        Z = cMultSF(Z1, sinSF(tanSF(P1 - cDivSF(C, Z1))) + Z1 + tanSF(Z1));
     </string>
     <string name="persianrug_katex">
         $z_{n+1} = z \\cdot \\big(\\sin\\big(\\tan(P1 - \\large\\frac{%s}{z_n}\\normalsize)\\big) + z_n + \\tan(z_n)\\big)$
@@ -800,10 +851,11 @@
         }
     </string>
 
-    <!-- NEWTON 1 -->
+    <!-- NEWTON -->
     <string name="newton1_loop_sf">
         Z = Z - cDivSF(cSqrSF(cSqrSF(Z)) - vec2(1.0, 0.0), 4.0*cMultSF(Z, cSqrSF(Z)));
     </string>
+
     <string name="newton2_loop_sf">
         vec2 W = cMultSF(Z - P1, Z - P2);
         vec2 numerator = cMultSF(W, Z - P3);
@@ -811,16 +863,37 @@
         Z = Z - cDivSF(numerator, denominator);
     </string>
 
-    <!-- MOBIUS -->
-    <string name="mobius_loop_sf">
-        Z = cDivSF(cMultSF(P1, Z) + P2, cMultSF(P3, Z) + P4);
+    <string name="newton3_loop_sf">
+        Z = Z1 - cDivSF(coshSF(Z1) - vec2(1.0, 0.0), sinhSF(Z1));
     </string>
+    <string name="newton3_katex">
+        $z_{n+1} = z_n - \\large\\frac{\\cosh(z_n) - 1}{\\sinh(z_n)} \\normalsize$
+    </string>
+
+
+    <!-- NOVA -->
+    <string name="nova1_loop_sf">
+        vec2 zSqr = cSqrSF(Z1);
+        Z = Z1 - cMultSF(P1, cDivSF(cMultSF(Z1, zSqr) - vec2(1.0, 0.0), 3.0*zSqr)) + C;
+    </string>
+    <string name="nova1_katex">
+        $z_{n+1} = z_n -\\small P1\\cdot\\Large\\frac{z_n^3 - 1}{3z_n^2} \\normalsize + %s$
+    </string>
+
+    <string name="nova2_loop_sf">
+        vec2 zSqr = cSqrSF(Z1);
+        Z = Z1 - cDivSF(sinSF(zSqr) - Z1, 2.0*cMultSF(Z1, cosSF(zSqr)) - vec2(1.0, 0.0));
+    </string>
+    <string name="nova2_katex">
+        $z_{n+1} = z_n - \\Large\\frac{\\sin(z_n^2) - z_n}{2z_n\\cos(z_n^2)} \\normalsize + %s$
+    </string>
+
 
     <!-- TEST -->
     <string name="test_init_sf">
     </string>
     <string name="test_loop_sf">
-        Z = abs(cSinSF(cSqrSF(Z1) - vec2(-Z1.y, Z1.x))) + C;
+        Z = Z1 - cMultSF(P1, cDivSF(cMultSF(Z1, cSqrSF(Z1)) - vec2(1.0, 0.0), 3.0*cSqrSF(Z1))) + C;
     </string>
     <string name="test_loop_df">
         vec4 Q1 = cSqrDF(X1, Y1);
@@ -854,7 +927,7 @@
     <!-- CONVERGE -->
     <string name="converge_sf">
         eps = modSF(Z - Z1);
-        if (eps &lt; 1e-9)
+        if (eps &lt; 1e-4)
     </string>
     <string name="converge_df">
         eps = modSqrDF(addDF(X, -X1), addDF(Y, -Y1)).x;
@@ -891,7 +964,10 @@
     <!-- TEXTURE ALGORITHMS -->
     <!-- ===================================================================================== -->
 
-    <!--  -->
+    <!-- ABSOLUTE ESCAPE -->
+    <string name="absolute_escape_final">
+        colorParams.z = floor(float(n)/float(maxIter - 1));
+    </string>
 
     <!-- CONDITIONAL ITERATION -->
     <string name="escape_final">

@@ -35,7 +35,7 @@ class EquationFragment : Fragment() {
     @SuppressLint("SetTextI18n")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
-        val v = inflater.inflate(R.layout.equation_fragment, container, false)
+        val v = inflater.inflate(R.layout.fractal_fragment, container, false)
 
         val mapParamLayouts = listOf<ConstraintLayout>(
                 v.findViewById(R.id.p1Layout),
@@ -192,8 +192,8 @@ class EquationFragment : Fragment() {
         val lockListener = { i: Int, j: Int -> View.OnClickListener {
             val lock = it as ToggleButton
             when (j) {
-                0 -> (config.params["p$i"] as ComplexMapParam).uLocked = lock.isChecked
-                1 -> (config.params["p$i"] as ComplexMapParam).vLocked = lock.isChecked
+                0 -> (config.params["p$i"] as ComplexMap.Param).uLocked = lock.isChecked
+                1 -> (config.params["p$i"] as ComplexMap.Param).vLocked = lock.isChecked
             }
         }}
 
@@ -287,22 +287,23 @@ class EquationFragment : Fragment() {
                         v.findViewById(R.id.v4Lock)))
         )
         mapParamEditTexts.forEachIndexed { i, pair1 ->
-            pair1.first.first.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMapParam).getU()))
-            pair1.first.second.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMapParam).getV()))
+            pair1.first.first.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).getU()))
+            pair1.first.second.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).getV()))
             pair1.first.first.setOnEditorActionListener(editListenerNext(pair1.first.first, pair1.first.second, "p${i + 1}") {
-                w: TextView -> ComplexMapParam(
-                    "${w.text}".toDouble(),
-                    "${pair1.first.second.text}".toDouble(),
-                    (config.params["p${i + 1}"] as ComplexMapParam).uLocked,
-                    (config.params["p${i + 1}"] as ComplexMapParam).vLocked
+                w: TextView ->
+                ComplexMap.Param(
+                        "${w.text}".toDouble(),
+                        "${pair1.first.second.text}".toDouble(),
+                        (config.params["p${i + 1}"] as ComplexMap.Param).uLocked,
+                        (config.params["p${i + 1}"] as ComplexMap.Param).vLocked
                 )
             })
             pair1.first.second.setOnEditorActionListener(editListenerDone(pair1.first.second, "p${i + 1}") {
-                w: TextView -> ComplexMapParam(
-                    "${pair1.first.first.text}".toDouble(),
-                    "${w.text}".toDouble(),
-                    (config.params["p${i + 1}"] as ComplexMapParam).uLocked,
-                    (config.params["p${i + 1}"] as ComplexMapParam).vLocked
+                w: TextView -> ComplexMap.Param(
+                        "${pair1.first.first.text}".toDouble(),
+                        "${w.text}".toDouble(),
+                        (config.params["p${i + 1}"] as ComplexMap.Param).uLocked,
+                        (config.params["p${i + 1}"] as ComplexMap.Param).vLocked
                 )
             })
             pair1.second.first.setOnClickListener(lockListener(i + 1, 0))
@@ -323,6 +324,8 @@ class EquationFragment : Fragment() {
         })
 
 
+
+        // COLOR PALETTE SELECTION
         colorPaletteSpinner = v.findViewById(R.id.colorPaletteSpinner)
         colorPaletteSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
@@ -331,25 +334,22 @@ class EquationFragment : Fragment() {
             }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val item = parent?.getItemAtPosition(position).toString()
-                callback.onEquationParamsChanged(
-                        "palette",
-                        ColorPalette.all[item] ?: config.palette()
-                )
+                val item = parent?.getItemAtPosition(position) as ColorPalette
+                callback.onEquationParamsChanged("palette", item)
             }
 
         }
 
-        val colorPaletteAdapter = ArrayAdapter(
+        val adapter = ColorPaletteAdapter(
                 v.context,
-                android.R.layout.simple_spinner_item,
-                List(ColorPalette.all.size) { i: Int -> ColorPalette.all.keys.elementAt(i) }
+                List(ColorPalette.all.size) { i: Int -> ColorPalette.all.values.elementAt(i).invoke(resources) }
         )
-        colorPaletteAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        colorPaletteSpinner.adapter = colorPaletteAdapter
+        // adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        colorPaletteSpinner.adapter = adapter
         colorPaletteSpinner.setSelection(ColorPalette.all.keys.indexOf(
                 savedInstanceState?.getString("palette") ?: config.palette().name)
         )
+
 
         val frequencyEdit = v.findViewById<EditText>(R.id.frequencyEdit)
         frequencyEdit.setText("%.5f".format(config.frequency()))
@@ -460,12 +460,11 @@ class EquationFragment : Fragment() {
 
         }
 
-        val complexMapAdapter = ArrayAdapter(
+        val complexMapAdapter = ComplexMapAdapter(
                 v.context,
-                android.R.layout.simple_spinner_item,
-                List(ComplexMap.all.size) { i: Int -> ComplexMap.all.keys.elementAt(i) }
+                List(ComplexMap.all.size) { i: Int -> ComplexMap.all.values.elementAt(i).invoke(resources) }
         )
-        complexMapAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        // complexMapAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         complexMapSpinner.adapter = complexMapAdapter
         complexMapSpinner.setSelection(ComplexMap.all.keys.indexOf(
                 savedInstanceState?.getString("map") ?: config.map().name)
@@ -499,7 +498,7 @@ class EquationFragment : Fragment() {
 
                 callback.onEquationParamsChanged(
                         "texture",
-                        TextureAlgorithm.all[item]?.invoke(resources) ?: config.texture()
+                        Texture.all[item]?.invoke(resources) ?: config.texture()
                 )
                 for (i in 0 until NUM_TEXTURE_PARAMS) { textureCardBody.removeView(textureParamEditRows[i]) }
                 val textureLayoutIndex = textureCardBody.indexOfChild(textureSpinnerLayout)
@@ -529,7 +528,7 @@ class EquationFragment : Fragment() {
         )
         textureAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         textureAlgSpinner.adapter = textureAlgAdapter
-        textureAlgSpinner.setSelection(TextureAlgorithm.all.keys.indexOf(
+        textureAlgSpinner.setSelection(Texture.all.keys.indexOf(
                 savedInstanceState?.getString("texture") ?: config.texture().name)
         )
 

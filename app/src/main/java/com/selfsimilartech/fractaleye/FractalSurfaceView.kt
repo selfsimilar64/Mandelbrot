@@ -22,10 +22,7 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
 import javax.microedition.khronos.egl.EGLDisplay
 import javax.microedition.khronos.opengles.GL10
-import kotlin.math.atan2
 import kotlin.math.ceil
-import kotlin.math.log
-import kotlin.math.sqrt
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
@@ -47,7 +44,7 @@ private class ContextFactory : GLSurfaceView.EGLContextFactory {
 
 }
 
-class Texture (
+class GLTexture (
         val res         : IntArray,
         interpolation   : Int,
         internalFormat  : Int,
@@ -179,13 +176,13 @@ class FractalSurfaceView(
             private val interpolation = { GL.GL_NEAREST }
 
             private val textures = arrayOf(
-                    Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0),
-                    Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 1),
-                    Texture(f.texRes(), interpolation(), GL.GL_RGBA16F, 2),
-                    Texture(intArrayOf(f.fractalConfig.maxIter(), 1), GL.GL_NEAREST, GL.GL_RG32F, 3)    // perturbation texture
-//                    Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA, 0),
-//                    Texture(f.texRes(), interpolation(), GL.GL_RGBA, 1),
-//                    Texture(f.texRes(), interpolation(), GL.GL_RGBA, 2)
+                    GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0),
+                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA16F, 1),
+                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA16F, 2),
+                    GLTexture(intArrayOf(f.fractalConfig.maxIter(), 1), GL.GL_NEAREST, GL.GL_RG32F, 3)    // perturbation texture
+//                    GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA, 0),
+//                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA, 1),
+//                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA, 2)
             )
 
             // allocate memory for textures
@@ -388,17 +385,17 @@ class FractalSurfaceView(
                 if (f.resolutionChanged) {
                     val texRes = f.texRes()
                     textures[1].delete()
-                    textures[1] = Texture(texRes, interpolation(), GL.GL_RGBA16F, 1)
-//                    textures[1] = Texture(texRes, interpolation(), GL.GL_RGBA, 1)
+                    textures[1] = GLTexture(texRes, interpolation(), GL.GL_RGBA16F, 1)
+//                    textures[1] = GLTexture(texRes, interpolation(), GL.GL_RGBA, 1)
                     textures[2].delete()
-                    textures[2] = Texture(texRes, interpolation(), GL.GL_RGBA16F, 2)
-//                    textures[2] = Texture(texRes, interpolation(), GL.GL_RGBA, 2)
+                    textures[2] = GLTexture(texRes, interpolation(), GL.GL_RGBA16F, 2)
+//                    textures[2] = GLTexture(texRes, interpolation(), GL.GL_RGBA, 2)
                     f.resolutionChanged = false
                 }
                 if (f.renderProfileChanged) {
                     textures[0].delete()
-                    textures[0] = Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0)
-//                    textures[0] = Texture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA, 0)
+                    textures[0] = GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0)
+//                    textures[0] = GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA, 0)
                     f.renderProfileChanged = false
                 }
 
@@ -514,8 +511,8 @@ class FractalSurfaceView(
 
                 for (i in 1..NUM_MAP_PARAMS) {
                     val p = floatArrayOf(
-                            (f.fractalConfig.params["p$i"] as ComplexMapParam).getU().toFloat(),
-                            (f.fractalConfig.params["p$i"] as ComplexMapParam).getV().toFloat())
+                            (f.fractalConfig.params["p$i"] as ComplexMap.Param).getU().toFloat(),
+                            (f.fractalConfig.params["p$i"] as ComplexMap.Param).getV().toFloat())
                     // Log.d("RENDER ROUTINE", "passing p${i + 1} in as (${p[0]}, ${p[1]})")
                     GL.glUniform2fv(mapParamHandles[i - 1], 1, p, 0)
                 }
