@@ -71,7 +71,7 @@ class ComplexMap (
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbrotcpow_loop_sf),
                 initScale = 3.5,
-                initParams = listOf(Param(5.0, vLocked = true))
+                initParams = listOf(Param(4.0, vLocked = true))
         )}
         val mandelbrotDualPower = { res: Resources -> ComplexMap(
                 "Mandelbrot Dual Power",
@@ -106,7 +106,7 @@ class ComplexMap (
                 initJuliaMode = true,
                 initBailout = 4e0f,
                 initScale = 4.0,
-                initParams = listOf(Param(-0.255, -0.14))
+                initParams = listOf(Param(-0.33170626, -0.18423799))
         ) }
         val kaliSquare          = { res: Resources -> ComplexMap(
                 "Kali Square",
@@ -142,7 +142,7 @@ class ComplexMap (
                 conditionalDF = res.getString(R.string.escape_df),
                 initDF = res.getString(R.string.burningship_init_df),
                 loopDF = res.getString(R.string.burningship_loop_df),
-                initCoords = doubleArrayOf(-0.35, 0.25),
+                initCoords = doubleArrayOf(-0.45, 0.25),
                 initScale = 3.5
         ) }
         val magnet              = { res: Resources -> ComplexMap(

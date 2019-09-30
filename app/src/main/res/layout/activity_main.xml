@@ -5,6 +5,7 @@
     android:id="@+id/layout_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     android:orientation="vertical"
     tools:context="com.selfsimilartech.fractaleye.MainActivity">
 
@@ -22,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="parent" >
+            app:layout_constraintTop_toBottomOf="parent">
 
         </View>
 
@@ -129,11 +130,11 @@
 
             <ImageView
                 android:id="@+id/leftArrow"
-                android:contentDescription="@string/left_arrow"
                 android:layout_width="10dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="1dp"
                 android:layout_marginRight="1dp"
+                android:contentDescription="@string/left_arrow"
                 android:rotation="90"
                 android:scaleType="centerInside"
                 app:srcCompat="@android:drawable/arrow_down_float" />
@@ -224,11 +225,11 @@
 
             <ImageView
                 android:id="@+id/rightArrow"
-                android:contentDescription="@string/right_arrow"
                 android:layout_width="10dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="1dp"
                 android:layout_marginRight="1dp"
+                android:contentDescription="@string/right_arrow"
                 android:rotation="270"
                 android:scaleType="fitCenter"
                 app:srcCompat="@android:drawable/arrow_down_float" />

@@ -22,7 +22,7 @@ import katex.hourglass.`in`.mathlib.MathView
 import kotlin.math.pow
 
 
-class EquationFragment : Fragment() {
+class FractalEditFragment : Fragment() {
 
     private lateinit var callback : OnParamChangeListener
     private lateinit var complexMapSpinner : Spinner
@@ -157,7 +157,7 @@ class EquationFragment : Fragment() {
             editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)-> Any -> TextView.OnEditorActionListener {
             w, actionId, _ -> when (actionId) {
             EditorInfo.IME_ACTION_NEXT -> {
-                callback.onEquationParamsChanged(key, value(w))
+                callback.onFractalParamsChanged(key, value(w))
                 editText.clearFocus()
                 editText.isSelected = false
 
@@ -175,7 +175,7 @@ class EquationFragment : Fragment() {
             editText: EditText, key: String, value: (w: TextView)->Any -> TextView.OnEditorActionListener {
             w, actionId, _ -> when (actionId) {
             EditorInfo.IME_ACTION_DONE -> {
-                callback.onEquationParamsChanged(key, value(w))
+                callback.onFractalParamsChanged(key, value(w))
                 val imm = v.context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(v.windowToken, 0)
                 editText.clearFocus()
@@ -335,7 +335,7 @@ class EquationFragment : Fragment() {
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val item = parent?.getItemAtPosition(position) as ColorPalette
-                callback.onEquationParamsChanged("palette", item)
+                callback.onFractalParamsChanged("palette", item)
             }
 
         }
@@ -382,7 +382,7 @@ class EquationFragment : Fragment() {
                  juliaLayout.removeView(mapParamLayouts[juliaParamIndex - 1])
                  complexMapKatex.setDisplayText(config.map().katex.format("c"))
              }
-             callback.onEquationParamsChanged("juliaMode", isChecked)
+             callback.onFractalParamsChanged("juliaMode", isChecked)
          }
         juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
         if (config.map().initJuliaMode) { functionCardBody.removeView(juliaLayout) }
@@ -429,7 +429,7 @@ class EquationFragment : Fragment() {
                     functionCardBody.addView(mapParamLayouts[i], mapLayoutIndex + i + 1)
                 }
 
-                callback.onEquationParamsChanged(
+                callback.onFractalParamsChanged(
                         "map",
                         ComplexMap.all[item]?.invoke(resources) ?: config.map()
                 )
@@ -481,7 +481,7 @@ class EquationFragment : Fragment() {
                 val p = progress / 100.0
                 val range = config.texture().initParams[0].second
                 val length = range.upper - range.lower
-                callback.onEquationParamsChanged("q1", p*length + range.lower)
+                callback.onFractalParamsChanged("q1", p*length + range.lower)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -496,7 +496,7 @@ class EquationFragment : Fragment() {
                 val item = parent?.getItemAtPosition(position).toString()
                 // textureAlgSpinner.requestLayout()
 
-                callback.onEquationParamsChanged(
+                callback.onFractalParamsChanged(
                         "texture",
                         Texture.all[item]?.invoke(resources) ?: config.texture()
                 )
@@ -541,7 +541,7 @@ class EquationFragment : Fragment() {
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 val p = seekBar.progress.toFloat() / 100.0f
-                callback.onEquationParamsChanged(
+                callback.onFractalParamsChanged(
                     "maxIter",
                     ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(11) - 1)*p).toInt()
                 )
@@ -565,7 +565,7 @@ class EquationFragment : Fragment() {
     }
 
     interface OnParamChangeListener {
-        fun onEquationParamsChanged(key: String, value: Any)
+        fun onFractalParamsChanged(key: String, value: Any)
     }
 
 }
