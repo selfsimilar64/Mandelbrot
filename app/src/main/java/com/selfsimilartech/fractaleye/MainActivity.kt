@@ -5,8 +5,6 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.content.res.Resources
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.TransitionDrawable
 import android.os.*
 import android.support.v7.app.AppCompatActivity
@@ -20,7 +18,6 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewPager
 import android.util.Log
-import android.util.Range
 import android.view.*
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
@@ -274,7 +271,7 @@ class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager)
 
 
 class MainActivity : AppCompatActivity(),
-        EquationFragment.OnParamChangeListener,
+        FractalEditFragment.OnParamChangeListener,
         SettingsFragment.OnParamChangeListener {
 
 
@@ -489,7 +486,7 @@ class MainActivity : AppCompatActivity(),
 
 
         // initialize fragments and set UI params from fractal
-        val equationFragment = EquationFragment()
+        val equationFragment = FractalEditFragment()
         val settingsFragment = SettingsFragment()
         // val saveFragment = SaveFragment()
 
@@ -587,6 +584,10 @@ class MainActivity : AppCompatActivity(),
         for (i in 1..n) { uiQuick.removeView(uiQuickButtons[uiQuick.childCount - 1]) }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) { fractalView.hideSystemUI() }
+    }
     override fun onSaveInstanceState(outState: Bundle?) {
 
         Log.d("MAIN ACTIVITY", "saving instance state !!")
@@ -624,10 +625,10 @@ class MainActivity : AppCompatActivity(),
         super.onAttachFragment(fragment)
         when (fragment) {
             is SettingsFragment -> fragment.setOnParamChangeListener(this)
-            is EquationFragment -> fragment.setOnParamChangeListener(this)
+            is FractalEditFragment -> fragment.setOnParamChangeListener(this)
         }
     }
-    override fun onEquationParamsChanged(key: String, value: Any) {
+    override fun onFractalParamsChanged(key: String, value: Any) {
         if (f.fractalConfig.params[key] != value) {
             Log.d("MAIN ACTIVITY", "$key set from ${f.fractalConfig.params[key]} to $value")
             f.fractalConfig.params[key] = value
