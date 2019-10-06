@@ -6,6 +6,8 @@ import android.util.Log
 import android.view.Gravity
 import android.view.animation.AlphaAnimation
 import android.widget.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 class Fractal(
@@ -235,6 +237,7 @@ class Fractal(
         val bailoutSignificandEdit = context.findViewById<EditText>(R.id.bailoutSignificandEdit)
         val bailoutExponentEdit = context.findViewById<EditText>(R.id.bailoutExponentEdit)
         val bailoutStrings = "%e".format(fractalConfig.bailoutRadius()).split("e")
+        val rotationEdit = context.findViewById<EditText>(R.id.rotationEdit)
 
 //        Log.w("FRACTAL", "scaleExponent: %d".format(scaleStrings[1].toInt()))
 //        Log.w("FRACTAL", "bailoutExponent: %d".format(bailoutStrings[1].toInt()))
@@ -247,6 +250,8 @@ class Fractal(
 
         bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
         bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
+
+        rotationEdit?.setText("%.0f".format(fractalConfig.rotation() * 180.0 / Math.PI))
 
     }
     @SuppressLint("SetTextI18n")
@@ -322,9 +327,11 @@ class Fractal(
         val displayParam1 = context.findViewById<TextView>(R.id.displayParam1)
         val displayParam2 = context.findViewById<TextView>(R.id.displayParam2)
         val displayParam3 = context.findViewById<TextView>(R.id.displayParam3)
+        val displayParam4 = context.findViewById<TextView>(R.id.displayParam4)
         val displayParamName1 = context.findViewById<TextView>(R.id.displayParamName1)
         val displayParamName2 = context.findViewById<TextView>(R.id.displayParamName2)
         val displayParamName3 = context.findViewById<TextView>(R.id.displayParamName3)
+        val displayParamName4 = context.findViewById<TextView>(R.id.displayParamName4)
         val density = context.resources.displayMetrics.density
         val w : Int
 
@@ -334,11 +341,13 @@ class Fractal(
 
                     displayParamName1.text = res.getString(R.string.x)
                     displayParamName2.text = res.getString(R.string.y)
-                    displayParamName3.text = res.getString(R.string.scale)
+                    displayParamName3.text = res.getString(R.string.scale_lower)
+                    displayParamName4.text = res.getString(R.string.rotation_lower)
                     displayParam1.text = "%.17f".format(fractalConfig.coords()[0])
                     displayParam2.text = "%.17f".format(fractalConfig.coords()[1])
                     displayParam3.text = "%e".format(fractalConfig.scale()[0])
-                    w = (45f * density).toInt()
+                    displayParam4.text = "%.0f".format(fractalConfig.rotation() * 180.0 / Math.PI)
+                    w = (60f * density).toInt()
 
                 }
                 Reaction.COLOR -> {
@@ -367,12 +376,15 @@ class Fractal(
             displayParamName1.width = w
             displayParamName2.width = w
             displayParamName3?.width = w
+            displayParamName4?.width = w
             displayParamName1.requestLayout()
             displayParamName2.requestLayout()
             displayParamName3?.requestLayout()
+            displayParamName4?.requestLayout()
             displayParam1.requestLayout()
             displayParam2.requestLayout()
             displayParam3?.requestLayout()
+            displayParam4?.requestLayout()
 
         }
         if (settingsConfig.displayParams() || reactionChanged) {
@@ -509,8 +521,12 @@ class Fractal(
 //                        yCoordsDD[1] += dPosDD[1]
             }
             else -> {
-                fractalConfig.coords()[0] -= (dScreenPos[0] / screenRes[0])*fractalConfig.scale()[0]
-                fractalConfig.coords()[1] += (dScreenPos[1] / screenRes[1])*fractalConfig.scale()[1]
+                val tx = (dScreenPos[0] / screenRes[0])*fractalConfig.scale()[0]
+                val ty = (dScreenPos[1] / screenRes[1])*fractalConfig.scale()[1]
+                val sinTheta = sin(-fractalConfig.rotation())
+                val cosTheta = cos(fractalConfig.rotation())
+                fractalConfig.coords()[0] -= tx*cosTheta - ty*sinTheta
+                fractalConfig.coords()[1] += tx*sinTheta + ty*cosTheta
             }
         }
 
@@ -581,13 +597,17 @@ class Fractal(
 //                        yCoordsDD[1] += focusDD[1]
             }
             else -> {
+                val qx = (prop[0] - 0.5)*fractalConfig.scale()[0]
+                val qy = -(prop[1] - 0.5)*fractalConfig.scale()[1]
+                val sinTheta = sin(fractalConfig.rotation())
+                val cosTheta = cos(fractalConfig.rotation())
                 val focus = doubleArrayOf(
 //                    xCoords[0] * (1.0 - prop[0]) + prop[0] * xCoords[1],
 //                    yCoords[1] * (1.0 - prop[1]) + prop[1] * yCoords[0]
-                        fractalConfig.coords()[0] + (prop[0] - 0.5)*fractalConfig.scale()[0],
-                        fractalConfig.coords()[1] - (prop[1] - 0.5)*fractalConfig.scale()[1]
+                        fractalConfig.coords()[0] + qx*cosTheta - qy*sinTheta,
+                        fractalConfig.coords()[1] + qx*sinTheta + qy*cosTheta
                 )
-                // Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
+                Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
 
                 translate(focus.negative())
                 fractalConfig.coords()[0] = fractalConfig.coords()[0] / dScale
@@ -630,6 +650,79 @@ class Fractal(
             toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
             toast.show()
         }
+
+    }
+    fun rotate(dTheta: Float, screenFocus: FloatArray) {
+
+        Log.d("FRACTAL", "dTheta: $dTheta")
+
+        // update complex coordinates
+        // convert focus coordinates from screen space to complex space
+        val prop = doubleArrayOf(
+                screenFocus[0].toDouble() / screenRes[0].toDouble(),
+                screenFocus[1].toDouble() / screenRes[1].toDouble()
+        )
+
+        when (precision()) {
+            Precision.QUAD -> {
+//                        val focusDD = arrayOf(
+//                                DualDouble(prop[0], 0.0) * (xCoordsDD[1] - xCoordsDD[0]) + xCoordsDD[0],
+//                                DualDouble(prop[1], 0.0) * (yCoordsDD[0] - yCoordsDD[1]) + yCoordsDD[1]
+//                        )
+//                        val dScaleDD = DualDouble(1.0 / dScale.toDouble(), 0.0)
+//
+//                        // translate focus to origin in complex coordinates
+//                        xCoordsDD[0] -= focusDD[0]
+//                        xCoordsDD[1] -= focusDD[0]
+//                        yCoordsDD[0] -= focusDD[1]
+//                        yCoordsDD[1] -= focusDD[1]
+//
+//                        // scale complex coordinates
+//                        xCoordsDD[0] *= dScaleDD
+//                        xCoordsDD[1] *= dScaleDD
+//                        yCoordsDD[0] *= dScaleDD
+//                        yCoordsDD[1] *= dScaleDD
+//
+//                        // translate origin back to focusDD in complex coordinates
+//                        xCoordsDD[0] += focusDD[0]
+//                        xCoordsDD[1] += focusDD[0]
+//                        yCoordsDD[0] += focusDD[1]
+//                        yCoordsDD[1] += focusDD[1]
+            }
+            else -> {
+                val qx = (prop[0] - 0.5)*fractalConfig.scale()[0]
+                val qy = -(prop[1] - 0.5)*fractalConfig.scale()[1]
+                val sinTheta = sin(fractalConfig.rotation())
+                val cosTheta = cos(fractalConfig.rotation())
+                val focus = doubleArrayOf(
+                    fractalConfig.coords()[0] + qx*cosTheta - qy*sinTheta,
+                    fractalConfig.coords()[1] + qx*sinTheta + qy*cosTheta
+                )
+
+                Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
+
+                val sindTheta = sin(-dTheta)
+                val cosdTheta = cos(dTheta)
+
+                Log.d("FRACTAL", "previous coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
+
+                translate(focus.negative())
+                val x = fractalConfig.coords()[0]
+                val y = fractalConfig.coords()[1]
+                fractalConfig.coords()[0] = x*cosdTheta - y*sindTheta
+                fractalConfig.coords()[1] = x*sindTheta + y*cosdTheta
+                translate(focus)
+                fractalConfig.params["rotation"] = fractalConfig.rotation() - dTheta.toDouble()
+                Log.d("FRACTAL", "rotation: ${fractalConfig.rotation()}")
+
+                Log.d("FRACTAL", "new coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
+
+            }
+        }
+
+
+        // updatePositionEditTexts()
+        updateDisplayParams(Reaction.POSITION, false)
 
     }
     fun setFrequency(dScale: Float) {

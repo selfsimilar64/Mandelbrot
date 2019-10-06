@@ -182,6 +182,7 @@ class FractalConfig (val params : MutableMap<String, Any>) {
     val savedCoords         = { params["savedCoords"]      as  DoubleArray       }
     val scale               = { params["scale"]            as  DoubleArray       }
     val savedScale          = { params["savedScale"]       as  DoubleArray       }
+    val rotation            = { params["rotation"]         as  Double            }
     val maxIter             = { params["maxIter"]          as  Int               }
     val bailoutRadius       = { params["bailoutRadius"]    as  Float             }
     val palette             = { params["palette"]          as  ColorPalette      }
@@ -328,14 +329,15 @@ class MainActivity : AppCompatActivity(),
         val savedCoords = savedInstanceState?.getDoubleArray("savedCoords") ?: doubleArrayOf(0.0, 0.0)
         val scale = savedInstanceState?.getDoubleArray("scale") ?: doubleArrayOf(1.0, aspectRatio)
         val savedScale = savedInstanceState?.getDoubleArray("savedScale") ?: doubleArrayOf(1.0, aspectRatio)
+        val rotation = 0.0
         val maxIter = savedInstanceState?.getInt("maxIter") ?: 255
         val bailoutRadius = savedInstanceState?.getFloat("bailoutRadius") ?: 1e5f
         val palette = ColorPalette.all[savedInstanceState?.getString("palette")]?.invoke(resources) ?: ColorPalette.p5(resources)
         val frequency = savedInstanceState?.getFloat("frequency") ?: 2.0f
         val phase = savedInstanceState?.getFloat("phase") ?: 0.0f
-        val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: "HIGH")
+        val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: Resolution.MED.name)
         val precision = Precision.valueOf(savedInstanceState?.getString("precision") ?: "AUTO")
-        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: false
+        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: true
         val displayParamsBoolean = savedInstanceState?.getBoolean("displayParams") ?: true
 
         val fractalConfig = FractalConfig(mutableMapOf(
@@ -353,6 +355,7 @@ class MainActivity : AppCompatActivity(),
                 "savedCoords"       to  savedCoords,
                 "scale"             to  scale,
                 "savedScale"        to  savedScale,
+                "rotation"          to  rotation,
                 "maxIter"           to  maxIter,
                 "bailoutRadius"     to  bailoutRadius,
                 "palette"           to  palette,
@@ -397,7 +400,8 @@ class MainActivity : AppCompatActivity(),
         displayParamRows = listOf(
             findViewById(R.id.displayParamRow1),
             findViewById(R.id.displayParamRow2),
-            findViewById(R.id.displayParamRow3)
+            findViewById(R.id.displayParamRow3),
+            findViewById(R.id.displayParamRow4)
         )
         displayParams.removeViews(1, displayParams.childCount - 1)
 
@@ -693,6 +697,10 @@ class MainActivity : AppCompatActivity(),
                     fractalView.r.renderToTex = true
                 }
                 "scale" -> {
+                    f.updatePositionEditTexts()
+                    fractalView.r.renderToTex = true
+                }
+                "rotation" -> {
                     f.updatePositionEditTexts()
                     fractalView.r.renderToTex = true
                 }

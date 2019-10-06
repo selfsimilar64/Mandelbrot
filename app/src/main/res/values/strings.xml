@@ -43,6 +43,8 @@
     <string name="tex_param2">Q2</string>
     <string name="x">x</string>
     <string name="y">y</string>
+    <string name="scale_lower">scale</string>
+    <string name="rotation_lower">rotation</string>
     <string name="maxIter">Max Iterations</string>
     <string name="juliaMode">Julia Mode</string>
     <string name="scale">Scale</string>
@@ -93,6 +95,8 @@
         uniform vec2 yScale;
         uniform vec2 xOffset;
         uniform vec2 yOffset;
+        uniform float sinRotate;
+        uniform float cosRotate;
 
         in vec4 viewPos;
         out vec4 fragmentColor;
@@ -119,6 +123,8 @@
         uniform vec2 yScale;
         uniform vec2 xOffset;
         uniform vec2 yOffset;
+        uniform float sinRotate;
+        uniform float cosRotate;
 
         in vec4 viewPos;
         out vec4 fragmentColor;
@@ -597,7 +603,9 @@
 
     <string name="general_init_sf">
         vec4 colorParams = vec4(0.0);
-        vec2 C = vec2(xScale.x*viewPos.x + xOffset.x, yScale.x*viewPos.y + yOffset.x);
+        vec2 C = vec2(xScale.x*viewPos.x, yScale.x*viewPos.y);
+        C = vec2(C.x*cosRotate - C.y*sinRotate, C.x*sinRotate + C.y*cosRotate);
+        C += vec2(xOffset.x, yOffset.x);
         vec2 Z, Z1, Z2 = vec2(0.0);
         float modZ = 0.0;
         float eps = 0.0;
@@ -605,8 +613,12 @@
     </string>
     <string name="general_init_df">
         vec4 colorParams = vec4(0.0);
-        vec2 A = addDF(multDF(xScale, vec2(viewPos.x, 0.0)), xOffset);
-        vec2 B = addDF(multDF(yScale, vec2(viewPos.y, 0.0)), yOffset);
+        vec2 A = multDF(xScale, vec2(viewPos.x, 0.0));
+        vec2 B = multDF(yScale, vec2(viewPos.y, 0.0));
+        vec2 tempA = addDF(multDF(A, vec2(cosRotate, 0.0)), -multDF(B, vec2(sinRotate, 0.0)));
+        B = addDF(multDF(A, vec2(sinRotate, 0.0)), multDF(B, vec2(cosRotate, 0.0)));
+        A = addDF(tempA, xOffset);
+        B = addDF(B, yOffset);
         vec2 X, X1, X2 = vec2(0.0, 0.0);
         vec2 Y, Y1, Y2 = vec2(0.0, 0.0);
         vec2 modZ = vec2(0.0);

@@ -251,6 +251,12 @@ class FractalEditFragment : Fragment() {
                     w: TextView -> "${bailoutSignificandEdit.text}e${w.text}".toFloat()
                 })
 
+        val rotationEdit = v.findViewById<EditText>(R.id.rotationEdit)
+        rotationEdit.setText("%.0f".format(config.rotation() * 180.0 / Math.PI))
+        rotationEdit.setOnEditorActionListener(editListenerDone(rotationEdit, "rotation") {
+            w: TextView -> w.text.toString().toDouble() * Math.PI / 180.0
+        })
+
 
 
 
