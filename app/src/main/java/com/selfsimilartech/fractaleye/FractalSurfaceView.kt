@@ -22,7 +22,10 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
 import javax.microedition.khronos.egl.EGLDisplay
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.atan2
 import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
@@ -137,6 +140,8 @@ class FractalSurfaceView(
             private val yScaleHandle     : Int
             private val xOffsetHandle    : Int
             private val yOffsetHandle    : Int
+            private val sinRotateHandle  : Int
+            private val cosRotateHandle  : Int
             private val bgScaleHandle    : Int
             private val mapParamHandles  : IntArray
             private val textureParamHandles : IntArray
@@ -277,6 +282,8 @@ class FractalSurfaceView(
                 yScaleHandle         =  GL.glGetUniformLocation(  renderProgram, "yScale"      )
                 xOffsetHandle        =  GL.glGetUniformLocation(  renderProgram, "xOffset"     )
                 yOffsetHandle        =  GL.glGetUniformLocation(  renderProgram, "yOffset"     )
+                sinRotateHandle      =  GL.glGetUniformLocation(  renderProgram, "sinRotate"   )
+                cosRotateHandle      =  GL.glGetUniformLocation(  renderProgram, "cosRotate"   )
                 bgScaleHandle        =  GL.glGetUniformLocation(  renderProgram, "bgScale"     )
                 mapParamHandles      =  IntArray(NUM_MAP_PARAMS) { i: Int ->
                     GL.glGetUniformLocation(renderProgram, "P${i+1}")
@@ -529,6 +536,8 @@ class FractalSurfaceView(
                 val yScaleSD = f.fractalConfig.scale()[1] / 2.0
                 val xOffsetSD = f.fractalConfig.coords()[0]
                 val yOffsetSD = f.fractalConfig.coords()[1]
+                //val sinRotateSD = sin(f.fractalConfig.rotation())
+                //val cosRotateSD = cos(f.fractalConfig.rotation())
 
                 // calculate scale/offset parameters and pass to fragment shader
                 when (f.precision()) {
@@ -538,11 +547,16 @@ class FractalSurfaceView(
                         val yScaleSF = yScaleSD.toFloat()
                         val xOffsetSF = xOffsetSD.toFloat()
                         val yOffsetSF = yOffsetSD.toFloat()
+                        //val sinRotateSF = sinRotateSD.toFloat()
+                        //val cosRotateSF = cosRotateSD.toFloat()
 
-                        GL.glUniform2fv(xScaleHandle,  1,  floatArrayOf(xScaleSF, 0.0f),   0)
-                        GL.glUniform2fv(yScaleHandle,  1,  floatArrayOf(yScaleSF, 0.0f),   0)
-                        GL.glUniform2fv(xOffsetHandle, 1,  floatArrayOf(xOffsetSF, 0.0f),  0)
-                        GL.glUniform2fv(yOffsetHandle, 1,  floatArrayOf(yOffsetSF, 0.0f),  0)
+                        GL.glUniform2fv(xScaleHandle,     1,  floatArrayOf(xScaleSF,     0.0f),  0)
+                        GL.glUniform2fv(yScaleHandle,     1,  floatArrayOf(yScaleSF,     0.0f),  0)
+                        GL.glUniform2fv(xOffsetHandle,    1,  floatArrayOf(xOffsetSF,    0.0f),  0)
+                        GL.glUniform2fv(yOffsetHandle,    1,  floatArrayOf(yOffsetSF,    0.0f),  0)
+                        //GL.glUniform2fv(sinRotateHandle,  1,  floatArrayOf(sinRotateSF,  0.0f),  0)
+                        //GL.glUniform2fv(cosRotateHandle,  1,  floatArrayOf(cosRotateSF,  0.0f),  0)
+
 
                     }
                     Precision.DUAL -> {
@@ -551,11 +565,15 @@ class FractalSurfaceView(
                         val yScaleDF = splitSD(yScaleSD)
                         val xOffsetDF = splitSD(xOffsetSD)
                         val yOffsetDF = splitSD(yOffsetSD)
+                        //val sinRotateDF = splitSD(sinRotateSD)
+                        //val cosRotateDF = splitSD(cosRotateSD)
 
-                        GL.glUniform2fv(xScaleHandle,  1,  xScaleDF,   0)
-                        GL.glUniform2fv(yScaleHandle,  1,  yScaleDF,   0)
-                        GL.glUniform2fv(xOffsetHandle, 1,  xOffsetDF,  0)
-                        GL.glUniform2fv(yOffsetHandle, 1,  yOffsetDF,  0)
+                        GL.glUniform2fv(xScaleHandle,     1,  xScaleDF,     0)
+                        GL.glUniform2fv(yScaleHandle,     1,  yScaleDF,     0)
+                        GL.glUniform2fv(xOffsetHandle,    1,  xOffsetDF,    0)
+                        GL.glUniform2fv(yOffsetHandle,    1,  yOffsetDF,    0)
+                        //GL.glUniform2fv(sinRotateHandle,  1,  sinRotateDF,  0)
+                        //GL.glUniform2fv(cosRotateHandle,  1,  cosRotateDF,  0)
 
                     }
                     Precision.QUAD -> {
@@ -573,6 +591,9 @@ class FractalSurfaceView(
                     }
                     else -> {}
                 }
+
+                GL.glUniform1fv(sinRotateHandle, 1, floatArrayOf(sin(f.fractalConfig.rotation()).toFloat()), 0)
+                GL.glUniform1fv(cosRotateHandle, 1, floatArrayOf(cos(f.fractalConfig.rotation()).toFloat()), 0)
 
                 GL.glEnableVertexAttribArray(viewCoordsHandle)
                 GL.glUniform1i(iterHandle, f.fractalConfig.maxIter())
@@ -1121,6 +1142,45 @@ class FractalSurfaceView(
             // Log.d("fractalConfig.coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
 
         }
+        fun rotate(dTheta: Float) {
+
+            val tQuadFocus = doubleArrayOf(quadFocus[0] + t[0], quadFocus[1] + t[1])
+
+            // translate quadFocus to origin in quad coordinates
+            xQuadCoords[0] -= tQuadFocus[0]
+            xQuadCoords[1] -= tQuadFocus[0]
+            yQuadCoords[0] -= tQuadFocus[1]
+            yQuadCoords[1] -= tQuadFocus[1]
+
+            // rotate quad coordinates
+
+            // translate origin back to quadFocus in quad coordinates
+            xQuadCoords[0] += tQuadFocus[0]
+            xQuadCoords[1] += tQuadFocus[0]
+            yQuadCoords[0] += tQuadFocus[1]
+            yQuadCoords[1] += tQuadFocus[1]
+
+
+
+            // translate quadFocus to origin in quad coordinates
+            xBgQuadCoords[0] -= tQuadFocus[0]
+            xBgQuadCoords[1] -= tQuadFocus[0]
+            yBgQuadCoords[0] -= tQuadFocus[1]
+            yBgQuadCoords[1] -= tQuadFocus[1]
+
+            // rotate quad coordinates
+
+            // translate origin back to quadFocus in quad coordinates
+            xBgQuadCoords[0] += tQuadFocus[0]
+            xBgQuadCoords[1] += tQuadFocus[0]
+            yBgQuadCoords[0] += tQuadFocus[1]
+            yBgQuadCoords[1] += tQuadFocus[1]
+
+            hasScaled = true
+
+            // Log.d("fractalConfig.coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
+
+        }
         private fun resetQuadParams() {
 
             xQuadCoords[0] = -1.0
@@ -1284,13 +1344,14 @@ class FractalSurfaceView(
     var reaction = Reaction.POSITION
     val numDisplayParams = {
         when (reaction) {
-            Reaction.POSITION -> 3
+            Reaction.POSITION -> 4
             Reaction.COLOR -> 2
             else -> 3
         }
     }
 
-    private val prevFocus = floatArrayOf(0.0f, 0.0f)
+    private val prevFocus = floatArrayOf(0f, 0f)
+    private var prevAngle = 0f
     // private val edgeRightSize = 150
     private var prevFocalLen = 1.0f
     // private val minPixelMove = 5f
@@ -1375,6 +1436,7 @@ class FractalSurfaceView(
                             val focus = e.focus()
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
+                            prevAngle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
                             prevFocalLen = e.focalLength()
                             // Log.d("POSITION", "focalLen: $prevFocalLen")
                             if (!f.settingsConfig.continuousRender()) {
@@ -1398,6 +1460,8 @@ class FractalSurfaceView(
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
                             if (e.pointerCount > 1) {   // MULTI-TOUCH
+
+                                // SCALE
                                 val focalLen = e.focalLength()
                                 // Log.d("POSITION", "MOVE -- prevFocalLen: $prevFocalLen, focalLen: $focalLen")
                                 val dFocalLen = focalLen / prevFocalLen
@@ -1406,6 +1470,14 @@ class FractalSurfaceView(
                                     r.scale(dFocalLen)
                                 }
                                 prevFocalLen = focalLen
+
+                                // ROTATE
+                                val angle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
+                                val dtheta = angle - prevAngle
+                                f.rotate(dtheta, focus)
+
+                                prevAngle = angle
+
                             }
 
                             if (f.settingsConfig.continuousRender()) {

@@ -18,7 +18,7 @@ class ComplexMap (
         val textures        : List<String>       = Texture.all.keys.toList(),
         val initCoords      : DoubleArray        = doubleArrayOf(0.0, 0.0),
         val initScale       : Double             = 1.0,
-        val initParams      : List<Param>  = listOf(),
+        val initParams      : List<Param>        = listOf(),
         val initZ           : DoubleArray        = doubleArrayOf(0.0, 0.0),
         val initJuliaMode   : Boolean            = false,
         val initBailout     : Float              = 1e5f
