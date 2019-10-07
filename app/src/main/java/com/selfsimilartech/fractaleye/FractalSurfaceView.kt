@@ -609,7 +609,7 @@ class FractalSurfaceView(
                 //======================================================================================
 
                 GL.glViewport(0, 0, textures[0].res[0], textures[0].res[1])
-                GL.glUniform1fv(bgScaleHandle, 1, bgScaleFloat, 0)
+                GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(bgSize), 0)
                 GL.glVertexAttribPointer(
                         viewCoordsHandle,       // index
                         3,                      // coordinates per vertex
@@ -650,28 +650,28 @@ class FractalSurfaceView(
                     val yComplementViewCoordsB : FloatArray
 
 
-                    if (xQuadCoords[0] > -1.0) {
-                        xIntersectQuadCoords   = floatArrayOf( xQuadCoords[0].toFloat(),   1.0f )
-                        xIntersectViewCoords   = floatArrayOf( -1.0f, -xQuadCoords[0].toFloat() )
-                        xComplementViewCoordsA = floatArrayOf( -1.0f,  xQuadCoords[0].toFloat() )
+                    if (quadCoords[0] - quadScale > -1.0) {
+                        xIntersectQuadCoords   = floatArrayOf( quadCoords[0] - quadScale,   1.0f )
+                        xIntersectViewCoords   = floatArrayOf( -1.0f, -quadCoords[0] + quadScale )
+                        xComplementViewCoordsA = floatArrayOf( -1.0f,  quadCoords[0] - quadScale )
                     }
                     else {
-                        xIntersectQuadCoords   = floatArrayOf( -1.0f,  xQuadCoords[1].toFloat() )
-                        xIntersectViewCoords   = floatArrayOf( -xQuadCoords[1].toFloat(),  1.0f )
-                        xComplementViewCoordsA = floatArrayOf(  xQuadCoords[1].toFloat(),  1.0f )
+                        xIntersectQuadCoords   = floatArrayOf( -1.0f,  quadCoords[0] + quadScale )
+                        xIntersectViewCoords   = floatArrayOf( -quadCoords[0] - quadScale,  1.0f )
+                        xComplementViewCoordsA = floatArrayOf(  quadCoords[0] + quadScale,  1.0f )
                     }
 
-                    if (yQuadCoords[0] > -1.0) {
-                        yIntersectQuadCoords   = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
-                        yIntersectViewCoords   = floatArrayOf( -1.0f, -yQuadCoords[0].toFloat() )
-                        yComplementViewCoordsA = floatArrayOf( yQuadCoords[0].toFloat(),   1.0f )
-                        yComplementViewCoordsB = floatArrayOf( -1.0f,  yQuadCoords[0].toFloat() )
+                    if (quadCoords[1] - quadScale > -1.0) {
+                        yIntersectQuadCoords   = floatArrayOf( quadCoords[1] - quadScale,   1.0f )
+                        yIntersectViewCoords   = floatArrayOf( -1.0f, -quadCoords[1] + quadScale )
+                        yComplementViewCoordsA = floatArrayOf( quadCoords[1] - quadScale,   1.0f )
+                        yComplementViewCoordsB = floatArrayOf( -1.0f,  quadCoords[1] - quadScale )
                     }
                     else {
-                        yIntersectQuadCoords   = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
-                        yIntersectViewCoords   = floatArrayOf( -yQuadCoords[1].toFloat(), 1.0f )
-                        yComplementViewCoordsA = floatArrayOf( -1.0f, yQuadCoords[1].toFloat() )
-                        yComplementViewCoordsB = floatArrayOf(  yQuadCoords[1].toFloat(), 1.0f )
+                        yIntersectQuadCoords   = floatArrayOf( -1.0f, quadCoords[1] + quadScale )
+                        yIntersectViewCoords   = floatArrayOf( -quadCoords[1] - quadScale, 1.0f )
+                        yComplementViewCoordsA = floatArrayOf( -1.0f, quadCoords[1] + quadScale )
+                        yComplementViewCoordsB = floatArrayOf(  quadCoords[1] + quadScale, 1.0f )
                     }
 
 
@@ -886,23 +886,23 @@ class FractalSurfaceView(
                 }
 
                 // create float array of quad coordinates
-                val quadCoords = floatArrayOf(
-                        xQuadCoords[0].toFloat(),  yQuadCoords[1].toFloat(),  0.0f,     // top left
-                        xQuadCoords[0].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom left
-                        xQuadCoords[1].toFloat(),  yQuadCoords[0].toFloat(),  0.0f,     // bottom right
-                        xQuadCoords[1].toFloat(),  yQuadCoords[1].toFloat(),  0.0f )    // top right
+                val quadVertices = floatArrayOf(
+                        quadCoords[0] - quadScale,  quadCoords[1] + quadScale,  0f,     // top left
+                        quadCoords[0] - quadScale,  quadCoords[1] - quadScale,  0f,     // bottom left
+                        quadCoords[0] + quadScale,  quadCoords[1] - quadScale,  0f,     // bottom right
+                        quadCoords[0] + quadScale,  quadCoords[1] + quadScale,  0f )    // top right
                 quadBuffer
-                        .put(quadCoords)
+                        .put(quadVertices)
                         .position(0)
 
                 // create float array of background quad coordinates
-                val bgQuadCoords = floatArrayOf(
-                        xBgQuadCoords[0].toFloat(),  yBgQuadCoords[1].toFloat(),  0.0f,     // top left
-                        xBgQuadCoords[0].toFloat(),  yBgQuadCoords[0].toFloat(),  0.0f,     // bottom left
-                        xBgQuadCoords[1].toFloat(),  yBgQuadCoords[0].toFloat(),  0.0f,     // bottom right
-                        xBgQuadCoords[1].toFloat(),  yBgQuadCoords[1].toFloat(),  0.0f )    // top right
+                val bgQuadVertices = floatArrayOf(
+                        quadCoords[0] - bgSize*quadScale,  quadCoords[1] + bgSize*quadScale,  0f,     // top left
+                        quadCoords[0] - bgSize*quadScale,  quadCoords[1] - bgSize*quadScale,  0f,     // bottom left
+                        quadCoords[0] + bgSize*quadScale,  quadCoords[1] - bgSize*quadScale,  0f,     // bottom right
+                        quadCoords[0] + bgSize*quadScale,  quadCoords[1] + bgSize*quadScale,  0f )    // top right
                 bgQuadBuffer
-                        .put(bgQuadCoords)
+                        .put(bgQuadVertices)
                         .position(0)
 
                 GL.glUniform1fv(yOrientColorHandle, 1, floatArrayOf(yOrient), 0)
@@ -1026,116 +1026,60 @@ class FractalSurfaceView(
         private val strictTranslate = { hasTranslated && !hasScaled }
 
 
-        private val xQuadCoords = doubleArrayOf(-1.0, 1.0)
-        private val yQuadCoords = doubleArrayOf(-1.0, 1.0)
-        private val quadLength = { xQuadCoords[1] - xQuadCoords[0] }
-        private val quadScale = { quadLength() / 2.0 }
+        private val quadCoords = floatArrayOf(0f, 0f)
+        private val quadFocus = floatArrayOf(0f, 0f)
+        private var quadScale = 1f
 
-        private val bgScaleFloat = floatArrayOf(5.0f)
-        private val bgScaleDouble = 5.0
-
-        private val xBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
-        private val yBgQuadCoords = doubleArrayOf(-bgScaleDouble, bgScaleDouble)
-
-        private val quadAnchor = doubleArrayOf(0.0, 0.0)
-        private val quadFocus = doubleArrayOf(0.0, 0.0)
-        private val t = doubleArrayOf(0.0, 0.0)
+        private val bgSize = 5f
 
         private lateinit var rr : RenderRoutine
+        
+        
+        fun setQuadFocus(screenPos: FloatArray, multitouch: Boolean = false) {
 
-
-        fun setQuadAnchor(screenPos: FloatArray) {
-
-            val screenProp = doubleArrayOf(
-                    screenPos[0].toDouble()/f.screenRes[0],
-                    screenPos[1].toDouble()/f.screenRes[1]
-            )
-            quadAnchor[0] = screenProp[0]*2.0 - 1.0
-            quadAnchor[1] = 1.0 - screenProp[1]*2.0
-            // Log.d("RENDERER", "quadAnchor : (${quadAnchor[0]}, ${quadAnchor[1]})")
-
-        }
-        fun setQuadFocus(screenDist: FloatArray) {
             // update texture quad coordinates
             // convert focus coordinates from screen space to quad space
-            val screenProp = doubleArrayOf(
-                    screenDist[0].toDouble() / f.screenRes[0],
-                    screenDist[1].toDouble() / f.screenRes[1]
-            )
 
-            quadFocus[0] = quadAnchor[0] + screenProp[0]*(2.0/quadScale())
-            quadFocus[1] = quadAnchor[1] - screenProp[1]*(2.0/quadScale())
+            quadFocus[0] =   2f*(screenPos[0] / f.screenRes[0]) - 1f
+            quadFocus[1] = -(2f*(screenPos[1] / f.screenRes[1]) - 1f)
 
-//        quadFocus[0] = (xQuadCoords[0] - quadFocus[0])*(1.0 - screenProp[0]) + screenProp[0]*(xQuadCoords[1] - quadFocus[0])
-//        quadFocus[1] = (yQuadCoords[1] - quadFocus[1])*(1.0 - screenProp[1]) + screenProp[1]*(yQuadCoords[0] - quadFocus[1])
-//        Log.d("RENDERER", "quadFocus : (${quadFocus[0]}, ${quadFocus[1]})")
+            Log.d("SURFACE VIEW", "quadFocus: (${quadFocus[0]}, ${quadFocus[1]})")
+
         }
         fun translate(dScreenPos: FloatArray) {
 
             // update texture quad coordinates
-            val dQuadPos = doubleArrayOf(
-                    dScreenPos[0].toDouble() / f.screenRes[0].toDouble() * 2.0,
-                    dScreenPos[1].toDouble() / f.screenRes[1].toDouble() * 2.0
+            val dQuadPos = floatArrayOf(
+                    dScreenPos[0] / f.screenRes[0] * 2f,
+                    -dScreenPos[1] / f.screenRes[1] * 2f
             )
 
-            xQuadCoords[0] += dQuadPos[0]
-            xQuadCoords[1] += dQuadPos[0]
-            yQuadCoords[0] -= dQuadPos[1]
-            yQuadCoords[1] -= dQuadPos[1]
+            quadCoords[0] += dQuadPos[0]
+            quadCoords[1] += dQuadPos[1]
 
-            xBgQuadCoords[0] += dQuadPos[0]
-            xBgQuadCoords[1] += dQuadPos[0]
-            yBgQuadCoords[0] -= dQuadPos[1]
-            yBgQuadCoords[1] -= dQuadPos[1]
+            quadFocus[0] += dQuadPos[0]
+            quadFocus[1] += dQuadPos[1]
 
-            // still magic
-            t[0] += dQuadPos[0]
-            t[1] -= dQuadPos[1]
+            Log.d("SURFACE VIEW", "TRANSLATE -- quadCoords: (${quadCoords[0]}, ${quadCoords[1]})")
+            Log.d("SURFACE VIEW", "TRANSLATE -- quadFocus: (${quadFocus[0]}, ${quadFocus[1]})")
 
             hasTranslated = true
 
         }
         fun scale(dScale: Float) {
 
-            val tQuadFocus = doubleArrayOf(quadFocus[0] + t[0], quadFocus[1] + t[1])
+            quadCoords[0] -= quadFocus[0]
+            quadCoords[1] -= quadFocus[1]
 
-            // translate quadFocus to origin in quad coordinates
-            xQuadCoords[0] -= tQuadFocus[0]
-            xQuadCoords[1] -= tQuadFocus[0]
-            yQuadCoords[0] -= tQuadFocus[1]
-            yQuadCoords[1] -= tQuadFocus[1]
+            quadCoords[0] *= dScale
+            quadCoords[1] *= dScale
 
-            // scale quad coordinates
-            xQuadCoords[0] *= dScale.toDouble()
-            xQuadCoords[1] *= dScale.toDouble()
-            yQuadCoords[0] *= dScale.toDouble()
-            yQuadCoords[1] *= dScale.toDouble()
+            quadCoords[0] += quadFocus[0]
+            quadCoords[1] += quadFocus[1]
 
-            // translate origin back to quadFocus in quad coordinates
-            xQuadCoords[0] += tQuadFocus[0]
-            xQuadCoords[1] += tQuadFocus[0]
-            yQuadCoords[0] += tQuadFocus[1]
-            yQuadCoords[1] += tQuadFocus[1]
+            quadScale *= dScale
 
-
-
-            // translate quadFocus to origin in quad coordinates
-            xBgQuadCoords[0] -= tQuadFocus[0]
-            xBgQuadCoords[1] -= tQuadFocus[0]
-            yBgQuadCoords[0] -= tQuadFocus[1]
-            yBgQuadCoords[1] -= tQuadFocus[1]
-
-            // scale quad coordinates
-            xBgQuadCoords[0] *= dScale.toDouble()
-            xBgQuadCoords[1] *= dScale.toDouble()
-            yBgQuadCoords[0] *= dScale.toDouble()
-            yBgQuadCoords[1] *= dScale.toDouble()
-
-            // translate origin back to quadFocus in quad coordinates
-            xBgQuadCoords[0] += tQuadFocus[0]
-            xBgQuadCoords[1] += tQuadFocus[0]
-            yBgQuadCoords[0] += tQuadFocus[1]
-            yBgQuadCoords[1] += tQuadFocus[1]
+            Log.d("SURFACE VIEW", "SCALE -- quadCoords: (${quadCoords[0]}, ${quadCoords[1]})")
 
             hasScaled = true
 
@@ -1144,60 +1088,17 @@ class FractalSurfaceView(
         }
         fun rotate(dTheta: Float) {
 
-            val tQuadFocus = doubleArrayOf(quadFocus[0] + t[0], quadFocus[1] + t[1])
-
-            // translate quadFocus to origin in quad coordinates
-            xQuadCoords[0] -= tQuadFocus[0]
-            xQuadCoords[1] -= tQuadFocus[0]
-            yQuadCoords[0] -= tQuadFocus[1]
-            yQuadCoords[1] -= tQuadFocus[1]
-
-            // rotate quad coordinates
-
-            // translate origin back to quadFocus in quad coordinates
-            xQuadCoords[0] += tQuadFocus[0]
-            xQuadCoords[1] += tQuadFocus[0]
-            yQuadCoords[0] += tQuadFocus[1]
-            yQuadCoords[1] += tQuadFocus[1]
-
-
-
-            // translate quadFocus to origin in quad coordinates
-            xBgQuadCoords[0] -= tQuadFocus[0]
-            xBgQuadCoords[1] -= tQuadFocus[0]
-            yBgQuadCoords[0] -= tQuadFocus[1]
-            yBgQuadCoords[1] -= tQuadFocus[1]
-
-            // rotate quad coordinates
-
-            // translate origin back to quadFocus in quad coordinates
-            xBgQuadCoords[0] += tQuadFocus[0]
-            xBgQuadCoords[1] += tQuadFocus[0]
-            yBgQuadCoords[0] += tQuadFocus[1]
-            yBgQuadCoords[1] += tQuadFocus[1]
-
-            hasScaled = true
-
-            // Log.d("fractalConfig.coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
 
         }
         private fun resetQuadParams() {
 
-            xQuadCoords[0] = -1.0
-            xQuadCoords[1] = 1.0
-            yQuadCoords[0] = -1.0
-            yQuadCoords[1] = 1.0
+            quadCoords[0] = 0f
+            quadCoords[1] = 0f
 
-            xBgQuadCoords[0] = -bgScaleDouble
-            xBgQuadCoords[1] = bgScaleDouble
-            yBgQuadCoords[0] = -bgScaleDouble
-            yBgQuadCoords[1] = bgScaleDouble
+            quadFocus[0] = 0f
+            quadFocus[1] = 0f
 
-            quadFocus[0] = 0.0
-            quadFocus[1] = 0.0
-
-            t[0] = 0.0
-            t[1] = 0.0
+            quadScale = 1f
 
         }
         private fun saveImage(im: Bitmap) {
@@ -1425,8 +1326,7 @@ class FractalSurfaceView(
                             prevFocus[1] = focus[1]
 
                             if (!f.settingsConfig.continuousRender()) {
-                                r.setQuadAnchor(focus)
-                                r.setQuadFocus(floatArrayOf(0.0f, 0.0f))
+                                r.setQuadFocus(focus)
                             }
 
                             return true
@@ -1440,10 +1340,7 @@ class FractalSurfaceView(
                             prevFocalLen = e.focalLength()
                             // Log.d("POSITION", "focalLen: $prevFocalLen")
                             if (!f.settingsConfig.continuousRender()) {
-                                r.setQuadFocus(floatArrayOf(
-                                        focus[0] - e.getX(0),
-                                        focus[1] - e.getY(0)
-                                ))
+                                r.setQuadFocus(focus, true)
                             }
                             return true
                         }
@@ -1474,7 +1371,7 @@ class FractalSurfaceView(
                                 // ROTATE
                                 val angle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
                                 val dtheta = angle - prevAngle
-                                f.rotate(dtheta, focus)
+                                //f.rotate(dtheta, focus)
 
                                 prevAngle = angle
 
@@ -1502,9 +1399,7 @@ class FractalSurfaceView(
                                     prevFocus[1] = e.getY(1)
 
                                     // change quad anchor to remaining pointer
-                                    if (!f.settingsConfig.continuousRender()) {
-                                        r.setQuadAnchor(floatArrayOf(e.getX(1), e.getY(1)))
-                                    }
+                                    if (!f.settingsConfig.continuousRender()) {  }
                                 }
                                 1 -> {
                                     prevFocus[0] = e.getX(0)
