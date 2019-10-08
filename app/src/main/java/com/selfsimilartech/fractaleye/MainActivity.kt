@@ -335,9 +335,9 @@ class MainActivity : AppCompatActivity(),
         val palette = ColorPalette.all[savedInstanceState?.getString("palette")]?.invoke(resources) ?: ColorPalette.p5(resources)
         val frequency = savedInstanceState?.getFloat("frequency") ?: 2.0f
         val phase = savedInstanceState?.getFloat("phase") ?: 0.0f
-        val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: Resolution.MED.name)
+        val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: Resolution.HIGH.name)
         val precision = Precision.valueOf(savedInstanceState?.getString("precision") ?: "AUTO")
-        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: true
+        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: false
         val displayParamsBoolean = savedInstanceState?.getBoolean("displayParams") ?: true
 
         val fractalConfig = FractalConfig(mutableMapOf(
