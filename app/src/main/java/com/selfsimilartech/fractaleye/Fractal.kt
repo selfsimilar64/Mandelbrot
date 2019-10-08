@@ -38,7 +38,7 @@ class Fractal(
 
 
     private val precisionThreshold = 5e-4
-    private val aspectRatio = screenRes[1].toDouble() / screenRes[0]
+    val aspectRatio = screenRes[1].toDouble() / screenRes[0]
     var renderShaderChanged = false
     var colorShaderChanged = false
     var resolutionChanged = false
@@ -397,7 +397,7 @@ class Fractal(
             displayParams.requestLayout()
         }
     }
-//    fun switchOrientation() {
+    fun switchOrientation() {
 //
 //        val fractalConfig.coords() = doubleArrayOf((xCoords[0] + xCoords[1]) / 2.0, -(yCoords[0] + yCoords[1]) / 2.0)
 //        translate(fractalConfig.coords())
@@ -416,7 +416,7 @@ class Fractal(
 //        Log.d("FRACTAL", "yCoordsNew:  (${yCoordsNew[0]}, ${yCoordsNew[1]})")
 
 
-//    }
+    }
     fun setMapParam(i: Int, dPos: FloatArray) {
         // dx -- [0, screenWidth]
         val sensitivity =
@@ -500,12 +500,12 @@ class Fractal(
         // updateMapParamEditText(i)
         updateDisplayParams(Reaction.valueOf("P$i"), false)
     }
-//    fun setTextureParam(i: Int, dPos: FloatArray) {
+    fun setTextureParam(i: Int, dPos: FloatArray) {
 //        // dx -- [0, screenWidth]
 //        fractalConfig.params["q$i"] = fractalConfig.q1() + dPos[0]/screenRes[0]
 //        // updateDisplayParams(Reaction.valueOf("P$i"), false)
 //        // updateTextureParamEditText(i)
-//    }
+    }
     fun translate(dScreenPos: FloatArray) {
 
         // update complex coordinates
@@ -607,7 +607,7 @@ class Fractal(
                         fractalConfig.coords()[0] + qx*cosTheta - qy*sinTheta,
                         fractalConfig.coords()[1] + qx*sinTheta + qy*cosTheta
                 )
-                Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
+                //Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
 
                 translate(focus.negative())
                 fractalConfig.coords()[0] = fractalConfig.coords()[0] / dScale
@@ -654,7 +654,7 @@ class Fractal(
     }
     fun rotate(dTheta: Float, screenFocus: FloatArray) {
 
-        Log.d("FRACTAL", "dTheta: $dTheta")
+        //Log.d("FRACTAL", "dTheta: $dTheta")
 
         // update complex coordinates
         // convert focus coordinates from screen space to complex space
@@ -699,12 +699,12 @@ class Fractal(
                     fractalConfig.coords()[1] + qx*sinTheta + qy*cosTheta
                 )
 
-                Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
+                //Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
 
                 val sindTheta = sin(-dTheta)
                 val cosdTheta = cos(dTheta)
 
-                Log.d("FRACTAL", "previous coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
+                //Log.d("FRACTAL", "previous coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
 
                 translate(focus.negative())
                 val x = fractalConfig.coords()[0]
@@ -713,9 +713,9 @@ class Fractal(
                 fractalConfig.coords()[1] = x*sindTheta + y*cosdTheta
                 translate(focus)
                 fractalConfig.params["rotation"] = fractalConfig.rotation() - dTheta.toDouble()
-                Log.d("FRACTAL", "rotation: ${fractalConfig.rotation()}")
+                //Log.d("FRACTAL", "rotation: ${fractalConfig.rotation()}")
 
-                Log.d("FRACTAL", "new coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
+                //Log.d("FRACTAL", "new coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
 
             }
         }

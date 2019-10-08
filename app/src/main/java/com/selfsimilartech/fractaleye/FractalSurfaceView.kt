@@ -15,6 +15,7 @@ import android.widget.ProgressBar
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.Math.pow
 import java.nio.*
 import java.util.*
 import javax.microedition.khronos.egl.EGL10
@@ -22,10 +23,7 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
 import javax.microedition.khronos.egl.EGLDisplay
 import javax.microedition.khronos.opengles.GL10
-import kotlin.math.atan2
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.sin
+import kotlin.math.*
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
@@ -885,22 +883,45 @@ class FractalSurfaceView(
                     GL.glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
                 }
 
+
+                val aspect = f.aspectRatio.toFloat()
+                val vert1 = rotate(floatArrayOf(-quadScale, quadScale*aspect), quadRotation)
+                val vert2 = rotate(floatArrayOf(-quadScale, -quadScale*aspect), quadRotation)
+                val vert3 = rotate(floatArrayOf(quadScale, -quadScale*aspect), quadRotation)
+                val vert4 = rotate(floatArrayOf(quadScale, quadScale*aspect), quadRotation)
+
+                vert1[1] /= aspect
+                vert2[1] /= aspect
+                vert3[1] /= aspect
+                vert4[1] /= aspect
+
                 // create float array of quad coordinates
                 val quadVertices = floatArrayOf(
-                        quadCoords[0] - quadScale,  quadCoords[1] + quadScale,  0f,     // top left
-                        quadCoords[0] - quadScale,  quadCoords[1] - quadScale,  0f,     // bottom left
-                        quadCoords[0] + quadScale,  quadCoords[1] - quadScale,  0f,     // bottom right
-                        quadCoords[0] + quadScale,  quadCoords[1] + quadScale,  0f )    // top right
+                        vert1[0] + quadCoords[0], vert1[1] + quadCoords[1], 0f,     // top left
+                        vert2[0] + quadCoords[0], vert2[1] + quadCoords[1], 0f,     // bottom left
+                        vert3[0] + quadCoords[0], vert3[1] + quadCoords[1], 0f,     // bottom right
+                        vert4[0] + quadCoords[0], vert4[1] + quadCoords[1], 0f )    // top right
                 quadBuffer
                         .put(quadVertices)
                         .position(0)
 
+                
+                val bgVert1 = rotate(floatArrayOf(-bgSize*quadScale, bgSize*quadScale*aspect), quadRotation)
+                val bgVert2 = rotate(floatArrayOf(-bgSize*quadScale, -bgSize*quadScale*aspect), quadRotation)
+                val bgVert3 = rotate(floatArrayOf(bgSize*quadScale, -bgSize*quadScale*aspect), quadRotation)
+                val bgVert4 = rotate(floatArrayOf(bgSize*quadScale, bgSize*quadScale*aspect), quadRotation)
+
+                bgVert1[1] /= aspect
+                bgVert2[1] /= aspect
+                bgVert3[1] /= aspect
+                bgVert4[1] /= aspect
+
                 // create float array of background quad coordinates
                 val bgQuadVertices = floatArrayOf(
-                        quadCoords[0] - bgSize*quadScale,  quadCoords[1] + bgSize*quadScale,  0f,     // top left
-                        quadCoords[0] - bgSize*quadScale,  quadCoords[1] - bgSize*quadScale,  0f,     // bottom left
-                        quadCoords[0] + bgSize*quadScale,  quadCoords[1] - bgSize*quadScale,  0f,     // bottom right
-                        quadCoords[0] + bgSize*quadScale,  quadCoords[1] + bgSize*quadScale,  0f )    // top right
+                        bgVert1[0] + quadCoords[0], bgVert1[1] + quadCoords[1], 0f,     // top left
+                        bgVert2[0] + quadCoords[0], bgVert2[1] + quadCoords[1], 0f,     // bottom left
+                        bgVert3[0] + quadCoords[0], bgVert3[1] + quadCoords[1], 0f,     // bottom right
+                        bgVert4[0] + quadCoords[0], bgVert4[1] + quadCoords[1], 0f )    // top right
                 bgQuadBuffer
                         .put(bgQuadVertices)
                         .position(0)
@@ -1023,19 +1044,21 @@ class FractalSurfaceView(
         var saveImage = false
         private var hasTranslated = false
         private var hasScaled = false
-        private val strictTranslate = { hasTranslated && !hasScaled }
+        private var hasRotated = false
+        private val strictTranslate = { hasTranslated && !hasScaled && !hasRotated }
 
 
         private val quadCoords = floatArrayOf(0f, 0f)
         private val quadFocus = floatArrayOf(0f, 0f)
         private var quadScale = 1f
+        private var quadRotation = 0f
 
         private val bgSize = 5f
 
         private lateinit var rr : RenderRoutine
         
         
-        fun setQuadFocus(screenPos: FloatArray, multitouch: Boolean = false) {
+        fun setQuadFocus(screenPos: FloatArray) {
 
             // update texture quad coordinates
             // convert focus coordinates from screen space to quad space
@@ -1060,7 +1083,7 @@ class FractalSurfaceView(
             quadFocus[0] += dQuadPos[0]
             quadFocus[1] += dQuadPos[1]
 
-            Log.d("SURFACE VIEW", "TRANSLATE -- quadCoords: (${quadCoords[0]}, ${quadCoords[1]})")
+            //Log.d("SURFACE VIEW", "TRANSLATE -- quadCoords: (${quadCoords[0]}, ${quadCoords[1]})")
             Log.d("SURFACE VIEW", "TRANSLATE -- quadFocus: (${quadFocus[0]}, ${quadFocus[1]})")
 
             hasTranslated = true
@@ -1079,15 +1102,40 @@ class FractalSurfaceView(
 
             quadScale *= dScale
 
-            Log.d("SURFACE VIEW", "SCALE -- quadCoords: (${quadCoords[0]}, ${quadCoords[1]})")
+            //Log.d("SURFACE VIEW", "SCALE -- quadCoords: (${quadCoords[0]}, ${quadCoords[1]})")
 
             hasScaled = true
 
             // Log.d("fractalConfig.coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
 
         }
+        private fun rotate(p: FloatArray, theta: Float) : FloatArray {
+
+            val sinTheta = sin(theta)
+            val cosTheta = cos(theta)
+            return floatArrayOf(
+                p[0]*cosTheta - p[1]*sinTheta,
+                p[0]*sinTheta + p[1]*cosTheta
+            )
+
+        }
         fun rotate(dTheta: Float) {
 
+            quadCoords[0] -= quadFocus[0]
+            quadCoords[1] -= quadFocus[1]
+
+            val rotatedQuadCoords = rotate(floatArrayOf(quadCoords[0], quadCoords[1]*f.aspectRatio.toFloat()), dTheta)
+            quadCoords[0] = rotatedQuadCoords[0]
+            quadCoords[1] = rotatedQuadCoords[1]
+            quadCoords[1] /= f.aspectRatio.toFloat()
+
+            quadCoords[0] += quadFocus[0]
+            quadCoords[1] += quadFocus[1]
+
+            //Log.d("RR", "quadCoords: (${quadCoords[0]}, ${quadCoords[1]})")
+
+            quadRotation += dTheta
+            hasRotated = true
 
         }
         private fun resetQuadParams() {
@@ -1099,6 +1147,7 @@ class FractalSurfaceView(
             quadFocus[1] = 0f
 
             quadScale = 1f
+            quadRotation = 0f
 
         }
         private fun saveImage(im: Bitmap) {
@@ -1182,6 +1231,7 @@ class FractalSurfaceView(
                 renderToTex = false
                 hasTranslated = false
                 hasScaled = false
+                hasRotated = false
                 resetQuadParams()
 
             }
@@ -1340,7 +1390,7 @@ class FractalSurfaceView(
                             prevFocalLen = e.focalLength()
                             // Log.d("POSITION", "focalLen: $prevFocalLen")
                             if (!f.settingsConfig.continuousRender()) {
-                                r.setQuadFocus(focus, true)
+                                r.setQuadFocus(focus)
                             }
                             return true
                         }
@@ -1371,7 +1421,8 @@ class FractalSurfaceView(
                                 // ROTATE
                                 val angle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
                                 val dtheta = angle - prevAngle
-                                //f.rotate(dtheta, focus)
+                                f.rotate(dtheta, focus)
+                                r.rotate(dtheta)
 
                                 prevAngle = angle
 
