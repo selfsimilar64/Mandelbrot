@@ -15,7 +15,7 @@ class ComplexMap (
         val initDF          : String?            = "",
         val loopDF          : String?            = "",
         val finalDF         : String?            = "",
-        val textures        : List<String>       = Texture.all.keys.toList(),
+        val textures        : List<String>       = Texture.arbitrary.keys.toList(),
         val initCoords      : DoubleArray        = doubleArrayOf(0.0, 0.0),
         val initScale       : Double             = 1.0,
         val initParams      : List<Param>        = listOf(),
@@ -270,10 +270,7 @@ class ComplexMap (
                 initSF = res.getString(R.string.test_init_sf),
                 loopSF = res.getString(R.string.test_loop_sf),
                 initZ = doubleArrayOf(1.0, 0.0),
-                initScale = 3.5,
-                initParams = listOf(
-                        Param(1.0, 0.0)
-                )
+                initScale = 3.5
         )}
         val all                 = mapOf(
                 "Mandelbrot"            to  mandelbrot,

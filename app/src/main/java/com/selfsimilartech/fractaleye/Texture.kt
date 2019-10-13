@@ -32,7 +32,7 @@ class Texture (
         val escapeSmooth          = { res: Resources -> Texture(
                 name = "Escape Time Smooth",
                 finalSF = res.getString(R.string.mandelbrot_smooth_final_sf),
-                finalDF = res.getString(R.string.mandelbrot_smooth_final_df) )
+                finalDF = res.getString(R.string.mandelbrot_smooth_final_df2) )
         }
         val distanceEstimation    = { res: Resources -> Texture(
                 name = "Distance Estimation",

@@ -216,8 +216,8 @@ class Fractal(
         updateTextureParamEditTexts()
     }
     private fun resetColorParams() {
-        fractalConfig.params["frequency"] = 3.5f
-        fractalConfig.params["phase"] = 0f
+        fractalConfig.params["frequency"] = 1.3454f
+        fractalConfig.params["phase"] = 0.0f
     }
     fun reset() {
         resetPosition()
@@ -444,7 +444,17 @@ class Fractal(
         //      JULIA :: (0.53298706, 0.00747937)
 
         // MANDELBROT
-        //      JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ !!!!!
+        //      JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ
+
+        // MANDELBROT @
+        //      x:         -1.25735194436369140
+        //      y:         -0.07363029998042227
+        //      scale:      1.87845e-3
+        // MANDELBROT @
+        //      x:          0.39019590054025366
+        //      y:         -0.26701156160039610
+        //      scale:      9.59743e-8
+        //      rotation:   146
 
         // MANDELBROT CPOW :: (1.31423213, 2.86942864)
         //      JULIA :: (-0.84765975, -0.02321229)
@@ -486,6 +496,7 @@ class Fractal(
 
         // KALI
         //      JULIA :: (-0.96665798, -0.02109066)
+        //      JULIA :: (-0.04638263, -1.85958555)
 
         // ABS(SIN(Z^2 - i*Z)) + C
         //      JULIA :: (0.19371092, 0.53478799)

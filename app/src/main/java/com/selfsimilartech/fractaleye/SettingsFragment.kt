@@ -196,12 +196,7 @@ class SettingsFragment : Fragment() {
             }
 
         })
-        precisionTabs.getTabAt(
-                Precision.valueOf(
-                        savedInstanceState?.getString("precision")
-                                ?: config.precision().name
-                ).ordinal
-        )?.select()
+        precisionTabs.getTabAt(2)?.select()
 
         return v
     }

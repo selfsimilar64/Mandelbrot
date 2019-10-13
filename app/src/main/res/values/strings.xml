@@ -905,7 +905,7 @@
     <string name="test_init_sf">
     </string>
     <string name="test_loop_sf">
-        Z = Z1 - cMultSF(P1, cDivSF(cMultSF(Z1, cSqrSF(Z1)) - vec2(1.0, 0.0), 3.0*cSqrSF(Z1))) + C;
+        Z = abs(sinSF(cSqrSF(Z1) - cMultSF(vec2(0.0, 1.0), Z1))) + C;
     </string>
     <string name="test_loop_df">
         vec4 Q1 = cSqrDF(X1, Y1);
@@ -1134,7 +1134,7 @@
         sum = sum + exp(-modZ.x);
     </string>
     <string name="exponential_smooth_final">
-        colorParams.z = sum;
+        colorParams.z = log(log(sum + 1.0) + 1.0);
     </string>
 
 

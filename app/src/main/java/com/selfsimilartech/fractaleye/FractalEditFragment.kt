@@ -460,7 +460,8 @@ class FractalEditFragment : Fragment() {
                 )
                 textureAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 textureAlgSpinner.adapter = textureAlgAdapter
-                //textureAlgSpinner.setSelection(0)
+                val textureIndex = config.map().textures.indexOf(config.texture().name)
+                textureAlgSpinner.setSelection(if (textureIndex == -1) 0 else textureIndex)
 
             }
 
@@ -549,12 +550,12 @@ class FractalEditFragment : Fragment() {
                 val p = seekBar.progress.toFloat() / 100.0f
                 callback.onFractalParamsChanged(
                     "maxIter",
-                    ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(11) - 1)*p).toInt()
+                    ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(12) - 1)*p).toInt()
                 )
             }
 
         })
-        maxIterBar.progress = 20
+        maxIterBar.progress = (100.0*(config.maxIter().toDouble() - 2.0.pow(5) + 1.0) / (2.0.pow(12) - 1.0)).toInt()
 
         return v
     }

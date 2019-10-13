@@ -333,7 +333,7 @@ class MainActivity : AppCompatActivity(),
         val maxIter = savedInstanceState?.getInt("maxIter") ?: 255
         val bailoutRadius = savedInstanceState?.getFloat("bailoutRadius") ?: 1e5f
         val palette = ColorPalette.all[savedInstanceState?.getString("palette")]?.invoke(resources) ?: ColorPalette.p5(resources)
-        val frequency = savedInstanceState?.getFloat("frequency") ?: 2.0f
+        val frequency = savedInstanceState?.getFloat("frequency") ?: 1.0f
         val phase = savedInstanceState?.getFloat("phase") ?: 0.0f
         val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: Resolution.HIGH.name)
         val precision = Precision.valueOf(savedInstanceState?.getString("precision") ?: "AUTO")
