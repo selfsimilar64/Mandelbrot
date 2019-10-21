@@ -111,30 +111,105 @@ class ColorPalette (
                 R.color.q10,
                 R.color.tangerine
         )))}
-
+        val p9      = { res: Resources -> ColorPalette(
+                "P9", getColorResources(res, intArrayOf(
+                R.color.q12,
+                R.color.q13,
+                R.color.q14,
+                R.color.q15,
+                R.color.q16,
+                R.color.q17,
+                R.color.q18
+        )))}
+        val viridis      = { res: Resources -> ColorPalette(
+                "Viridis", getColorResources(res, intArrayOf(
+                R.color.q19,
+                R.color.q20,
+                R.color.q21,
+                R.color.q22,
+                R.color.q23,
+                R.color.q24
+        )))}
+        val plasma      = { res: Resources -> ColorPalette(
+                "Plasma", getColorResources(res, intArrayOf(
+                R.color.q25,
+                R.color.q26,
+                R.color.q27,
+                R.color.q28,
+                R.color.q29,
+                R.color.q30,
+                R.color.q31
+        )))}
+        val inferno      = { res: Resources -> ColorPalette(
+                "Inferno", getColorResources(res, intArrayOf(
+                R.color.q32,
+                R.color.q33,
+                R.color.q34,
+                R.color.q35,
+                R.color.q36,
+                R.color.q37
+        )))}
+        val magma = { res: Resources -> ColorPalette(
+                "Magma", getColorResources(res, intArrayOf(
+                R.color.q38,
+                R.color.q39,
+                R.color.q40,
+                R.color.q41,
+                R.color.q42,
+                R.color.q43
+        )))}
         val all     = mapOf(
                 "Yin Yang"      to  bw,
-                "Beach"   to  beach,
+                "Beach"         to  beach,
                 "Vascular"      to  p4,
-                "Flora"      to  p5,
-                "Royal"   to  royal,
-                "Groovy"      to  p8,
-                "Canyon"  to  canyon,
-                "Anubis"  to  anubis
+                "Flora"         to  p5,
+                "Royal"         to  royal,
+                "Groovy"        to  p8,
+                "Canyon"        to  canyon,
+                "Anubis"        to  anubis,
+                "P9"            to  p9,
+                "Virids"        to  viridis,
+                "Plasma"        to  plasma,
+                "Inferno"       to  inferno,
+                "Magma"         to  magma
         )
 
     }
 
     private val colors = List(colorInts.size) { i: Int -> intToFloatArray(colorInts[i]) }
-    private val palette = colors.plus(colors[0])
-    val size = palette.size
-    val flatPalette = FloatArray(palette.size * 3) {i: Int ->
-        val a = floor(i / 3.0f).toInt()
-        val b = i % 3
-        palette[a][b]
+
+    var oscillate = true
+
+    private var palette = listOf(floatArrayOf())
+    var size = 0
+
+    val flatPalette = {
+        FloatArray(palette.size * 3) { i: Int ->
+            val a = floor(i / 3.0f).toInt()
+            val b = i % 3
+            palette[a][b]
+        }
     }
-    var drawableOrientation = GradientDrawable.Orientation.LEFT_RIGHT
+
+    private val drawableOrientation = GradientDrawable.Orientation.LEFT_RIGHT
     val drawable = GradientDrawable(drawableOrientation, colorInts)
+
+
+    init {
+
+        updatePalette()
+
+    }
+
+    fun updatePalette() {
+
+        palette =
+            if (oscillate) {  colors.minus(colors.last()).plus(colors.reversed())  }
+            else {            colors.plus(colors.first())                          }
+        size = palette.size
+
+
+    }
 
     override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
