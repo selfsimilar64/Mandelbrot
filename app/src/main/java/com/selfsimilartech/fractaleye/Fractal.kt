@@ -65,8 +65,7 @@ class Fractal(
 
         loadRenderResources()
 
-        """
-        $header
+        """$header
         $arithmetic
         void main() {
             $init
@@ -75,7 +74,7 @@ class Fractal(
             for (int n = 0; n < maxIter; n++) {
                 if (n == maxIter - 1) {
                     $algFinal
-                    colorParams.w = -2.0;
+                    colorParams.y = -2.0;
                     break;
                 }
                 $loop
@@ -97,14 +96,13 @@ class Fractal(
 
         loadColorResources()
 
-        """
-        $colorHeader
+        """$colorHeader
         void main() {
 
             vec3 color = vec3(1.0);
             vec4 s = texture(tex, texCoord);
 
-            if (s.w != -1.0) {
+            if (s.y != -1.0) {
                 $colorIndex
                 $colorPostIndex
             }
@@ -140,7 +138,7 @@ class Fractal(
                 algInit     = fractalConfig.texture().initSF
                 mapLoop     = fractalConfig.map().loopSF           ?: ""
                 if (fractalConfig.juliaMode()) {
-                    mapLoop = mapLoop.replace("C", "P${fractalConfig.map().initParams.size + 1}", false)
+                    mapLoop = mapLoop.replace("C", "P${fractalConfig.map().params.size + 1}", false)
                 }
                 algLoop     = fractalConfig.texture().loopSF
                 mapFinal    = fractalConfig.map().finalSF          ?: ""
@@ -164,8 +162,8 @@ class Fractal(
                 algInit     = fractalConfig.texture().initDF
                 mapLoop     = fractalConfig.map().loopDF           ?: ""
                 if (fractalConfig.juliaMode()) {
-                    mapLoop = mapLoop.replace("A", "vec2(P${fractalConfig.map().initParams.size + 1}.x, 0.0)", false)
-                    mapLoop = mapLoop.replace("B", "vec2(P${fractalConfig.map().initParams.size + 1}.y, 0.0)", false)
+                    mapLoop = mapLoop.replace("A", "vec2(P${fractalConfig.map().params.size + 1}.x, 0.0)", false)
+                    mapLoop = mapLoop.replace("B", "vec2(P${fractalConfig.map().params.size + 1}.y, 0.0)", false)
                 }
                 algLoop     = fractalConfig.texture().loopDF
                 mapFinal    = fractalConfig.map().finalDF          ?: ""
@@ -190,19 +188,20 @@ class Fractal(
     }
 
     private fun resetPosition() {
-        fractalConfig.coords()[0] = fractalConfig.map().initCoords[0]
-        fractalConfig.coords()[1] = fractalConfig.map().initCoords[1]
-        fractalConfig.scale()[0] = fractalConfig.map().initScale
-        fractalConfig.scale()[1] = fractalConfig.map().initScale * aspectRatio
-        fractalConfig.params["bailoutRadius"] = fractalConfig.map().initBailout
+        fractalConfig.coords()[0] = fractalConfig.map().coords[0]
+        fractalConfig.coords()[1] = fractalConfig.map().coords[1]
+        fractalConfig.scale()[0] = fractalConfig.map().scale
+        fractalConfig.scale()[1] = fractalConfig.map().scale * aspectRatio
+        fractalConfig.params["bailoutRadius"] = fractalConfig.map().bailout
+        fractalConfig.params["rotation"] = 0.0
         updatePositionEditTexts()
     }
     private fun resetMapParams() {
-        for (i in 1..fractalConfig.map().initParams.size) {
-            fractalConfig.params["p$i"] = fractalConfig.map().initParams[i - 1]
+        for (i in 1..fractalConfig.map().params.size) {
+            fractalConfig.params["p$i"] = fractalConfig.map().params[i - 1]
         }
-        for (i in (fractalConfig.map().initParams.size + 1)..NUM_MAP_PARAMS) {
-            fractalConfig.params["p$i"] = ComplexMap.Param(0.0, 0.0)
+        for (i in (fractalConfig.map().params.size + 1)..NUM_MAP_PARAMS) {
+            fractalConfig.params["p$i"] = ComplexMap.Param()
         }
         updateMapParamEditTexts()
     }
@@ -224,7 +223,7 @@ class Fractal(
         resetMapParams()
         resetTextureParams()
         resetColorParams()
-        fractalConfig.params["juliaMode"] = fractalConfig.map().initJuliaMode
+        fractalConfig.params["juliaMode"] = fractalConfig.map().juliaMode
     }
     @SuppressLint("SetTextI18n")
     fun updatePositionEditTexts() {
@@ -284,8 +283,8 @@ class Fractal(
             }
         }
 
-        xEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMap.Param).getU()))
-        yEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMap.Param).getV()))
+        xEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMap.Param).u.get()))
+        yEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMap.Param).v.get()))
 
     }
     fun updateMapParamEditTexts() {
@@ -365,8 +364,8 @@ class Fractal(
                     displayParamName1.text = "u"
                     displayParamName2.text = "v"
                     displayParamName3.text = res.getString(R.string.sensitivity)
-                    displayParam1.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMap.Param).getU())
-                    displayParam2.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMap.Param).getV())
+                    displayParam1.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMap.Param).u.get())
+                    displayParam2.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMap.Param).v.get())
                     displayParam3.text = "%.4f".format(fractalConfig.paramSensitivity())
                     w = (80f * density).toInt()
 
@@ -424,8 +423,8 @@ class Fractal(
                 else fractalConfig.paramSensitivity()
 //        (fractalConfig.params["p$i"] as DoubleArray)[0] += sensitivity*dPos[0]/screenRes[0]
 //        (fractalConfig.params["p$i"] as DoubleArray)[1] -= sensitivity*dPos[1]/screenRes[1]
-        (fractalConfig.params["p$i"] as ComplexMap.Param).setU(sensitivity*dPos[0]/screenRes[0])
-        (fractalConfig.params["p$i"] as ComplexMap.Param).setV(-sensitivity*dPos[1]/screenRes[1])
+        (fractalConfig.params["p$i"] as ComplexMap.Param).u.set(sensitivity*dPos[0]/screenRes[0])
+        (fractalConfig.params["p$i"] as ComplexMap.Param).v.set(-sensitivity*dPos[1]/screenRes[1])
 
         // Log.d("FRACTAL", "setting map param ${p + 1} to (${fractalConfig.map().params[p - 1][0]}, ${fractalConfig.map().params[p - 1][1]})")
 
@@ -455,6 +454,16 @@ class Fractal(
         //      y:         -0.26701156160039610
         //      scale:      9.59743e-8
         //      rotation:   146
+        // MANDELBROT @
+        //      x:         -0.48414790254135703
+        //      y:         -0.59799104457234160
+        //      scale:      6.15653e-4
+        //      rotation:   2
+        //      texture:    orbit trap
+        //      palette:    p9
+        //      frequency:  71.74303
+        //      offset:     -0.26012
+        //      maxIter:    1047
 
         // MANDELBROT CPOW :: (1.31423213, 2.86942864)
         //      JULIA :: (-0.84765975, -0.02321229)
