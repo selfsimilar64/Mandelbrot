@@ -16,36 +16,37 @@ class ComplexMap (
         val loopDF          : String?            = "",
         val finalDF         : String?            = "",
         val textures        : List<String>       = Texture.arbitrary.keys.toList(),
-        val initCoords      : DoubleArray        = doubleArrayOf(0.0, 0.0),
-        val initScale       : Double             = 1.0,
-        val initParams      : List<Param>        = listOf(),
-        val initZ           : DoubleArray        = doubleArrayOf(0.0, 0.0),
-        val initJuliaMode   : Boolean            = false,
-        val initBailout     : Float              = 1e5f
+        val coords          : DoubleArray        = doubleArrayOf(0.0, 0.0),
+        val scale           : Double             = 1.0,
+        val params          : List<Param>        = listOf(),
+        val z0              : DoubleArray        = doubleArrayOf(0.0, 0.0),  // seed?
+        val juliaMode       : Boolean            = false,
+        val bailout         : Float              = 1e5f
 ) {
 
-    class Param (
+    class Lockable (
             private var u: Double = 0.0,
-            private var v: Double = 0.0,
-            var uLocked: Boolean = false,
-            var vLocked: Boolean = false
+            var locked: Boolean = false
     ) {
 
-        fun getU() : Double { return u }
-        fun setU(U: Double, add: Boolean = true) {
-            if (!uLocked) {
+        fun get() : Double { return u }
+        fun set(U: Double, add: Boolean = true) {
+            if (!locked) {
                 if (add) { u += U }
                 else { u = U }
             }
         }
 
-        fun getV() : Double { return v }
-        fun setV(V: Double, add: Boolean = true) {
-            if (!vLocked) {
-                if (add) { v += V }
-                else { v = V }
-            }
-        }
+    }
+    class Param (
+        initU: Double = 0.0,
+        initV: Double = 0.0,
+        uLocked: Boolean = false,
+        vLocked: Boolean = false
+    ) {
+
+        val u = Lockable(initU, uLocked)
+        val v = Lockable(initV, vLocked)
 
     }
 
@@ -61,8 +62,8 @@ class ComplexMap (
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.mandelbrot_loop_df),
                 textures = Texture.all.keys.toList(),
-                initCoords = doubleArrayOf(-0.75, 0.0),
-                initScale = 3.5
+                coords = doubleArrayOf(-0.75, 0.0),
+                scale = 3.5
         )}
         val mandelbrotPower     = { res: Resources -> ComplexMap(
                 "Mandelbrot Power",
@@ -70,8 +71,8 @@ class ComplexMap (
                 icon = R.drawable.mandelbrotpower_icon,
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbrotcpow_loop_sf),
-                initScale = 3.5,
-                initParams = listOf(Param(4.0, vLocked = true))
+                scale = 3.5,
+                params = listOf(Param(4.0, vLocked = true))
         )}
         val mandelbrotDualPower = { res: Resources -> ComplexMap(
                 "Mandelbrot Dual Power",
@@ -80,9 +81,9 @@ class ComplexMap (
                 conditionalSF = res.getString(R.string.escape_sf),
                 initSF = res.getString(R.string.dualpow_init_sf),
                 loopSF = res.getString(R.string.dualpow_loop_sf),
-                initScale = 3.0,
-                initZ = doubleArrayOf(1.0, 0.0),
-                initParams = listOf(Param(2.0, 0.0, vLocked = true))
+                scale = 3.0,
+                z0 = doubleArrayOf(1.0, 0.0),
+                params = listOf(Param(2.0, vLocked = true))
         )}
         val mandelbox           = { res: Resources -> ComplexMap(
                 "Mandelbox",
@@ -92,8 +93,8 @@ class ComplexMap (
                 loopSF = res.getString(R.string.mandelbox_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.mandelbox_loop_df),
-                initScale = 5.0,
-                initParams = listOf(Param(-2.66421354, 0.0, vLocked = true))
+                scale = 5.0,
+                params = listOf(Param(-2.66421354, vLocked = true))
         ) }
         val kali                = { res: Resources -> ComplexMap(
                 "Kali",
@@ -103,24 +104,24 @@ class ComplexMap (
                 loopSF = res.getString(R.string.kali_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.kali_loop_df),
-                initJuliaMode = true,
-                initBailout = 4e0f,
-                initScale = 4.0,
-                initParams = listOf(Param(-0.33170626, -0.18423799))
+                juliaMode = true,
+                bailout = 4e0f,
+                scale = 4.0,
+                params = listOf(Param(-0.33170626, -0.18423799))
         ) }
         val kaliSquare          = { res: Resources -> ComplexMap(
                 "Kali Square",
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.kalisquare_loop_sf),
-                initJuliaMode = true,
-                initBailout = 4e0f,
-                initScale = 4.0
+                juliaMode = true,
+                bailout = 4e0f,
+                scale = 4.0
         ) }
         val mandelbar           = { res: Resources -> ComplexMap(
                 "Mandelbar",
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.mandelbar_loop_sf),
-                initScale = 3.5
+                scale = 3.5
         )}
         val logistic            = { res: Resources -> ComplexMap(
                 "Logistic",
@@ -129,8 +130,8 @@ class ComplexMap (
                 loopSF = res.getString(R.string.logistic_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.logistic_loop_df),
-                initScale = 3.5,
-                initZ = doubleArrayOf(0.5, 0.0)
+                scale = 3.5,
+                z0 = doubleArrayOf(0.5, 0.0)
         ) }
         val burningShip         = { res: Resources -> ComplexMap(
                 "Burning Ship",
@@ -142,18 +143,18 @@ class ComplexMap (
                 conditionalDF = res.getString(R.string.escape_df),
                 initDF = res.getString(R.string.burningship_init_df),
                 loopDF = res.getString(R.string.burningship_loop_df),
-                initCoords = doubleArrayOf(-0.45, 0.25),
-                initScale = 3.5
+                coords = doubleArrayOf(-0.45, 0.25),
+                scale = 3.5
         ) }
         val magnet              = { res: Resources -> ComplexMap(
                 "Magnet",
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.magnet_loop_sf),
-                initScale = 3.5,
-                initBailout = 4e0f,
-                initParams = listOf(
-                        Param(-1.0, 0.0, vLocked = true),
-                        Param(-2.0, 0.0, vLocked = true))
+                scale = 3.5,
+                bailout = 4e0f,
+                params = listOf(
+                        Param(-1.0, vLocked = true),
+                        Param(-2.0, vLocked = true))
         ) }
         val sine1               = { res: Resources -> ComplexMap(
                 "Sine 1",
@@ -163,7 +164,7 @@ class ComplexMap (
                 loopSF = res.getString(R.string.sine1_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.sine1_loop_df),
-                initScale = 3.5
+                scale = 3.5
         )}
         val sine2               = { res: Resources -> ComplexMap(
                 "Sine 2",
@@ -171,19 +172,19 @@ class ComplexMap (
                 icon = R.drawable.sine2_icon,
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.sine2_loop_sf),
-                initScale = 3.5,
-                initParams = listOf(Param(-0.26282884, 0.0)),
-                initZ = doubleArrayOf(1.0, 0.0)
+                scale = 3.5,
+                params = listOf(Param(-0.26282884)),
+                z0 = doubleArrayOf(1.0, 0.0)
         ) }
         val sine3               = { res: Resources -> ComplexMap(
                 "Sine 3",
                 katex = res.getString(R.string.sine3_katex),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.sine3_loop_sf),
-                initScale = 3.5,
-                initBailout = 1e1f,
-                initParams = listOf(Param(0.31960705187983646, vLocked = true)),
-                initZ = doubleArrayOf(1.0, 0.0)
+                scale = 3.5,
+                bailout = 1e1f,
+                params = listOf(Param(0.31960705187983646, vLocked = true)),
+                z0 = doubleArrayOf(1.0, 0.0)
         )}
         val horseshoeCrab       = { res: Resources -> ComplexMap(
                 "Horseshoe Crab",
@@ -193,29 +194,29 @@ class ComplexMap (
                 loopSF = res.getString(R.string.horseshoecrab_loop_sf),
                 conditionalDF = res.getString(R.string.escape_df),
                 loopDF = res.getString(R.string.horseshoecrab_loop_df),
-                initScale = 5.0,
-                initParams = listOf(Param(sqrt(2.0), 0.0)),
-                initZ = doubleArrayOf(1.0, 0.0)
+                scale = 5.0,
+                params = listOf(Param(sqrt(2.0))),
+                z0 = doubleArrayOf(1.0, 0.0)
         )}
         val newton2             = { res: Resources -> ComplexMap(
                 "Newton 2",
                 conditionalSF = res.getString(R.string.converge_sf),
                 loopSF = res.getString(R.string.newton2_loop_sf),
-                initScale = 3.5,
-                initParams = listOf(
+                scale = 3.5,
+                params = listOf(
                         Param(1.0, 1.0),
                         Param(-1.0, -1.0),
                         Param(2.0, -0.5)
                 ),
-                initJuliaMode = true
+                juliaMode = true
         ) }
         val newton3             = { res: Resources -> ComplexMap(
                 "Newton 3",
                 katex = res.getString(R.string.newton3_katex),
                 conditionalSF = res.getString(R.string.converge_sf),
                 loopSF = res.getString(R.string.newton3_loop_sf),
-                initScale = 5.0,
-                initJuliaMode = true
+                scale = 5.0,
+                juliaMode = true
         ) }
         val persianRug          = { res: Resources -> ComplexMap(
                 "Persian Rug",
@@ -223,9 +224,9 @@ class ComplexMap (
                 initSF = res.getString(R.string.persianrug_init_sf),
                 conditionalSF = res.getString(R.string.escape_sf),
                 loopSF = res.getString(R.string.persianrug_loop_sf),
-                initScale = 1.5,
-                initParams = listOf(Param(0.642, 0.0)),
-                initBailout = 1e1f
+                scale = 1.5,
+                params = listOf(Param(0.642, 0.0)),
+                bailout = 1e1f
         )}
         val kleinian            = { res: Resources -> ComplexMap(
                 "Kleinian",
@@ -233,13 +234,13 @@ class ComplexMap (
                 conditionalSF = res.getString(R.string.escape_sf),
                 initSF = res.getString(R.string.kleinian_init_sf),
                 loopSF = res.getString(R.string.kleinian_loop_sf),
-                initScale = 1.2,
-                initCoords = doubleArrayOf(0.0, -0.5),
-                initParams = listOf(
+                scale = 1.2,
+                coords = doubleArrayOf(0.0, -0.5),
+                params = listOf(
                         Param(2.0, vLocked = true),
                         Param(0.0, -1.0)
                 ),
-                initJuliaMode = true
+                juliaMode = true
         )}
         val nova1               = { res: Resources -> ComplexMap(
                 "Nova 1",
@@ -247,10 +248,10 @@ class ComplexMap (
                 icon = R.drawable.nova1_icon,
                 conditionalSF = res.getString(R.string.converge_sf),
                 loopSF = res.getString(R.string.nova1_loop_sf),
-                initCoords = doubleArrayOf(-0.3, 0.0),
-                initScale = 1.5,
-                initZ = doubleArrayOf(1.0, 0.0),
-                initParams = listOf(
+                coords = doubleArrayOf(-0.3, 0.0),
+                scale = 1.5,
+                z0 = doubleArrayOf(1.0, 0.0),
+                params = listOf(
                         Param(1.0, 0.0)
                 )
         ) }
@@ -260,17 +261,17 @@ class ComplexMap (
                 icon = R.drawable.nova2_icon,
                 conditionalSF = res.getString(R.string.converge_sf),
                 loopSF = res.getString(R.string.nova2_loop_sf),
-                initJuliaMode = true,
-                initScale = 5.0,
-                initCoords = doubleArrayOf(-0.3, 0.0)
+                juliaMode = true,
+                scale = 5.0,
+                coords = doubleArrayOf(-0.3, 0.0)
         ) }
         val test                = { res: Resources -> ComplexMap(
                 "Test",
                 conditionalSF = res.getString(R.string.converge_sf),
                 initSF = res.getString(R.string.test_init_sf),
                 loopSF = res.getString(R.string.test_loop_sf),
-                initZ = doubleArrayOf(1.0, 0.0),
-                initScale = 3.5
+                z0 = doubleArrayOf(1.0, 0.0),
+                scale = 3.5
         )}
         val all                 = mapOf(
                 "Mandelbrot"            to  mandelbrot,
