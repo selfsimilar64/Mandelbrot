@@ -5,17 +5,15 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.opengl.GLES30 as GL
+import android.opengl.GLES30.*
 import android.opengl.GLSurfaceView
 import android.os.*
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.HorizontalScrollView
 import android.widget.ProgressBar
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Math.pow
 import java.nio.*
 import java.util.*
 import javax.microedition.khronos.egl.EGL10
@@ -58,44 +56,46 @@ class GLTexture (
     init {
         // create texture id
         val b = IntBuffer.allocate(1)
-        GL.glGenTextures(1, b)
+        glGenTextures(1, b)
         id = b[0]
 
         // allocate texture memory
         val bytesPerTexel = when(internalFormat) {
                            // # of components   # of bytes per component
-            GL.GL_RGBA8 ->    4                 * 1
-            GL.GL_RGBA16F ->  4                 * 2
-            GL.GL_RGBA32F ->  4                 * 4
-            GL.GL_RG32F ->    2                 * 4
-//            GL.GL_RGBA -> ByteBuffer.allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
+            GL_RGBA8 ->    4                 * 1
+            GL_RGBA16F ->  4                 * 2
+            GL_RGBA32F ->  4                 * 4
+            GL_RG16F ->    2                 * 2
+            GL_RG32F ->    2                 * 4
+//            GL_RGBA -> ByteBuffer.allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
             else -> 0
         }
         buffer = ByteBuffer.allocateDirect(res[0] * res[1] * bytesPerTexel).order(ByteOrder.nativeOrder()).asFloatBuffer()
 
         // bind and set texture parameters
-        GL.glActiveTexture(GL.GL_TEXTURE0 + index)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, id)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, interpolation)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, interpolation)
+        glActiveTexture(GL_TEXTURE0 + index)
+        glBindTexture(GL_TEXTURE_2D, id)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolation)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolation)
 
         val type = when(internalFormat) {
-            GL.GL_RGBA8 -> GL.GL_UNSIGNED_BYTE
-            GL.GL_RGBA16F -> GL.GL_HALF_FLOAT
-            GL.GL_RGBA32F -> GL.GL_FLOAT
-            GL.GL_RG32F -> GL.GL_FLOAT
-//            GL.GL_RGBA -> GL.GL_UNSIGNED_BYTE
+            GL_RGBA8 -> GL_UNSIGNED_BYTE
+            GL_RGBA16F -> GL_HALF_FLOAT
+            GL_RG16F -> GL_HALF_FLOAT
+            GL_RGBA32F -> GL_FLOAT
+            GL_RG32F -> GL_FLOAT
+//            GL_RGBA -> GL_UNSIGNED_BYTE
             else -> 0
         }
 
         val format = when(internalFormat) {
-            GL.GL_RG32F -> GL.GL_RG
-            else -> GL.GL_RGBA
+            GL_RG16F, GL_RG32F -> GL_RG
+            else -> GL_RGBA
         }
 
         // define texture specs
-        GL.glTexImage2D(
-            GL.GL_TEXTURE_2D,           // target
+        glTexImage2D(
+            GL_TEXTURE_2D,           // target
             0,                          // mipmap level
             internalFormat,             // internal format
             res[0], res[1],             // texture resolution
@@ -104,9 +104,10 @@ class GLTexture (
             type,                       // type
             buffer                      // memory pointer
         )
+
     }
 
-    fun delete() { GL.glDeleteTextures(1, intArrayOf(id), 0) }
+    fun delete() { glDeleteTextures(1, intArrayOf(id), 0) }
 
 }
 
@@ -128,33 +129,33 @@ class FractalSurfaceView(
                     1.0f,   1.0f,   0.0f )    // top right
             private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
 
-            private val renderProgram = GL.glCreateProgram()
-            private val viewCoordsHandle : Int
-            private val iterHandle       : Int
-            private val bailoutHandle    : Int
-            private val xInitHandle      : Int
-            private val yInitHandle      : Int
-            private val xScaleHandle     : Int
-            private val yScaleHandle     : Int
-            private val xOffsetHandle    : Int
-            private val yOffsetHandle    : Int
-            private val sinRotateHandle  : Int
-            private val cosRotateHandle  : Int
-            private val bgScaleHandle    : Int
+            private val renderProgram = glCreateProgram()
+            private var viewCoordsHandle : Int
+            private var iterHandle       : Int
+            private var bailoutHandle    : Int
+            private var x0Handle         : Int
+            private var y0Handle         : Int
+            private var xScaleHandle     : Int
+            private var yScaleHandle     : Int
+            private var xCoordHandle     : Int
+            private var yCoordHandle     : Int
+            private var sinRotateHandle  : Int
+            private var cosRotateHandle  : Int
+            private var bgScaleHandle    : Int
             private val mapParamHandles  : IntArray
             private val textureParamHandles : IntArray
 
 
-            private val orbitHandle : Int
+            // private val orbitHandle : Int
 
 
-            private val sampleProgram = GL.glCreateProgram()
+            private val sampleProgram = glCreateProgram()
             private val viewCoordsSampleHandle : Int
             private val quadCoordsSampleHandle : Int
             private val textureSampleHandle    : Int
             private val yOrientSampleHandle    : Int
 
-            private val colorProgram = GL.glCreateProgram()
+            private val colorProgram = glCreateProgram()
             private val viewCoordsColorHandle : Int
             private val quadCoordsColorHandle : Int
             private val yOrientColorHandle    : Int
@@ -176,16 +177,16 @@ class FractalSurfaceView(
             private val bgTexWidth = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[0]/8 }
             private val bgTexHeight = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[1]/8 }
 
-            private val interpolation = { GL.GL_NEAREST }
+            private val interpolation = { GL_NEAREST }
 
             private val textures = arrayOf(
-                    GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0),
-                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA16F, 1),
-                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA16F, 2),
-                    GLTexture(intArrayOf(f.fractalConfig.maxIter(), 1), GL.GL_NEAREST, GL.GL_RG32F, 3)    // perturbation texture
-//                    GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA, 0),
-//                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA, 1),
-//                    GLTexture(f.texRes(), interpolation(), GL.GL_RGBA, 2)
+                    GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL_NEAREST, GL_RG16F, 0),
+                    GLTexture(f.texRes(), interpolation(), GL_RG16F, 1),
+                    GLTexture(f.texRes(), interpolation(), GL_RG16F, 2)
+//                    GLTexture(intArrayOf(f.fractalConfig.maxIter(), 1), GL_NEAREST, GL_RG32F, 3)    // perturbation texture
+//                    GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL_NEAREST, GL_RGBA, 0),
+//                    GLTexture(f.texRes(), interpolation(), GL_RGBA, 1),
+//                    GLTexture(f.texRes(), interpolation(), GL_RGBA, 2)
             )
 
             // allocate memory for textures
@@ -229,6 +230,11 @@ class FractalSurfaceView(
 
             init {
 
+//                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR)
+//                glDebugMessageCallbackKHR { source, type, id, severity, message ->
+//                    Log.e("RENDER ROUTINE", message)
+//                }
+
                 // load all vertex and fragment shader code
                 var s = context.resources.openRawResource(R.raw.vert_render)
                 val vRenderCode = Scanner(s).useDelimiter("\\Z").next()
@@ -249,93 +255,94 @@ class FractalSurfaceView(
 
 
                 // create and compile shaders
-                vRenderShader = loadShader(GL.GL_VERTEX_SHADER, vRenderCode)
-                vSampleShader = loadShader(GL.GL_VERTEX_SHADER, vSampleCode)
+                vRenderShader = loadShader(GL_VERTEX_SHADER, vRenderCode)
+                vSampleShader = loadShader(GL_VERTEX_SHADER, vSampleCode)
 
-                fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, f.renderShader())
-//                fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, perturbationCode)
+                fRenderShader = loadShader(GL_FRAGMENT_SHADER, f.renderShader())
+//                fRenderShader = loadShader(GL_FRAGMENT_SHADER, perturbationCode)
 
-                fSampleShader = loadShader(GL.GL_FRAGMENT_SHADER, fSampleCode)
-                fColorShader  = loadShader(GL.GL_FRAGMENT_SHADER, f.colorShader())
+                fSampleShader = loadShader(GL_FRAGMENT_SHADER, fSampleCode)
+                fColorShader  = loadShader(GL_FRAGMENT_SHADER, f.colorShader())
 
 
-                GL.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
                 // generate texture and framebuffer objects
-                GL.glGenFramebuffers(1, fboIDs)
-
-
+                glGenFramebuffers(1, fboIDs)
 
                 // attach shaders and create renderProgram executables
-                GL.glAttachShader(renderProgram, vRenderShader)
-                GL.glAttachShader(renderProgram, fRenderShader)
-                GL.glLinkProgram(renderProgram)
+                glAttachShader(renderProgram, vRenderShader)
+                glAttachShader(renderProgram, fRenderShader)
+                glLinkProgram(renderProgram)
 
-                viewCoordsHandle     =  GL.glGetAttribLocation(   renderProgram, "viewCoords"  )
-                iterHandle           =  GL.glGetUniformLocation(  renderProgram, "maxIter"     )
-                bailoutHandle        =  GL.glGetUniformLocation(  renderProgram, "R"           )
-                xInitHandle          =  GL.glGetUniformLocation(  renderProgram, "x0"          )
-                yInitHandle          =  GL.glGetUniformLocation(  renderProgram, "y0"          )
-                xScaleHandle         =  GL.glGetUniformLocation(  renderProgram, "xScale"      )
-                yScaleHandle         =  GL.glGetUniformLocation(  renderProgram, "yScale"      )
-                xOffsetHandle        =  GL.glGetUniformLocation(  renderProgram, "xOffset"     )
-                yOffsetHandle        =  GL.glGetUniformLocation(  renderProgram, "yOffset"     )
-                sinRotateHandle      =  GL.glGetUniformLocation(  renderProgram, "sinRotate"   )
-                cosRotateHandle      =  GL.glGetUniformLocation(  renderProgram, "cosRotate"   )
-                bgScaleHandle        =  GL.glGetUniformLocation(  renderProgram, "bgScale"     )
+//                val q = IntBuffer.allocate(1)
+//                glGetProgramiv(renderProgram, GL_LINK_STATUS, q)
+//                Log.e("RENDER ROUTINE", "${q[0] == GL_TRUE}")
+
+                viewCoordsHandle     =  glGetAttribLocation(   renderProgram, "viewCoords"  )
+                iterHandle           =  glGetUniformLocation(  renderProgram, "maxIter"     )
+                bailoutHandle        =  glGetUniformLocation(  renderProgram, "R"           )
+                x0Handle          =  glGetUniformLocation(  renderProgram, "x0"          )
+                y0Handle          =  glGetUniformLocation(  renderProgram, "y0"          )
+                xScaleHandle         =  glGetUniformLocation(  renderProgram, "xScale"      )
+                yScaleHandle         =  glGetUniformLocation(  renderProgram, "yScale"      )
+                xCoordHandle        =   glGetUniformLocation(  renderProgram, "xCoord"      )
+                yCoordHandle        =   glGetUniformLocation(  renderProgram, "yCoord"      )
+                sinRotateHandle      =  glGetUniformLocation(  renderProgram, "sinRotate"   )
+                cosRotateHandle      =  glGetUniformLocation(  renderProgram, "cosRotate"   )
+                bgScaleHandle        =  glGetUniformLocation(  renderProgram, "bgScale"     )
+
                 mapParamHandles      =  IntArray(NUM_MAP_PARAMS) { i: Int ->
-                    GL.glGetUniformLocation(renderProgram, "P${i+1}")
+                    glGetUniformLocation(renderProgram, "P${i+1}")
                 }
                 textureParamHandles  =  IntArray(NUM_TEXTURE_PARAMS) { i: Int ->
-                    GL.glGetUniformLocation(renderProgram, "Q${i+1}")
+                    glGetUniformLocation(renderProgram, "Q${i+1}")
                 }
 
-                orbitHandle          =  GL.glGetUniformLocation(  renderProgram, "orbit"       )
+                // orbitHandle          =  glGetUniformLocation(  renderProgram, "orbit"       )
 
+                glAttachShader(sampleProgram, vSampleShader)
+                glAttachShader(sampleProgram, fSampleShader)
+                glLinkProgram(sampleProgram)
 
+                viewCoordsSampleHandle = glGetAttribLocation(  sampleProgram, "viewCoords"  )
+                quadCoordsSampleHandle = glGetAttribLocation(  sampleProgram, "quadCoords"  )
+                textureSampleHandle    = glGetUniformLocation( sampleProgram, "tex"         )
+                yOrientSampleHandle    = glGetUniformLocation( sampleProgram, "yOrient"     )
 
-                GL.glAttachShader(sampleProgram, vSampleShader)
-                GL.glAttachShader(sampleProgram, fSampleShader)
-                GL.glLinkProgram(sampleProgram)
+                glAttachShader(colorProgram, vSampleShader)
+                glAttachShader(colorProgram, fColorShader)
+                glLinkProgram(colorProgram)
 
-                viewCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "viewCoords"  )
-                quadCoordsSampleHandle = GL.glGetAttribLocation(  sampleProgram, "quadCoords"  )
-                textureSampleHandle    = GL.glGetUniformLocation( sampleProgram, "tex"         )
-                yOrientSampleHandle    = GL.glGetUniformLocation( sampleProgram, "yOrient"     )
-
-                GL.glAttachShader(colorProgram, vSampleShader)
-                GL.glAttachShader(colorProgram, fColorShader)
-                GL.glLinkProgram(colorProgram)
-
-                viewCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "viewCoords"   )
-                quadCoordsColorHandle = GL.glGetAttribLocation(   colorProgram, "quadCoords"   )
-                textureColorHandle    = GL.glGetUniformLocation(  colorProgram, "tex"          )
-                yOrientColorHandle    = GL.glGetUniformLocation(  colorProgram, "yOrient"      )
-                numColorsHandle       = GL.glGetUniformLocation(  colorProgram, "numColors"    )
-                paletteHandle         = GL.glGetUniformLocation(  colorProgram, "palette"      )
-                frequencyHandle       = GL.glGetUniformLocation(  colorProgram, "frequency"    )
-                phaseHandle           = GL.glGetUniformLocation(  colorProgram, "phase"        )
+                viewCoordsColorHandle = glGetAttribLocation(   colorProgram, "viewCoords"   )
+                quadCoordsColorHandle = glGetAttribLocation(   colorProgram, "quadCoords"   )
+                textureColorHandle    = glGetUniformLocation(  colorProgram, "tex"          )
+                yOrientColorHandle    = glGetUniformLocation(  colorProgram, "yOrient"      )
+                numColorsHandle       = glGetUniformLocation(  colorProgram, "numColors"    )
+                paletteHandle         = glGetUniformLocation(  colorProgram, "palette"      )
+                frequencyHandle       = glGetUniformLocation(  colorProgram, "frequency"    )
+                phaseHandle           = glGetUniformLocation(  colorProgram, "phase"        )
 
             }
 
             private fun loadShader(type: Int, shaderCode: String): Int {
 
-                // create a vertex shader type (GL.GL_VERTEX_SHADER)
-                // or a fragment shader type (GL.GL_FRAGMENT_SHADER)
-                val shader = GL.glCreateShader(type)
+                // create a vertex shader type (GL_VERTEX_SHADER)
+                // or a fragment shader type (GL_FRAGMENT_SHADER)
+                val shader = glCreateShader(type)
 
                 // add the source code to the shader and compile it
-                GL.glShaderSource(shader, shaderCode)
-                GL.glCompileShader(shader)
+                glShaderSource(shader, shaderCode)
+                glCompileShader(shader)
 
-//            val a = IntBuffer.allocate(1)
-//            GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS, a)
-//            if (a[0] == GL.GL_FALSE) {
-//                Log.d("RENDER ROUTINE", "shader compile failed")
-//            }
-//            else if (a[0] == GL.GL_TRUE) {
-//                Log.d("RENDER ROUTINE", "shader compile succeeded")
-//            }
+//                val a = IntBuffer.allocate(1)
+//                glGetShaderiv(shader, GL_COMPILE_STATUS, a)
+//                if (a[0] == GL_FALSE) {
+//                    Log.e("RENDER ROUTINE", "shader compile failed")
+//                }
+//                else if (a[0] == GL_TRUE) {
+//                    Log.e("RENDER ROUTINE", "shader compile succeeded")
+//                }
 
                 return shader
 
@@ -377,255 +384,270 @@ class FractalSurfaceView(
                 }
 
             }
+            private fun perturbation() {
+
+                // TESTING PERTURBATION
+                val numProbes = 25
+                var orbitArray : FloatArray = floatArrayOf()
+                var z : Complex
+                var c = Complex(f.fractalConfig.coords()[0], f.fractalConfig.coords()[1])
+                var modZ = 0.0
+                var alpha : Complex
+                var beta : Complex
+                val iterations = IntArray(numProbes)
+                val distances = DoubleArray(numProbes)
+                val gradientAngles = DoubleArray(numProbes)
+
+                var maxIterFound = false
+
+
+
+                for (j in 0 until numProbes) {
+
+                    Log.d("RENDER ROUTINE", "j: $j")
+
+                    orbitArray = FloatArray(f.fractalConfig.maxIter()*2) { 0f }
+                    z = Complex(0.0, 0.0)
+                    alpha = Complex(0.0, 0.0)
+                    beta = Complex(0.0, 0.0)
+
+                    for (i in 0 until f.fractalConfig.maxIter()) {
+
+                        orbitArray[2 * i] = z.x.toFloat()
+                        orbitArray[2 * i + 1] = z.y.toFloat()
+
+                        // iterate second derivative
+                        beta = 2.0*beta*z + alpha*alpha
+
+                        // iterate first derivative
+                        alpha = 2.0*alpha*z + Complex(1.0, 0.0)
+
+                        // iterate z
+                        z = z*z + c
+                        modZ = z.mod()
+                        //Log.d("RENDER ROUTINE", "x: $x, y: $y")
+
+                        if (i == f.fractalConfig.maxIter() - 1) {
+                            Log.d("RENDER ROUTINE", "maxIter !!!!!")
+                            maxIterFound = true
+                            iterations[j] = i
+                        }
+                        if (modZ > f.fractalConfig.bailoutRadius()) {
+                            Log.d("RENDER ROUTINE", "i: $i")
+                            iterations[j] = i
+                            break
+                        }
+
+                    }
+
+                    if (maxIterFound) {
+                        break
+                    }
+
+
+                    var grad = z/alpha
+                    grad /= grad.mod()
+                    grad = -grad
+                    distances[j] = modZ*log(modZ, Math.E)/alpha.mod()
+                    gradientAngles[j] = atan2(grad.y, grad.x)
+
+                    c += 1.5*distances[j]*grad
+                    Log.d("RENDER ROUTINE", "c_prime: $c")
+
+
+                }
+
+                var s = ""
+                gradientAngles.forEach { s += "$it   " }
+                Log.d("RENDER ROUTINE", "\ngradientAngles: $s")
+
+                s = ""
+                iterations.forEach { s += "$it   " }
+                Log.d("RENDER ROUTINE", "\niterations: $s")
+
+                textures[perturbationIndex].buffer.position(0)
+                textures[perturbationIndex].buffer.put(orbitArray)
+                textures[perturbationIndex].buffer.position(0)
+
+                // define texture specs
+                glTexImage2D(
+                        GL_TEXTURE_2D,           // target
+                        0,                          // mipmap level
+                        GL_RG32F,                // internal format
+                        f.fractalConfig.maxIter(), 1, // texture resolution
+                        0,                          // border
+                        GL_RG,                     // internalFormat
+                        GL_FLOAT,                       // type
+                        textures[perturbationIndex].buffer                      // memory pointer
+                )
+
+                // glUniform1i(orbitHandle, perturbationIndex)
+                val xCoordSD = f.fractalConfig.coords()[0] - c.x
+                val yCoordSD = f.fractalConfig.coords()[1] - c.y
+
+            }
             fun renderToTexture() {
 
                 if (f.renderShaderChanged) {
+
                     Log.d("RENDER ROUTINE", "render shader changed")
-                    GL.glDetachShader(renderProgram, fRenderShader)
-                    fRenderShader = loadShader(GL.GL_FRAGMENT_SHADER, f.renderShader())
-                    GL.glAttachShader(renderProgram, fRenderShader)
-                    GL.glLinkProgram(renderProgram)
+
+                    // load new render shader
+                    glDetachShader(renderProgram, fRenderShader)
+                    fRenderShader = loadShader(GL_FRAGMENT_SHADER, f.renderShader())
+                    glAttachShader(renderProgram, fRenderShader)
+                    glLinkProgram(renderProgram)
+
+                    // check program link success
+                    // val q = IntBuffer.allocate(1)
+                    // glGetProgramiv(renderProgram, GL_LINK_STATUS, q)
+                    // Log.e("RENDER ROUTINE", "program linked: ${q[0] == GL_TRUE}")
+
+                    // reassign location handles to avoid bug on Mali GPUs
+                    viewCoordsHandle     =  glGetAttribLocation(   renderProgram, "viewCoords"  )
+                    iterHandle           =  glGetUniformLocation(  renderProgram, "maxIter"     )
+                    bailoutHandle        =  glGetUniformLocation(  renderProgram, "R"           )
+                    x0Handle          =  glGetUniformLocation(  renderProgram, "x0"          )
+                    y0Handle          =  glGetUniformLocation(  renderProgram, "y0"          )
+                    xScaleHandle         =  glGetUniformLocation(  renderProgram, "xScale"      )
+                    yScaleHandle         =  glGetUniformLocation(  renderProgram, "yScale"      )
+                    xCoordHandle        =  glGetUniformLocation(  renderProgram, "xCoord"     )
+                    yCoordHandle        =  glGetUniformLocation(  renderProgram, "yCoord"     )
+                    sinRotateHandle      =  glGetUniformLocation(  renderProgram, "sinRotate"   )
+                    cosRotateHandle      =  glGetUniformLocation(  renderProgram, "cosRotate"   )
+                    bgScaleHandle        =  glGetUniformLocation(  renderProgram, "bgScale"     )
+                    for (i in mapParamHandles.indices) {
+                        mapParamHandles[i] = glGetUniformLocation(renderProgram, "P${i+1}")
+                    }
+                    for (i in textureParamHandles.indices) {
+                        textureParamHandles[i] = glGetUniformLocation(renderProgram, "Q${i+1}")
+                    }
+
                     f.renderShaderChanged = false
+
                 }
                 if (f.resolutionChanged) {
                     val texRes = f.texRes()
                     textures[1].delete()
-                    textures[1] = GLTexture(texRes, interpolation(), GL.GL_RGBA16F, 1)
-//                    textures[1] = GLTexture(texRes, interpolation(), GL.GL_RGBA, 1)
+                    textures[1] = GLTexture(texRes, interpolation(), GL_RGBA16F, 1)
+//                    textures[1] = GLTexture(texRes, interpolation(), GL_RGBA, 1)
                     textures[2].delete()
-                    textures[2] = GLTexture(texRes, interpolation(), GL.GL_RGBA16F, 2)
-//                    textures[2] = GLTexture(texRes, interpolation(), GL.GL_RGBA, 2)
+                    textures[2] = GLTexture(texRes, interpolation(), GL_RGBA16F, 2)
+//                    textures[2] = GLTexture(texRes, interpolation(), GL_RGBA, 2)
                     f.resolutionChanged = false
                 }
                 if (f.renderProfileChanged) {
                     textures[0].delete()
-                    textures[0] = GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA16F, 0)
-//                    textures[0] = GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL.GL_NEAREST, GL.GL_RGBA, 0)
+                    textures[0] = GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL_NEAREST, GL_RGBA16F, 0)
+//                    textures[0] = GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL_NEAREST, GL_RGBA, 0)
                     f.renderProfileChanged = false
                 }
 
                 context.findViewById<ProgressBar>(R.id.progressBar).progress = 0
 
-                GL.glUseProgram(renderProgram)
-                GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
+                glUseProgram(renderProgram)
 
+                // perturbation()
+                glBindFramebuffer(GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
-
-                // TESTING PERTURBATION
-//                val numProbes = 25
-//                var orbitArray : FloatArray = floatArrayOf()
-//                var z : Complex
-//                var c = Complex(f.fractalConfig.coords()[0], f.fractalConfig.coords()[1])
-//                var modZ = 0.0
-//                var alpha : Complex
-//                var beta : Complex
-//                val iterations = IntArray(numProbes)
-//                val distances = DoubleArray(numProbes)
-//                val gradientAngles = DoubleArray(numProbes)
-//
-//                var maxIterFound = false
-//
-//
-//
-//                for (j in 0 until numProbes) {
-//
-//                    Log.d("RENDER ROUTINE", "j: $j")
-//
-//                    orbitArray = FloatArray(f.fractalConfig.maxIter()*2) { 0f }
-//                    z = Complex(0.0, 0.0)
-//                    alpha = Complex(0.0, 0.0)
-//                    beta = Complex(0.0, 0.0)
-//
-//                    for (i in 0 until f.fractalConfig.maxIter()) {
-//
-//                        orbitArray[2 * i] = z.x.toFloat()
-//                        orbitArray[2 * i + 1] = z.y.toFloat()
-//
-//                        // iterate second derivative
-//                        beta = 2.0*beta*z + alpha*alpha
-//
-//                        // iterate first derivative
-//                        alpha = 2.0*alpha*z + Complex(1.0, 0.0)
-//
-//                        // iterate z
-//                        z = z*z + c
-//                        modZ = z.mod()
-//                        //Log.d("RENDER ROUTINE", "x: $x, y: $y")
-//
-//                        if (i == f.fractalConfig.maxIter() - 1) {
-//                            Log.d("RENDER ROUTINE", "maxIter !!!!!")
-//                            maxIterFound = true
-//                            iterations[j] = i
-//                        }
-//                        if (modZ > f.fractalConfig.bailoutRadius()) {
-//                            Log.d("RENDER ROUTINE", "i: $i")
-//                            iterations[j] = i
-//                            break
-//                        }
-//
-//                    }
-//
-//                    if (maxIterFound) {
-//                        break
-//                    }
-//
-//
-//                    var grad = z/alpha
-//                    grad /= grad.mod()
-//                    grad = -grad
-//                    distances[j] = modZ*log(modZ, Math.E)/alpha.mod()
-//                    gradientAngles[j] = atan2(grad.y, grad.x)
-//
-//                    c += 1.5*distances[j]*grad
-//                    Log.d("RENDER ROUTINE", "c_prime: $c")
-//
-//
-//                }
-//
-//                var s = ""
-//                gradientAngles.forEach { s += "$it   " }
-//                Log.d("RENDER ROUTINE", "\ngradientAngles: $s")
-//
-//                s = ""
-//                iterations.forEach { s += "$it   " }
-//                Log.d("RENDER ROUTINE", "\niterations: $s")
-//
-//                textures[perturbationIndex].buffer.position(0)
-//                textures[perturbationIndex].buffer.put(orbitArray)
-//                textures[perturbationIndex].buffer.position(0)
-//
-//                // define texture specs
-//                GL.glTexImage2D(
-//                        GL.GL_TEXTURE_2D,           // target
-//                        0,                          // mipmap level
-//                        GL.GL_RG32F,                // internal format
-//                        f.fractalConfig.maxIter(), 1, // texture resolution
-//                        0,                          // border
-//                        GL.GL_RG,                     // internalFormat
-//                        GL.GL_FLOAT,                       // type
-//                        textures[perturbationIndex].buffer                      // memory pointer
-//                )
-//
-//                GL.glUniform1i(orbitHandle, perturbationIndex)
-//                val xOffsetSD = f.fractalConfig.coords()[0] - c.x
-//                val yOffsetSD = f.fractalConfig.coords()[1] - c.y
-
-
-
-
-
-                for (i in 1..NUM_MAP_PARAMS) {
-                    val p = floatArrayOf(
-                            (f.fractalConfig.params["p$i"] as ComplexMap.Param).getU().toFloat(),
-                            (f.fractalConfig.params["p$i"] as ComplexMap.Param).getV().toFloat())
-                    // Log.d("RENDER ROUTINE", "passing p${i + 1} in as (${p[0]}, ${p[1]})")
-                    GL.glUniform2fv(mapParamHandles[i - 1], 1, p, 0)
-                }
-                for (i in 0 until NUM_TEXTURE_PARAMS) {
-                    // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.fractalConfig.params["q${i + 1}"]}")
-                    GL.glUniform1fv(textureParamHandles[i], 1, floatArrayOf((f.fractalConfig.params["q${i + 1}"] as Double).toFloat()), 0)
+                // pass in map params
+                for (i in mapParamHandles.indices) {
+                    val p = (f.fractalConfig.params["p${i+1}"] as ComplexMap.Param)
+                    val pArray = floatArrayOf(p.u.get().toFloat(), p.v.get().toFloat())
+                    // Log.d("RENDER ROUTINE", "passing p${i+1} in as (${pArray[0]}, ${pArray[1]})")
+                    glUniform2fv(mapParamHandles[i], 1, pArray, 0)
                 }
 
-                val x0 = floatArrayOf(f.fractalConfig.map().initZ[0].toFloat())
-                val y0 = floatArrayOf(f.fractalConfig.map().initZ[1].toFloat())
-
+                // pass in texture params
+                for (i in textureParamHandles.indices) {
+                    // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.fractalConfig.params["q${i+1}"]}")
+                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf((f.fractalConfig.params["q${i+1}"] as Double).toFloat()), 0)
+                }
 
                 val xScaleSD = f.fractalConfig.scale()[0] / 2.0
                 val yScaleSD = f.fractalConfig.scale()[1] / 2.0
-                val xOffsetSD = f.fractalConfig.coords()[0]
-                val yOffsetSD = f.fractalConfig.coords()[1]
-                //val sinRotateSD = sin(f.fractalConfig.rotation())
-                //val cosRotateSD = cos(f.fractalConfig.rotation())
+                val xCoordSD = f.fractalConfig.coords()[0]
+                val yCoordSD = f.fractalConfig.coords()[1]
 
-                // calculate scale/offset parameters and pass to fragment shader
+                // pass in position params
                 when (f.precision()) {
                     Precision.SINGLE -> {
 
                         val xScaleSF = xScaleSD.toFloat()
                         val yScaleSF = yScaleSD.toFloat()
-                        val xOffsetSF = xOffsetSD.toFloat()
-                        val yOffsetSF = yOffsetSD.toFloat()
-                        //val sinRotateSF = sinRotateSD.toFloat()
-                        //val cosRotateSF = cosRotateSD.toFloat()
+                        val xCoordSF = xCoordSD.toFloat()
+                        val yCoordSF = yCoordSD.toFloat()
 
-                        GL.glUniform2fv(xScaleHandle,     1,  floatArrayOf(xScaleSF,     0.0f),  0)
-                        GL.glUniform2fv(yScaleHandle,     1,  floatArrayOf(yScaleSF,     0.0f),  0)
-                        GL.glUniform2fv(xOffsetHandle,    1,  floatArrayOf(xOffsetSF,    0.0f),  0)
-                        GL.glUniform2fv(yOffsetHandle,    1,  floatArrayOf(yOffsetSF,    0.0f),  0)
-                        //GL.glUniform2fv(sinRotateHandle,  1,  floatArrayOf(sinRotateSF,  0.0f),  0)
-                        //GL.glUniform2fv(cosRotateHandle,  1,  floatArrayOf(cosRotateSF,  0.0f),  0)
-
+                        glUniform2fv(xScaleHandle,  1,  floatArrayOf(xScaleSF,  0.0f),  0)
+                        glUniform2fv(yScaleHandle,  1,  floatArrayOf(yScaleSF,  0.0f),  0)
+                        glUniform2fv(xCoordHandle,  1,  floatArrayOf(xCoordSF,  0.0f),  0)
+                        glUniform2fv(yCoordHandle,  1,  floatArrayOf(yCoordSF,  0.0f),  0)
 
                     }
                     Precision.DUAL -> {
 
                         val xScaleDF = splitSD(xScaleSD)
                         val yScaleDF = splitSD(yScaleSD)
-                        val xOffsetDF = splitSD(xOffsetSD)
-                        val yOffsetDF = splitSD(yOffsetSD)
-                        //val sinRotateDF = splitSD(sinRotateSD)
-                        //val cosRotateDF = splitSD(cosRotateSD)
+                        val xCoordDF = splitSD(xCoordSD)
+                        val yCoordDF = splitSD(yCoordSD)
 
-                        GL.glUniform2fv(xScaleHandle,     1,  xScaleDF,     0)
-                        GL.glUniform2fv(yScaleHandle,     1,  yScaleDF,     0)
-                        GL.glUniform2fv(xOffsetHandle,    1,  xOffsetDF,    0)
-                        GL.glUniform2fv(yOffsetHandle,    1,  yOffsetDF,    0)
-                        //GL.glUniform2fv(sinRotateHandle,  1,  sinRotateDF,  0)
-                        //GL.glUniform2fv(cosRotateHandle,  1,  cosRotateDF,  0)
+                        glUniform2fv(xScaleHandle,  1,  xScaleDF,   0)
+                        glUniform2fv(yScaleHandle,  1,  yScaleDF,   0)
+                        glUniform2fv(xCoordHandle,  1,  xCoordDF,   0)
+                        glUniform2fv(yCoordHandle,  1,  yCoordDF,   0)
 
                     }
                     Precision.QUAD -> {
 
 //                val xScaleQF = splitDD(xScaleDD)
 //                val yScaleQF = splitDD(yScaleDD)
-//                val xOffsetQF = splitDD(xOffsetDD)
-//                val yOffsetQF = splitDD(yOffsetDD)
+//                val xCoordQF = splitDD(xCoordDD)
+//                val yCoordQF = splitDD(yCoordDD)
 //
-//                GL.glUniform4fv(xScaleHandle,  1,  xScaleQF,   0)
-//                GL.glUniform4fv(yScaleHandle,  1,  yScaleQF,   0)
-//                GL.glUniform4fv(xOffsetHandle, 1,  xOffsetQF,  0)
-//                GL.glUniform4fv(yOffsetHandle, 1,  yOffsetQF,  0)
+//                glUniform4fv(xScaleHandle,  1,  xScaleQF,   0)
+//                glUniform4fv(yScaleHandle,  1,  yScaleQF,   0)
+//                glUniform4fv(xCoordHandle, 1,  xCoordQF,  0)
+//                glUniform4fv(yCoordHandle, 1,  yCoordQF,  0)
 
                     }
                     else -> {}
                 }
+                glUniform1fv( sinRotateHandle, 1, floatArrayOf(sin(f.fractalConfig.rotation()).toFloat()), 0 )
+                glUniform1fv( cosRotateHandle, 1, floatArrayOf(cos(f.fractalConfig.rotation()).toFloat()), 0 )
 
-                GL.glUniform1fv(sinRotateHandle, 1, floatArrayOf(sin(f.fractalConfig.rotation()).toFloat()), 0)
-                GL.glUniform1fv(cosRotateHandle, 1, floatArrayOf(cos(f.fractalConfig.rotation()).toFloat()), 0)
+                // pass in other parameters
+                glUniform1i(  iterHandle,         f.fractalConfig.maxIter()                               )
+                glUniform1fv( bailoutHandle,  1,  floatArrayOf(f.fractalConfig.bailoutRadius()),        0 )
+                glUniform1fv( x0Handle,       1,  floatArrayOf(f.fractalConfig.map().z0[0].toFloat()),  0 )
+                glUniform1fv( y0Handle,       1,  floatArrayOf(f.fractalConfig.map().z0[1].toFloat()),  0 )
 
-                GL.glEnableVertexAttribArray(viewCoordsHandle)
-                GL.glUniform1i(iterHandle, f.fractalConfig.maxIter())
-                GL.glUniform1fv(bailoutHandle, 1, floatArrayOf(f.fractalConfig.bailoutRadius()), 0)
-                GL.glUniform1fv(xInitHandle, 1, x0, 0)
-                GL.glUniform1fv(yInitHandle, 1, y0, 0)
-
-
+                glEnableVertexAttribArray(viewCoordsHandle)
 
 
                 //======================================================================================
                 // RENDER LOW-RES
                 //======================================================================================
 
-                GL.glViewport(0, 0, textures[0].res[0], textures[0].res[1])
-                GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(bgSize), 0)
-                GL.glVertexAttribPointer(
+                glViewport(0, 0, textures[0].res[0], textures[0].res[1])
+                glUniform1fv(bgScaleHandle, 1, floatArrayOf(bgSize), 0)
+                glVertexAttribPointer(
                         viewCoordsHandle,       // index
                         3,                      // coordinates per vertex
-                        GL.GL_FLOAT,            // type
+                        GL_FLOAT,            // type
                         false,                  // normalized
-                        12,                     // coordinates per vertex * bytes per float
+                        12,                     // coordinates per vertex (3) * bytes per float (4)
                         viewBuffer              // coordinates
                 )
-                GL.glFramebufferTexture2D(
-                        GL.GL_FRAMEBUFFER,              // target
-                        GL.GL_COLOR_ATTACHMENT0,        // attachment
-                        GL.GL_TEXTURE_2D,               // texture target
+                glFramebufferTexture2D(
+                        GL_FRAMEBUFFER,              // target
+                        GL_COLOR_ATTACHMENT0,        // attachment
+                        GL_TEXTURE_2D,               // texture target
                         textures[0].id,                 // texture
                         0                               // level
                 )
 
-                GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                glClear(GL_COLOR_BUFFER_BIT)
+                glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
 
 
 
@@ -679,24 +701,24 @@ class FractalSurfaceView(
                     // NOVEL RENDER -- TRANSLATION COMPLEMENT
                     //===================================================================================
 
-                    GL.glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
-                    GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
-                    GL.glVertexAttribPointer(
+                    glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
+                    glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
+                    glVertexAttribPointer(
                             viewCoordsHandle,           // index
                             3,                          // coordinates per vertex
-                            GL.GL_FLOAT,                // type
+                            GL_FLOAT,                // type
                             false,                      // normalized
                             12,                         // coordinates per vertex * bytes per float
                             viewChunkBuffer             // coordinates
                     )
-                    GL.glFramebufferTexture2D(
-                            GL.GL_FRAMEBUFFER,              // target
-                            GL.GL_COLOR_ATTACHMENT0,        // attachment
-                            GL.GL_TEXTURE_2D,               // texture target
+                    glFramebufferTexture2D(
+                            GL_FRAMEBUFFER,              // target
+                            GL_COLOR_ATTACHMENT0,        // attachment
+                            GL_TEXTURE_2D,               // texture target
                             textures[intIndex].id,          // texture
                             0                               // level
                     )
-                    GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+                    glClear(GL_COLOR_BUFFER_BIT)
 
                     val chunksA = splitCoords(xComplementViewCoordsA, yComplementViewCoordsA)
                     val chunksB = splitCoords(xComplementViewCoordsB, yComplementViewCoordsB)
@@ -705,8 +727,8 @@ class FractalSurfaceView(
                     for (complementViewChunkCoordsA in chunksA) {
 
                         viewChunkBuffer.put(complementViewChunkCoordsA).position(0)
-                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-                        GL.glFinish()
+                        glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
+                        glFinish()
                         chunksRendered++
                         if (!f.settingsConfig.continuousRender()) {
                             context.findViewById<ProgressBar>(R.id.progressBar).progress =
@@ -717,8 +739,8 @@ class FractalSurfaceView(
                     for (complementViewChunkCoordsB in chunksB) {
 
                         viewChunkBuffer.put(complementViewChunkCoordsB).position(0)
-                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-                        GL.glFinish()
+                        glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
+                        glFinish()
                         chunksRendered++
                         if (!f.settingsConfig.continuousRender()) {
                             context.findViewById<ProgressBar>(R.id.progressBar).progress =
@@ -735,8 +757,8 @@ class FractalSurfaceView(
                     // SAMPLE -- TRANSLATION INTERSECTION
                     //===================================================================================
 
-                    GL.glUseProgram(sampleProgram)
-                    GL.glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
+                    glUseProgram(sampleProgram)
+                    glViewport(0, 0, textures[intIndex].res[0], textures[intIndex].res[1])
 
                     val intersectQuadCoords = floatArrayOf(
                             xIntersectQuadCoords[0],  yIntersectQuadCoords[1],  0.0f,     // top left
@@ -753,40 +775,40 @@ class FractalSurfaceView(
                     viewChunkBuffer.put(intersectViewCoords).position(0)
 
 
-                    GL.glEnableVertexAttribArray(viewCoordsSampleHandle)
-                    GL.glEnableVertexAttribArray(quadCoordsSampleHandle)
-                    GL.glUniform1fv(yOrientSampleHandle, 1, floatArrayOf(1f), 0)
-                    GL.glUniform1i(textureSampleHandle, currIndex)
-                    GL.glVertexAttribPointer(
+                    glEnableVertexAttribArray(viewCoordsSampleHandle)
+                    glEnableVertexAttribArray(quadCoordsSampleHandle)
+                    glUniform1fv(yOrientSampleHandle, 1, floatArrayOf(1f), 0)
+                    glUniform1i(textureSampleHandle, currIndex)
+                    glVertexAttribPointer(
                             viewCoordsSampleHandle,        // index
                             3,                          // coordinates per vertex
-                            GL.GL_FLOAT,                // type
+                            GL_FLOAT,                // type
                             false,                      // normalized
                             12,                         // coordinates per vertex * bytes per float
                             viewChunkBuffer             // coordinates
                     )
-                    GL.glVertexAttribPointer(
+                    glVertexAttribPointer(
                             quadCoordsSampleHandle,        // index
                             3,                          // coordinates per vertex
-                            GL.GL_FLOAT,                // type
+                            GL_FLOAT,                // type
                             false,                      // normalized
                             12,                         // coordinates per vertex * bytes per float
                             quadBuffer                  // coordinates
                     )
 
 
-                    GL.glFramebufferTexture2D(
-                            GL.GL_FRAMEBUFFER,              // target
-                            GL.GL_COLOR_ATTACHMENT0,        // attachment
-                            GL.GL_TEXTURE_2D,               // texture target
+                    glFramebufferTexture2D(
+                            GL_FRAMEBUFFER,              // target
+                            GL_COLOR_ATTACHMENT0,        // attachment
+                            GL_TEXTURE_2D,               // texture target
                             textures[intIndex].id,          // texture
                             0                               // level
                     )
 
-                    GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                    glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
 
-                    GL.glDisableVertexAttribArray(viewCoordsSampleHandle)
-                    GL.glDisableVertexAttribArray(quadCoordsSampleHandle)
+                    glDisableVertexAttribArray(viewCoordsSampleHandle)
+                    glDisableVertexAttribArray(quadCoordsSampleHandle)
 
 
                     // swap intermediate and current texture indices
@@ -802,23 +824,23 @@ class FractalSurfaceView(
                     // NOVEL RENDER -- ENTIRE TEXTURE
                     //===================================================================================
 
-                    GL.glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
-                    GL.glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
-                    GL.glFramebufferTexture2D(
-                            GL.GL_FRAMEBUFFER,              // target
-                            GL.GL_COLOR_ATTACHMENT0,        // attachment
-                            GL.GL_TEXTURE_2D,               // texture target
+                    glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
+                    glUniform1fv(bgScaleHandle, 1, floatArrayOf(1.0f), 0)
+                    glFramebufferTexture2D(
+                            GL_FRAMEBUFFER,              // target
+                            GL_COLOR_ATTACHMENT0,        // attachment
+                            GL_TEXTURE_2D,               // texture target
                             textures[currIndex].id,         // texture
                             0                               // level
                     )
 
                     // check framebuffer status
-                    val status = GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER)
-                    if (status != GL.GL_FRAMEBUFFER_COMPLETE) {
+                    val status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+                    if (status != GL_FRAMEBUFFER_COMPLETE) {
                         Log.d("FRAMEBUFFER", "$status")
                     }
 
-                    GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+                    glClear(GL_COLOR_BUFFER_BIT)
 
 
                     val chunks = splitCoords(floatArrayOf(-1.0f, 1.0f), floatArrayOf(-1.0f, 1.0f))
@@ -829,17 +851,17 @@ class FractalSurfaceView(
                         viewChunkBuffer.put(viewChunkCoords)
                         viewChunkBuffer.position(0)
 
-                        GL.glVertexAttribPointer(
+                        glVertexAttribPointer(
                                 viewCoordsHandle,           // index
                                 3,                          // coordinates per vertex
-                                GL.GL_FLOAT,                // type
+                                GL_FLOAT,                // type
                                 false,                      // normalized
                                 12,                         // coordinates per vertex * bytes per float
                                 viewChunkBuffer             // coordinates
                         )
 
-                        GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
-                        GL.glFinish()   // force chunk to finish rendering before continuing
+                        glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
+                        glFinish()   // force chunk to finish rendering before continuing
                         chunksRendered++
                         if(!f.settingsConfig.continuousRender()) {
                             context.findViewById<ProgressBar>(R.id.progressBar).progress =
@@ -848,10 +870,9 @@ class FractalSurfaceView(
 
                     }
 
-                    GL.glDisableVertexAttribArray(viewCoordsHandle)
+                    glDisableVertexAttribArray(viewCoordsHandle)
 
                 }
-
 
 
 
@@ -862,10 +883,10 @@ class FractalSurfaceView(
 
                 if (f.colorShaderChanged) {
                     Log.d("RENDER ROUTINE", "color shader changed")
-                    GL.glDetachShader(colorProgram, fColorShader)
-                    fColorShader = loadShader(GL.GL_FRAGMENT_SHADER, f.colorShader())
-                    GL.glAttachShader(colorProgram, fColorShader)
-                    GL.glLinkProgram(colorProgram)
+                    glDetachShader(colorProgram, fColorShader)
+                    fColorShader = loadShader(GL_FRAGMENT_SHADER, f.colorShader())
+                    glAttachShader(colorProgram, fColorShader)
+                    glLinkProgram(colorProgram)
                     f.colorShaderChanged = false
                 }
 
@@ -873,14 +894,14 @@ class FractalSurfaceView(
                 // PRE-RENDER PROCESSING
                 //======================================================================================
 
-                GL.glUseProgram(colorProgram)
+                glUseProgram(colorProgram)
 
-                GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+                glBindFramebuffer(GL_FRAMEBUFFER, 0)
                 if (fitToScreen) {
-                    GL.glViewport(0, 0, f.screenRes[0], f.screenRes[1])
+                    glViewport(0, 0, f.screenRes[0], f.screenRes[1])
                 }
                 else {
-                    GL.glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
+                    glViewport(0, 0, textures[currIndex].res[0], textures[currIndex].res[1])
                 }
 
 
@@ -926,14 +947,14 @@ class FractalSurfaceView(
                         .put(bgQuadVertices)
                         .position(0)
 
-                GL.glUniform1fv(yOrientColorHandle, 1, floatArrayOf(yOrient), 0)
-                GL.glUniform1i(numColorsHandle, f.fractalConfig.palette().size)
-                GL.glUniform3fv(paletteHandle, f.fractalConfig.palette().size, f.fractalConfig.palette().flatPalette, 0)
-                GL.glUniform1fv(frequencyHandle, 1, floatArrayOf(f.fractalConfig.frequency()), 0)
-                GL.glUniform1fv(phaseHandle, 1, floatArrayOf(f.fractalConfig.phase()), 0)
+                glUniform1fv(yOrientColorHandle, 1, floatArrayOf(yOrient), 0)
+                glUniform1i(numColorsHandle, f.fractalConfig.palette().size)
+                glUniform3fv(paletteHandle, f.fractalConfig.palette().size, f.fractalConfig.palette().flatPalette(), 0)
+                glUniform1fv(frequencyHandle, 1, floatArrayOf(f.fractalConfig.frequency()), 0)
+                glUniform1fv(phaseHandle, 1, floatArrayOf(f.fractalConfig.phase()), 0)
 
-                GL.glEnableVertexAttribArray(viewCoordsColorHandle)
-                GL.glEnableVertexAttribArray(quadCoordsColorHandle)
+                glEnableVertexAttribArray(viewCoordsColorHandle)
+                glEnableVertexAttribArray(quadCoordsColorHandle)
 
 
 
@@ -942,26 +963,26 @@ class FractalSurfaceView(
                 // RENDER LOW-RES
                 //======================================================================================
 
-                GL.glUniform1i(textureColorHandle, 0)    // use GL_TEXTURE0
-                GL.glVertexAttribPointer(
+                glUniform1i(textureColorHandle, 0)    // use GL_TEXTURE0
+                glVertexAttribPointer(
                         viewCoordsColorHandle,      // index
                         3,                          // coordinates per vertex
-                        GL.GL_FLOAT,                // type
+                        GL_FLOAT,                // type
                         false,                      // normalized
                         12,                         // coordinates per vertex * bytes per float
                         viewBuffer                  // coordinates
                 )
-                GL.glVertexAttribPointer(
+                glVertexAttribPointer(
                         quadCoordsColorHandle,      // index
                         3,                          // coordinates per vertex
-                        GL.GL_FLOAT,                // type
+                        GL_FLOAT,                // type
                         false,                      // normalized
                         12,                         // coordinates per vertex * bytes per float
                         bgQuadBuffer                // coordinates
                 )
 
-                GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                glClear(GL_COLOR_BUFFER_BIT)
+                glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
 
 
 
@@ -970,31 +991,31 @@ class FractalSurfaceView(
                 // RENDER HIGH-RES
                 //======================================================================================
 
-                GL.glUniform1i(textureColorHandle, currIndex)
-                GL.glVertexAttribPointer(
+                glUniform1i(textureColorHandle, currIndex)
+                glVertexAttribPointer(
                         viewCoordsColorHandle,        // index
                         3,                          // coordinates per vertex
-                        GL.GL_FLOAT,                // type
+                        GL_FLOAT,                // type
                         false,                      // normalized
                         12,                         // coordinates per vertex * bytes per float
                         viewBuffer                  // coordinates
                 )
-                GL.glVertexAttribPointer(
+                glVertexAttribPointer(
                         quadCoordsColorHandle,        // index
                         3,                          // coordinates per vertex
-                        GL.GL_FLOAT,                // type
+                        GL_FLOAT,                // type
                         false,                      // normalized
                         12,                         // coordinates per vertex * bytes per float
                         quadBuffer                  // coordinates
                 )
 
-                GL.glDrawElements(GL.GL_TRIANGLES, drawOrder.size, GL.GL_UNSIGNED_SHORT, drawListBuffer)
+                glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
 
 
 
 
-                GL.glDisableVertexAttribArray(viewCoordsColorHandle)
-                GL.glDisableVertexAttribArray(quadCoordsColorHandle)
+                glDisableVertexAttribArray(viewCoordsColorHandle)
+                glDisableVertexAttribArray(quadCoordsColorHandle)
 
 //        Log.d("RENDER", "render from texture -- end")
 
@@ -1005,25 +1026,25 @@ class FractalSurfaceView(
                 val bufferSize = textures[currIndex].res[0]*textures[currIndex].res[1]*4
                 val imBuffer = ByteBuffer.allocateDirect(bufferSize).order(ByteOrder.nativeOrder())
 
-                GL.glReadPixels(
+                glReadPixels(
                         0, 0,
                         textures[currIndex].res[0],
                         textures[currIndex].res[1],
-                        GL.GL_RGBA,
-                        GL.GL_UNSIGNED_BYTE,
+                        GL_RGBA,
+                        GL_UNSIGNED_BYTE,
                         imBuffer
                 )
-                val e = GL.glGetError()
-                if (e != GL.GL_NO_ERROR) {
+                val e = glGetError()
+                if (e != GL_NO_ERROR) {
                     val s = when (e) {
-                        GL.GL_INVALID_ENUM -> "invalid enum"
-                        GL.GL_INVALID_VALUE -> "invalid value"
-                        GL.GL_INVALID_OPERATION -> "invalid operation"
-                        GL.GL_INVALID_FRAMEBUFFER_OPERATION -> "invalid framebuffer operation"
-                        GL.GL_OUT_OF_MEMORY -> "out of memory"
+                        GL_INVALID_ENUM -> "invalid enum"
+                        GL_INVALID_VALUE -> "invalid value"
+                        GL_INVALID_OPERATION -> "invalid operation"
+                        GL_INVALID_FRAMEBUFFER_OPERATION -> "invalid framebuffer operation"
+                        GL_OUT_OF_MEMORY -> "out of memory"
                         else -> "something else I guess"
                     }
-                    Log.e("RENDER ROUTINE", s)
+                    Log.w("RENDER ROUTINE", s)
                 }
 
                 val imByteArray = imBuffer.array()
@@ -1032,6 +1053,29 @@ class FractalSurfaceView(
                 bmp.copyPixelsFromBuffer(imBuffer)
                 Log.d("RENDER ROUTINE", "bmp is null: ${bmp == null}")
                 return bmp
+            }
+            private fun logError() {
+
+                val e = glGetError()
+                val s = when (e) {
+                    GL_NO_ERROR -> "nothing 2 c here pls move along"
+                    GL_INVALID_ENUM -> "invalid enum"
+                    GL_INVALID_VALUE -> "invalid value"
+                    GL_INVALID_OPERATION -> "invalid operation"
+                    GL_INVALID_FRAMEBUFFER_OPERATION -> "invalid framebuffer operation"
+                    GL_OUT_OF_MEMORY -> "out of memory"
+                    else -> "idfk"
+                }
+                Log.e("RENDER ROUTINE", s)
+
+                var log = glGetProgramInfoLog(renderProgram)
+                Log.e("RENDER ROUTINE", log)
+
+                log = glGetShaderInfoLog(fRenderShader)
+                Log.e("RENDER ROUTINE", log)
+
+
+
             }
 
         }
@@ -1196,22 +1240,21 @@ class FractalSurfaceView(
         override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
 
             // get OpenGL ES version
-            val glVersion = unused.glGetString(GL10.GL_VERSION).split(" ")[2].toFloat()
+            val glVersion = unused.glGetString(GL_VERSION).split(" ")[2].toFloat()
             Log.d("SURFACE VIEW", "$glVersion")
-            Log.d("SURFACE VIEW", "${glVersion > 2f}")
             f.glVersion = glVersion
 
             // get fragment shader precision
 //            val a : IntBuffer = IntBuffer.allocate(2)
 //            val b : IntBuffer = IntBuffer.allocate(1)
-//            GL.glGetShaderPrecisionFormat(GL.GL_FRAGMENT_SHADER, GL.GL_HIGH_FLOAT, a, b)
+//            glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT, a, b)
 //            Log.d("SURFACE VIEW", "float precision: ${b[0]}")
 
             rr = RenderRoutine()
             rr.renderToTexture()
 
-            val buttonScroll = context.findViewById<HorizontalScrollView>(R.id.buttonScroll)
-            buttonScroll.fullScroll(HorizontalScrollView.FOCUS_RIGHT)
+            //val buttonScroll = context.findViewById<HorizontalScrollView>(R.id.buttonScroll)
+            //buttonScroll.fullScroll(HorizontalScrollView.FOCUS_RIGHT)
 
         }
         override fun onDrawFrame(unused: GL10) {
@@ -1311,8 +1354,9 @@ class FractalSurfaceView(
     init {
 
 
-        // setEGLContextClientVersion(2)              // create OpenGL ES 3.0 context
+        // setEGLContextClientVersion(3)              // create OpenGL ES 3.0 context
         setEGLContextFactory(ContextFactory())
+
         r = FractalRenderer()                       // create renderer
         setRenderer(r)                              // set renderer
         renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly
