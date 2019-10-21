@@ -74,8 +74,7 @@
 
     <!-- UTILITY -->
     <!-- ===================================================================================== -->
-    <string name="header_sf">
-        #version 300 es\n
+    <string name="header_sf">#version 300 es\n
         #define pi 3.141592654\n
         #define Sn 1e-8\n
         #define Sp 1e8\n
@@ -93,16 +92,15 @@
         uniform float Q1;
         uniform vec2 xScale;
         uniform vec2 yScale;
-        uniform vec2 xOffset;
-        uniform vec2 yOffset;
+        uniform vec2 xCoord;
+        uniform vec2 yCoord;
         uniform float sinRotate;
         uniform float cosRotate;
 
         in vec4 viewPos;
         out vec4 fragmentColor;
     </string>
-    <string name="header_df">
-        #version 300 es\n
+    <string name="header_df">#version 300 es\n
         #define SPLIT 8193.\n
         #define pi 3.141592654\n
         #define Sn 1e-8\n
@@ -121,8 +119,8 @@
         uniform float Q1;
         uniform vec2 xScale;
         uniform vec2 yScale;
-        uniform vec2 xOffset;
-        uniform vec2 yOffset;
+        uniform vec2 xCoord;
+        uniform vec2 yCoord;
         uniform float sinRotate;
         uniform float cosRotate;
 
@@ -130,13 +128,12 @@
         out vec4 fragmentColor;
     </string>
 
-    <string name="color_header">
-        #version 300 es\n
+    <string name="color_header">#version 300 es\n
 
         precision highp float;
         uniform sampler2D tex;
         uniform int numColors;
-        uniform vec3 palette[10];
+        uniform vec3 palette[15];
         uniform float frequency;
         uniform float phase;
 
@@ -144,7 +141,7 @@
         out vec4 fragmentColor;
     </string>
     <string name="color_index">
-        float n = mod(float(numColors - 1)*(frequency*s.z + phase), float(numColors - 1));
+        float n = mod(float(numColors - 1)*(frequency*s.x + phase), float(numColors - 1));
         int p = int(floor(n));
         float q = mod(n, 1.0);
         color = (1.0 - q)*palette[p] + q*palette[p + 1];
@@ -605,11 +602,11 @@
         vec4 colorParams = vec4(0.0);
         vec2 C = vec2(xScale.x*viewPos.x, yScale.x*viewPos.y);
         C = vec2(C.x*cosRotate - C.y*sinRotate, C.x*sinRotate + C.y*cosRotate);
-        C += vec2(xOffset.x, yOffset.x);
+        C += vec2(xCoord.x, yCoord.x);
         vec2 Z, Z1, Z2 = vec2(0.0);
         float modZ = 0.0;
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + x0 + y0 + R;
+        vec2 useUniforms = P1 + P2 + P3 + P4 + Q1 + x0 + y0 + R;
     </string>
     <string name="general_init_df">
         vec4 colorParams = vec4(0.0);
@@ -617,8 +614,8 @@
         vec2 B = multDF(yScale, vec2(viewPos.y, 0.0));
         vec2 tempA = addDF(multDF(A, vec2(cosRotate, 0.0)), -multDF(B, vec2(sinRotate, 0.0)));
         B = addDF(multDF(A, vec2(sinRotate, 0.0)), multDF(B, vec2(cosRotate, 0.0)));
-        A = addDF(tempA, xOffset);
-        B = addDF(B, yOffset);
+        A = addDF(tempA, xCoord);
+        B = addDF(B, yCoord);
         vec2 X, X1, X2 = vec2(0.0, 0.0);
         vec2 Y, Y1, Y2 = vec2(0.0, 0.0);
         vec2 modZ = vec2(0.0);
@@ -678,17 +675,17 @@
 
     <!-- MANDELBOX -->
     <string name="mandelbox_loop_sf">
-        Z = cMultSF(P1, ballFoldSF(boxFoldSF(Z1))) + C;
+        Z = cMultSF(P1, ballFoldSF(boxFoldSF(Z1))) - C;
     </string>
     <string name="mandelbox_loop_df">
         vec4 Q1 = boxFoldDF(X1, Y1);
         vec4 Q2 = ballFoldDF(Q1.xy, Q1.zw);
         vec4 Q3 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), Q2.xy, Q2.zw);
-        X = addDF(Q3.xy, A);
-        Y = addDF(Q3.zw, B);
+        X = addDF(Q3.xy, -A);
+        Y = addDF(Q3.zw, -B);
     </string>
     <string name="mandelbox_katex">
-        $z_{n+1} = \\small \\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) + %s$
+        $z_{n+1} = \\small \\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) - %s$
     </string>
 
     <!-- KALI -->
@@ -978,13 +975,13 @@
 
     <!-- ABSOLUTE ESCAPE -->
     <string name="absolute_escape_final">
-        colorParams.z = floor(float(n)/float(maxIter - 1));
+        colorParams.x = floor(float(n)/float(maxIter - 1));
     </string>
 
     <!-- CONDITIONAL ITERATION -->
     <string name="escape_final">
         float j = float(n)/float(maxIter);
-        colorParams.z = j;
+        colorParams.x = j;
     </string>
 
 
@@ -998,16 +995,16 @@
     <string name="mandelbrot_smooth_final_sf">
         float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
-        colorParams.z = j;
+        colorParams.x = j;
     </string>
     <string name="mandelbrot_smooth_final_df">
         float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
-        colorParams.z = i;
+        colorParams.x = i;
     </string>
     <string name="mandelbrot_smooth_final_df2">
         float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
         float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
-        colorParams.z = j;
+        colorParams.x = j;
     </string>
 
 
@@ -1019,7 +1016,7 @@
         alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
     </string>
     <string name="mandelbrot_dist_final_sf">
-        colorParams.z = modZ*log(modZ)/modSF(alpha);
+        colorParams.x = modZ*log(modZ)/modSF(alpha);
     </string>
     <string name="mandelbrot_dist_init_df">
         vec2 alpha = vec2(0.0);
@@ -1031,7 +1028,7 @@
         alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
     </string>
     <string name="mandelbrot_dist_final_df">
-        colorParams.z = modZ.x*log(modZ.x)/modSF(alpha);
+        colorParams.x = modZ.x*log(modZ.x)/modSF(alpha);
     </string>
 
     <string name="mandelbrot_normal1_init_sf">
@@ -1042,7 +1039,7 @@
     </string>
     <string name="mandelbrot_normal1_final_sf">
         vec2 u = cDivSF(Z, alpha);
-        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+        colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
     <string name="mandelbrot_normal1_init_df">
         vec2 alpha = vec2(0.0);
@@ -1055,7 +1052,7 @@
     </string>
     <string name="mandelbrot_normal1_final_df">
         vec2 u = cDivSF(Z, alpha);
-        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+        colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
 
     <string name="mandelbrot_normal2_init_sf">
@@ -1069,7 +1066,7 @@
     <string name="mandelbrot_normal2_final_sf">
         float logModZ = log(modZ);
         vec2 u = cMultSF(cMultSF(Z, alpha), (logModZ + 1.0)*cConjSF(cSqrSF(alpha)) - logModZ*cConjSF(cMultSF(Z, beta)));
-        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+        colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
     <string name="mandelbrot_normal2_init_df">
         vec2 alpha = vec2(0.0);
@@ -1085,7 +1082,7 @@
     <string name="mandelbrot_normal2_final_df">
         float logModZ = log(modZ.x);
         vec2 u = cMultSF(cMultSF(Z, alpha), (logModZ + 1.0)*cConjSF(cSqrSF(alpha)) - logModZ*cConjSF(cMultSF(Z, beta)));
-        colorParams.z = atan(u.y, u.x)/(2.0*pi) + 1.0;
+        colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
 
     <string name="mandelbrot_distgrad_init_sf">
@@ -1101,7 +1098,7 @@
         float modAlpha = modSF(alpha);
         float dist = 2.0*modZ*logModZ/modAlpha;
         vec2 grad = 2.0*cMultSF(alpha/modAlpha, (logModZ + 1.0)/modZ*Z - modZ*logModZ/(modAlpha*modAlpha)*beta);
-        colorParams.z = atan(grad.y, grad.x)/(2.0*pi) + 1.0;
+        colorParams.x = atan(grad.y, grad.x)/(2.0*pi) + 1.0;
     </string>
     <string name="mandelbrot_distgrad_init_df">
         vec2 alpha = vec2(0.0);
@@ -1119,7 +1116,19 @@
         float modAlpha = modSF(alpha);
         float dist = 2.0*modZ.x*logModZ/modAlpha;
         vec2 grad = 2.0*cMultSF(alpha, (logModZ + 1.0)*modAlpha/modZ.x*Z - modZ*logModZ/modAlpha*beta)/modSqrSF(beta);
-        colorParams.z = atan(grad.y, grad.x)/(2.0*pi) + 1.0;
+        colorParams.x = atan(grad.y, grad.x)/(2.0*pi) + 1.0;
+    </string>
+
+    <!-- FIELD LINES -->
+    <string name="mandelbrot_fieldlines_init_sf">
+        vec2 alpha = vec2(0.0);
+    </string>
+    <string name="mandelbrot_fieldlines_loop_sf">
+        alpha = 2.0*cMultSF(alpha, Z1) + vec2(1.0, 0.0);
+    </string>
+    <string name="mandelbrot_fieldlines_final_sf">
+        vec2 q = cMultSF(cMultSF(vec2(0.0, 1.0), Z), alpha) / (2.0*modZ*modZ);
+        colorParams.x = atan(q.y, q.x);
     </string>
 
 
@@ -1134,7 +1143,7 @@
         sum = sum + exp(-modZ.x);
     </string>
     <string name="exponential_smooth_final">
-        colorParams.z = log(log(sum + 1.0) + 1.0);
+        colorParams.x = log(log(sum + 1.0) + 1.0);
     </string>
 
 
@@ -1211,7 +1220,7 @@
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
     <string name="triangle_init_sf2" tools:ignore="TypographyOther">
         float _modC = modSF(C)*Sn;
@@ -1236,7 +1245,7 @@
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
     <string name="triangle_init_df" tools:ignore="TypographyOther">
         vec2 modC = modDF(A, B);
@@ -1261,7 +1270,7 @@
         sum1 = multDF(sum1, vec2(1.0/float(n - 1), 0.0));
         float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
         float s = sum1.x + (sum.x - sum1.x)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
     <string name="triangle_init_df2" tools:ignore="TypographyOther">
         float modC = modDF(A, B).x;
@@ -1284,7 +1293,7 @@
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
 
 
@@ -1306,7 +1315,7 @@
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
     <string name="curvature_loop_df">
         if (n > 1) {
@@ -1320,7 +1329,7 @@
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
 
 
@@ -1348,7 +1357,7 @@
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
     <string name="stripe_loop_df">
         sum1 = sum;
@@ -1360,7 +1369,7 @@
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
 
 
@@ -1387,10 +1396,10 @@
         }
     </string>
     <string name="orbittrap_final_radius">
-        colorParams.z = minX;
+        colorParams.x = minX;
     </string>
     <string name="orbittrap_final_iteration">
-        colorParams.z = float(m)/float(maxIter);
+        colorParams.x = float(m)/float(maxIter);
     </string>
 
 
@@ -1416,14 +1425,14 @@
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
     <string name="overlay_final_df">
         sum /= float(n) * pi;
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.z = s;
+        colorParams.x = s;
     </string>
 
 
