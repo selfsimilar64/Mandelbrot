@@ -87,7 +87,7 @@ class FractalEditFragment : Fragment() {
             val anim = ValueAnimator.ofInt(hStart, hEnd)
             anim.addUpdateListener { animation ->
                 val intermediateHeight = animation?.animatedValue as Int
-                Log.d("FRACTAL FRAGMENT", "intermediate height: $intermediateHeight")
+                // Log.d("FRACTAL FRAGMENT", "intermediate height: $intermediateHeight")
                 cardBody.layoutParams.height = intermediateHeight
                 cardBody.requestLayout()
 
@@ -192,8 +192,8 @@ class FractalEditFragment : Fragment() {
         val lockListener = { i: Int, j: Int -> View.OnClickListener {
             val lock = it as ToggleButton
             when (j) {
-                0 -> (config.params["p$i"] as ComplexMap.Param).uLocked = lock.isChecked
-                1 -> (config.params["p$i"] as ComplexMap.Param).vLocked = lock.isChecked
+                0 -> (config.params["p$i"] as ComplexMap.Param).u.locked = lock.isChecked
+                1 -> (config.params["p$i"] as ComplexMap.Param).v.locked = lock.isChecked
             }
         }}
 
@@ -293,23 +293,23 @@ class FractalEditFragment : Fragment() {
                         v.findViewById(R.id.v4Lock)))
         )
         mapParamEditTexts.forEachIndexed { i, pair1 ->
-            pair1.first.first.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).getU()))
-            pair1.first.second.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).getV()))
+            pair1.first.first.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).u.get()))
+            pair1.first.second.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).v.get()))
             pair1.first.first.setOnEditorActionListener(editListenerNext(pair1.first.first, pair1.first.second, "p${i + 1}") {
                 w: TextView ->
                 ComplexMap.Param(
                         "${w.text}".toDouble(),
                         "${pair1.first.second.text}".toDouble(),
-                        (config.params["p${i + 1}"] as ComplexMap.Param).uLocked,
-                        (config.params["p${i + 1}"] as ComplexMap.Param).vLocked
+                        (config.params["p${i + 1}"] as ComplexMap.Param).u.locked,
+                        (config.params["p${i + 1}"] as ComplexMap.Param).v.locked
                 )
             })
             pair1.first.second.setOnEditorActionListener(editListenerDone(pair1.first.second, "p${i + 1}") {
                 w: TextView -> ComplexMap.Param(
                         "${pair1.first.first.text}".toDouble(),
                         "${w.text}".toDouble(),
-                        (config.params["p${i + 1}"] as ComplexMap.Param).uLocked,
-                        (config.params["p${i + 1}"] as ComplexMap.Param).vLocked
+                        (config.params["p${i + 1}"] as ComplexMap.Param).u.locked,
+                        (config.params["p${i + 1}"] as ComplexMap.Param).v.locked
                 )
             })
             pair1.second.first.setOnClickListener(lockListener(i + 1, 0))
@@ -391,7 +391,7 @@ class FractalEditFragment : Fragment() {
              callback.onFractalParamsChanged("juliaMode", isChecked)
          }
         juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
-        if (config.map().initJuliaMode) { functionCardBody.removeView(juliaLayout) }
+        if (config.map().juliaMode) { functionCardBody.removeView(juliaLayout) }
         else { juliaModeSwitch.setOnCheckedChangeListener(juliaListener) }
 
 
@@ -409,15 +409,15 @@ class FractalEditFragment : Fragment() {
 
                 val nextMap = ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()
                 if (nextMap != config.map()) {
-                    if (juliaModeSwitch.isChecked && !config.map().initJuliaMode) {
+                    if (juliaModeSwitch.isChecked && !config.map().juliaMode) {
                         val juliaParamIndex = config.numParamsInUse() - 1
                         Log.d("FRACTAL FRAGMENT", "params in use: ${config.numParamsInUse()}")
                         juliaModeSwitch.setOnCheckedChangeListener { _, _ ->  }
                         juliaModeSwitch.isChecked = false
                         juliaLayout.removeView(mapParamLayouts[juliaParamIndex])
-                        config.params["juliaMode"] = nextMap.initJuliaMode
+                        config.params["juliaMode"] = nextMap.juliaMode
                     }
-                    if (nextMap.initJuliaMode) { functionCardBody.removeView(juliaLayout) }
+                    if (nextMap.juliaMode) { functionCardBody.removeView(juliaLayout) }
                     else {
                         if (functionCardBody.indexOfChild(juliaLayout) == -1) { functionCardBody.addView(juliaLayout) }
                         juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
@@ -426,11 +426,11 @@ class FractalEditFragment : Fragment() {
                 }
 
                 val mapLayoutIndex = functionCardBody.indexOfChild(complexMapKatexLayout)
-                for (i in 0 until config.map().initParams.size) {
+                for (i in 0 until config.map().params.size) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- removing row ${i + 1}")
                     functionCardBody.removeView(mapParamLayouts[i])
                 }
-                for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).initParams.size) {
+                for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).params.size) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- adding row ${i + 1} at index ${mapLayoutIndex + i + 1}")
                     functionCardBody.addView(mapParamLayouts[i], mapLayoutIndex + i + 1)
                 }
@@ -446,9 +446,9 @@ class FractalEditFragment : Fragment() {
 
                 // set map param locks
                 mapParamEditTexts.forEachIndexed { i, pair ->
-                    if (i < config.map().initParams.size) {
-                        pair.second.first.isChecked = config.map().initParams[i].uLocked
-                        pair.second.second.isChecked = config.map().initParams[i].vLocked
+                    if (i < config.map().params.size) {
+                        pair.second.first.isChecked = config.map().params[i].u.locked
+                        pair.second.second.isChecked = config.map().params[i].v.locked
                     }
                 }
 
