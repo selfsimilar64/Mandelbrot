@@ -58,5 +58,42 @@
     <color name="softgreen">#99d1e6</color>
     <color name="softgreen2">#4c6973</color>
 
+    <color name="q12">#B30F44</color>
+    <color name="q13">#970C99</color>
+    <color name="q14">#9055E3</color>
+    <color name="q15">#A4B1E8</color>
+    <color name="q16">#BDE4C7</color>
+    <color name="q17">#EBF463</color>
+    <color name="q18">#EA7501</color>
+
+    <color name="q19">#440154</color>
+    <color name="q20">#3C4D89</color>
+    <color name="q21">#277E8D</color>
+    <color name="q22">#28AD7F</color>
+    <color name="q23">#8DD544</color>
+    <color name="q24">#FAE623</color>
+
+    <color name="q25">#0C0785</color>
+    <color name="q26">#49029E</color>
+    <color name="q27">#9210A0</color>
+    <color name="q28">#D04E72</color>
+    <color name="q29">#EF804D</color>
+    <color name="q30">#FBBF29</color>
+    <color name="q31">#EEF622</color>
+
+    <color name="q32">#000000</color>
+    <color name="q33">#3C0965</color>
+    <color name="q34">#AC305B</color>
+    <color name="q35">#F1741C</color>
+    <color name="q36">#F9BD24</color>
+    <color name="q37">#FAFDA1</color>
+
+    <color name="q38">#000000</color>
+    <color name="q39">#410F73</color>
+    <color name="q40">#A4307D</color>
+    <color name="q41">#F5705B</color>
+    <color name="q42">#FCCA8D</color>
+    <color name="q43">#FAFBC5</color>
+
 
 </resources>
