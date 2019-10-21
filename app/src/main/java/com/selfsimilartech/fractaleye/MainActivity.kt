@@ -190,9 +190,9 @@ class FractalConfig (val params : MutableMap<String, Any>) {
     val phase               = { params["phase"]            as  Float             }
 
     val numParamsInUse      = {
-        val num1 = map().initParams.size
-        val num2 = if (juliaMode() && !map().initJuliaMode) 1 else 0
-        // val num3 = texture().initParams.size
+        val num1 = map().params.size
+        val num2 = if (juliaMode() && !map().juliaMode) 1 else 0
+        // val num3 = texture().params.size
         // Log.d("MAIN ACTIVITY", "$num1, $num2, $num3")
         Log.d("MAIN ACTIVITY", "$num1, $num2")
         num1 + num2
@@ -314,10 +314,10 @@ class MainActivity : AppCompatActivity(),
 //        val p2 = savedInstanceState?.getDoubleArray("p2") ?: Param(0.0, 0.0)
 //        val p3 = savedInstanceState?.getDoubleArray("p3") ?: Param(0.0, 0.0)
 //        val p4 = savedInstanceState?.getDoubleArray("p4") ?: Param(0.0, 0.0)
-        val p1 = ComplexMap.Param(0.0, 0.0)
-        val p2 = ComplexMap.Param(0.0, 0.0)
-        val p3 = ComplexMap.Param(0.0, 0.0)
-        val p4 = ComplexMap.Param(0.0, 0.0)
+        val p1 = ComplexMap.Param()
+        val p2 = ComplexMap.Param()
+        val p3 = ComplexMap.Param()
+        val p4 = ComplexMap.Param()
 
         val texture = Texture.all[savedInstanceState?.getString("texture")]?.invoke(resources)
                 ?: Texture.escape(resources)
@@ -449,7 +449,7 @@ class MainActivity : AppCompatActivity(),
             b.background = TransitionDrawable(buttonBackgrounds)
             b.setOnClickListener(uiQuickButtonListener)
         }
-        val diff = f.fractalConfig.map().initParams.size - uiQuick.childCount + 2
+        val diff = f.fractalConfig.map().params.size - uiQuick.childCount + 2
         uiQuick.removeViews(0, abs(diff))
         uiQuick.bringToFront()
         uiQuickButtons[0].performClick()
@@ -645,7 +645,7 @@ class MainActivity : AppCompatActivity(),
                     f.renderShaderChanged = true
                     val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
                     removeMapParams(uiQuick.childCount - 2)
-                    addMapParams(f.fractalConfig.map().initParams.size)
+                    addMapParams(f.fractalConfig.map().params.size)
                     uiQuick.getChildAt(uiQuick.childCount - 1).performClick()
                     fractalView.r.renderToTex = true
                 }
