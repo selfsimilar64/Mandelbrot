@@ -7,112 +7,101 @@ import android.os.Build
 import kotlin.math.floor
 
 
+fun FloatArray.mult(s: Float) : FloatArray {
+    return FloatArray(this.size) {i: Int -> s*this[i]}
+}
+fun FloatArray.invert() : FloatArray {
+    return FloatArray(this.size) {i: Int -> 1.0f - this[i]}
+}
+
 class ColorPalette (
         val name: String,
-        private val colorInts: IntArray = intArrayOf()
+        val colors: List<Int> = listOf(),
+        oscillate: Boolean = false
 ) {
 
     companion object {
 
-        private fun getColor(res: Resources, id: Int) : Int {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) res.getColor(id, null)
-            else res.getColor(id)
-        }
-        private fun getColorResources(res: Resources, ids: IntArray) : IntArray {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
-            else IntArray(ids.size) { i: Int -> res.getColor(ids[i]) }
-        }
-        fun intToFloatArray(c: Int) : FloatArray {
-            return floatArrayOf(Color.red(c)/255f, Color.green(c)/255f, Color.blue(c)/255f)
-        }
-        fun FloatArray.mult(s: Float) : FloatArray {
-            return FloatArray(this.size) {i: Int -> s*this[i]}
-        }
-        fun FloatArray.invert() : FloatArray {
-            return FloatArray(this.size) {i: Int -> 1.0f - this[i]}
-        }
-
-        val bw      = { res: Resources -> ColorPalette(
-                "Yin Yang", getColorResources(res, intArrayOf(
+        val bw = ColorPalette(
+                "Yin Yang", listOf(
                 R.color.black,
                 R.color.white
-        )))}
-        val beach   = { res: Resources -> ColorPalette(
-                "Beach", getColorResources(res, intArrayOf(
+        ))
+        val beach = ColorPalette(
+                "Beach", listOf(
                 R.color.yellowish1,
                 R.color.darkblue1,
                 R.color.black,
                 R.color.turquoise,
-                R.color.tusk)
-        )) }
-        val p1      = { res: Resources -> ColorPalette(
-                "P1", getColorResources(res, intArrayOf(
+                R.color.tusk
+        ))
+        val p1 = ColorPalette(
+                "P1", listOf(
                 R.color.white,
                 R.color.purple1,
                 R.color.black,
                 R.color.deepred,
                 R.color.white
-        )))}
-        val p3      = { res: Resources -> ColorPalette(
-                "P3", getColorResources(res, intArrayOf(
+        ))
+        val p3 = ColorPalette(
+                "P3", listOf(
                 R.color.q1,
                 R.color.darkblue1,
                 R.color.white,
                 R.color.q2,
                 R.color.q3
-        )))}
-        val p4      = { res: Resources -> ColorPalette(
-                "Vascular", getColorResources(res, intArrayOf(
+        ))
+        val p4 = ColorPalette(
+                "Vascular", listOf(
                 R.color.yellowish1,
                 R.color.darkblue2,
                 R.color.black,
                 R.color.purple3,
                 R.color.deepred
-        )
-        )) }
-        val p5      = { res: Resources -> ColorPalette(
-                "Flora", getColorResources(res, intArrayOf(
+        ))
+        val p5 = ColorPalette(
+                "Flora", listOf(
                 R.color.yellowish2,
                 R.color.magenta2,
                 R.color.white,
                 R.color.darkblue1,
                 R.color.black,
                 R.color.darkblue1
-        )))}
-        val royal   = { res: Resources -> ColorPalette(
-                "Royal", getColorResources(res, intArrayOf(
+        ))
+        val royal = ColorPalette(
+                "Royal", listOf(
                 R.color.yellowish1,
                 R.color.darkblue1,
                 R.color.softgreen2,
                 R.color.purple3,
                 R.color.maroon
-        )))}
-        val p8      = { res: Resources -> ColorPalette(
-                "Groovy", getColorResources(res, intArrayOf(
+        ))
+        val p8 = ColorPalette(
+                "Groovy", listOf(
                 R.color.q4,
                 R.color.q5,
                 R.color.q6,
                 R.color.black
-        )))}
-        val canyon  = { res: Resources -> ColorPalette(
-                "Canyon", getColorResources(res, intArrayOf(
+        ))
+        val canyon = ColorPalette(
+                "Canyon", listOf(
                 R.color.deepred2,
                 R.color.q6,
                 R.color.q8,
                 R.color.q9,
                 R.color.purple3
-        )))}
-        val anubis  = { res: Resources -> ColorPalette(
-                "Anubis", getColorResources(res, intArrayOf(
+        ))
+        val anubis = ColorPalette(
+                "Anubis", listOf(
                 R.color.black,
                 R.color.purple2,
                 R.color.mint,
                 R.color.yellowish1,
                 R.color.q10,
                 R.color.tangerine
-        )))}
-        val p9      = { res: Resources -> ColorPalette(
-                "P9", getColorResources(res, intArrayOf(
+        ))
+        val p9 = ColorPalette(
+                "P9", listOf(
                 R.color.q12,
                 R.color.q13,
                 R.color.q14,
@@ -120,18 +109,18 @@ class ColorPalette (
                 R.color.q16,
                 R.color.q17,
                 R.color.q18
-        )))}
-        val viridis      = { res: Resources -> ColorPalette(
-                "Viridis", getColorResources(res, intArrayOf(
+        ))
+        val viridis = ColorPalette(
+                "Viridis", listOf(
                 R.color.q19,
                 R.color.q20,
                 R.color.q21,
                 R.color.q22,
                 R.color.q23,
                 R.color.q24
-        )))}
-        val plasma      = { res: Resources -> ColorPalette(
-                "Plasma", getColorResources(res, intArrayOf(
+        ))
+        val plasma = ColorPalette(
+                "Plasma", listOf(
                 R.color.q25,
                 R.color.q26,
                 R.color.q27,
@@ -139,28 +128,27 @@ class ColorPalette (
                 R.color.q29,
                 R.color.q30,
                 R.color.q31
-        )))}
-        val inferno      = { res: Resources -> ColorPalette(
-                "Inferno", getColorResources(res, intArrayOf(
+        ))
+        val inferno = ColorPalette(
+                "Inferno", listOf(
                 R.color.q32,
                 R.color.q33,
                 R.color.q34,
                 R.color.q35,
                 R.color.q36,
                 R.color.q37
-        )))}
-        val magma = { res: Resources -> ColorPalette(
-                "Magma", getColorResources(res, intArrayOf(
+        ))
+        val magma = ColorPalette(
+                "Magma", listOf(
                 R.color.q38,
                 R.color.q39,
                 R.color.q40,
                 R.color.q41,
                 R.color.q42,
                 R.color.q43
-        )))}
-        val all     = mapOf(
+        ))
+        val all = mapOf(
                 "Yin Yang"      to  bw,
-                "Beach"         to  beach,
                 "Vascular"      to  p4,
                 "Flora"         to  p5,
                 "Royal"         to  royal,
@@ -176,39 +164,45 @@ class ColorPalette (
 
     }
 
-    private val colors = List(colorInts.size) { i: Int -> intToFloatArray(colorInts[i]) }
 
-    var oscillate = true
+    var size = if (oscillate) 2*colors.size - 1 else colors.size + 1
 
-    private var palette = listOf(floatArrayOf())
-    var size = 0
+    val oscillateInit = oscillate
 
-    val flatPalette = {
-        FloatArray(palette.size * 3) { i: Int ->
+    var oscillate = oscillate
+        set (value) {
+            field = value
+            size = if (oscillate) 2*colors.size - 1 else colors.size + 1
+        }
+
+
+    fun reset() {
+        oscillate = oscillateInit
+    }
+    fun getFlatPalette(res: Resources) : FloatArray {
+
+        val palette = intArrayToList(getColors(res,
+                if (oscillate) colors.minus(colors.last()).plus(colors.reversed())
+                else colors.plus(colors.first())
+        ))
+
+        return FloatArray(palette.size * 3) { i: Int ->
             val a = floor(i / 3.0f).toInt()
             val b = i % 3
             palette[a][b]
         }
-    }
-
-    private val drawableOrientation = GradientDrawable.Orientation.LEFT_RIGHT
-    val drawable = GradientDrawable(drawableOrientation, colorInts)
-
-
-    init {
-
-        updatePalette()
 
     }
-
-    fun updatePalette() {
-
-        palette =
-            if (oscillate) {  colors.minus(colors.last()).plus(colors.reversed())  }
-            else {            colors.plus(colors.first())                          }
-        size = palette.size
-
-
+    fun getColors(res: Resources, ids: List<Int>) : IntArray {
+        // takes color resource ids as input and returns color ints
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
+        else IntArray(ids.size) { i: Int -> res.getColor(ids[i]) }
+    }
+    private fun intToFloatArray(c: Int) : FloatArray {
+        return floatArrayOf(Color.red(c)/255f, Color.green(c)/255f, Color.blue(c)/255f)
+    }
+    private fun intArrayToList(C: IntArray) : List<FloatArray> {
+        return List(C.size) { i: Int -> intToFloatArray(C[i]) }
     }
 
     override fun toString() : String { return name }
