@@ -4,20 +4,182 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.view.animation.AlphaAnimation
 import android.widget.*
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 
+@SuppressLint("SetTextI18n")
 class Fractal(
         private val context     : Activity,
-        val fractalConfig       : FractalConfig,
-        val settingsConfig      : SettingsConfig,
-        val screenRes           : IntArray
+        val sc                  : SettingsConfig,
+        val screenRes           : IntArray,
+        
+        // shape config
+        map:            ComplexMap              = ComplexMap.mandelbrot,
+        juliaMode:      Boolean                 = map.juliaMode,
+
+        // texture config
+        texture:        Texture                 = Texture.exponentialSmoothing,
+        
+        // color config
+        palette:        ColorPalette            = ColorPalette.p9,
+        frequency:      Float                   = 1f,
+        phase:          Float                   = 0f,
+        
+        
+        maxIter:        Int             = 255,
+        sensitivity:    Double          = 1.0
 ) {
 
-    var glVersion : Float = 0f
+
+    var numParamsInUse = map.numParams + if (juliaMode && !map.juliaMode) 1 else 0
+
+    
+    var map = map
+        set (value) {
+            if (field != value) {
+
+                Log.d("FRACTAL", "setting map from $field to $value")
+                field = value
+
+
+                // reset texture if not compatible with new map
+                if (!map.textures.contains(texture.name)) {
+                    texture = Texture.escape
+                }
+
+                juliaMode = map.juliaMode
+                map.position = if (juliaMode) map.positions.julia else map.positions.default
+                numParamsInUse = map.numParams + if (juliaMode && !map.juliaMode) 1 else 0
+                bailoutRadius = map.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
+                autoPrecision = if (!map.hasDualFloat || map.position.scale > precisionThreshold) Precision.SINGLE else Precision.DUAL
+
+                updateShapeEditTexts()
+                updatePositionEditTexts()
+
+                // update render profile
+                renderShaderChanged = true
+
+            }
+        }
+
+    var juliaMode = juliaMode
+        set (value) {
+            if (field != value) {
+
+                Log.d("FRACTAL", "setting juliaMode from $field to $value")
+                field = value
+
+                numParamsInUse += if (value) 1 else -1
+                map.position = if (value) map.positions.julia else map.positions.default
+
+                updateMapParamEditText(numParamsInUse)
+
+//                if (value as Boolean) {
+//                    addMapParams(1)
+//                    f.savedCoords()[0] = f.coords()[0]
+//                    f.savedCoords()[1] = f.coords()[1]
+//                    f.savedScale()[0] = f.scale()[0]
+//                    f.savedScale()[1] = f.scale()[1]
+//                    f.coords()[0] = 0.0
+//                    f.coords()[1] = 0.0
+//                    f.scale()[0] = 3.5
+//                    f.scale()[1] = 3.5 * f.screenRes[1].toDouble() / f.screenRes[0]
+//                    f.params["p${f.numParamsInUse()}"] = ComplexMap.Param(
+//                            f.savedCoords()[0],
+//                            f.savedCoords()[1]
+//                    )
+//                }
+//                else {
+//                    removeMapParams(1)
+//                    f.coords()[0] = f.savedCoords()[0]
+//                    f.coords()[1] = f.savedCoords()[1]
+//                    f.scale()[0] = f.savedScale()[0]
+//                    f.scale()[1] = f.savedScale()[1]
+//                }
+//                f.updateMapParamEditTexts()
+//                f.renderShaderChanged = true
+//                fsv.r.renderToTex = true
+            }
+        }
+
+    var texture = texture
+        set (value) {
+            if (field != value) {
+
+                Log.d("FRACTAL", "setting texture from $field to $value")
+                field = value
+
+                bailoutRadius = map.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
+
+                updateShapeEditTexts()
+
+                renderShaderChanged = true
+                // fsv.r.renderToTex = true
+
+            }
+        }
+
+    var palette = palette
+        set (value) {
+            if (field != value) {
+
+                field = value
+
+            }
+        }
+
+    var frequency = frequency
+        set (value) {
+            if (field != value) {
+                field = value
+            }
+        }
+
+    var phase = phase
+        set (value) {
+            if (field != value) {
+                field = value
+            }
+        }
+
+    var maxIter = maxIter
+        set (value) {
+            if (field != value) {
+
+                Log.d("FRACTAL", "setting maxIter from $field to $value")
+                field = value
+                // fsv.r.renderToTex = true
+
+            }
+        }
+
+    var bailoutRadius = texture.bailoutRadius ?: 2f
+        set (value) {
+            if (field != value) {
+
+                Log.d("FRACTAL", "setting bailoutRadius from $field to $value")
+                field = value
+
+                // update EditText here
+
+                // fsv.r.renderToTex = true
+
+            }
+        }
+
+    var sensitivity = sensitivity
+        set (value) {
+            if (field != value) {
+                field = value
+            }
+        }
+
+
 
     private var header       : String = ""
     private var arithmetic   : String = ""
@@ -45,14 +207,12 @@ class Fractal(
     var renderProfileChanged = false
     private var innerColor = "1.0"
 
-    val autoPrecision = {
-        if (!fractalConfig.map().hasDualFloat || fractalConfig.scale()[0] > precisionThreshold) Precision.SINGLE else Precision.DUAL
-    }
+    var autoPrecision = if (!map.hasDualFloat || map.position.scale > precisionThreshold) Precision.SINGLE else Precision.DUAL
     val precision = {
-        if (settingsConfig.precision() == Precision.AUTO) autoPrecision() else settingsConfig.precision()
+        if (sc.precision() == Precision.AUTO) autoPrecision else sc.precision()
     }
     var texRes = {
-        when (settingsConfig.resolution()) {
+        when (sc.resolution()) {
             Resolution.LOW -> intArrayOf(screenRes[0]/8, screenRes[1]/8)
             Resolution.MED -> intArrayOf(screenRes[0]/3, screenRes[1]/3)
             Resolution.HIGH -> screenRes
@@ -74,7 +234,7 @@ class Fractal(
             for (int n = 0; n < maxIter; n++) {
                 if (n == maxIter - 1) {
                     $algFinal
-                    colorParams.y = -2.0;
+                    colorParams.y = -1.0;
                     break;
                 }
                 $loop
@@ -115,318 +275,10 @@ class Fractal(
     }
 
 
-    init {
-        reset()
-    }
 
 
-    private fun loadRenderResources() {
 
-        when(precision()) {
-            Precision.SINGLE -> {
-                header      = res.getString(R.string.header_sf)
-                arithmetic  = res.getString(R.string.arithmetic_sf)
-                init        = res.getString(R.string.general_init_sf)
-                init += if (fractalConfig.juliaMode()) {
-                    res.getString(R.string.julia_sf)
-                } else {
-                    res.getString(R.string.constant_sf)
-                }
-                loop        = res.getString(R.string.general_loop_sf)
-                conditional = fractalConfig.map().conditionalSF    ?: ""
-                mapInit     = fractalConfig.map().initSF           ?: ""
-                algInit     = fractalConfig.texture().initSF
-                mapLoop     = fractalConfig.map().loopSF           ?: ""
-                if (fractalConfig.juliaMode()) {
-                    mapLoop = mapLoop.replace("C", "P${fractalConfig.map().params.size + 1}", false)
-                }
-                algLoop     = fractalConfig.texture().loopSF
-                mapFinal    = fractalConfig.map().finalSF          ?: ""
-                algFinal    = fractalConfig.texture().finalSF
-            }
-            Precision.DUAL -> {
-
-                header      = res.getString(R.string.header_df)
-                arithmetic  = res.getString(R.string.arithmetic_util)
-                arithmetic += res.getString(R.string.arithmetic_sf)
-                arithmetic += res.getString(R.string.arithmetic_df)
-                init        = res.getString(R.string.general_init_df)
-                init += if (fractalConfig.juliaMode()) {
-                    res.getString(R.string.julia_df)
-                } else {
-                    res.getString(R.string.constant_df)
-                }
-                loop        = res.getString(R.string.general_loop_df)
-                conditional = fractalConfig.map().conditionalDF    ?: ""
-                mapInit     = fractalConfig.map().initDF           ?: ""
-                algInit     = fractalConfig.texture().initDF
-                mapLoop     = fractalConfig.map().loopDF           ?: ""
-                if (fractalConfig.juliaMode()) {
-                    mapLoop = mapLoop.replace("A", "vec2(P${fractalConfig.map().params.size + 1}.x, 0.0)", false)
-                    mapLoop = mapLoop.replace("B", "vec2(P${fractalConfig.map().params.size + 1}.y, 0.0)", false)
-                }
-                algLoop     = fractalConfig.texture().loopDF
-                mapFinal    = fractalConfig.map().finalDF          ?: ""
-                algFinal    = fractalConfig.texture().finalDF
-
-            }
-            else -> {}
-        }
-
-    }
-    private fun loadColorResources() {
-
-        if (fractalConfig.texture().name == "Escape Time Smooth with Lighting") {
-            colorPostIndex = context.resources.getString(R.string.color_lighting)
-            innerColor = "1.0"
-        }
-        else {
-            colorPostIndex = ""
-            innerColor = "0.0"
-        }
-
-    }
-
-    private fun resetPosition() {
-        fractalConfig.coords()[0] = fractalConfig.map().coords[0]
-        fractalConfig.coords()[1] = fractalConfig.map().coords[1]
-        fractalConfig.scale()[0] = fractalConfig.map().scale
-        fractalConfig.scale()[1] = fractalConfig.map().scale * aspectRatio
-        fractalConfig.params["bailoutRadius"] = fractalConfig.map().bailout
-        fractalConfig.params["rotation"] = 0.0
-        updatePositionEditTexts()
-    }
-    private fun resetMapParams() {
-        for (i in 1..fractalConfig.map().params.size) {
-            fractalConfig.params["p$i"] = fractalConfig.map().params[i - 1]
-        }
-        for (i in (fractalConfig.map().params.size + 1)..NUM_MAP_PARAMS) {
-            fractalConfig.params["p$i"] = ComplexMap.Param()
-        }
-        updateMapParamEditTexts()
-    }
-    fun resetTextureParams() {
-        for (i in 1..fractalConfig.texture().initParams.size) {
-            fractalConfig.params["q$i"] = fractalConfig.texture().initParams[i - 1].third
-        }
-        for (i in (fractalConfig.texture().initParams.size + 1)..NUM_TEXTURE_PARAMS) {
-            fractalConfig.params["q$i"] = 0.0
-        }
-        updateTextureParamEditTexts()
-    }
-    private fun resetColorParams() {
-        fractalConfig.params["frequency"] = 1.3454f
-        fractalConfig.params["phase"] = 0.0f
-    }
-    fun reset() {
-        resetPosition()
-        resetMapParams()
-        resetTextureParams()
-        resetColorParams()
-        fractalConfig.params["juliaMode"] = fractalConfig.map().juliaMode
-    }
-    @SuppressLint("SetTextI18n")
-    fun updatePositionEditTexts() {
-
-        val xCoordEdit = context.findViewById<EditText>(R.id.xCoordEdit)
-        val yCoordEdit = context.findViewById<EditText>(R.id.yCoordEdit)
-        val scaleSignificandEdit = context.findViewById<EditText>(R.id.scaleSignificandEdit)
-        val scaleExponentEdit = context.findViewById<EditText>(R.id.scaleExponentEdit)
-        val scaleStrings = "%e".format(fractalConfig.scale()[0]).split("e")
-        val bailoutSignificandEdit = context.findViewById<EditText>(R.id.bailoutSignificandEdit)
-        val bailoutExponentEdit = context.findViewById<EditText>(R.id.bailoutExponentEdit)
-        val bailoutStrings = "%e".format(fractalConfig.bailoutRadius()).split("e")
-        val rotationEdit = context.findViewById<EditText>(R.id.rotationEdit)
-
-//        Log.w("FRACTAL", "scaleExponent: %d".format(scaleStrings[1].toInt()))
-//        Log.w("FRACTAL", "bailoutExponent: %d".format(bailoutStrings[1].toInt()))
-
-        xCoordEdit?.setText("%.17f".format(fractalConfig.coords()[0]))
-        yCoordEdit?.setText("%.17f".format(fractalConfig.coords()[1]))
-
-        scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
-        scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
-
-        bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
-        bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
-
-        rotationEdit?.setText("%.0f".format(fractalConfig.rotation() * 180.0 / Math.PI))
-
-    }
-    @SuppressLint("SetTextI18n")
-    fun updateMapParamEditText(i: Int) {
-        // Log.d("FRACTAL", "updating map param EditText $i")
-
-        val xEdit : EditText?
-        val yEdit : EditText?
-
-        when (i) {
-            1 -> {
-                xEdit = context.findViewById(R.id.u1Edit)
-                yEdit = context.findViewById(R.id.v1Edit)
-            }
-            2 -> {
-                xEdit = context.findViewById(R.id.u2Edit)
-                yEdit = context.findViewById(R.id.v2Edit)
-            }
-            3 -> {
-                xEdit = context.findViewById(R.id.u3Edit)
-                yEdit = context.findViewById(R.id.v3Edit)
-            }
-            4 -> {
-                xEdit = context.findViewById(R.id.u4Edit)
-                yEdit = context.findViewById(R.id.v4Edit)
-            }
-            else -> {
-                xEdit = null
-                yEdit = null
-            }
-        }
-
-        xEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMap.Param).u.get()))
-        yEdit?.setText("%.8f".format((fractalConfig.params["p$i"] as ComplexMap.Param).v.get()))
-
-    }
-    fun updateMapParamEditTexts() {
-        for (i in 1..NUM_MAP_PARAMS) {
-            updateMapParamEditText(i)
-        }
-    }
-    @SuppressLint("SetTextI18n")
-    fun updateTextureParamEditText(i: Int) {
-
-        val edit : EditText? = when (i) {
-            1 -> context.findViewById(R.id.q1Edit)
-            2 -> context.findViewById(R.id.q2Edit)
-            else -> null
-        }
-
-        edit?.setText("%.3f".format((fractalConfig.params["q$i"] as Double)))
-
-    }
-    private fun updateTextureParamEditTexts() {
-        for (i in 1..NUM_TEXTURE_PARAMS) {
-            updateMapParamEditText(i)
-        }
-    }
-    @SuppressLint("SetTextI18n")
-    fun updateColorParamEditTexts() {
-
-        val frequencyEdit = context.findViewById<EditText>(R.id.frequencyEdit)
-        val phaseEdit = context.findViewById<EditText>(R.id.phaseEdit)
-
-        frequencyEdit?.setText("%.5f".format(fractalConfig.frequency()))
-        phaseEdit?.setText("%.5f".format(fractalConfig.phase()))
-
-    }
-    @SuppressLint("SetTextI18n")
-    fun updateDisplayParams(reaction: Reaction, reactionChanged: Boolean) {
-
-        val displayParams = context.findViewById<LinearLayout>(R.id.displayParams)
-        val displayParam1 = context.findViewById<TextView>(R.id.displayParam1)
-        val displayParam2 = context.findViewById<TextView>(R.id.displayParam2)
-        val displayParam3 = context.findViewById<TextView>(R.id.displayParam3)
-        val displayParam4 = context.findViewById<TextView>(R.id.displayParam4)
-        val displayParamName1 = context.findViewById<TextView>(R.id.displayParamName1)
-        val displayParamName2 = context.findViewById<TextView>(R.id.displayParamName2)
-        val displayParamName3 = context.findViewById<TextView>(R.id.displayParamName3)
-        val displayParamName4 = context.findViewById<TextView>(R.id.displayParamName4)
-        val density = context.resources.displayMetrics.density
-        val w : Int
-
-        if (settingsConfig.displayParams()) {
-            when (reaction) {
-                Reaction.POSITION -> {
-
-                    displayParamName1.text = res.getString(R.string.x)
-                    displayParamName2.text = res.getString(R.string.y)
-                    displayParamName3.text = res.getString(R.string.scale_lower)
-                    displayParamName4.text = res.getString(R.string.rotation_lower)
-                    displayParam1.text = "%.17f".format(fractalConfig.coords()[0])
-                    displayParam2.text = "%.17f".format(fractalConfig.coords()[1])
-                    displayParam3.text = "%e".format(fractalConfig.scale()[0])
-                    displayParam4.text = "%.0f".format(fractalConfig.rotation() * 180.0 / Math.PI)
-                    w = (60f * density).toInt()
-
-                }
-                Reaction.COLOR -> {
-
-                    displayParamName1.text = res.getString(R.string.frequency)
-                    displayParamName2.text = res.getString(R.string.offset)
-                    displayParam1.text = "%.4f".format(fractalConfig.frequency())
-                    displayParam2.text = "%.4f".format(fractalConfig.phase())
-                    w = (75f * density).toInt()
-
-                }
-                else -> {
-
-                    val i = reaction.ordinal - 2
-                    displayParamName1.text = "u"
-                    displayParamName2.text = "v"
-                    displayParamName3.text = res.getString(R.string.sensitivity)
-                    displayParam1.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMap.Param).u.get())
-                    displayParam2.text = "%.8f".format((fractalConfig.params["p${i + 1}"] as ComplexMap.Param).v.get())
-                    displayParam3.text = "%.4f".format(fractalConfig.paramSensitivity())
-                    w = (80f * density).toInt()
-
-                }
-            }
-
-            displayParamName1.width = w
-            displayParamName2.width = w
-            displayParamName3?.width = w
-            displayParamName4?.width = w
-            displayParamName1.requestLayout()
-            displayParamName2.requestLayout()
-            displayParamName3?.requestLayout()
-            displayParamName4?.requestLayout()
-            displayParam1.requestLayout()
-            displayParam2.requestLayout()
-            displayParam3?.requestLayout()
-            displayParam4?.requestLayout()
-
-        }
-        if (settingsConfig.displayParams() || reactionChanged) {
-            val fadeOut = AlphaAnimation(1f, 0f)
-            fadeOut.duration = 1000L
-            fadeOut.startOffset = 2500L
-            fadeOut.fillAfter = true
-            displayParams.animation = fadeOut
-            displayParams.animation.start()
-            displayParams.requestLayout()
-        }
-    }
-    fun switchOrientation() {
-//
-//        val fractalConfig.coords() = doubleArrayOf((xCoords[0] + xCoords[1]) / 2.0, -(yCoords[0] + yCoords[1]) / 2.0)
-//        translate(fractalConfig.coords())
-//
-//        // rotation by 90 degrees counter-clockwise
-//        val xCoordsNew = doubleArrayOf(-yCoords[1], -yCoords[0])
-//        val yCoordsNew = doubleArrayOf(xCoords[0], xCoords[1])
-//        xCoords[0] = xCoordsNew[0]
-//        xCoords[1] = xCoordsNew[1]
-//        yCoords[0] = yCoordsNew[0]
-//        yCoords[1] = yCoordsNew[1]
-//
-//        translate(fractalConfig.coords().negative())
-
-//        Log.d("FRACTAL", "xCoordsNew:  (${xCoordsNew[0]}, ${xCoordsNew[1]})")
-//        Log.d("FRACTAL", "yCoordsNew:  (${yCoordsNew[0]}, ${yCoordsNew[1]})")
-
-
-    }
-    fun setMapParam(i: Int, dPos: FloatArray) {
-        // dx -- [0, screenWidth]
-        val sensitivity =
-                if (fractalConfig.paramSensitivity() == -1.0) fractalConfig.scale()[0]
-                else fractalConfig.paramSensitivity()
-//        (fractalConfig.params["p$i"] as DoubleArray)[0] += sensitivity*dPos[0]/screenRes[0]
-//        (fractalConfig.params["p$i"] as DoubleArray)[1] -= sensitivity*dPos[1]/screenRes[1]
-        (fractalConfig.params["p$i"] as ComplexMap.Param).u.set(sensitivity*dPos[0]/screenRes[0])
-        (fractalConfig.params["p$i"] as ComplexMap.Param).v.set(-sensitivity*dPos[1]/screenRes[1])
-
-        // Log.d("FRACTAL", "setting map param ${p + 1} to (${fractalConfig.map().params[p - 1][0]}, ${fractalConfig.map().params[p - 1][1]})")
+    val saved = {
 
         // SINE2 :: (-0.26282883851642613, 2.042520182493586E-6)
         // SINE2 :: (-0.999996934286532, 9.232660318047263E-5)
@@ -477,6 +329,12 @@ class Fractal(
         // HORSESHOE CRAB :: (-0.02926709, 0.48591950)
         //      JULIA :: (-0.74308518, -0.94826022)
 
+        // HORSESHOE CRAB :: (1.0, 0.0) @
+        //      x:          -1.58648660503412890
+        //      y:           0.09697857522320943
+        //      scale:       7.28425e-3
+        //      rotation:   -183
+
         // PERSIAN RUG :: (2.26988707, 0.0)
         //      JULIA :: (-0.04956468, -0.00017392)
 
@@ -511,150 +369,78 @@ class Fractal(
         //      JULIA :: (0.19371092, 0.53478799)
 
 
-        updateDisplayParams(Reaction.valueOf("P$i"), false)
-        // updateMapParamEditText(i)
+    }
 
-    }
-    fun setMapParamSensitivity(i: Int, dScale: Float) {
-        fractalConfig.params["paramSensitivity"] = fractalConfig.paramSensitivity() * dScale
-        // updateMapParamEditText(i)
-        updateDisplayParams(Reaction.valueOf("P$i"), false)
-    }
-    fun setTextureParam(i: Int, dPos: FloatArray) {
-//        // dx -- [0, screenWidth]
-//        fractalConfig.params["q$i"] = fractalConfig.q1() + dPos[0]/screenRes[0]
-//        // updateDisplayParams(Reaction.valueOf("P$i"), false)
-//        // updateTextureParamEditText(i)
-    }
-    fun translate(dScreenPos: FloatArray) {
 
-        // update complex coordinates
-        when (settingsConfig.precision()) {
-            Precision.QUAD -> {
-//                        val dPosDD = arrayOf(
-//                                DualDouble((dScreenPos[0].toDouble() / screenRes[0]), 0.0) * (xCoordsDD[1] - xCoordsDD[0]),
-//                                DualDouble((dScreenPos[1].toDouble() / screenRes[1]), 0.0) * (yCoordsDD[1] - yCoordsDD[0])
-//                        )
-//                        xCoordsDD[0] -= dPosDD[0]
-//                        xCoordsDD[1] -= dPosDD[0]
-//                        yCoordsDD[0] += dPosDD[1]
-//                        yCoordsDD[1] += dPosDD[1]
+
+
+    private fun loadRenderResources() {
+
+        when(precision()) {
+            Precision.SINGLE -> {
+                header      = res.getString(R.string.header_sf)
+                arithmetic  = res.getString(R.string.arithmetic_sf)
+                init        = res.getString(R.string.general_init_sf)
+                init += if (juliaMode) {
+                    res.getString(R.string.julia_sf)
+                } else {
+                    res.getString(R.string.constant_sf)
+                }
+                loop        = res.getString(R.string.general_loop_sf)
+                conditional = res.getString(map.conditionalSF)
+                mapInit     = res.getString(map.initSF)
+                algInit     = res.getString(texture.initSF)
+                mapLoop     = res.getString(map.loopSF)
+                if (juliaMode && !map.juliaMode) {
+                    mapLoop = mapLoop.replace("C", "P${numParamsInUse}", false)
+                }
+                algLoop     = res.getString(texture.loopSF)
+                mapFinal    = res.getString(map.finalSF)
+                algFinal    = res.getString(texture.finalSF)
             }
-            else -> {
-                val tx = (dScreenPos[0] / screenRes[0])*fractalConfig.scale()[0]
-                val ty = (dScreenPos[1] / screenRes[1])*fractalConfig.scale()[1]
-                val sinTheta = sin(-fractalConfig.rotation())
-                val cosTheta = cos(fractalConfig.rotation())
-                fractalConfig.coords()[0] -= tx*cosTheta - ty*sinTheta
-                fractalConfig.coords()[1] += tx*sinTheta + ty*cosTheta
+            Precision.DUAL -> {
+
+                header      = res.getString(R.string.header_df)
+                arithmetic  = res.getString(R.string.arithmetic_util)
+                arithmetic += res.getString(R.string.arithmetic_sf)
+                arithmetic += res.getString(R.string.arithmetic_df)
+                init        = res.getString(R.string.general_init_df)
+                init += if (juliaMode) { res.getString(R.string.julia_df) }
+                else { res.getString(R.string.constant_df) }
+                loop        = res.getString(R.string.general_loop_df)
+                conditional = res.getString(map.conditionalDF)
+                mapInit     = res.getString(map.initDF)
+                algInit     = res.getString(texture.initDF)
+                mapLoop     = res.getString(map.loopDF)
+                if (juliaMode && !map.juliaMode) {
+                    mapLoop = mapLoop.replace("A", "vec2(P${map.numParams + 1}.x, 0.0)", false)
+                    mapLoop = mapLoop.replace("B", "vec2(P${map.numParams + 1}.y, 0.0)", false)
+                }
+                algLoop     = res.getString(texture.loopDF)
+                mapFinal    = res.getString(map.finalDF)
+                algFinal    = res.getString(texture.finalDF)
+
             }
+            else -> {}
         }
 
-        // updatePositionEditTexts()
-        updateDisplayParams(Reaction.POSITION, false)
-//        Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
+    }
+    private fun loadColorResources() {
+
+        colorPostIndex = ""
+        innerColor = "0.0"
 
     }
-    private fun translate(dPos: DoubleArray) {
 
-        // update complex coordinates
-        when (settingsConfig.precision()) {
-            Precision.QUAD -> {
-//                        val dPosDD = arrayOf(
-//                                DualDouble((dScreenPos[0].toDouble() / screenRes[0]), 0.0) * (xCoordsDD[1] - xCoordsDD[0]),
-//                                DualDouble((dScreenPos[1].toDouble() / screenRes[1]), 0.0) * (yCoordsDD[1] - yCoordsDD[0])
-//                        )
-//                        xCoordsDD[0] -= dPosDD[0]
-//                        xCoordsDD[1] -= dPosDD[0]
-//                        yCoordsDD[0] += dPosDD[1]
-//                        yCoordsDD[1] += dPosDD[1]
-            }
-            else -> {
-                fractalConfig.coords()[0] += dPos[0]
-                fractalConfig.coords()[1] += dPos[1]
-            }
-        }
+    fun checkThresholdCross(prevScale: Double, prevPrecision: Precision) {
 
-//        Log.d("FRACTAL", "translation (coordinates) -- dx: ${dPos[0]}, dy: ${dPos[1]}")
+        autoPrecision = if (!map.hasDualFloat || map.position.scale > precisionThreshold) Precision.SINGLE else Precision.DUAL
+        if (precision() != prevPrecision) { renderShaderChanged = true }
 
-    }
-    fun scale(dScale: Float, screenFocus: FloatArray) {
-
-        val prevScale = fractalConfig.scale()[0]
-
-        // update complex coordinates
-        // convert focus coordinates from screen space to complex space
-        val prop = doubleArrayOf(
-                screenFocus[0].toDouble() / screenRes[0].toDouble(),
-                screenFocus[1].toDouble() / screenRes[1].toDouble()
-        )
-
-        val precisionPreScale = precision()
-        when (precisionPreScale) {
-            Precision.QUAD -> {
-//                        val focusDD = arrayOf(
-//                                DualDouble(prop[0], 0.0) * (xCoordsDD[1] - xCoordsDD[0]) + xCoordsDD[0],
-//                                DualDouble(prop[1], 0.0) * (yCoordsDD[0] - yCoordsDD[1]) + yCoordsDD[1]
-//                        )
-//                        val dScaleDD = DualDouble(1.0 / dScale.toDouble(), 0.0)
-//
-//                        // translate focus to origin in complex coordinates
-//                        xCoordsDD[0] -= focusDD[0]
-//                        xCoordsDD[1] -= focusDD[0]
-//                        yCoordsDD[0] -= focusDD[1]
-//                        yCoordsDD[1] -= focusDD[1]
-//
-//                        // scale complex coordinates
-//                        xCoordsDD[0] *= dScaleDD
-//                        xCoordsDD[1] *= dScaleDD
-//                        yCoordsDD[0] *= dScaleDD
-//                        yCoordsDD[1] *= dScaleDD
-//
-//                        // translate origin back to focusDD in complex coordinates
-//                        xCoordsDD[0] += focusDD[0]
-//                        xCoordsDD[1] += focusDD[0]
-//                        yCoordsDD[0] += focusDD[1]
-//                        yCoordsDD[1] += focusDD[1]
-            }
-            else -> {
-                val qx = (prop[0] - 0.5)*fractalConfig.scale()[0]
-                val qy = -(prop[1] - 0.5)*fractalConfig.scale()[1]
-                val sinTheta = sin(fractalConfig.rotation())
-                val cosTheta = cos(fractalConfig.rotation())
-                val focus = doubleArrayOf(
-//                    xCoords[0] * (1.0 - prop[0]) + prop[0] * xCoords[1],
-//                    yCoords[1] * (1.0 - prop[1]) + prop[1] * yCoords[0]
-                        fractalConfig.coords()[0] + qx*cosTheta - qy*sinTheta,
-                        fractalConfig.coords()[1] + qx*sinTheta + qy*cosTheta
-                )
-                //Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
-
-                translate(focus.negative())
-                fractalConfig.coords()[0] = fractalConfig.coords()[0] / dScale
-                fractalConfig.coords()[1] = fractalConfig.coords()[1] / dScale
-                translate(focus)
-                fractalConfig.scale()[0] = fractalConfig.scale()[0] / dScale
-                fractalConfig.scale()[1] = fractalConfig.scale()[1] / dScale
-            }
-        }
-
-//        Log.d("FRACTAL", "length of x-interval: ${abs(xCoords[1] - xCoords[0])}")
-
-        val precisionPostScale = precision()
-        if (precisionPostScale != precisionPreScale) {
-            renderShaderChanged = true
-            Log.d("FRACTAL", "precision changed")
-        }
-
-        // updatePositionEditTexts()
-        updateDisplayParams(Reaction.POSITION, false)
-//        Log.d("FRACTAL", "scale -- dscale: $dScale")
-
-
-        val singleThresholdCrossed = fractalConfig.scale()[0] < precisionThreshold && prevScale > precisionThreshold
-        val dualThresholdCrossed = fractalConfig.scale()[0] < 1e-12 && prevScale > 1e-12
-        if ((!fractalConfig.map().hasDualFloat && singleThresholdCrossed) ||
-                (fractalConfig.map().hasDualFloat && dualThresholdCrossed)) {
+        // display message
+        val singleThresholdCrossed = map.position.scale < precisionThreshold && prevScale > precisionThreshold
+        val dualThresholdCrossed = map.position.scale < 1e-12 && prevScale > 1e-12
+        if ((!map.hasDualFloat && singleThresholdCrossed) || (map.hasDualFloat && dualThresholdCrossed)) {
             val toast = Toast.makeText(context.baseContext, "Zoom limit reached", 2*Toast.LENGTH_LONG)
             val toastHeight = context.findViewById<LinearLayout>(R.id.buttons).height +
                     context.findViewById<LinearLayout>(R.id.uiFull).height +
@@ -662,7 +448,7 @@ class Fractal(
             toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
             toast.show()
         }
-        if (fractalConfig.map().hasDualFloat && singleThresholdCrossed) {
+        if (map.hasDualFloat && singleThresholdCrossed) {
             val toast = Toast.makeText(context.baseContext, "Switching to dual-precision\nImage generation will be slower", Toast.LENGTH_LONG)
             val toastHeight = context.findViewById<LinearLayout>(R.id.buttons).height +
                     context.findViewById<LinearLayout>(R.id.uiFull).height +
@@ -672,88 +458,168 @@ class Fractal(
         }
 
     }
-    fun rotate(dTheta: Float, screenFocus: FloatArray) {
+    fun updateMapParamEditText(i: Int) {
+        // Log.d("FRACTAL", "updating map param EditText $i")
 
-        //Log.d("FRACTAL", "dTheta: $dTheta")
+        val xEdit : EditText?
+        val yEdit : EditText?
 
-        // update complex coordinates
-        // convert focus coordinates from screen space to complex space
-        val prop = doubleArrayOf(
-                screenFocus[0].toDouble() / screenRes[0].toDouble(),
-                screenFocus[1].toDouble() / screenRes[1].toDouble()
-        )
-
-        when (precision()) {
-            Precision.QUAD -> {
-//                        val focusDD = arrayOf(
-//                                DualDouble(prop[0], 0.0) * (xCoordsDD[1] - xCoordsDD[0]) + xCoordsDD[0],
-//                                DualDouble(prop[1], 0.0) * (yCoordsDD[0] - yCoordsDD[1]) + yCoordsDD[1]
-//                        )
-//                        val dScaleDD = DualDouble(1.0 / dScale.toDouble(), 0.0)
-//
-//                        // translate focus to origin in complex coordinates
-//                        xCoordsDD[0] -= focusDD[0]
-//                        xCoordsDD[1] -= focusDD[0]
-//                        yCoordsDD[0] -= focusDD[1]
-//                        yCoordsDD[1] -= focusDD[1]
-//
-//                        // scale complex coordinates
-//                        xCoordsDD[0] *= dScaleDD
-//                        xCoordsDD[1] *= dScaleDD
-//                        yCoordsDD[0] *= dScaleDD
-//                        yCoordsDD[1] *= dScaleDD
-//
-//                        // translate origin back to focusDD in complex coordinates
-//                        xCoordsDD[0] += focusDD[0]
-//                        xCoordsDD[1] += focusDD[0]
-//                        yCoordsDD[0] += focusDD[1]
-//                        yCoordsDD[1] += focusDD[1]
+        when (i) {
+            1 -> {
+                xEdit = context.findViewById(R.id.u1Edit)
+                yEdit = context.findViewById(R.id.v1Edit)
+            }
+            2 -> {
+                xEdit = context.findViewById(R.id.u2Edit)
+                yEdit = context.findViewById(R.id.v2Edit)
+            }
+            3 -> {
+                xEdit = context.findViewById(R.id.u3Edit)
+                yEdit = context.findViewById(R.id.v3Edit)
+            }
+            4 -> {
+                xEdit = context.findViewById(R.id.u4Edit)
+                yEdit = context.findViewById(R.id.v4Edit)
             }
             else -> {
-                val qx = (prop[0] - 0.5)*fractalConfig.scale()[0]
-                val qy = -(prop[1] - 0.5)*fractalConfig.scale()[1]
-                val sinTheta = sin(fractalConfig.rotation())
-                val cosTheta = cos(fractalConfig.rotation())
-                val focus = doubleArrayOf(
-                    fractalConfig.coords()[0] + qx*cosTheta - qy*sinTheta,
-                    fractalConfig.coords()[1] + qx*sinTheta + qy*cosTheta
-                )
-
-                //Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
-
-                val sindTheta = sin(-dTheta)
-                val cosdTheta = cos(dTheta)
-
-                //Log.d("FRACTAL", "previous coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
-
-                translate(focus.negative())
-                val x = fractalConfig.coords()[0]
-                val y = fractalConfig.coords()[1]
-                fractalConfig.coords()[0] = x*cosdTheta - y*sindTheta
-                fractalConfig.coords()[1] = x*sindTheta + y*cosdTheta
-                translate(focus)
-                fractalConfig.params["rotation"] = fractalConfig.rotation() - dTheta.toDouble()
-                //Log.d("FRACTAL", "rotation: ${fractalConfig.rotation()}")
-
-                //Log.d("FRACTAL", "new coords: (${fractalConfig.coords()[0]}, ${fractalConfig.coords()[1]})")
-
+                xEdit = null
+                yEdit = null
             }
         }
 
-
-        // updatePositionEditTexts()
-        updateDisplayParams(Reaction.POSITION, false)
+        xEdit?.setText("%.8f".format((map.params[i-1].u)))
+        yEdit?.setText("%.8f".format((map.params[i-1].v)))
 
     }
-    fun setFrequency(dScale: Float) {
-        fractalConfig.params["frequency"] = fractalConfig.frequency() * dScale
-        updateDisplayParams(Reaction.COLOR, false)
-        // updateColorParamEditTexts()
+    fun updateShapeEditTexts() {
+
+        val bailoutSignificandEdit = context.findViewById<EditText>(R.id.bailoutSignificandEdit)
+        val bailoutExponentEdit = context.findViewById<EditText>(R.id.bailoutExponentEdit)
+        val bailoutStrings = "%e".format(bailoutRadius).split("e")
+        bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
+        bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
+
+        for (i in 1..NUM_MAP_PARAMS) {
+            updateMapParamEditText(i)
+        }
+
+        updatePositionEditTexts()
+
     }
-    fun setPhase(dx: Float) {
-        fractalConfig.params["phase"] = (fractalConfig.phase() + dx/screenRes[0])
-        updateDisplayParams(Reaction.COLOR, false)
-        // updateColorParamEditTexts()
+    fun updateTextureEditTexts() {
+
+        val q1Edit = context.findViewById<EditText>(R.id.q1Edit)
+        val q2Edit = context.findViewById<EditText>(R.id.q2Edit)
+
+        q1Edit?.setText("%.3f".format(texture.params[0].t))
+        q2Edit?.setText("%.3f".format(texture.params[1].t))
+
+    }
+    fun updateColorEditTexts() {
+
+        val frequencyEdit = context.findViewById<EditText>(R.id.frequencyEdit)
+        val phaseEdit = context.findViewById<EditText>(R.id.phaseEdit)
+
+        frequencyEdit?.setText("%.5f".format(frequency))
+        phaseEdit?.setText("%.5f".format(phase))
+
+    }
+    fun updatePositionEditTexts() {
+
+        val xCoordEdit = context.findViewById<EditText>(R.id.xCoordEdit)
+        val yCoordEdit = context.findViewById<EditText>(R.id.yCoordEdit)
+        val scaleSignificandEdit = context.findViewById<EditText>(R.id.scaleSignificandEdit)
+        val scaleExponentEdit = context.findViewById<EditText>(R.id.scaleExponentEdit)
+        val scaleStrings = "%e".format(map.position.scale).split("e")
+        val rotationEdit = context.findViewById<EditText>(R.id.rotationEdit)
+
+//        Log.w("FRACTAL", "scaleExponent: %d".format(scaleStrings[1].toInt()))
+//        Log.w("FRACTAL", "bailoutExponent: %d".format(bailoutStrings[1].toInt()))
+
+        xCoordEdit?.setText("%.17f".format(map.position.x))
+        yCoordEdit?.setText("%.17f".format(map.position.y))
+
+        scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
+        scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
+
+        rotationEdit?.setText("%.0f".format(map.position.rotation * 180.0 / Math.PI))
+
+    }
+    fun updateDisplayParams(reaction: Reaction, reactionChanged: Boolean = false) {
+
+        val displayParams = context.findViewById<LinearLayout>(R.id.displayParams)
+        val displayParam1 = context.findViewById<TextView>(R.id.displayParam1)
+        val displayParam2 = context.findViewById<TextView>(R.id.displayParam2)
+        val displayParam3 = context.findViewById<TextView>(R.id.displayParam3)
+        val displayParam4 = context.findViewById<TextView>(R.id.displayParam4)
+        val displayParamName1 = context.findViewById<TextView>(R.id.displayParamName1)
+        val displayParamName2 = context.findViewById<TextView>(R.id.displayParamName2)
+        val displayParamName3 = context.findViewById<TextView>(R.id.displayParamName3)
+        val displayParamName4 = context.findViewById<TextView>(R.id.displayParamName4)
+        val density = context.resources.displayMetrics.density
+        val w : Int
+
+        if (sc.displayParams()) {
+            when (reaction) {
+                Reaction.POSITION -> {
+
+                    displayParamName1.text = res.getString(R.string.x)
+                    displayParamName2.text = res.getString(R.string.y)
+                    displayParamName3.text = res.getString(R.string.scale_lower)
+                    displayParamName4.text = res.getString(R.string.rotation_lower)
+                    displayParam1.text = "%.17f".format(map.position.x)
+                    displayParam2.text = "%.17f".format(map.position.y)
+                    displayParam3.text = "%e".format(map.position.scale)
+                    displayParam4.text = "%.0f".format(map.position.rotation * 180.0 / Math.PI)
+                    w = (60f * density).toInt()
+
+                }
+                Reaction.COLOR -> {
+
+                    displayParamName1.text = res.getString(R.string.frequency)
+                    displayParamName2.text = res.getString(R.string.offset)
+                    displayParam1.text = "%.4f".format(frequency)
+                    displayParam2.text = "%.4f".format(phase)
+                    w = (75f * density).toInt()
+
+                }
+                else -> {
+
+                    val i = reaction.ordinal - 2
+                    displayParamName1.text = "u"
+                    displayParamName2.text = "v"
+                    displayParamName3.text = res.getString(R.string.sensitivity)
+                    displayParam1.text = "%.8f".format((map.params[i].u))
+                    displayParam2.text = "%.8f".format((map.params[i].v))
+                    displayParam3.text = "%.4f".format(sensitivity)
+                    w = (80f * density).toInt()
+
+                }
+            }
+
+            displayParamName1.width = w
+            displayParamName2.width = w
+            displayParamName3?.width = w
+            displayParamName4?.width = w
+            displayParamName1.requestLayout()
+            displayParamName2.requestLayout()
+            displayParamName3?.requestLayout()
+            displayParamName4?.requestLayout()
+            displayParam1.requestLayout()
+            displayParam2.requestLayout()
+            displayParam3?.requestLayout()
+            displayParam4?.requestLayout()
+
+        }
+        if (sc.displayParams() || reactionChanged) {
+            val fadeOut = AlphaAnimation(1f, 0f)
+            fadeOut.duration = 1000L
+            fadeOut.startOffset = 2500L
+            fadeOut.fillAfter = true
+            displayParams.animation = fadeOut
+            displayParams.animation.start()
+            displayParams.requestLayout()
+        }
     }
 
 }
