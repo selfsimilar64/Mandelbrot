@@ -67,6 +67,7 @@
     <string name="tutorial_color2">Swipe left or right to shift the colors</string>
     <string name="tutorial_color3">Pinch to make the colors change more or less frequently!</string>
 
+    <string name="empty"> </string>
 
 
 
@@ -685,7 +686,7 @@
         Y = addDF(Q3.zw, -B);
     </string>
     <string name="mandelbox_katex">
-        $z_{n+1} = \\small \\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) - %s$
+        $z_{n+1} = \\footnotesize P1\\cdot\\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) - %s$
     </string>
 
     <!-- KALI -->
@@ -730,14 +731,8 @@
     </string>
 
     <!-- BURNING SHIP -->
-    <string name="burningship_init_sf">
-        C = vec2(C.x, -C.y);
-    </string>
     <string name="burningship_loop_sf">
         Z = cSqrSF(abs(Z1)) + C;
-    </string>
-    <string name="burningship_init_df">
-        B = -B;
     </string>
     <string name="burningship_loop_df">
         vec4 Q = cSqrDF(absDF(X1), absDF(Y1));
@@ -1016,7 +1011,7 @@
         alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
     </string>
     <string name="mandelbrot_dist_final_sf">
-        colorParams.x = modZ*log(modZ)/modSF(alpha);
+        colorParams.x = modZ*log(modZ)/modSF(alpha)/xScale.x;
     </string>
     <string name="mandelbrot_dist_init_df">
         vec2 alpha = vec2(0.0);
@@ -1028,7 +1023,7 @@
         alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
     </string>
     <string name="mandelbrot_dist_final_df">
-        colorParams.x = modZ.x*log(modZ.x)/modSF(alpha);
+        colorParams.x = divDF(vec2(modZ.x*log(modZ.x)/modSF(alpha), 0.0), xScale).x;
     </string>
 
     <string name="mandelbrot_normal1_init_sf">
@@ -1039,6 +1034,7 @@
     </string>
     <string name="mandelbrot_normal1_final_sf">
         vec2 u = cDivSF(Z, alpha);
+        float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
         colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
     <string name="mandelbrot_normal1_init_df">
