@@ -43,6 +43,15 @@ data class Complex(
         val y : Double
 ) {
 
+    companion object {
+
+        val ZERO = Complex(0.0, 0.0)
+        val ONE = Complex(1.0, 0.0)
+        val i = Complex(0.0, 1.0)
+
+    }
+
+
     override fun toString(): String {
         return "($x, $y)"
     }
@@ -166,39 +175,117 @@ enum class Reaction { POSITION, COLOR, P1, P2, P3, P4 }
 enum class Resolution { LOW, MED, HIGH }
 
 
-class FractalConfig (val params : MutableMap<String, Any>) {
 
-    val map                 = { params["map"]              as  ComplexMap        }
-    val p1                  = { params["p1"]               as  ComplexMap.Param  }
-    val p2                  = { params["p2"]               as  ComplexMap.Param  }
-    val p3                  = { params["p3"]               as  ComplexMap.Param  }
-    val p4                  = { params["p4"]               as  ComplexMap.Param  }
-    val texture             = { params["texture"]          as  Texture           }
-    val q1                  = { params["q1"]               as  Double            }
-    val q2                  = { params["q2"]               as  Double            }
-    val juliaMode           = { params["juliaMode"]        as  Boolean           }
-    val paramSensitivity    = { params["paramSensitivity"] as  Double            }
-    val coords              = { params["coords"]           as  DoubleArray       }
-    val savedCoords         = { params["savedCoords"]      as  DoubleArray       }
-    val scale               = { params["scale"]            as  DoubleArray       }
-    val savedScale          = { params["savedScale"]       as  DoubleArray       }
-    val rotation            = { params["rotation"]         as  Double            }
-    val maxIter             = { params["maxIter"]          as  Int               }
-    val bailoutRadius       = { params["bailoutRadius"]    as  Float             }
-    val palette             = { params["palette"]          as  ColorPalette      }
-    val frequency           = { params["frequency"]        as  Float             }
-    val phase               = { params["phase"]            as  Float             }
 
-    val numParamsInUse      = {
-        val num1 = map().params.size
-        val num2 = if (juliaMode() && !map().juliaMode) 1 else 0
-        // val num3 = texture().params.size
-        // Log.d("MAIN ACTIVITY", "$num1, $num2, $num3")
-        Log.d("MAIN ACTIVITY", "$num1, $num2")
-        num1 + num2
+class Position(
+        var x: Double = 0.0,
+        var y: Double = 0.0,
+        var scale: Double = 1.0,
+        var rotation: Double = 0.0
+) {
+
+    private val xInit = x
+    private val yInit = y
+    private val scaleInit = scale
+    private val rotationInit = rotation
+
+    private fun translate(dPos: DoubleArray) {
+
+        // update complex coordinates
+        x += dPos[0]
+        y += dPos[1]
+
+        // Log.d("FRACTAL", "translation (coordinates) -- dx: ${dPos[0]}, dy: ${dPos[1]}")
+
+    }
+    fun translate(dx: Float, dy: Float) {
+        // dx, dy --> [0, 1]
+
+        // update complex coordinates
+        val tx = dx*scale
+        val ty = dy*scale
+        val sinTheta = sin(-rotation)
+        val cosTheta = cos(rotation)
+        x -= tx*cosTheta - ty*sinTheta
+        y += tx*sinTheta + ty*cosTheta
+
+        // updatePositionEditTexts()
+        // updateDisplayParams(Reaction.POSITION)
+        // Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
+
+    }
+    fun scale(dScale: Float, prop: DoubleArray) {
+
+        val qx = prop[0]*scale
+        val qy = prop[1]*scale
+        val sinTheta = sin(rotation)
+        val cosTheta = cos(rotation)
+        val focus = doubleArrayOf(
+                x + qx*cosTheta - qy*sinTheta,
+                y + qx*sinTheta + qy*cosTheta
+        )
+
+        translate(focus.negative())
+        x /= dScale
+        y /= dScale
+        translate(focus)
+        scale /= dScale
+
+    }
+    fun rotate(dTheta: Float, prop: DoubleArray) {
+
+        //Log.d("FRACTAL", "dTheta: $dTheta")
+
+        // calculate focus in complex coordinates
+        var qx = prop[0]*scale
+        var qy = prop[1]*scale
+        val sinTheta = sin(rotation)
+        val cosTheta = cos(rotation)
+        val focus = doubleArrayOf(
+                x + qx*cosTheta - qy*sinTheta,
+                y + qx*sinTheta + qy*cosTheta
+        )
+
+        //Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
+
+        val sindTheta = sin(-dTheta)
+        val cosdTheta = cos(dTheta)
+
+        //Log.d("FRACTAL", "previous coords: (${x}, ${y})")
+
+        translate(focus.negative())
+        qx = x
+        qy = y
+        x = qx*cosdTheta - qy*sindTheta
+        y = qx*sindTheta + qy*cosdTheta
+        translate(focus)
+        rotation -= dTheta.toDouble()
+        //Log.d("FRACTAL", "rotation: ${rotation}")
+
+        //Log.d("FRACTAL", "new coords: (${x}, ${y})")
+
+
+        // updatePositionEditTexts()
+        // updateDisplayParams(Reaction.POSITION)
+
+    }
+    fun reset() {
+        x = xInit
+        y = yInit
+        scale = scaleInit
+        rotation = rotationInit
     }
 
 }
+
+class PositionList(
+        val default : Position = Position(),
+        val julia   : Position = Position(scale = default.scale)
+)
+
+
+
+
 class SettingsConfig (val params: MutableMap<String, Any>) {
 
     val resolution         = { params["resolution"]        as Resolution }
@@ -272,12 +359,10 @@ class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager)
 
 
 class MainActivity : AppCompatActivity(),
-        FractalEditFragment.OnParamChangeListener,
         SettingsFragment.OnParamChangeListener {
 
-
     private lateinit var f : Fractal
-    private lateinit var fractalView : FractalSurfaceView
+    private lateinit var fsv : FractalSurfaceView
     private lateinit var uiQuickButtons : List<View>
     private lateinit var displayParamRows : List<LinearLayout>
 
@@ -305,64 +390,42 @@ class MainActivity : AppCompatActivity(),
         // val statusBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
 
 
-        // get saved or default parameters
 
-        val map = ComplexMap.all[savedInstanceState?.getString("map")]?.invoke(resources)
-                ?: ComplexMap.mandelbrot(resources)
+        // get initial values for fractalConfig
 
-//        val p1 = savedInstanceState?.getDoubleArray("p1") ?: Param(0.0, 0.0)
-//        val p2 = savedInstanceState?.getDoubleArray("p2") ?: Param(0.0, 0.0)
-//        val p3 = savedInstanceState?.getDoubleArray("p3") ?: Param(0.0, 0.0)
-//        val p4 = savedInstanceState?.getDoubleArray("p4") ?: Param(0.0, 0.0)
-        val p1 = ComplexMap.Param()
-        val p2 = ComplexMap.Param()
-        val p3 = ComplexMap.Param()
-        val p4 = ComplexMap.Param()
+//        val map = ComplexMap.all[savedInstanceState?.getString("map")] ?: ComplexMap.mandelbrot
+//
+//        map.position.x = savedInstanceState?.getDouble("x") ?: 0.0
+//        map.position.y = savedInstanceState?.getDouble("y") ?: 0.0
+//        map.position.scale = savedInstanceState?.getDouble("scale") ?: 1.0
+//        map.position.rotation = savedInstanceState?.getDouble("rotation") ?: 0.0
+//        map.juliaMode = savedInstanceState?.getBoolean("juliaMode") ?: false
+//        // params
+//
+//        val texture = Texture.all[savedInstanceState?.getString("texture")] ?: Texture.escape
+//        // texture.params[0] = savedInstanceState?.getDouble("q1") ?: 0.0
+//        // texture.params[1] = savedInstanceState?.getDouble("q2") ?: 0.0
+//
+//        val palette = ColorPalette.all[savedInstanceState?.getString("palette")] ?: ColorPalette.p5
+//        palette.frequency = savedInstanceState?.getFloat("frequency") ?: 1f
+//        palette.phase = savedInstanceState?.getFloat("phase") ?: 0f
+//
+//        val maxIter = savedInstanceState?.getInt("maxIter") ?: 255
+//        val bailoutRadius = savedInstanceState?.getFloat("bailoutRadius") ?: 1e5f
+//        val sensitivity = savedInstanceState?.getDouble("paramSensitivity") ?: 1.0
 
-        val texture = Texture.all[savedInstanceState?.getString("texture")]?.invoke(resources)
-                ?: Texture.escape(resources)
-        val q1 = savedInstanceState?.getDouble("q1") ?: 0.0
-        val q2 = savedInstanceState?.getDouble("q2") ?: 0.0
-        val juliaMode = savedInstanceState?.getBoolean("juliaMode") ?: false
-        val paramSensitivity = savedInstanceState?.getDouble("paramSensitivity") ?: 1.0
-        val coords = savedInstanceState?.getDoubleArray("coords") ?: doubleArrayOf(0.0, 0.0)
-        val savedCoords = savedInstanceState?.getDoubleArray("savedCoords") ?: doubleArrayOf(0.0, 0.0)
-        val scale = savedInstanceState?.getDoubleArray("scale") ?: doubleArrayOf(1.0, aspectRatio)
-        val savedScale = savedInstanceState?.getDoubleArray("savedScale") ?: doubleArrayOf(1.0, aspectRatio)
-        val rotation = 0.0
-        val maxIter = savedInstanceState?.getInt("maxIter") ?: 255
-        val bailoutRadius = savedInstanceState?.getFloat("bailoutRadius") ?: 1e5f
-        val palette = ColorPalette.all[savedInstanceState?.getString("palette")]?.invoke(resources) ?: ColorPalette.p5(resources)
-        val frequency = savedInstanceState?.getFloat("frequency") ?: 1.0f
-        val phase = savedInstanceState?.getFloat("phase") ?: 0.0f
+
+
+
+        // get initial values for settingsConfig
+
         val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: Resolution.HIGH.name)
         val precision = Precision.valueOf(savedInstanceState?.getString("precision") ?: "AUTO")
         val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: false
         val displayParamsBoolean = savedInstanceState?.getBoolean("displayParams") ?: true
 
-        val fractalConfig = FractalConfig(mutableMapOf(
-                "map"               to  map,
-                "p1"                to  p1,
-                "p2"                to  p2,
-                "p3"                to  p3,
-                "p4"                to  p4,
-                "texture"           to  texture,
-                "q1"                to  q1,
-                "q2"                to  q2,
-                "juliaMode"         to  juliaMode,
-                "paramSensitivity"  to  paramSensitivity,
-                "coords"            to  coords,
-                "savedCoords"       to  savedCoords,
-                "scale"             to  scale,
-                "savedScale"        to  savedScale,
-                "rotation"          to  rotation,
-                "maxIter"           to  maxIter,
-                "bailoutRadius"     to  bailoutRadius,
-                "palette"           to  palette,
-                "frequency"         to  frequency,
-                "phase"             to  phase
-        ))
-        val settingsConfig = SettingsConfig(mutableMapOf(
+
+        val sc = SettingsConfig(mutableMapOf(
                 "resolution"        to resolution,
                 "precision"         to precision,
                 "continuousRender"  to continuousRender,
@@ -375,8 +438,7 @@ class MainActivity : AppCompatActivity(),
         // create fractal
         f = Fractal(
                 this,
-                fractalConfig,
-                settingsConfig,
+                sc,
                 intArrayOf(screenWidth, screenHeight)
         )
 
@@ -386,14 +448,14 @@ class MainActivity : AppCompatActivity(),
 //        }
 
 
-        fractalView = FractalSurfaceView(f, this)
-        fractalView.layoutParams = ViewGroup.LayoutParams(screenWidth, screenHeight)
-        fractalView.hideSystemUI()
+        fsv = FractalSurfaceView(f, this)
+        fsv.layoutParams = ViewGroup.LayoutParams(screenWidth, screenHeight)
+        fsv.hideSystemUI()
 
         setContentView(R.layout.activity_main)
 
         val fractalLayout = findViewById<FrameLayout>(R.id.layout_main)
-        fractalLayout.addView(fractalView)
+        fractalLayout.addView(fsv)
 
 
         val displayParams = findViewById<LinearLayout>(R.id.displayParams)
@@ -425,15 +487,15 @@ class MainActivity : AppCompatActivity(),
                 is ImageButton -> it.contentDescription.toString()
                 else -> ""
             }
-            fractalView.reaction = Reaction.valueOf(s)
-            (displayParams.getChildAt(0) as TextView).text = when (fractalView.reaction) {
+            fsv.reaction = Reaction.valueOf(s)
+            (displayParams.getChildAt(0) as TextView).text = when (fsv.reaction) {
                 Reaction.POSITION, Reaction.COLOR -> s
                 else -> "PARAMETER ${s[1]}"
             }
 
-            if (fractalView.f.settingsConfig.displayParams()) {
+            if (fsv.f.sc.displayParams()) {
                 displayParams.removeViews(1, displayParams.childCount - 1)
-                for (i in 0 until fractalView.numDisplayParams()) {
+                for (i in 0 until fsv.numDisplayParams()) {
                     displayParams.addView(displayParamRows[i])
                 }
             }
@@ -443,13 +505,13 @@ class MainActivity : AppCompatActivity(),
                 if (b == it) { btd.startTransition(0) }
                 else { btd.resetTransition() }
             }
-            fractalView.f.updateDisplayParams(Reaction.valueOf(s), true)
+            fsv.f.updateDisplayParams(Reaction.valueOf(s), true)
         }
         for (b in uiQuickButtons) {
             b.background = TransitionDrawable(buttonBackgrounds)
             b.setOnClickListener(uiQuickButtonListener)
         }
-        val diff = f.fractalConfig.map().params.size - uiQuick.childCount + 2
+        val diff = f.map.params.size - uiQuick.childCount + 2
         uiQuick.removeViews(0, abs(diff))
         uiQuick.bringToFront()
         uiQuickButtons[0].performClick()
@@ -490,12 +552,14 @@ class MainActivity : AppCompatActivity(),
 
 
         // initialize fragments and set UI params from fractal
-        val equationFragment = FractalEditFragment()
+        val fractalEditFragment = FractalEditFragment()
         val settingsFragment = SettingsFragment()
         // val saveFragment = SaveFragment()
 
-        equationFragment.config = f.fractalConfig
-        settingsFragment.config = f.settingsConfig
+        fractalEditFragment.f = f
+        fractalEditFragment.fsv = fsv
+
+        settingsFragment.config = f.sc
 
 
 
@@ -503,7 +567,7 @@ class MainActivity : AppCompatActivity(),
 
 
         val adapter = ViewPagerAdapter(supportFragmentManager)
-        adapter.addFrag( equationFragment,  "Fractal" )
+        adapter.addFrag( fractalEditFragment,  "Fractal" )
         adapter.addFrag( settingsFragment,  "Settings" )
 
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
@@ -539,7 +603,7 @@ class MainActivity : AppCompatActivity(),
         // val uiFullHeightOpen = (screenHeight*(1.0 - 1.0/phi)).toInt()
         // val uiFullHeightFullscreen = screenHeight - statusBarHeight
         val uiFullHeightOpen = screenHeight/2
-        // fractalView.y = -uiFullHeightOpen/2f
+        // fsv.y = -uiFullHeightOpen/2f
 
         val uiFull = findViewById<LinearLayout>(R.id.uiFull)
         uiFull.layoutParams.height = 1
@@ -565,7 +629,7 @@ class MainActivity : AppCompatActivity(),
                 c.clone(overlay)
                 c.constrainHeight(R.id.uiFull, intermediateHeight)
                 c.applyTo(overlay)
-                fractalView.y = -uiFull.height/2.0f
+                fsv.y = -uiFull.height/2.0f
             }
             anim.duration = 300
             anim.start()
@@ -579,49 +643,43 @@ class MainActivity : AppCompatActivity(),
 
     }
 
-    private fun addMapParams(n: Int) {
+
+    fun addMapParams(n: Int) {
         val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
         for (i in 1..n) { uiQuick.addView(uiQuickButtons[uiQuick.childCount], 0) }
     }
-    private fun removeMapParams(n: Int) {
+    fun removeMapParams(n: Int) {
         val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
         for (i in 1..n) { uiQuick.removeView(uiQuickButtons[uiQuick.childCount - 1]) }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) { fractalView.hideSystemUI() }
+        if (hasFocus) { fsv.hideSystemUI() }
     }
     override fun onSaveInstanceState(outState: Bundle?) {
 
         Log.d("MAIN ACTIVITY", "saving instance state !!")
 
         // save FractalConfig values
-        outState?.putString(        "map",               f.fractalConfig.map().name          )
-//        outState?.putDoubleArray(   "p1",                f.fractalConfig.p1()                )
-//        outState?.putDoubleArray(   "p2",                f.fractalConfig.p2()                )
-//        outState?.putDoubleArray(   "p3",                f.fractalConfig.p3()                )
-//        outState?.putDoubleArray(   "p4",                f.fractalConfig.p4()                )
-        outState?.putString(        "texture",           f.fractalConfig.texture().name      )
-        outState?.putDouble(        "q1",                f.fractalConfig.q1()                )
-        outState?.putDouble(        "q2",                f.fractalConfig.q2()                )
-        outState?.putBoolean(       "juliaMode",         f.fractalConfig.juliaMode()         )
-        outState?.putDouble(        "paramSensitivity",  f.fractalConfig.paramSensitivity()  )
-        outState?.putDoubleArray(   "coords",            f.fractalConfig.coords()            )
-        outState?.putDoubleArray(   "savedCoords",       f.fractalConfig.savedCoords()       )
-        outState?.putDoubleArray(   "scale",             f.fractalConfig.scale()             )
-        outState?.putDoubleArray(   "savedScale",        f.fractalConfig.savedScale()        )
-        outState?.putInt(           "maxIter",           f.fractalConfig.maxIter()           )
-        outState?.putFloat(         "bailoutRadius",     f.fractalConfig.bailoutRadius()     )
-        outState?.putString(        "palette",           f.fractalConfig.palette().name      )
-        outState?.putFloat(         "frequency",         f.fractalConfig.frequency()         )
-        outState?.putFloat(         "phase",             f.fractalConfig.phase()             )
-
-        // save SettingsConfig values
-        outState?.putString(    "resolution",        f.settingsConfig.resolution().name   )
-        outState?.putBoolean(   "continuousRender",  f.settingsConfig.continuousRender()  )
-        outState?.putBoolean(   "displayParams",     f.settingsConfig.displayParams()     )
-        outState?.putString(    "precision",         f.settingsConfig.precision().name    )
+//        outState?.putString(        "map",               f.map.name          )
+//        outState?.putString(        "texture",           f.texture.name      )
+//        outState?.putDouble(        "sensitivity",       f.sensitivity  )
+//        outState?.putDoubleArray(   "coords",            f.coords()            )
+//        outState?.putDoubleArray(   "savedCoords",       f.savedCoords()       )
+//        outState?.putDoubleArray(   "scale",             f.scale()             )
+//        outState?.putDoubleArray(   "savedScale",        f.savedScale()        )
+//        outState?.putInt(           "maxIter",           f.maxIter()           )
+//        outState?.putFloat(         "bailoutRadius",     f.bailoutRadius()     )
+//        outState?.putString(        "palette",           f.palette().name      )
+//        outState?.putFloat(         "frequency",         f.frequency()         )
+//        outState?.putFloat(         "phase",             f.phase()             )
+//
+//        // save SettingsConfig values
+//        outState?.putString(    "resolution",        f.sc.resolution().name   )
+//        outState?.putBoolean(   "continuousRender",  f.sc.continuousRender()  )
+//        outState?.putBoolean(   "displayParams",     f.sc.displayParams()     )
+//        outState?.putString(    "precision",         f.sc.precision().name    )
 
         super.onSaveInstanceState(outState)
     }
@@ -629,136 +687,42 @@ class MainActivity : AppCompatActivity(),
         super.onAttachFragment(fragment)
         when (fragment) {
             is SettingsFragment -> fragment.setOnParamChangeListener(this)
-            is FractalEditFragment -> fragment.setOnParamChangeListener(this)
-        }
-    }
-    override fun onFractalParamsChanged(key: String, value: Any) {
-        if (f.fractalConfig.params[key] != value) {
-            Log.d("MAIN ACTIVITY", "$key set from ${f.fractalConfig.params[key]} to $value")
-            f.fractalConfig.params[key] = value
-            when (key) {
-                "map" -> {
-                    if (!f.fractalConfig.map().textures.contains(f.fractalConfig.texture().name)) {
-                        f.fractalConfig.params["texture"] = Texture.escape(resources)
-                    }
-                    f.reset()
-                    f.renderShaderChanged = true
-                    val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
-                    removeMapParams(uiQuick.childCount - 2)
-                    addMapParams(f.fractalConfig.map().params.size)
-                    uiQuick.getChildAt(uiQuick.childCount - 1).performClick()
-                    fractalView.r.renderToTex = true
-                }
-                "p1", "p2", "p3", "p4" -> {
-                    f.updateMapParamEditText(key[1].toString().toInt())
-                    fractalView.r.renderToTex = true
-                }
-                "q1", "q2" -> {
-                    f.updateTextureParamEditText(key[1].toString().toInt())
-                    fractalView.r.renderToTex = true
-                }
-                "texture" -> {
-                    f.resetTextureParams()
-                    if (f.fractalConfig.texture().name == "Escape Time Smooth with Lighting") {
-                        f.colorShaderChanged = true
-                    }
-                    f.renderShaderChanged = true
-                    fractalView.r.renderToTex = true
-                }
-                "juliaMode" -> {
-                    if (value as Boolean) {
-                        addMapParams(1)
-                        f.fractalConfig.savedCoords()[0] = f.fractalConfig.coords()[0]
-                        f.fractalConfig.savedCoords()[1] = f.fractalConfig.coords()[1]
-                        f.fractalConfig.savedScale()[0] = f.fractalConfig.scale()[0]
-                        f.fractalConfig.savedScale()[1] = f.fractalConfig.scale()[1]
-                        f.fractalConfig.coords()[0] = 0.0
-                        f.fractalConfig.coords()[1] = 0.0
-                        f.fractalConfig.scale()[0] = 3.5
-                        f.fractalConfig.scale()[1] = 3.5 * f.screenRes[1].toDouble() / f.screenRes[0]
-                        f.fractalConfig.params["p${f.fractalConfig.numParamsInUse()}"] = ComplexMap.Param(
-                                f.fractalConfig.savedCoords()[0],
-                                f.fractalConfig.savedCoords()[1]
-                        )
-                    }
-                    else {
-                        removeMapParams(1)
-                        f.fractalConfig.coords()[0] = f.fractalConfig.savedCoords()[0]
-                        f.fractalConfig.coords()[1] = f.fractalConfig.savedCoords()[1]
-                        f.fractalConfig.scale()[0] = f.fractalConfig.savedScale()[0]
-                        f.fractalConfig.scale()[1] = f.fractalConfig.savedScale()[1]
-                    }
-                    f.updateMapParamEditTexts()
-                    f.renderShaderChanged = true
-                    fractalView.r.renderToTex = true
-                }
-                "coords" -> {
-                    f.updatePositionEditTexts()
-                    fractalView.r.renderToTex = true
-                }
-                "scale" -> {
-                    f.updatePositionEditTexts()
-                    fractalView.r.renderToTex = true
-                }
-                "rotation" -> {
-                    f.updatePositionEditTexts()
-                    fractalView.r.renderToTex = true
-                }
-                "maxIter" -> {
-                    fractalView.r.renderToTex = true
-                }
-                "bailoutRadius" -> {
-                    f.updatePositionEditTexts()
-                    fractalView.r.renderToTex = true
-                }
-                "palette" -> {}
-                "frequency" -> {
-                    f.updateColorParamEditTexts()
-                }
-                "phase" -> {
-                    f.updateColorParamEditTexts()
-                }
-            }
-            fractalView.requestRender()
-        }
-        else {
-            Log.d("MAIN ACTIVITY", "$key already set to $value")
         }
     }
     override fun onSettingsParamsChanged(key: String, value: Any) {
-        if (f.settingsConfig.params[key] != value) {
-            Log.d("MAIN ACTIVITY", "$key set from ${f.settingsConfig.params[key]} to $value")
-            f.settingsConfig.params[key] = value
+        if (f.sc.params[key] != value) {
+            Log.d("MAIN ACTIVITY", "$key set from ${f.sc.params[key]} to $value")
+            f.sc.params[key] = value
             when (key) {
                 "resolution" -> {
                     f.resolutionChanged = true
-                    fractalView.r.renderToTex = true
-                    fractalView.requestRender()
+                    fsv.r.renderToTex = true
+                    fsv.requestRender()
                 }
                 "precision" -> {
                     f.renderShaderChanged = true
-                    fractalView.r.renderToTex = true
-                    fractalView.requestRender()
+                    fsv.r.renderToTex = true
+                    fsv.requestRender()
                 }
                 "continuousRender" -> {
                     f.renderProfileChanged = true
-                    fractalView.r.renderToTex = true
-                    fractalView.requestRender()
+                    fsv.r.renderToTex = true
+                    fsv.requestRender()
                 }
                 "displayParams" -> {
                     val displayParams = findViewById<LinearLayout>(R.id.displayParams)
                     if (value as Boolean) {
-                        for (i in 0 until fractalView.numDisplayParams()) {
+                        for (i in 0 until fsv.numDisplayParams()) {
                             displayParams.addView(displayParamRows[i])
                         }
-                        fractalView.f.updateDisplayParams(fractalView.reaction, false)
+                        fsv.f.updateDisplayParams(fsv.reaction, false)
                     }
                     else {
                         displayParams.removeViews(1, displayParams.childCount - 1)
                     }
                 }
                 "saveToFile" -> {
-                    if (fractalView.r.isRendering) {
+                    if (fsv.r.isRendering) {
                         val toast = Toast.makeText(baseContext, "Please wait for the image to finish rendering", Toast.LENGTH_SHORT)
                         toast.show()
                     }
@@ -770,18 +734,18 @@ class MainActivity : AppCompatActivity(),
                                     WRITE_STORAGE_REQUEST_CODE)
                         }
                         else {
-                            fractalView.r.saveImage = true
-                            fractalView.requestRender()
+                            fsv.r.saveImage = true
+                            fsv.requestRender()
                             val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
                             toast.show()
                         }
                     }
-                    f.settingsConfig.params[key] = false
+                    f.sc.params[key] = false
                 }
                 "render" -> {
-                    fractalView.r.renderToTex = true
-                    fractalView.requestRender()
-                    f.settingsConfig.params[key] = false
+                    fsv.r.renderToTex = true
+                    fsv.requestRender()
+                    f.sc.params[key] = false
                 }
             }
         }
@@ -794,8 +758,8 @@ class MainActivity : AppCompatActivity(),
             WRITE_STORAGE_REQUEST_CODE -> {
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    fractalView.r.saveImage = true
-                    fractalView.requestRender()
+                    fsv.r.saveImage = true
+                    fsv.requestRender()
                     val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
                     toast.show()
                 } else {
