@@ -1,297 +1,314 @@
 package com.selfsimilartech.fractaleye
 
-import android.content.res.Resources
 import kotlin.math.sqrt
 
 class ComplexMap (
         val name            : String,
-        val katex           : String             = "$$",
+        val katex           : Int                = R.string.empty,
         val icon            : Int                = R.drawable.mandelbrot_icon,
-        val conditionalSF   : String?            = "",
-        val initSF          : String?            = "",
-        val loopSF          : String?            = "",
-        val finalSF         : String?            = "",
-        val conditionalDF   : String?            = "",
-        val initDF          : String?            = "",
-        val loopDF          : String?            = "",
-        val finalDF         : String?            = "",
+        val conditionalSF   : Int                = R.string.empty,
+        val initSF          : Int                = R.string.empty,
+        val loopSF          : Int                = R.string.empty,
+        val finalSF         : Int                = R.string.empty,
+        val conditionalDF   : Int                = R.string.empty,
+        val initDF          : Int                = R.string.empty,
+        val loopDF          : Int                = R.string.empty,
+        val finalDF         : Int                = R.string.empty,
         val textures        : List<String>       = Texture.arbitrary.keys.toList(),
-        val coords          : DoubleArray        = doubleArrayOf(0.0, 0.0),
-        val scale           : Double             = 1.0,
-        val params          : List<Param>        = listOf(),
-        val z0              : DoubleArray        = doubleArrayOf(0.0, 0.0),  // seed?
+        val positions       : PositionList       = PositionList(),
+        params              : List<Param>        = listOf(),
         val juliaMode       : Boolean            = false,
-        val bailout         : Float              = 1e5f
+        val z0              : Complex            = Complex.ZERO,   // seed?
+        val bailoutRadius   : Float?             = null
 ) {
 
-    class Lockable (
-            private var u: Double = 0.0,
-            var locked: Boolean = false
+
+    class Param (
+            u: Double = 0.0,
+            v: Double = 0.0,
+            uLocked: Boolean = false,
+            vLocked: Boolean = false
     ) {
 
-        fun get() : Double { return u }
-        fun set(U: Double, add: Boolean = true) {
-            if (!locked) {
-                if (add) { u += U }
-                else { u = U }
+        private val uInit = u
+        private val vInit = v
+        private val uLockedInit = uLocked
+        private val vLockedInit = vLocked
+
+        var uLocked = uLockedInit
+        var vLocked = vLockedInit
+        var u = u
+            set (value) {
+                if (!uLocked) {
+                    field = value
+                    // f.updateMapParamEditText(key[1].toString().toInt())
+                    // fsv.r.renderToTex = true
+                }
             }
+        var v = v
+            set (value) {
+                if (!vLocked) {
+                    field = value
+                    // f.updateMapParamEditText(key[1].toString().toInt())
+                    // fsv.r.renderToTex = true
+                }
+            }
+
+        fun reset() {
+            uLocked = false
+            vLocked = false
+            u = uInit
+            v = vInit
+            uLocked = uLockedInit
+            vLocked = vLockedInit
         }
 
     }
-    class Param (
-        initU: Double = 0.0,
-        initV: Double = 0.0,
-        uLocked: Boolean = false,
-        vLocked: Boolean = false
-    ) {
 
-        val u = Lockable(initU, uLocked)
-        val v = Lockable(initV, vLocked)
-
-    }
 
     companion object {
 
-        val empty           = { ComplexMap("Empty", "$$") }
-        val mandelbrot          = { res: Resources -> ComplexMap(
+
+        val empty = ComplexMap("Empty")
+        val mandelbrot = ComplexMap(
                 "Mandelbrot",
-                katex = res.getString(R.string.mandelbrot_katex),
+                katex = R.string.mandelbrot_katex,
                 icon = R.drawable.mandelbrot_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.mandelbrot_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.mandelbrot_loop_df),
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.mandelbrot_loop_sf,
+                conditionalDF = R.string.escape_df,
+                loopDF = R.string.mandelbrot_loop_df,
                 textures = Texture.all.keys.toList(),
-                coords = doubleArrayOf(-0.75, 0.0),
-                scale = 3.5
-        )}
-        val mandelbrotPower     = { res: Resources -> ComplexMap(
+                positions = PositionList(Position(x = -0.75, scale = 3.5))
+        )
+        val mandelbrotPower = ComplexMap(
                 "Mandelbrot Power",
-                katex = res.getString(R.string.mandelbrotcpow_katex),
+                katex = R.string.mandelbrotcpow_katex,
                 icon = R.drawable.mandelbrotpower_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.mandelbrotcpow_loop_sf),
-                scale = 3.5,
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.mandelbrotcpow_loop_sf,
+                positions = PositionList(Position(scale = 3.5)),
                 params = listOf(Param(4.0, vLocked = true))
-        )}
-        val mandelbrotDualPower = { res: Resources -> ComplexMap(
+        )
+        val mandelbrotDualPower = ComplexMap(
                 "Mandelbrot Dual Power",
-                katex = res.getString(R.string.dualpow_katex),
+                katex = R.string.dualpow_katex,
                 icon = R.drawable.mandelbrotdualpower_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                initSF = res.getString(R.string.dualpow_init_sf),
-                loopSF = res.getString(R.string.dualpow_loop_sf),
-                scale = 3.0,
-                z0 = doubleArrayOf(1.0, 0.0),
+                conditionalSF = R.string.escape_sf,
+                initSF = R.string.dualpow_init_sf,
+                loopSF = R.string.dualpow_loop_sf,
+                positions = PositionList(Position(scale = 3.0)),
+                z0 = Complex.ONE,
                 params = listOf(Param(2.0, vLocked = true))
-        )}
-        val mandelbox           = { res: Resources -> ComplexMap(
+        )
+        val mandelbox = ComplexMap(
                 "Mandelbox",
-                katex = res.getString(R.string.mandelbox_katex),
+                katex = R.string.mandelbox_katex,
                 icon = R.drawable.mandelbox_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.mandelbox_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.mandelbox_loop_df),
-                scale = 5.0,
-                params = listOf(Param(-2.66421354, vLocked = true))
-        ) }
-        val kali                = { res: Resources -> ComplexMap(
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.mandelbox_loop_sf,
+                conditionalDF = R.string.escape_df,
+                loopDF = R.string.mandelbox_loop_df,
+                positions = PositionList(Position(scale = 5.0)),
+                params = listOf(Param(-2.66421354, vLocked = true)),
+                bailoutRadius = 5f
+        )
+        val kali = ComplexMap(
                 "Kali",
-                katex = res.getString(R.string.kali_katex),
+                katex = R.string.kali_katex,
                 icon = R.drawable.kali_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.kali_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.kali_loop_df),
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.kali_loop_sf,
+                conditionalDF = R.string.escape_df,
+                loopDF = R.string.kali_loop_df,
                 juliaMode = true,
-                bailout = 4e0f,
-                scale = 4.0,
-                params = listOf(Param(-0.33170626, -0.18423799))
-        ) }
-        val kaliSquare          = { res: Resources -> ComplexMap(
+                positions = PositionList(julia = Position(scale = 2.0)),
+                params = listOf(Param(-0.33170626, -0.18423799)),
+                bailoutRadius = 4e0f
+        )
+        val kaliSquare = ComplexMap(
                 "Kali Square",
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.kalisquare_loop_sf),
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.kalisquare_loop_sf,
                 juliaMode = true,
-                bailout = 4e0f,
-                scale = 4.0
-        ) }
-        val mandelbar           = { res: Resources -> ComplexMap(
+                positions = PositionList(julia = Position(scale = 4.0)),
+                bailoutRadius = 4e0f
+        )
+        val mandelbar = ComplexMap(
                 "Mandelbar",
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.mandelbar_loop_sf),
-                scale = 3.5
-        )}
-        val logistic            = { res: Resources -> ComplexMap(
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.mandelbar_loop_sf,
+                positions = PositionList(Position(scale = 3.0))
+        )
+        val logistic = ComplexMap(
                 "Logistic",
-                katex = res.getString(R.string.logistic_katex),
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.logistic_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.logistic_loop_df),
-                scale = 3.5,
-                z0 = doubleArrayOf(0.5, 0.0)
-        ) }
-        val burningShip         = { res: Resources -> ComplexMap(
+                katex = R.string.logistic_katex,
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.logistic_loop_sf,
+                conditionalDF = R.string.escape_df,
+                loopDF = R.string.logistic_loop_df,
+                positions = PositionList(Position(scale = 3.5)),
+                z0 = Complex(0.5, 0.0)
+        )
+        val burningShip = ComplexMap(
                 "Burning Ship",
-                katex = res.getString(R.string.burningship_katex),
+                katex = R.string.burningship_katex,
                 icon = R.drawable.burningship_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                initSF = res.getString(R.string.burningship_init_sf),
-                loopSF = res.getString(R.string.burningship_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                initDF = res.getString(R.string.burningship_init_df),
-                loopDF = res.getString(R.string.burningship_loop_df),
-                coords = doubleArrayOf(-0.45, 0.25),
-                scale = 3.5
-        ) }
-        val magnet              = { res: Resources -> ComplexMap(
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.burningship_loop_sf,
+                conditionalDF = R.string.escape_df,
+                loopDF = R.string.burningship_loop_df,
+                positions = PositionList(Position(-0.45, -0.25, 3.5, Math.PI))
+        )
+        val magnet = ComplexMap(
                 "Magnet",
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.magnet_loop_sf),
-                scale = 3.5,
-                bailout = 4e0f,
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.magnet_loop_sf,
+                positions = PositionList(Position(scale = 3.5)),
                 params = listOf(
                         Param(-1.0, vLocked = true),
-                        Param(-2.0, vLocked = true))
-        ) }
-        val sine1               = { res: Resources -> ComplexMap(
+                        Param(-2.0, vLocked = true)),
+                bailoutRadius = 4e0f
+        )
+        val sine1 = ComplexMap(
                 "Sine 1",
-                katex = res.getString(R.string.sine1_katex),
+                katex = R.string.sine1_katex,
                 icon = R.drawable.sine1_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.sine1_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.sine1_loop_df),
-                scale = 3.5
-        )}
-        val sine2               = { res: Resources -> ComplexMap(
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.sine1_loop_sf,
+                positions = PositionList(Position(scale = 3.5)),
+                bailoutRadius = 1e4f
+        )
+        val sine2 = ComplexMap(
                 "Sine 2",
-                katex = res.getString(R.string.sine2_katex),
+                katex = R.string.sine2_katex,
                 icon = R.drawable.sine2_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.sine2_loop_sf),
-                scale = 3.5,
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.sine2_loop_sf,
+                positions = PositionList(Position(scale = 3.5)),
                 params = listOf(Param(-0.26282884)),
-                z0 = doubleArrayOf(1.0, 0.0)
-        ) }
-        val sine3               = { res: Resources -> ComplexMap(
+                z0 = Complex.ONE
+        )
+        val sine3 = ComplexMap(
                 "Sine 3",
-                katex = res.getString(R.string.sine3_katex),
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.sine3_loop_sf),
-                scale = 3.5,
-                bailout = 1e1f,
+                katex = R.string.sine3_katex,
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.sine3_loop_sf,
+                positions = PositionList(Position(scale = 3.5)),
                 params = listOf(Param(0.31960705187983646, vLocked = true)),
-                z0 = doubleArrayOf(1.0, 0.0)
-        )}
-        val horseshoeCrab       = { res: Resources -> ComplexMap(
+                z0 = Complex.ONE,
+                bailoutRadius = 1e1f
+        )
+        val horseshoeCrab = ComplexMap(
                 "Horseshoe Crab",
-                katex = res.getString(R.string.horseshoecrab_katex),
+                katex = R.string.horseshoecrab_katex,
                 icon = R.drawable.horseshoecrab_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.horseshoecrab_loop_sf),
-                conditionalDF = res.getString(R.string.escape_df),
-                loopDF = res.getString(R.string.horseshoecrab_loop_df),
-                scale = 5.0,
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.horseshoecrab_loop_sf,
+                positions = PositionList(Position(scale = 5.0)),
                 params = listOf(Param(sqrt(2.0))),
-                z0 = doubleArrayOf(1.0, 0.0)
-        )}
-        val newton2             = { res: Resources -> ComplexMap(
+                z0 = Complex.ONE
+        )
+        val newton2 = ComplexMap(
                 "Newton 2",
-                conditionalSF = res.getString(R.string.converge_sf),
-                loopSF = res.getString(R.string.newton2_loop_sf),
-                scale = 3.5,
+                conditionalSF = R.string.converge_sf,
+                loopSF = R.string.newton2_loop_sf,
+                positions = PositionList(julia = Position(scale = 3.5)),
                 params = listOf(
                         Param(1.0, 1.0),
                         Param(-1.0, -1.0),
                         Param(2.0, -0.5)
                 ),
                 juliaMode = true
-        ) }
-        val newton3             = { res: Resources -> ComplexMap(
+        )
+        val newton3 = ComplexMap(
                 "Newton 3",
-                katex = res.getString(R.string.newton3_katex),
-                conditionalSF = res.getString(R.string.converge_sf),
-                loopSF = res.getString(R.string.newton3_loop_sf),
-                scale = 5.0,
+                katex = R.string.newton3_katex,
+                conditionalSF = R.string.converge_sf,
+                loopSF = R.string.newton3_loop_sf,
+                positions = PositionList(julia = Position(scale = 5.0)),
                 juliaMode = true
-        ) }
-        val persianRug          = { res: Resources -> ComplexMap(
+        )
+        val persianRug = ComplexMap(
                 "Persian Rug",
-                katex = res.getString(R.string.persianrug_katex),
-                initSF = res.getString(R.string.persianrug_init_sf),
-                conditionalSF = res.getString(R.string.escape_sf),
-                loopSF = res.getString(R.string.persianrug_loop_sf),
-                scale = 1.5,
+                katex = R.string.persianrug_katex,
+                initSF = R.string.persianrug_init_sf,
+                conditionalSF = R.string.escape_sf,
+                loopSF = R.string.persianrug_loop_sf,
+                positions = PositionList(Position(scale = 1.5)),
                 params = listOf(Param(0.642, 0.0)),
-                bailout = 1e1f
-        )}
-        val kleinian            = { res: Resources -> ComplexMap(
+                bailoutRadius = 1e1f
+        )
+        val kleinian = ComplexMap(
                 "Kleinian",
                 icon = R.drawable.kleinian_icon,
-                conditionalSF = res.getString(R.string.escape_sf),
-                initSF = res.getString(R.string.kleinian_init_sf),
-                loopSF = res.getString(R.string.kleinian_loop_sf),
-                scale = 1.2,
-                coords = doubleArrayOf(0.0, -0.5),
+                conditionalSF = R.string.escape_sf,
+                initSF = R.string.kleinian_init_sf,
+                loopSF = R.string.kleinian_loop_sf,
+                positions = PositionList(julia = Position(y = -0.5, scale = 1.2)),
                 params = listOf(
                         Param(2.0, vLocked = true),
                         Param(0.0, -1.0)
                 ),
-                juliaMode = true
-        )}
-        val nova1               = { res: Resources -> ComplexMap(
+                juliaMode = true,
+                bailoutRadius = 1e5f
+        )
+        val nova1 = ComplexMap(
                 "Nova 1",
-                katex = res.getString(R.string.nova1_katex),
+                katex = R.string.nova1_katex,
                 icon = R.drawable.nova1_icon,
-                conditionalSF = res.getString(R.string.converge_sf),
-                loopSF = res.getString(R.string.nova1_loop_sf),
-                coords = doubleArrayOf(-0.3, 0.0),
-                scale = 1.5,
-                z0 = doubleArrayOf(1.0, 0.0),
+                conditionalSF = R.string.converge_sf,
+                loopSF = R.string.nova1_loop_sf,
+                positions = PositionList(Position(x = -0.3, scale = 1.5)),
+                z0 = Complex.ONE,
                 params = listOf(
                         Param(1.0, 0.0)
                 )
-        ) }
-        val nova2               = { res: Resources -> ComplexMap(
+        )
+        val nova2 = ComplexMap(
                 "Nova 2",
-                katex = res.getString(R.string.nova2_katex),
+                katex = R.string.nova2_katex,
                 icon = R.drawable.nova2_icon,
-                conditionalSF = res.getString(R.string.converge_sf),
-                loopSF = res.getString(R.string.nova2_loop_sf),
+                conditionalSF = R.string.converge_sf,
+                loopSF = R.string.nova2_loop_sf,
                 juliaMode = true,
-                scale = 5.0,
-                coords = doubleArrayOf(-0.3, 0.0)
-        ) }
-        val test                = { res: Resources -> ComplexMap(
+                positions = PositionList(julia = Position(x = -0.3, scale = 5.0))
+        )
+        val test = ComplexMap(
                 "Test",
-                conditionalSF = res.getString(R.string.converge_sf),
-                initSF = res.getString(R.string.test_init_sf),
-                loopSF = res.getString(R.string.test_loop_sf),
-                z0 = doubleArrayOf(1.0, 0.0),
-                scale = 3.5
-        )}
-        val all                 = mapOf(
-                "Mandelbrot"            to  mandelbrot,
-                "Mandelbrot Power"      to  mandelbrotPower,
-                "Mandelbrot Dual Power" to  mandelbrotDualPower,
-                "Burning Ship"          to  burningShip,
-                "Mandelbox"             to  mandelbox,
-                "Kali"                  to  kali,
-                "Sine 1"                to  sine1,
-                "Sine 2"                to  sine2,
-                "Horseshoe Crab"        to  horseshoeCrab,
-                "Kleinian"              to  kleinian,
-                "Nova 1"                to  nova1,
-                "Nova 2"                to  nova2,
-                "Test"                  to  test
+                conditionalSF = R.string.converge_sf,
+                initSF = R.string.test_init_sf,
+                loopSF = R.string.test_loop_sf,
+                z0 = Complex.ONE,
+                positions = PositionList(Position(scale = 3.5))
+        )
+        val all = mapOf(
+                "Mandelbrot"             to  mandelbrot,
+                "Mandelbrot Power"       to  mandelbrotPower,
+                "Mandelbrot Dual Power"  to  mandelbrotDualPower,
+                "Burning Ship"           to  burningShip,
+                "Mandelbox"              to  mandelbox,
+                "Kali"                   to  kali,
+                "Sine 1"                 to  sine1,
+                "Sine 2"                 to  sine2,
+                "Horseshoe Crab"         to  horseshoeCrab,
+                "Kleinian"               to  kleinian,
+                "Nova 1"                 to  nova1,
+                "Nova 2"                 to  nova2,
+                "Test"                   to  test
         )
 
     }
 
-    val hasDualFloat = loopDF != ""
+    val numParams = params.size
+    val hasDualFloat = loopDF != R.string.empty
+    val params = List(NUM_MAP_PARAMS) { i: Int ->
+        if (i < params.size) { params[i] }
+        else { Param() }
+    }
+    var position = if (juliaMode) positions.julia else positions.default
+
+
     override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
         return other is ComplexMap && name == other.name
