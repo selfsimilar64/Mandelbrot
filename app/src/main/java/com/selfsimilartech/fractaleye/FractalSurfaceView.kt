@@ -174,8 +174,8 @@ class FractalSurfaceView(
             private val fSampleShader : Int
 
             // define texture resolutions
-            private val bgTexWidth = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[0]/8 }
-            private val bgTexHeight = { if (f.settingsConfig.continuousRender()) 1 else f.screenRes[1]/8 }
+            private val bgTexWidth = { if (f.sc.continuousRender()) 1 else f.screenRes[0]/8 }
+            private val bgTexHeight = { if (f.sc.continuousRender()) 1 else f.screenRes[1]/8 }
 
             private val interpolation = { GL_NEAREST }
 
@@ -183,7 +183,7 @@ class FractalSurfaceView(
                     GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL_NEAREST, GL_RG16F, 0),
                     GLTexture(f.texRes(), interpolation(), GL_RG16F, 1),
                     GLTexture(f.texRes(), interpolation(), GL_RG16F, 2)
-//                    GLTexture(intArrayOf(f.fractalConfig.maxIter(), 1), GL_NEAREST, GL_RG32F, 3)    // perturbation texture
+//                    GLTexture(intArrayOf(f.maxIter(), 1), GL_NEAREST, GL_RG32F, 3)    // perturbation texture
 //                    GLTexture(intArrayOf(bgTexWidth(), bgTexHeight()), GL_NEAREST, GL_RGBA, 0),
 //                    GLTexture(f.texRes(), interpolation(), GL_RGBA, 1),
 //                    GLTexture(f.texRes(), interpolation(), GL_RGBA, 2)
@@ -354,7 +354,7 @@ class FractalSurfaceView(
                 val texRes = f.texRes()
                 val xPixels = xLength / 2.0f * texRes[0]
                 val yPixels = yLength / 2.0f * texRes[1]
-                val maxPixelsPerChunk = when (f.autoPrecision()) {
+                val maxPixelsPerChunk = when (f.autoPrecision) {
                     Precision.SINGLE -> f.screenRes[0]*f.screenRes[1]/4
                     Precision.DUAL -> f.screenRes[0]*f.screenRes[1]/8
                     else -> f.screenRes[0]*f.screenRes[1]
@@ -390,7 +390,7 @@ class FractalSurfaceView(
                 val numProbes = 25
                 var orbitArray : FloatArray = floatArrayOf()
                 var z : Complex
-                var c = Complex(f.fractalConfig.coords()[0], f.fractalConfig.coords()[1])
+                var c = Complex(f.map.position.x, f.map.position.y)
                 var modZ = 0.0
                 var alpha : Complex
                 var beta : Complex
@@ -406,12 +406,12 @@ class FractalSurfaceView(
 
                     Log.d("RENDER ROUTINE", "j: $j")
 
-                    orbitArray = FloatArray(f.fractalConfig.maxIter()*2) { 0f }
+                    orbitArray = FloatArray(f.maxIter*2) { 0f }
                     z = Complex(0.0, 0.0)
                     alpha = Complex(0.0, 0.0)
                     beta = Complex(0.0, 0.0)
 
-                    for (i in 0 until f.fractalConfig.maxIter()) {
+                    for (i in 0 until f.maxIter) {
 
                         orbitArray[2 * i] = z.x.toFloat()
                         orbitArray[2 * i + 1] = z.y.toFloat()
@@ -427,12 +427,12 @@ class FractalSurfaceView(
                         modZ = z.mod()
                         //Log.d("RENDER ROUTINE", "x: $x, y: $y")
 
-                        if (i == f.fractalConfig.maxIter() - 1) {
+                        if (i == f.maxIter - 1) {
                             Log.d("RENDER ROUTINE", "maxIter !!!!!")
                             maxIterFound = true
                             iterations[j] = i
                         }
-                        if (modZ > f.fractalConfig.bailoutRadius()) {
+                        if (modZ > f.bailoutRadius) {
                             Log.d("RENDER ROUTINE", "i: $i")
                             iterations[j] = i
                             break
@@ -474,7 +474,7 @@ class FractalSurfaceView(
                         GL_TEXTURE_2D,           // target
                         0,                          // mipmap level
                         GL_RG32F,                // internal format
-                        f.fractalConfig.maxIter(), 1, // texture resolution
+                        f.maxIter, 1, // texture resolution
                         0,                          // border
                         GL_RG,                     // internalFormat
                         GL_FLOAT,                       // type
@@ -482,8 +482,8 @@ class FractalSurfaceView(
                 )
 
                 // glUniform1i(orbitHandle, perturbationIndex)
-                val xCoordSD = f.fractalConfig.coords()[0] - c.x
-                val yCoordSD = f.fractalConfig.coords()[1] - c.y
+                val xCoordSD = f.map.position.x - c.x
+                val yCoordSD = f.map.position.y - c.y
 
             }
             fun renderToTexture() {
@@ -552,22 +552,23 @@ class FractalSurfaceView(
 
                 // pass in map params
                 for (i in mapParamHandles.indices) {
-                    val p = (f.fractalConfig.params["p${i+1}"] as ComplexMap.Param)
-                    val pArray = floatArrayOf(p.u.get().toFloat(), p.v.get().toFloat())
+                    val pArray =
+                            if (i < f.numParamsInUse) floatArrayOf(f.map.params[i].u.toFloat(), f.map.params[i].v.toFloat())
+                            else floatArrayOf(0f, 0f)
                     // Log.d("RENDER ROUTINE", "passing p${i+1} in as (${pArray[0]}, ${pArray[1]})")
                     glUniform2fv(mapParamHandles[i], 1, pArray, 0)
                 }
 
                 // pass in texture params
                 for (i in textureParamHandles.indices) {
-                    // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.fractalConfig.params["q${i+1}"]}")
-                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf((f.fractalConfig.params["q${i+1}"] as Double).toFloat()), 0)
+                    // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.params["q${i+1}"]}")
+                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf(f.texture.params[i].t.toFloat()), 0)
                 }
 
-                val xScaleSD = f.fractalConfig.scale()[0] / 2.0
-                val yScaleSD = f.fractalConfig.scale()[1] / 2.0
-                val xCoordSD = f.fractalConfig.coords()[0]
-                val yCoordSD = f.fractalConfig.coords()[1]
+                val xScaleSD = f.map.position.scale / 2.0
+                val yScaleSD = f.map.position.scale*f.aspectRatio / 2.0
+                val xCoordSD = f.map.position.x
+                val yCoordSD = f.map.position.y
 
                 // pass in position params
                 when (f.precision()) {
@@ -612,14 +613,14 @@ class FractalSurfaceView(
                     }
                     else -> {}
                 }
-                glUniform1fv( sinRotateHandle, 1, floatArrayOf(sin(f.fractalConfig.rotation()).toFloat()), 0 )
-                glUniform1fv( cosRotateHandle, 1, floatArrayOf(cos(f.fractalConfig.rotation()).toFloat()), 0 )
+                glUniform1fv( sinRotateHandle, 1, floatArrayOf(sin(f.map.position.rotation).toFloat()), 0 )
+                glUniform1fv( cosRotateHandle, 1, floatArrayOf(cos(f.map.position.rotation).toFloat()), 0 )
 
                 // pass in other parameters
-                glUniform1i(  iterHandle,         f.fractalConfig.maxIter()                               )
-                glUniform1fv( bailoutHandle,  1,  floatArrayOf(f.fractalConfig.bailoutRadius()),        0 )
-                glUniform1fv( x0Handle,       1,  floatArrayOf(f.fractalConfig.map().z0[0].toFloat()),  0 )
-                glUniform1fv( y0Handle,       1,  floatArrayOf(f.fractalConfig.map().z0[1].toFloat()),  0 )
+                glUniform1i(  iterHandle,         f.maxIter                               )
+                glUniform1fv( bailoutHandle,  1,  floatArrayOf(f.bailoutRadius),        0 )
+                glUniform1fv( x0Handle,       1,  floatArrayOf(f.map.z0.x.toFloat()),  0 )
+                glUniform1fv( y0Handle,       1,  floatArrayOf(f.map.z0.y.toFloat()),  0 )
 
                 glEnableVertexAttribArray(viewCoordsHandle)
 
@@ -730,7 +731,7 @@ class FractalSurfaceView(
                         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
                         glFinish()
                         chunksRendered++
-                        if (!f.settingsConfig.continuousRender()) {
+                        if (!f.sc.continuousRender()) {
                             context.findViewById<ProgressBar>(R.id.progressBar).progress =
                                     (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
                         }
@@ -742,7 +743,7 @@ class FractalSurfaceView(
                         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
                         glFinish()
                         chunksRendered++
-                        if (!f.settingsConfig.continuousRender()) {
+                        if (!f.sc.continuousRender()) {
                             context.findViewById<ProgressBar>(R.id.progressBar).progress =
                                     (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
                         }
@@ -863,7 +864,7 @@ class FractalSurfaceView(
                         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
                         glFinish()   // force chunk to finish rendering before continuing
                         chunksRendered++
-                        if(!f.settingsConfig.continuousRender()) {
+                        if(!f.sc.continuousRender()) {
                             context.findViewById<ProgressBar>(R.id.progressBar).progress =
                                     (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
                         }
@@ -948,10 +949,10 @@ class FractalSurfaceView(
                         .position(0)
 
                 glUniform1fv(yOrientColorHandle, 1, floatArrayOf(yOrient), 0)
-                glUniform1i(numColorsHandle, f.fractalConfig.palette().size)
-                glUniform3fv(paletteHandle, f.fractalConfig.palette().size, f.fractalConfig.palette().flatPalette(), 0)
-                glUniform1fv(frequencyHandle, 1, floatArrayOf(f.fractalConfig.frequency()), 0)
-                glUniform1fv(phaseHandle, 1, floatArrayOf(f.fractalConfig.phase()), 0)
+                glUniform1i(numColorsHandle, f.palette.size)
+                glUniform3fv(paletteHandle, f.palette.size, f.palette.getFlatPalette(resources), 0)
+                glUniform1fv(frequencyHandle, 1, floatArrayOf(f.frequency), 0)
+                glUniform1fv(phaseHandle, 1, floatArrayOf(f.phase), 0)
 
                 glEnableVertexAttribArray(viewCoordsColorHandle)
                 glEnableVertexAttribArray(quadCoordsColorHandle)
@@ -1150,7 +1151,7 @@ class FractalSurfaceView(
 
             hasScaled = true
 
-            // Log.d("fractalConfig.coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
+            // Log.d("coords()", "xQuadCoords: (${xQuadCoords[0]}, ${xQuadCoords[1]}), yQuadCoords: (${yQuadCoords[0]}, ${yQuadCoords[1]})")
 
         }
         private fun rotate(p: FloatArray, theta: Float) : FloatArray {
@@ -1242,7 +1243,7 @@ class FractalSurfaceView(
             // get OpenGL ES version
             val glVersion = unused.glGetString(GL_VERSION).split(" ")[2].toFloat()
             Log.d("SURFACE VIEW", "$glVersion")
-            f.glVersion = glVersion
+            // f.glVersion = glVersion
 
             // get fragment shader precision
 //            val a : IntBuffer = IntBuffer.allocate(2)
@@ -1264,7 +1265,7 @@ class FractalSurfaceView(
             // render to texture on ACTION_UP
             if (renderToTex) {
 
-                isRendering = !(f.settingsConfig.continuousRender()
+                isRendering = !(f.sc.continuousRender()
                         || reaction == Reaction.P1
                         || reaction == Reaction.P2
                         || reaction == Reaction.P3
@@ -1419,7 +1420,7 @@ class FractalSurfaceView(
                             prevFocus[0] = focus[0]
                             prevFocus[1] = focus[1]
 
-                            if (!f.settingsConfig.continuousRender()) {
+                            if (!f.sc.continuousRender()) {
                                 r.setQuadFocus(focus)
                             }
 
@@ -1433,7 +1434,7 @@ class FractalSurfaceView(
                             prevAngle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
                             prevFocalLen = e.focalLength()
                             // Log.d("POSITION", "focalLen: $prevFocalLen")
-                            if (!f.settingsConfig.continuousRender()) {
+                            if (!f.sc.continuousRender()) {
                                 r.setQuadFocus(focus)
                             }
                             return true
@@ -1443,9 +1444,8 @@ class FractalSurfaceView(
                             val dx: Float = focus[0] - prevFocus[0]
                             val dy: Float = focus[1] - prevFocus[1]
 
-                            // Log.d("POSITION", "MOVE -- dx: $dx, dy: $dy")
-                            f.translate(floatArrayOf(dx, dy))
-                            if (!f.settingsConfig.continuousRender()) {
+                            f.map.position.translate(dx/f.screenRes[0], dy/f.screenRes[0])
+                            if (!f.sc.continuousRender()) {
                                 r.translate(floatArrayOf(dx, dy))
                             }
                             prevFocus[0] = focus[0]
@@ -1454,10 +1454,16 @@ class FractalSurfaceView(
 
                                 // SCALE
                                 val focalLen = e.focalLength()
-                                // Log.d("POSITION", "MOVE -- prevFocalLen: $prevFocalLen, focalLen: $focalLen")
                                 val dFocalLen = focalLen / prevFocalLen
-                                f.scale(dFocalLen, focus)
-                                if (!f.settingsConfig.continuousRender()) {
+
+                                val prevScale = f.map.position.scale
+                                val prevPrecision = f.precision()
+                                f.map.position.scale(dFocalLen, doubleArrayOf(
+                                        focus[0].toDouble() / f.screenRes[0].toDouble() - 0.5,
+                                        -(focus[1].toDouble() / f.screenRes[0].toDouble() - 0.5*f.aspectRatio)))
+                                f.checkThresholdCross(prevScale, prevPrecision)
+
+                                if (!f.sc.continuousRender()) {
                                     r.scale(dFocalLen)
                                 }
                                 prevFocalLen = focalLen
@@ -1465,16 +1471,20 @@ class FractalSurfaceView(
                                 // ROTATE
                                 val angle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
                                 val dtheta = angle - prevAngle
-                                f.rotate(dtheta, focus)
+                                f.map.position.rotate(dtheta, doubleArrayOf(
+                                        focus[0].toDouble() / f.screenRes[0].toDouble() - 0.5,
+                                        -(focus[1].toDouble() / f.screenRes[0].toDouble() - 0.5*f.aspectRatio)))
                                 r.rotate(dtheta)
 
                                 prevAngle = angle
 
                             }
 
-                            if (f.settingsConfig.continuousRender()) {
+                            if (f.sc.continuousRender()) {
                                 r.renderToTex = true
                             }
+
+                            f.updateDisplayParams(reaction)
                             requestRender()
 
                             return true
@@ -1482,6 +1492,7 @@ class FractalSurfaceView(
                         MotionEvent.ACTION_UP -> {
                             // Log.d("POSITION", "POINTER UP")
                             f.updatePositionEditTexts()
+                            f.updateDisplayParams(reaction)
                             r.renderToTex = true
                             requestRender()
                             return true
@@ -1492,9 +1503,6 @@ class FractalSurfaceView(
                                 0 -> {
                                     prevFocus[0] = e.getX(1)
                                     prevFocus[1] = e.getY(1)
-
-                                    // change quad anchor to remaining pointer
-                                    if (!f.settingsConfig.continuousRender()) {  }
                                 }
                                 1 -> {
                                     prevFocus[0] = e.getX(0)
@@ -1531,17 +1539,18 @@ class FractalSurfaceView(
                             // Log.d("COLOR", "MOVE -- dx: $dx")
                             when (e.pointerCount) {
                                 1 -> {
-                                    f.setPhase(dx)
+                                    f.phase += dx/f.screenRes[0]
                                     prevFocus[0] = focus[0]
                                     prevFocus[1] = focus[1]
                                 }
                                 2 -> {
                                     val focalLen = e.focalLength()
                                     val dFocalLen = focalLen / prevFocalLen
-                                    f.setFrequency(dFocalLen)
+                                    f.frequency *= dFocalLen
                                     prevFocalLen = focalLen
                                 }
                             }
+                            f.updateDisplayParams(reaction)
                             requestRender()
                             return true
                         }
@@ -1560,7 +1569,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            f.updateColorParamEditTexts()
+                            f.updateColorEditTexts()
                             // Log.d("COLOR", "ACTION UP")
                             return true
                         }
@@ -1592,9 +1601,11 @@ class FractalSurfaceView(
                             val dx = focus[0] - prevFocus[0]
                             val dy = focus[1] - prevFocus[1]
                             // Log.d("PARAMETER", "MOVE -- dx: $dx, dy: $dy")
+                            val i = reaction.name[1].toString().toInt()
                             when (e.pointerCount) {
                                 1 -> {
-                                    f.setMapParam(reaction.name[1].toString().toInt(), floatArrayOf(dx, dy))
+                                    f.map.params[i-1].u += f.sensitivity*dx/f.screenRes[0]
+                                    f.map.params[i-1].v -= f.sensitivity*dy/f.screenRes[1]
                                     prevFocus[0] = focus[0]
                                     prevFocus[1] = focus[1]
                                     r.renderToTex = true
@@ -1603,10 +1614,11 @@ class FractalSurfaceView(
                                 2 -> {
                                     val focalLen = e.focalLength()
                                     val dFocalLen = focalLen / prevFocalLen
-                                    f.setMapParamSensitivity(reaction.name[1].toString().toInt(), dFocalLen)
+                                    f.sensitivity *= dFocalLen
                                     prevFocalLen = focalLen
                                 }
                             }
+                            f.updateDisplayParams(reaction)
                             return true
                         }
                         MotionEvent.ACTION_POINTER_UP -> {
@@ -1624,7 +1636,11 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            f.updateMapParamEditTexts()
+                            val i = reaction.name[1].toString().toInt()
+                            f.updateMapParamEditText(i)
+                            f.updateDisplayParams(reaction)
+                            r.renderToTex = true
+                            requestRender()
                             // Log.d("PARAMETER", "POINTER UP")
                             return true
                         }
