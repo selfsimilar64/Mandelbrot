@@ -24,18 +24,21 @@ import kotlin.math.pow
 
 class FractalEditFragment : Fragment() {
 
-    private lateinit var callback : OnParamChangeListener
     private lateinit var complexMapSpinner : Spinner
     private lateinit var textureAlgSpinner : Spinner
     private lateinit var colorPaletteSpinner : Spinner
     private lateinit var juliaModeSwitch : Switch
 
-    lateinit var config : FractalConfig
+    lateinit var f : Fractal
+    lateinit var fsv : FractalSurfaceView
+    lateinit var v : View
 
+    
+    
     @SuppressLint("SetTextI18n")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
-        val v = inflater.inflate(R.layout.fractal_fragment, container, false)
+        v = inflater.inflate(R.layout.fractal_fragment, container, false)
 
         val mapParamLayouts = listOf<ConstraintLayout>(
                 v.findViewById(R.id.p1Layout),
@@ -153,115 +156,133 @@ class FractalEditFragment : Fragment() {
         colorCardBody.layoutParams.height = 0
         positionCardBody.layoutParams.height = 0
 
-        val editListenerNext = {
-            editText: EditText, nextEditText: EditText, key: String, value: (w: TextView)-> Any -> TextView.OnEditorActionListener {
-            w, actionId, _ -> when (actionId) {
-            EditorInfo.IME_ACTION_NEXT -> {
-                callback.onFractalParamsChanged(key, value(w))
-                editText.clearFocus()
-                editText.isSelected = false
+        val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
+            -> TextView.OnEditorActionListener { editText, actionId, _ ->
+            when (actionId) {
+                EditorInfo.IME_ACTION_NEXT -> {
+                    setValueAndFormat(editText as EditText)
+                    editText.clearFocus()
+                    editText.isSelected = false
+                    nextEditText?.requestFocus()
+                }
+                EditorInfo.IME_ACTION_DONE -> {
+                    setValueAndFormat(editText as EditText)
+                    val imm = v.context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+                    editText.clearFocus()
+                    editText.isSelected = false
+                }
+                else -> {
+                    Log.d("EQUATION FRAGMENT", "some other action")
+                }
+            }
 
-                nextEditText.requestFocus()
-                true
-            }
-            else -> {
-                Log.d("EQUATION FRAGMENT", "some other action")
-                false
-            }
-        }
-        }
-        }
-        val editListenerDone = {
-            editText: EditText, key: String, value: (w: TextView)->Any -> TextView.OnEditorActionListener {
-            w, actionId, _ -> when (actionId) {
-            EditorInfo.IME_ACTION_DONE -> {
-                callback.onFractalParamsChanged(key, value(w))
-                val imm = v.context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(v.windowToken, 0)
-                editText.clearFocus()
-                editText.isSelected = false
-                true
-            }
-            else -> {
-                Log.d("EQUATION FRAGMENT", "some other action")
-                false
-            }
-        }
-        }
-        }
+
+            fsv.requestRender()
+            true
+
+        }}
         val lockListener = { i: Int, j: Int -> View.OnClickListener {
             val lock = it as ToggleButton
             when (j) {
-                0 -> (config.params["p$i"] as ComplexMap.Param).u.locked = lock.isChecked
-                1 -> (config.params["p$i"] as ComplexMap.Param).v.locked = lock.isChecked
+                0 -> f.map.params[i].uLocked = lock.isChecked
+                1 -> f.map.params[i].vLocked = lock.isChecked
             }
+            Log.e("FRACTAL EDIT FRAGMENT", "param ${i+1} component ${j+1} locked ?= ${lock.isChecked}")
         }}
 
 
 
 
 
+
+
+
+
         // POSITION EDIT FIELDS
+
         val xCoordEdit = v.findViewById<EditText>(R.id.xCoordEdit)
         val yCoordEdit = v.findViewById<EditText>(R.id.yCoordEdit)
-        xCoordEdit.setText("%.17f".format(config.coords()[0]))
-        yCoordEdit.setText("%.17f".format(config.coords()[1]))
-        xCoordEdit.setOnEditorActionListener(editListenerNext(xCoordEdit, yCoordEdit, "coords") { w: TextView ->
-            doubleArrayOf(
-                    w.text.toString().toDouble(),
-                    config.coords()[1]
-            )
+        xCoordEdit.setText("%.17f".format(f.map.position.x))
+        yCoordEdit.setText("%.17f".format(f.map.position.y))
+        xCoordEdit.setOnEditorActionListener(editListener(yCoordEdit) { w: TextView ->
+            f.map.position.x = w.text.toString().toDouble()
+            w.text = "%.17f".format(f.map.position.x)
+            fsv.r.renderToTex = true
         })
-        yCoordEdit.setOnEditorActionListener(editListenerDone(yCoordEdit, "coords") { w: TextView ->
-            doubleArrayOf(
-                    config.coords()[0],
-                    w.text.toString().toDouble()
-            )
+        yCoordEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+            f.map.position.y = w.text.toString().toDouble()
+            w.text = "%.17f".format(f.map.position.y)
+            fsv.r.renderToTex = true
         })
 
-        val scaleStrings = "%e".format(config.scale()[0]).split("e")
         val scaleSignificandEdit = v.findViewById<EditText>(R.id.scaleSignificandEdit)
         val scaleExponentEdit = v.findViewById<EditText>(R.id.scaleExponentEdit)
-        scaleSignificandEdit.setText(scaleStrings[0])
-        scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
         scaleSignificandEdit.setOnEditorActionListener(
-                editListenerNext(scaleSignificandEdit, scaleExponentEdit, "scale") { w: TextView ->
-                    val aspectRatio = config.scale()[1]/config.scale()[0]
-                    val s = "${w.text}e${scaleExponentEdit.text}".toDouble()
-                    doubleArrayOf(s, s*aspectRatio)
+                editListener(scaleExponentEdit) { w: TextView ->
+
+                    val prevScale = f.map.position.scale
+                    val prevPrecision = f.precision()
+
+                    f.map.position.scale = "${w.text}e${scaleExponentEdit.text}".toDouble()
+                    val scaleStrings = "%e".format(f.map.position.scale).split("e")
+                    w.text = "%.5f".format(scaleStrings[0].toFloat())
+
+                    f.checkThresholdCross(prevScale, prevPrecision)
+
+                    fsv.r.renderToTex = true
+
                 })
         scaleExponentEdit.setOnEditorActionListener(
-                editListenerDone(scaleExponentEdit, "scale") { w: TextView ->
-                    val aspectRatio = config.scale()[1]/config.scale()[0]
-                    val s = "${scaleSignificandEdit.text}e${w.text}".toDouble()
-                    doubleArrayOf(s, s*aspectRatio)
-                })
+                editListener(null) { w: TextView ->
 
-        val bailoutStrings = "%e".format(config.bailoutRadius()).split("e")
-        val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
-        val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
-        bailoutSignificandEdit.setText(bailoutStrings[0])
-        bailoutExponentEdit.setText("%d".format(bailoutStrings[1].toInt()))
-        bailoutSignificandEdit.setOnEditorActionListener(
-                editListenerNext(bailoutSignificandEdit, bailoutExponentEdit, "bailoutRadius") {
-                    w: TextView -> "${w.text}e${bailoutExponentEdit.text}".toFloat()
-                })
-        bailoutExponentEdit.setOnEditorActionListener(
-                editListenerDone(bailoutExponentEdit, "bailoutRadius") {
-                    w: TextView -> "${bailoutSignificandEdit.text}e${w.text}".toFloat()
+                    val prevScale = f.map.position.scale
+                    val prevPrecision = f.precision()
+
+                    f.map.position.scale = "${scaleSignificandEdit.text}e${w.text}".toDouble()
+                    val scaleStrings = "%e".format(f.map.position.scale).split("e")
+                    w.text = "%d".format(scaleStrings[1].toInt())
+
+                    f.checkThresholdCross(prevScale, prevPrecision)
+
+                    fsv.r.renderToTex = true
+
                 })
 
         val rotationEdit = v.findViewById<EditText>(R.id.rotationEdit)
-        rotationEdit.setText("%.0f".format(config.rotation() * 180.0 / Math.PI))
-        rotationEdit.setOnEditorActionListener(editListenerDone(rotationEdit, "rotation") {
-            w: TextView -> w.text.toString().toDouble() * Math.PI / 180.0
+        rotationEdit.setText("%.0f".format(f.map.position.rotation * 180.0 / Math.PI))
+        rotationEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+            f.map.position.rotation = w.text.toString().toDouble() * Math.PI / 180.0
+            w.text = "%.0f".format(f.map.position.rotation * 180.0 / Math.PI)
+            fsv.r.renderToTex = true
         })
 
 
 
 
 
-        // PARAMETER EDIT FIELDS
+
+
+        // SHAPE EDIT FIELDS
+
+        val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
+        val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
+        bailoutSignificandEdit.setOnEditorActionListener(
+                editListener(bailoutExponentEdit) { w: TextView ->
+                    f.bailoutRadius = "${w.text}e${bailoutExponentEdit.text}".toFloat()
+                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+                    w.text = "%.5f".format(bailoutStrings[0].toFloat())
+                    fsv.r.renderToTex = true
+                })
+        bailoutExponentEdit.setOnEditorActionListener(
+                editListener(null) { w: TextView ->
+                    f.bailoutRadius = "${bailoutSignificandEdit.text}e${w.text}".toFloat()
+                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+                    w.text = "%d".format(bailoutStrings[1].toInt())
+                    fsv.r.renderToTex = true
+                })
+
+
         val mapParamEditTexts = listOf<Pair<Pair<EditText, EditText>, Pair<ToggleButton, ToggleButton>>>(
                 Pair(
                     Pair(
@@ -293,45 +314,31 @@ class FractalEditFragment : Fragment() {
                         v.findViewById(R.id.v4Lock)))
         )
         mapParamEditTexts.forEachIndexed { i, pair1 ->
-            pair1.first.first.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).u.get()))
-            pair1.first.second.setText("%.8f".format((config.params["p${i + 1}"] as ComplexMap.Param).v.get()))
-            pair1.first.first.setOnEditorActionListener(editListenerNext(pair1.first.first, pair1.first.second, "p${i + 1}") {
-                w: TextView ->
-                ComplexMap.Param(
-                        "${w.text}".toDouble(),
-                        "${pair1.first.second.text}".toDouble(),
-                        (config.params["p${i + 1}"] as ComplexMap.Param).u.locked,
-                        (config.params["p${i + 1}"] as ComplexMap.Param).v.locked
-                )
+            pair1.first.first.setText("%.8f".format(f.map.params[i].u))
+            pair1.first.second.setText("%.8f".format(f.map.params[i].v))
+            pair1.first.first.setOnEditorActionListener(editListener(pair1.first.second) { w: TextView ->
+                f.map.params[i].u = "${w.text}".toDouble()
+                w.text = "%.8f".format((f.map.params[i].u))
+                fsv.r.renderToTex = true
             })
-            pair1.first.second.setOnEditorActionListener(editListenerDone(pair1.first.second, "p${i + 1}") {
-                w: TextView -> ComplexMap.Param(
-                        "${pair1.first.first.text}".toDouble(),
-                        "${w.text}".toDouble(),
-                        (config.params["p${i + 1}"] as ComplexMap.Param).u.locked,
-                        (config.params["p${i + 1}"] as ComplexMap.Param).v.locked
-                )
+            pair1.first.second.setOnEditorActionListener(editListener(null) { w: TextView ->
+                f.map.params[i].v = "${w.text}".toDouble()
+                w.text = "%.8f".format((f.map.params[i].v))
+                fsv.r.renderToTex = true
             })
-            pair1.second.first.setOnClickListener(lockListener(i + 1, 0))
-            pair1.second.second.setOnClickListener(lockListener(i + 1, 1))
+            pair1.second.first.setOnClickListener(lockListener(i, 0))
+            pair1.second.second.setOnClickListener(lockListener(i, 1))
         }
 
 
-        val q1Edit = v.findViewById<EditText>(R.id.q1Edit)
-        q1Edit.setText("%.3f".format(config.q1()))
-        q1Edit.setOnEditorActionListener(editListenerDone(q1Edit, "q1") {
-            w: TextView -> w.text.toString().toDouble()
-        })
 
-        val q2Edit = v.findViewById<EditText>(R.id.q2Edit)
-        q2Edit.setText("%.3f".format(config.q2()))
-        q2Edit.setOnEditorActionListener(editListenerDone(q2Edit, "q2") {
-            w: TextView -> w.text.toString().toDouble()
-        })
+
+
 
 
 
         // COLOR PALETTE SELECTION
+
         colorPaletteSpinner = v.findViewById(R.id.colorPaletteSpinner)
         colorPaletteSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
@@ -340,65 +347,78 @@ class FractalEditFragment : Fragment() {
             }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val item = parent?.getItemAtPosition(position) as ColorPalette
-                callback.onFractalParamsChanged("palette", item)
+                f.palette = parent?.getItemAtPosition(position) as ColorPalette
+                fsv.requestRender()
             }
 
         }
 
-        val adapter = ColorPaletteAdapter(
-                v.context,
-                List(ColorPalette.all.size) { i: Int -> ColorPalette.all.values.elementAt(i).invoke(resources) }
-        )
+        val adapter = ColorPaletteAdapter(v.context, ColorPalette.all.values.toList())
+
         // adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         colorPaletteSpinner.adapter = adapter
         colorPaletteSpinner.setSelection(ColorPalette.all.keys.indexOf(
-                savedInstanceState?.getString("palette") ?: config.palette().name)
+                savedInstanceState?.getString("palette") ?: f.palette.name)
         )
 
 
+
+        // COLOR EDIT FIELDS
+
         val frequencyEdit = v.findViewById<EditText>(R.id.frequencyEdit)
-        frequencyEdit.setText("%.5f".format(config.frequency()))
-        frequencyEdit.setOnEditorActionListener(editListenerDone(frequencyEdit, "frequency") {
-            it.text.toString().toFloat()
+        frequencyEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+            f.frequency = w.text.toString().toFloat()
+            w.text = "%.5f".format(f.frequency)
         })
 
         val phaseEdit = v.findViewById<EditText>(R.id.phaseEdit)
-        phaseEdit.setText("%.5f".format(config.phase()))
-        phaseEdit.setOnEditorActionListener(editListenerDone(frequencyEdit, "phase") {
-            it.text.toString().toFloat()
+        phaseEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+            f.phase = w.text.toString().toFloat()
+            w.text = "%.5f".format(f.phase)
         })
 
 
-        for (i in 0 until NUM_MAP_PARAMS) { functionCardBody.removeView(mapParamLayouts[i]) }
-        for (i in 0 until NUM_TEXTURE_PARAMS) { textureCardBody.removeView(textureParamEditRows[i]) }
+
+
+
 
 
 
         // JULIA MODE SWITCH
+
          val juliaListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
-             val juliaParamIndex = config.numParamsInUse()
-             Log.d("FRACTAL FRAGMENT", "juliaParamIndex: $juliaParamIndex")
+             val juliaParamIndex = f.numParamsInUse
+             Log.d("FRACTAL EDIT FRAGMENT", "juliaParamIndex: $juliaParamIndex")
              val juliaLayoutIndex = juliaLayout.indexOfChild(juliaModeSwitch)
              if (isChecked) {
                  juliaLayout.removeView(mapParamLayouts[juliaParamIndex])
                  juliaLayout.addView(mapParamLayouts[juliaParamIndex], juliaLayoutIndex + 1)
-                 complexMapKatex.setDisplayText(config.map().katex.format("P${config.numParamsInUse() + 1}"))
+                 complexMapKatex.setDisplayText(resources.getString(f.map.katex).format("P${f.numParamsInUse + 1}"))
+                 (activity as MainActivity).addMapParams(1)
              } else {
                  juliaLayout.removeView(mapParamLayouts[juliaParamIndex - 1])
-                 complexMapKatex.setDisplayText(config.map().katex.format("c"))
+                 complexMapKatex.setDisplayText(resources.getString(f.map.katex).format("c"))
+                 (activity as MainActivity).removeMapParams(1)
              }
-             callback.onFractalParamsChanged("juliaMode", isChecked)
+
+             f.juliaMode = isChecked
+             f.renderShaderChanged = true
+             fsv.r.renderToTex = true
+             fsv.requestRender()
+
          }
         juliaModeSwitch = v.findViewById(R.id.juliaModeSwitch)
-        if (config.map().juliaMode) { functionCardBody.removeView(juliaLayout) }
+        if (f.map.juliaMode) { functionCardBody.removeView(juliaLayout) }
         else { juliaModeSwitch.setOnCheckedChangeListener(juliaListener) }
 
 
 
 
 
+
+
         // COMPLEX MAP SELECTION
+
         complexMapSpinner = v.findViewById(R.id.complexMapSpinner)
         complexMapSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
@@ -406,17 +426,20 @@ class FractalEditFragment : Fragment() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
 
                 val item = parent?.getItemAtPosition(position).toString()
+                val nextMap = ComplexMap.all[item] ?: ComplexMap.empty
+                val mapChanged = nextMap != f.map
 
-                val nextMap = ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()
-                if (nextMap != config.map()) {
-                    if (juliaModeSwitch.isChecked && !config.map().juliaMode) {
-                        val juliaParamIndex = config.numParamsInUse() - 1
-                        Log.d("FRACTAL FRAGMENT", "params in use: ${config.numParamsInUse()}")
+                if (mapChanged) {
+
+                    if (juliaModeSwitch.isChecked && !nextMap.juliaMode) {
+                        val juliaParamIndex = f.numParamsInUse - 1
+                        Log.d("FRACTAL FRAGMENT", "params in use: ${f.numParamsInUse}")
                         juliaModeSwitch.setOnCheckedChangeListener { _, _ ->  }
                         juliaModeSwitch.isChecked = false
-                        juliaLayout.removeView(mapParamLayouts[juliaParamIndex])
-                        config.params["juliaMode"] = nextMap.juliaMode
+                        // juliaLayout.removeView(mapParamLayouts[juliaParamIndex])
                     }
+
+
                     if (nextMap.juliaMode) { functionCardBody.removeView(juliaLayout) }
                     else {
                         if (functionCardBody.indexOfChild(juliaLayout) == -1) { functionCardBody.addView(juliaLayout) }
@@ -426,29 +449,32 @@ class FractalEditFragment : Fragment() {
                 }
 
                 val mapLayoutIndex = functionCardBody.indexOfChild(complexMapKatexLayout)
-                for (i in 0 until config.map().params.size) {
-                    // Log.d("FRACTAL FRAGMENT", "MAP -- removing row ${i + 1}")
+                for (i in 0 until NUM_MAP_PARAMS) {
+                    // remove all map param layouts
+                    // Log.e("FRACTAL EDIT FRAGMENT", "MAP -- removing row ${i + 1}")
                     functionCardBody.removeView(mapParamLayouts[i])
+                    juliaLayout.removeView(mapParamLayouts[i])
                 }
-                for (i in 0 until (ComplexMap.all[item]?.invoke(resources) ?: ComplexMap.empty()).params.size) {
+                for (i in 0 until nextMap.numParams) {
                     // Log.d("FRACTAL FRAGMENT", "MAP -- adding row ${i + 1} at index ${mapLayoutIndex + i + 1}")
                     functionCardBody.addView(mapParamLayouts[i], mapLayoutIndex + i + 1)
                 }
 
-                callback.onFractalParamsChanged(
-                        "map",
-                        ComplexMap.all[item]?.invoke(resources) ?: config.map()
-                )
+                f.map = nextMap
+
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
 
                 // set katex
-                complexMapKatex.setDisplayText(nextMap.katex.format("c"))
+                complexMapKatex.setDisplayText(resources.getString(nextMap.katex).format("c"))
                 //complexMapKatex.setTextSize((nextMap.katexSize * resources.displayMetrics.scaledDensity).toInt())
 
                 // set map param locks
                 mapParamEditTexts.forEachIndexed { i, pair ->
-                    if (i < config.map().params.size) {
-                        pair.second.first.isChecked = config.map().params[i].u.locked
-                        pair.second.second.isChecked = config.map().params[i].v.locked
+                    if (i < f.map.params.size) {
+                        pair.second.first.isChecked = f.map.params[i].uLocked
+                        pair.second.second.isChecked = f.map.params[i].vLocked
                     }
                 }
 
@@ -456,12 +482,18 @@ class FractalEditFragment : Fragment() {
                 val textureAlgAdapter = ArrayAdapter(
                         v.context,
                         android.R.layout.simple_spinner_item,
-                        config.map().textures
+                        f.map.textures
                 )
                 textureAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 textureAlgSpinner.adapter = textureAlgAdapter
-                val textureIndex = config.map().textures.indexOf(config.texture().name)
+                val textureIndex = f.map.textures.indexOf(f.texture.name)
                 textureAlgSpinner.setSelection(if (textureIndex == -1) 0 else textureIndex)
+
+                // update overlay UI
+                val uiQuick = (activity as MainActivity).findViewById<LinearLayout>(R.id.uiQuick)
+                (activity as MainActivity).removeMapParams(uiQuick.childCount - 2)
+                (activity as MainActivity).addMapParams(f.numParamsInUse)
+                uiQuick.getChildAt(uiQuick.childCount - 1).performClick()
 
             }
 
@@ -469,26 +501,56 @@ class FractalEditFragment : Fragment() {
 
         val complexMapAdapter = ComplexMapAdapter(
                 v.context,
-                List(ComplexMap.all.size) { i: Int -> ComplexMap.all.values.elementAt(i).invoke(resources) }
+                List(ComplexMap.all.size) { i: Int -> ComplexMap.all.values.elementAt(i) }
         )
         // complexMapAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         complexMapSpinner.adapter = complexMapAdapter
         complexMapSpinner.setSelection(ComplexMap.all.keys.indexOf(
-                savedInstanceState?.getString("map") ?: config.map().name)
+                savedInstanceState?.getString("map") ?: f.map.name)
         )
+
+
+
 
 
 
 
         // TEXTURE SELECTION
 
+        val q1Bar = v.findViewById<SeekBar>(R.id.q1Bar)
+
+        // TEXTURE PARAM EDIT FIELDS
+
+        val q1Edit = v.findViewById<EditText>(R.id.q1Edit)
+        q1Edit.setOnEditorActionListener(editListener(null) { w: TextView ->
+            f.texture.params[0].t = w.text.toString().toDouble()
+            w.text = "%.3f".format(f.texture.params[0].t)
+            val range = f.texture.params[0].range
+            val length = range.upper - range.lower
+            q1Bar.progress = (100.0 * (f.texture.params[0].t - range.lower) / length).toInt()
+            fsv.r.renderToTex = true
+        })
+
+        val q2Edit = v.findViewById<EditText>(R.id.q2Edit)
+        q2Edit.setOnEditorActionListener(editListener(null) { w: TextView ->
+            f.texture.params[1].t = w.text.toString().toDouble()
+            w.text = "%.3f".format(f.texture.params[1].t)
+            fsv.r.renderToTex = true
+        })
+
         val q1BarListener = object : SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
                 val p = progress / 100.0
-                val range = config.texture().initParams[0].second
+                val range = f.texture.params[0].range
                 val length = range.upper - range.lower
-                callback.onFractalParamsChanged("q1", p*length + range.lower)
+                f.texture.params[0].t = p*length + range.lower
+                f.updateTextureEditTexts()
+
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -500,28 +562,26 @@ class FractalEditFragment : Fragment() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val item = parent?.getItemAtPosition(position).toString()
                 // textureAlgSpinner.requestLayout()
 
-                callback.onFractalParamsChanged(
-                        "texture",
-                        Texture.all[item]?.invoke(resources) ?: config.texture()
-                )
+                f.texture = Texture.all[parent?.getItemAtPosition(position).toString()] ?: Texture.escape
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
                 for (i in 0 until NUM_TEXTURE_PARAMS) { textureCardBody.removeView(textureParamEditRows[i]) }
                 val textureLayoutIndex = textureCardBody.indexOfChild(textureSpinnerLayout)
-                for (i in config.texture().initParams.indices) {
+                for (i in 0 until f.texture.numParamsInUse) {
                     if (textureCardBody.indexOfChild(textureParamEditRows[i]) == -1) {
                         textureCardBody.addView(textureParamEditRows[i], textureLayoutIndex + i + 1)
                     }
-                    (textureParamEditRows[i].getChildAt(0) as TextView).text = config.texture().initParams[i].first
+                    (textureParamEditRows[i].getChildAt(0) as TextView).text = f.texture.params[i].name
                     if (i == 0) {
-                        val q1Bar = v.findViewById<SeekBar>(R.id.q1Bar)
-                        val range = config.texture().initParams[0].second
-                        val q = (range.clamp(config.q1()) - range.lower) / (range.upper - range.lower) * 100
+                        val range = f.texture.params[0].range
+                        val q = (range.clamp(f.texture.params[0].t) - range.lower) / (range.upper - range.lower) * 100
                         Log.d("FRACTAL FRAGMENT", "q: $q")
                         q1Bar?.progress = q.toInt()
                         q1Bar?.setOnSeekBarChangeListener(q1BarListener)
-                        q1Edit.setText("%.3f".format(config.q1()))
+                        q1Edit.setText("%.3f".format(f.texture.params[0].t))
                     }
                 }
             }
@@ -531,12 +591,12 @@ class FractalEditFragment : Fragment() {
         val textureAlgAdapter = ArrayAdapter(
             v.context,
             android.R.layout.simple_spinner_item,
-            config.map().textures
+            f.map.textures
         )
         textureAlgAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         textureAlgSpinner.adapter = textureAlgAdapter
         textureAlgSpinner.setSelection(Texture.all.keys.indexOf(
-                savedInstanceState?.getString("texture") ?: config.texture().name)
+                savedInstanceState?.getString("texture") ?: f.texture.name)
         )
 
 
@@ -547,27 +607,41 @@ class FractalEditFragment : Fragment() {
             override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {}
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
             override fun onStopTrackingTouch(seekBar: SeekBar) {
+
                 val p = seekBar.progress.toFloat() / 100.0f
-                callback.onFractalParamsChanged(
-                    "maxIter",
-                    ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(12) - 1)*p).toInt()
-                )
+                f.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(12) - 1)*p).toInt()
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
             }
 
         })
-        maxIterBar.progress = (100.0*(config.maxIter().toDouble() - 2.0.pow(5) + 1.0) / (2.0.pow(12) - 1.0)).toInt()
+        maxIterBar.progress = (100.0*(f.maxIter.toDouble() - 2.0.pow(5) + 1.0) / (2.0.pow(12) - 1.0)).toInt()
+
+
+
+
+        for (i in 0 until NUM_MAP_PARAMS) { functionCardBody.removeView(mapParamLayouts[i]) }
+        for (i in 0 until NUM_TEXTURE_PARAMS) { textureCardBody.removeView(textureParamEditRows[i]) }
+
+
 
         return v
     }
 
-    fun setOnParamChangeListener(callback: OnParamChangeListener) {
-        this.callback = callback
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        f.updateShapeEditTexts()
+        f.updateTextureEditTexts()
+        f.updateColorEditTexts()
+        f.updatePositionEditTexts()
     }
 
+
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString("map", complexMapSpinner.selectedItem.toString())
-        outState.putString("texture", textureAlgSpinner.selectedItem.toString())
-        outState.putBoolean("juliaMode", juliaModeSwitch.isChecked)
+//        outState.putString("map", complexMapSpinner.selectedItem.toString())
+//        outState.putString("texture", textureAlgSpinner.selectedItem.toString())
+//        outState.putBoolean("juliaMode", juliaModeSwitch.isChecked)
         super.onSaveInstanceState(outState)
     }
 
