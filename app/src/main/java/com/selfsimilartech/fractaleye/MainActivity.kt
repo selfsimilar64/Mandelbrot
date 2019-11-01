@@ -178,10 +178,10 @@ enum class Resolution { LOW, MED, HIGH }
 
 
 class Position(
-        var x: Double = 0.0,
-        var y: Double = 0.0,
-        var scale: Double = 1.0,
-        var rotation: Double = 0.0
+        x: Double = 0.0,
+        y: Double = 0.0,
+        scale: Double = 1.0,
+        rotation: Double = 0.0
 ) {
 
     private val xInit = x
@@ -189,19 +189,32 @@ class Position(
     private val scaleInit = scale
     private val rotationInit = rotation
 
-    private fun translate(dPos: DoubleArray) {
+    var x = x
+        set(value) { if (!xLocked) { field = value } }
 
-        // update complex coordinates
-        x += dPos[0]
-        y += dPos[1]
+    var y = y
+        set(value) { if (!yLocked) { field = value } }
 
-        // Log.d("FRACTAL", "translation (coordinates) -- dx: ${dPos[0]}, dy: ${dPos[1]}")
+    var scale = scale
+        set(value) { if (!scaleLocked) { field = value } }
+
+    var rotation = rotation
+        set(value) { if (!rotationLocked) { field = value } }
+
+
+    var xLocked: Boolean = false
+    var yLocked: Boolean = false
+    var scaleLocked: Boolean = false
+    var rotationLocked: Boolean = false
+
+    private fun translate(dx: Double, dy: Double) {
+
+        x += dx
+        y += dy
 
     }
-    fun translate(dx: Float, dy: Float) {
-        // dx, dy --> [0, 1]
+    fun translate(dx: Float, dy: Float) {  // dx, dy --> [0, 1]
 
-        // update complex coordinates
         val tx = dx*scale
         val ty = dy*scale
         val sinTheta = sin(-rotation)
@@ -209,64 +222,73 @@ class Position(
         x -= tx*cosTheta - ty*sinTheta
         y += tx*sinTheta + ty*cosTheta
 
-        // updatePositionEditTexts()
-        // updateDisplayParams(Reaction.POSITION)
-        // Log.d("FRACTAL", "translation (pixels) -- dx: ${dScreenPos[0]}, dy: ${dScreenPos[1]}")
-
     }
     fun scale(dScale: Float, prop: DoubleArray) {
 
-        val qx = prop[0]*scale
-        val qy = prop[1]*scale
-        val sinTheta = sin(rotation)
-        val cosTheta = cos(rotation)
-        val focus = doubleArrayOf(
-                x + qx*cosTheta - qy*sinTheta,
-                y + qx*sinTheta + qy*cosTheta
-        )
+        if (!scaleLocked) {
 
-        translate(focus.negative())
-        x /= dScale
-        y /= dScale
-        translate(focus)
-        scale /= dScale
+            // unlock x and y to allow auxiliary transformations
+            val xLockedTemp = xLocked
+            val yLockedTemp = yLocked
+            xLocked = false
+            yLocked = false
+
+            // calculate scaling variables
+            val qx = prop[0] * scale
+            val qy = prop[1] * scale
+            val sinTheta = sin(rotation)
+            val cosTheta = cos(rotation)
+            val fx = x + qx * cosTheta - qy * sinTheta
+            val fy = y + qx * sinTheta + qy * cosTheta
+
+            // scale
+            translate(-fx, -fy)
+            x /= dScale
+            y /= dScale
+            translate(fx, fy)
+            scale /= dScale
+
+            // set x and y locks to previous values
+            xLocked = xLockedTemp
+            yLocked = yLockedTemp
+
+        }
 
     }
     fun rotate(dTheta: Float, prop: DoubleArray) {
 
-        //Log.d("FRACTAL", "dTheta: $dTheta")
+        if (!rotationLocked) {
 
-        // calculate focus in complex coordinates
-        var qx = prop[0]*scale
-        var qy = prop[1]*scale
-        val sinTheta = sin(rotation)
-        val cosTheta = cos(rotation)
-        val focus = doubleArrayOf(
-                x + qx*cosTheta - qy*sinTheta,
-                y + qx*sinTheta + qy*cosTheta
-        )
+            // unlock x and y to allow auxiliary transformations
+            val xLockedTemp = xLocked
+            val yLockedTemp = yLocked
+            xLocked = false
+            yLocked = false
 
-        //Log.d("FRACTAL", "focus (coordinates) -- x: ${focus[0]}, y: ${focus[1]}")
+            // calculate rotation variables
+            var qx = prop[0] * scale
+            var qy = prop[1] * scale
+            val sinTheta = sin(rotation)
+            val cosTheta = cos(rotation)
+            val fx = x + qx * cosTheta - qy * sinTheta
+            val fy = y + qx * sinTheta + qy * cosTheta
+            val sindTheta = sin(-dTheta)
+            val cosdTheta = cos(dTheta)
 
-        val sindTheta = sin(-dTheta)
-        val cosdTheta = cos(dTheta)
+            // rotate
+            translate(-fx, -fy)
+            qx = x
+            qy = y
+            x = qx * cosdTheta - qy * sindTheta
+            y = qx * sindTheta + qy * cosdTheta
+            translate(fx, fy)
+            rotation -= dTheta.toDouble()
 
-        //Log.d("FRACTAL", "previous coords: (${x}, ${y})")
+            // set x and y locks to previous values
+            xLocked = xLockedTemp
+            yLocked = yLockedTemp
 
-        translate(focus.negative())
-        qx = x
-        qy = y
-        x = qx*cosdTheta - qy*sindTheta
-        y = qx*sindTheta + qy*cosdTheta
-        translate(focus)
-        rotation -= dTheta.toDouble()
-        //Log.d("FRACTAL", "rotation: ${rotation}")
-
-        //Log.d("FRACTAL", "new coords: (${x}, ${y})")
-
-
-        // updatePositionEditTexts()
-        // updateDisplayParams(Reaction.POSITION)
+        }
 
     }
     fun reset() {
