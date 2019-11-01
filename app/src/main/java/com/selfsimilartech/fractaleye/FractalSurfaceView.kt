@@ -1307,34 +1307,37 @@ class FractalSurfaceView(
 
 
     val r : FractalRenderer
-//    var hasTranslated = false
-//    private val h = Handler()
-//    private val longPressed = Runnable {
-//        Log.d("SURFACE VIEW", "wow u pressed that so long")
-//
-//        // vibrate
-//        val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            vib.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
-//        }
-//        else {
-//            //deprecated in API 26
-//            vib.vibrate(15)
-//        }
-//
-//        // toggle uiQuick
-//        val uiQuick = context.findViewById<LinearLayout>(R.id.uiQuick)
-//        val v : Int
-//        if (uiQuick.visibility == LinearLayout.VISIBLE) {
-//            v = LinearLayout.INVISIBLE
-//        }
-//        else {
-//            v = LinearLayout.VISIBLE
-//            uiQuick.bringToFront()
-//        }
-//        uiQuick.visibility = v
-//
-//    }
+
+    fun vibrate() {
+        //    var hasTranslated = false
+        //    private val h = Handler()
+        //    private val longPressed = Runnable {
+        //        Log.d("SURFACE VIEW", "wow u pressed that so long")
+        //
+        //        // vibrate
+        //        val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        //            vib.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
+        //        }
+        //        else {
+        //            //deprecated in API 26
+        //            vib.vibrate(15)
+        //        }
+        //
+        //        // toggle uiQuick
+        //        val uiQuick = context.findViewById<LinearLayout>(R.id.uiQuick)
+        //        val v : Int
+        //        if (uiQuick.visibility == LinearLayout.VISIBLE) {
+        //            v = LinearLayout.INVISIBLE
+        //        }
+        //        else {
+        //            v = LinearLayout.VISIBLE
+        //            uiQuick.bringToFront()
+        //        }
+        //        uiQuick.visibility = v
+        //
+        //    }
+    }
 
     var reaction = Reaction.POSITION
     val numDisplayParams = {
