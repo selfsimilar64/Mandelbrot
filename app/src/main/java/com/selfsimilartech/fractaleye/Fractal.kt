@@ -76,6 +76,7 @@ class Fractal(
 
                 numParamsInUse += if (value) 1 else -1
                 map.position = if (value) map.positions.julia else map.positions.default
+                autoPrecision = if (!map.hasDualFloat || map.position.scale > precisionThreshold) Precision.SINGLE else Precision.DUAL
 
                 updateMapParamEditText(numParamsInUse)
 
