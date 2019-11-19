@@ -80,6 +80,8 @@
         #define Sn 1e-8\n
         #define Sp 1e8\n
         #define Sh 1e4\n
+        #define ONE vec2(1.0, 0.0)\n
+        #define I vec2(0.0, 1.0)\n
 
         precision highp float;
         uniform int maxIter;
@@ -102,7 +104,7 @@
         out vec4 fragmentColor;
     </string>
     <string name="header_df">#version 300 es\n
-        #define SPLIT 8193.\n
+        #define SPLIT 8097.\n
         #define pi 3.141592654\n
         #define Sn 1e-8\n
         #define Sp 1e8\n
@@ -175,14 +177,15 @@
     <string name="arithmetic_util">
 
         vec2 quickTwoSum(float a, float b) {
-            float s = a + b;
-            float e = b - (s - a);
+            float s = a + b + 1e-45;
+            float v = s - a;
+            float e = b - v;
             return vec2(s, e);
         }
 
         vec2 twoSum(float a, float b) {
-            float s = a + b;
-            float v = s - a;
+            float s = a + b + 1e-45;
+            float v = s - a + 1e-45;
             float e = (a - (s - v)) + (b - v);
             return vec2(s, e);
         }
@@ -219,7 +222,8 @@
 
         vec2 split(float a) {
             float t = a*SPLIT;
-            float a_hi = t - (t - a);
+            float q = t - a + 1e-45;
+            float a_hi = t - q;
             float a_lo = a - a_hi;
             return vec2(a_hi, a_lo);
         }
@@ -264,6 +268,10 @@
 
         float modSqrSF(vec2 w) {
             return w.x*w.x + w.y*w.y;
+        }
+
+        vec2 cInverseSF(vec2 w) {
+            return conjSF(w)/dot(w, w);
         }
 
         vec2 cDivSF(vec2 w1, vec2 w2) {
@@ -359,8 +367,8 @@
 
         vec2 cPow3(vec2 z, float p) {
             float theta = atan(z.y, z.x);
-            float r = sqrt(dot(z, z));
-            float c = pow(r, p);
+            float rSqr = dot(z, z);
+            float c = exp(0.5*p*log(rSqr));
             float f = p*theta;
             return c*vec2(cos(f), sin(f));
         }
@@ -880,6 +888,14 @@
         vec2 zSqr = cSqrSF(Z1);
         Z = Z1 - cMultSF(P1, cDivSF(cMultSF(Z1, zSqr) - vec2(1.0, 0.0), 3.0*zSqr)) + C;
     </string>
+    <string name="nova1_loop_df">
+        vec4 zSqr = cSqrDF(X1, Y1);
+        vec4 zCub = cMultDF(X1, Y1, zSqr.xy, zSqr.zw);
+        vec4 Q1 = cDivDF(addDF(zCub.xy, vec2(-1.0, 0.0)), zCub.zw, multDF(vec2(3.0, 0.0), zSqr.xy), multDF(vec2(3.0, 0.0), zSqr.zw));
+        vec4 Q2 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), Q1.xy, Q1.zw);
+        X = addDF(addDF(X1, -Q2.xy), A);
+        Y = addDF(addDF(Y1, -Q2.zw), B);
+    </string>
     <string name="nova1_katex">
         $z_{n+1} = z_n -\\small P1\\cdot\\Large\\frac{z_n^3 - 1}{3z_n^2} \\normalsize + %s$
     </string>
@@ -890,6 +906,20 @@
     </string>
     <string name="nova2_katex">
         $z_{n+1} = z_n - \\Large\\frac{\\sin(z_n^2) - z_n}{2z_n\\cos(z_n^2)} \\normalsize + %s$
+    </string>
+
+
+    <!-- FIBONACCI POWERS -->
+    <string name="fibonacci_init_sf">
+        int k1 = 0;
+        int k = 1;
+        int ktemp;
+    </string>
+    <string name="fibonacci_loop_sf">
+        Z = Z1 + cPow3(ONE + cInverseSF(Z1), float(k)) + C;
+        ktemp = k;
+        k = k + k1;
+        k1 = ktemp;
     </string>
 
 
