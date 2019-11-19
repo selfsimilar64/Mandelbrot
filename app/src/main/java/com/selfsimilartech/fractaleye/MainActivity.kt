@@ -19,6 +19,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewPager
 import android.util.Log
 import android.view.*
+import android.view.animation.AlphaAnimation
 import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
@@ -170,11 +171,25 @@ data class DualDouble (
 }
 
 
-enum class Precision { SINGLE, DUAL, QUAD, AUTO }
-enum class Reaction { POSITION, COLOR, P1, P2, P3, P4 }
-enum class Resolution { LOW, MED, HIGH }
+enum class Precision(val threshold: Double) {
+    SINGLE(5e-4), DUAL(1e-12), QUAD(1e-20)
+}
+enum class Reaction(val numDisplayParams: Int) {
+    POSITION(4), COLOR(2), P1(3), P2(3), P3(3), P4(3)
+}
+enum class Resolution(val scale: Int) {
+    LOW(8), MED(3), HIGH(1)
+}
 
 
+
+class SettingsConfig (
+    var resolution          : Resolution    = Resolution.HIGH,
+    var precision           : Precision     = Precision.SINGLE,
+    var autoPrecision       : Boolean       = true,
+    var continuousRender    : Boolean       = false,
+    var displayParams       : Boolean       = true
+)
 
 
 class Position(
@@ -302,20 +317,10 @@ class Position(
 
 class PositionList(
         val default : Position = Position(),
-        val julia   : Position = Position(scale = default.scale)
+        val julia   : Position = Position(scale = 3.5)
 )
 
 
-
-
-class SettingsConfig (val params: MutableMap<String, Any>) {
-
-    val resolution         = { params["resolution"]        as Resolution }
-    val precision          = { params["precision"]         as Precision  }
-    val continuousRender   = { params["continuousRender"]  as Boolean    }
-    val displayParams      = { params["displayParams"]     as Boolean    }
-
-}
 
 
 fun MotionEvent.focalLength() : Float {
@@ -380,11 +385,11 @@ class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager)
 }
 
 
-class MainActivity : AppCompatActivity(),
-        SettingsFragment.OnParamChangeListener {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var f : Fractal
     private lateinit var fsv : FractalSurfaceView
+    private lateinit var sc : SettingsConfig
     private lateinit var uiQuickButtons : List<View>
     private lateinit var displayParamRows : List<LinearLayout>
 
@@ -416,21 +421,18 @@ class MainActivity : AppCompatActivity(),
         // get initial values for fractalConfig
 
 //        val map = ComplexMap.all[savedInstanceState?.getString("map")] ?: ComplexMap.mandelbrot
+//        map.position.x = savedInstanceState?.getDouble("x") ?: map.position.x
+//        map.position.y = savedInstanceState?.getDouble("y") ?: map.position.y
+//        map.position.scale = savedInstanceState?.getDouble("scale") ?: map.position.scale
+//        map.position.rotation = savedInstanceState?.getDouble("rotation") ?: map.position.rotation
 //
-//        map.position.x = savedInstanceState?.getDouble("x") ?: 0.0
-//        map.position.y = savedInstanceState?.getDouble("y") ?: 0.0
-//        map.position.scale = savedInstanceState?.getDouble("scale") ?: 1.0
-//        map.position.rotation = savedInstanceState?.getDouble("rotation") ?: 0.0
-//        map.juliaMode = savedInstanceState?.getBoolean("juliaMode") ?: false
-//        // params
-//
+//        val juliaMode = savedInstanceState?.getBoolean("juliaMode") ?: false
+//        Log.e("MAIN ACTIVITY", "texture: ${savedInstanceState?.getString("texture")}")
 //        val texture = Texture.all[savedInstanceState?.getString("texture")] ?: Texture.escape
-//        // texture.params[0] = savedInstanceState?.getDouble("q1") ?: 0.0
-//        // texture.params[1] = savedInstanceState?.getDouble("q2") ?: 0.0
-//
-//        val palette = ColorPalette.all[savedInstanceState?.getString("palette")] ?: ColorPalette.p5
-//        palette.frequency = savedInstanceState?.getFloat("frequency") ?: 1f
-//        palette.phase = savedInstanceState?.getFloat("phase") ?: 0f
+//        Log.e("MAIN ACTIVITY", "texture: ${texture.name}")
+//        val palette = ColorPalette.all[savedInstanceState?.getString("palette")] ?: ColorPalette.p9
+//        val frequency = savedInstanceState?.getFloat("frequency") ?: 1f
+//        val phase = savedInstanceState?.getFloat("phase") ?: 0f
 //
 //        val maxIter = savedInstanceState?.getInt("maxIter") ?: 255
 //        val bailoutRadius = savedInstanceState?.getFloat("bailoutRadius") ?: 1e5f
@@ -441,28 +443,17 @@ class MainActivity : AppCompatActivity(),
 
         // get initial values for settingsConfig
 
-        val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: Resolution.HIGH.name)
-        val precision = Precision.valueOf(savedInstanceState?.getString("precision") ?: "AUTO")
-        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: false
-        val displayParamsBoolean = savedInstanceState?.getBoolean("displayParams") ?: true
+//        val resolution = Resolution.valueOf(savedInstanceState?.getString("resolution") ?: Resolution.HIGH.name)
+//        val precision = Precision.valueOf(savedInstanceState?.getString("precision") ?: Precision.SINGLE.name)
+//        val autoPrecision = savedInstanceState?.getBoolean("autoPrecision") ?: true
+//        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: false
+//        val displayParamsBoolean = savedInstanceState?.getBoolean("displayParams") ?: true
 
-
-        val sc = SettingsConfig(mutableMapOf(
-                "resolution"        to resolution,
-                "precision"         to precision,
-                "continuousRender"  to continuousRender,
-                "displayParams"     to displayParamsBoolean,
-                "saveToFile"        to false,
-                "render"            to false
-        ))
-
+        
+        sc = SettingsConfig()
 
         // create fractal
-        f = Fractal(
-                this,
-                sc,
-                intArrayOf(screenWidth, screenHeight)
-        )
+        f = Fractal()
 
 //        if (orientationChanged) {
 //            f.switchOrientation()
@@ -470,7 +461,7 @@ class MainActivity : AppCompatActivity(),
 //        }
 
 
-        fsv = FractalSurfaceView(f, this)
+        fsv = FractalSurfaceView(f, sc, this, intArrayOf(screenWidth, screenHeight))
         fsv.layoutParams = ViewGroup.LayoutParams(screenWidth, screenHeight)
         fsv.hideSystemUI()
 
@@ -515,9 +506,9 @@ class MainActivity : AppCompatActivity(),
                 else -> "PARAMETER ${s[1]}"
             }
 
-            if (fsv.f.sc.displayParams()) {
+            if (sc.displayParams) {
                 displayParams.removeViews(1, displayParams.childCount - 1)
-                for (i in 0 until fsv.numDisplayParams()) {
+                for (i in 0 until fsv.reaction.numDisplayParams) {
                     displayParams.addView(displayParamRows[i])
                 }
             }
@@ -527,7 +518,7 @@ class MainActivity : AppCompatActivity(),
                 if (b == it) { btd.startTransition(0) }
                 else { btd.resetTransition() }
             }
-            fsv.f.updateDisplayParams(Reaction.valueOf(s), true)
+            updateDisplayParams(Reaction.valueOf(s), true)
         }
         for (b in uiQuickButtons) {
             b.background = TransitionDrawable(buttonBackgrounds)
@@ -581,7 +572,9 @@ class MainActivity : AppCompatActivity(),
         fractalEditFragment.f = f
         fractalEditFragment.fsv = fsv
 
-        settingsFragment.config = f.sc
+        settingsFragment.f = f
+        settingsFragment.fsv = fsv
+        settingsFragment.sc = sc
 
 
 
@@ -675,105 +668,215 @@ class MainActivity : AppCompatActivity(),
         for (i in 1..n) { uiQuick.removeView(uiQuickButtons[uiQuick.childCount - 1]) }
     }
 
+    fun displayMessage(msg: String) {
+        val buttons = findViewById<LinearLayout>(R.id.buttons)
+        val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT)
+        val toastHeight = fsv.screenRes[1] - buttons.y.toInt() + buttons.height
+        toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
+        toast.show()
+    }
+    fun updateDisplayParams(reaction: Reaction, reactionChanged: Boolean = false, settingsChanged: Boolean = false) {
+
+        val displayParams = findViewById<LinearLayout>(R.id.displayParams)
+
+        if (settingsChanged) {
+            if (sc.displayParams) {
+                for (i in 0 until fsv.reaction.numDisplayParams) {
+                    displayParams.addView(displayParamRows[i])
+                }
+            }
+            else {
+                displayParams.removeViews(1, displayParams.childCount - 1)
+            }
+        }
+
+        val displayParam1 = findViewById<TextView>(R.id.displayParam1)
+        val displayParam2 = findViewById<TextView>(R.id.displayParam2)
+        val displayParam3 = findViewById<TextView>(R.id.displayParam3)
+        val displayParam4 = findViewById<TextView>(R.id.displayParam4)
+        val displayParamName1 = findViewById<TextView>(R.id.displayParamName1)
+        val displayParamName2 = findViewById<TextView>(R.id.displayParamName2)
+        val displayParamName3 = findViewById<TextView>(R.id.displayParamName3)
+        val displayParamName4 = findViewById<TextView>(R.id.displayParamName4)
+        val density = resources.displayMetrics.density
+        val w : Int
+
+
+        if (sc.displayParams) {
+            when (reaction) {
+                Reaction.POSITION -> {
+
+                    displayParamName1.text = resources.getString(R.string.x)
+                    displayParamName2.text = resources.getString(R.string.y)
+                    displayParamName3.text = resources.getString(R.string.scale_lower)
+                    displayParamName4.text = resources.getString(R.string.rotation_lower)
+                    displayParam1.text = "%.17f".format(f.map.position.x)
+                    displayParam2.text = "%.17f".format(f.map.position.y)
+                    displayParam3.text = "%e".format(f.map.position.scale)
+                    displayParam4.text = "%.0f".format(f.map.position.rotation * 180.0 / Math.PI)
+                    w = (60f * density).toInt()
+
+                }
+                Reaction.COLOR -> {
+
+                    displayParamName1.text = resources.getString(R.string.frequency)
+                    displayParamName2.text = resources.getString(R.string.offset)
+                    displayParam1.text = "%.4f".format(f.frequency)
+                    displayParam2.text = "%.4f".format(f.phase)
+                    w = (75f * density).toInt()
+
+                }
+                else -> {
+
+                    val i = reaction.ordinal - 2
+                    displayParamName1.text = "u"
+                    displayParamName2.text = "v"
+                    displayParamName3.text = resources.getString(R.string.sensitivity)
+                    displayParam1.text = "%.8f".format((f.map.params[i].u))
+                    displayParam2.text = "%.8f".format((f.map.params[i].v))
+                    displayParam3.text = "%.4f".format(f.sensitivity)
+                    w = (80f * density).toInt()
+
+                }
+            }
+
+            displayParamName1.width = w
+            displayParamName2.width = w
+            displayParamName3?.width = w
+            displayParamName4?.width = w
+            displayParamName1.requestLayout()
+            displayParamName2.requestLayout()
+            displayParamName3?.requestLayout()
+            displayParamName4?.requestLayout()
+            displayParam1.requestLayout()
+            displayParam2.requestLayout()
+            displayParam3?.requestLayout()
+            displayParam4?.requestLayout()
+
+        }
+        if (sc.displayParams || reactionChanged) {
+            val fadeOut = AlphaAnimation(1f, 0f)
+            fadeOut.duration = 1000L
+            fadeOut.startOffset = 2500L
+            fadeOut.fillAfter = true
+            displayParams.animation = fadeOut
+            displayParams.animation.start()
+            displayParams.requestLayout()
+        }
+
+    }
+    fun updateMapParamEditText(i: Int) {
+        // Log.d("FRACTAL", "updating map param EditText $i")
+
+        val xEdit : EditText?
+        val yEdit : EditText?
+
+        when (i) {
+            1 -> {
+                xEdit = findViewById(R.id.u1Edit)
+                yEdit = findViewById(R.id.v1Edit)
+            }
+            2 -> {
+                xEdit = findViewById(R.id.u2Edit)
+                yEdit = findViewById(R.id.v2Edit)
+            }
+            3 -> {
+                xEdit = findViewById(R.id.u3Edit)
+                yEdit = findViewById(R.id.v3Edit)
+            }
+            4 -> {
+                xEdit = findViewById(R.id.u4Edit)
+                yEdit = findViewById(R.id.v4Edit)
+            }
+            else -> {
+                xEdit = null
+                yEdit = null
+            }
+        }
+
+        xEdit?.setText("%.8f".format((f.map.params[i-1].u)))
+        yEdit?.setText("%.8f".format((f.map.params[i-1].v)))
+
+    }
+    fun updateShapeEditTexts() {
+
+        val bailoutSignificandEdit = findViewById<EditText>(R.id.bailoutSignificandEdit)
+        val bailoutExponentEdit = findViewById<EditText>(R.id.bailoutExponentEdit)
+        val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+        bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
+        bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
+
+        for (i in 1..NUM_MAP_PARAMS) {
+            updateMapParamEditText(i)
+        }
+
+        updatePositionEditTexts()
+
+    }
+    fun updateTextureEditTexts() {
+
+        val q1Edit = findViewById<EditText>(R.id.q1Edit)
+        val q2Edit = findViewById<EditText>(R.id.q2Edit)
+
+        q1Edit?.setText("%.3f".format(f.texture.params[0].t))
+        q2Edit?.setText("%.3f".format(f.texture.params[1].t))
+
+    }
+    fun updateColorEditTexts() {
+
+        val frequencyEdit = findViewById<EditText>(R.id.frequencyEdit)
+        val phaseEdit = findViewById<EditText>(R.id.phaseEdit)
+
+        frequencyEdit?.setText("%.5f".format(f.frequency))
+        phaseEdit?.setText("%.5f".format(f.phase))
+
+    }
+    fun updatePositionEditTexts() {
+
+        val xCoordEdit = findViewById<EditText>(R.id.xCoordEdit)
+        val yCoordEdit = findViewById<EditText>(R.id.yCoordEdit)
+        val scaleSignificandEdit = findViewById<EditText>(R.id.scaleSignificandEdit)
+        val scaleExponentEdit = findViewById<EditText>(R.id.scaleExponentEdit)
+        val scaleStrings = "%e".format(f.map.position.scale).split("e")
+        val rotationEdit = findViewById<EditText>(R.id.rotationEdit)
+
+//        Log.w("FRACTAL", "scaleExponent: %d".format(scaleStrings[1].toInt()))
+//        Log.w("FRACTAL", "bailoutExponent: %d".format(bailoutStrings[1].toInt()))
+
+        xCoordEdit?.setText("%.17f".format(f.map.position.x))
+        yCoordEdit?.setText("%.17f".format(f.map.position.y))
+
+        scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
+        scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
+
+        rotationEdit?.setText("%.0f".format(f.map.position.rotation * 180.0 / Math.PI))
+
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) { fsv.hideSystemUI() }
     }
     override fun onSaveInstanceState(outState: Bundle?) {
 
-        Log.d("MAIN ACTIVITY", "saving instance state !!")
+//        Log.d("MAIN ACTIVITY", "saving instance state !! outState: ${outState == null}")
 
-        // save FractalConfig values
-//        outState?.putString(        "map",               f.map.name          )
-//        outState?.putString(        "texture",           f.texture.name      )
-//        outState?.putDouble(        "sensitivity",       f.sensitivity  )
-//        outState?.putDoubleArray(   "coords",            f.coords()            )
-//        outState?.putDoubleArray(   "savedCoords",       f.savedCoords()       )
-//        outState?.putDoubleArray(   "scale",             f.scale()             )
-//        outState?.putDoubleArray(   "savedScale",        f.savedScale()        )
-//        outState?.putInt(           "maxIter",           f.maxIter()           )
-//        outState?.putFloat(         "bailoutRadius",     f.bailoutRadius()     )
-//        outState?.putString(        "palette",           f.palette().name      )
-//        outState?.putFloat(         "frequency",         f.frequency()         )
-//        outState?.putFloat(         "phase",             f.phase()             )
-//
-//        // save SettingsConfig values
-//        outState?.putString(    "resolution",        f.sc.resolution().name   )
-//        outState?.putBoolean(   "continuousRender",  f.sc.continuousRender()  )
-//        outState?.putBoolean(   "displayParams",     f.sc.displayParams()     )
-//        outState?.putString(    "precision",         f.sc.precision().name    )
+//        outState?.putString("map", f.map.name)
+//        outState?.putString("texture", f.texture.name)
+//        outState?.putBoolean("juliaMode", f.juliaMode)
+//        outState?.putFloat("bailoutRadius", f.bailoutRadius)
+//        outState?.putInt("maxIter", f.maxIter)
+//        outState?.putDouble("sensitivity", f.sensitivity)
+//        outState?.putString("palette", f.palette.name)
+//        outState?.putFloat("frequency", f.frequency)
+//        outState?.putFloat("phase", f.phase)
+
+//        outState?.putString("resolution", sc.resolution.name)
+//        outState?.putString("precision", sc.precision.name)
+//        outState?.putBoolean("continuousRender", sc.continuousRender)
+//        outState?.putBoolean("displayParams", sc.displayParams)
 
         super.onSaveInstanceState(outState)
-    }
-    override fun onAttachFragment(fragment: Fragment) {
-        super.onAttachFragment(fragment)
-        when (fragment) {
-            is SettingsFragment -> fragment.setOnParamChangeListener(this)
-        }
-    }
-    override fun onSettingsParamsChanged(key: String, value: Any) {
-        if (f.sc.params[key] != value) {
-            Log.d("MAIN ACTIVITY", "$key set from ${f.sc.params[key]} to $value")
-            f.sc.params[key] = value
-            when (key) {
-                "resolution" -> {
-                    f.resolutionChanged = true
-                    fsv.r.renderToTex = true
-                    fsv.requestRender()
-                }
-                "precision" -> {
-                    f.renderShaderChanged = true
-                    fsv.r.renderToTex = true
-                    fsv.requestRender()
-                }
-                "continuousRender" -> {
-                    f.renderProfileChanged = true
-                    fsv.r.renderToTex = true
-                    fsv.requestRender()
-                }
-                "displayParams" -> {
-                    val displayParams = findViewById<LinearLayout>(R.id.displayParams)
-                    if (value as Boolean) {
-                        for (i in 0 until fsv.numDisplayParams()) {
-                            displayParams.addView(displayParamRows[i])
-                        }
-                        fsv.f.updateDisplayParams(fsv.reaction, false)
-                    }
-                    else {
-                        displayParams.removeViews(1, displayParams.childCount - 1)
-                    }
-                }
-                "saveToFile" -> {
-                    if (fsv.r.isRendering) {
-                        val toast = Toast.makeText(baseContext, "Please wait for the image to finish rendering", Toast.LENGTH_SHORT)
-                        toast.show()
-                    }
-                    else {
-                        if (ContextCompat.checkSelfPermission(baseContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(this,
-                                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                                    WRITE_STORAGE_REQUEST_CODE)
-                        }
-                        else {
-                            fsv.r.saveImage = true
-                            fsv.requestRender()
-                            val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
-                            toast.show()
-                        }
-                    }
-                    f.sc.params[key] = false
-                }
-                "render" -> {
-                    fsv.r.renderToTex = true
-                    fsv.requestRender()
-                    f.sc.params[key] = false
-                }
-            }
-        }
-        else {
-            Log.d("MAIN ACTIVITY", "$key already set to $value")
-        }
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
