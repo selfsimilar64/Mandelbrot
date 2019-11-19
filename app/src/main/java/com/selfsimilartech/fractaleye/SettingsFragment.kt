@@ -1,33 +1,30 @@
 package com.selfsimilartech.fractaleye
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
 import android.support.design.widget.TabLayout
+import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.CardView
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.Switch
+import android.widget.*
 
 
 class SettingsFragment : Fragment() {
-
-    private lateinit var callback : OnParamChangeListener
     
-    lateinit var config : SettingsConfig
-    private lateinit var resolutionTabs : TabLayout
-    private lateinit var precisionTabs : TabLayout
-    private lateinit var continuousRenderSwitch : Switch
-    private lateinit var displayParamsSwitch : Switch
+    lateinit var f : Fractal
+    lateinit var fsv : FractalSurfaceView
+    lateinit var sc : SettingsConfig
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
@@ -67,7 +64,7 @@ class SettingsFragment : Fragment() {
             val anim = ValueAnimator.ofInt(hStart, hEnd)
             anim.addUpdateListener { animation ->
                 val intermediateHeight = animation?.animatedValue as Int
-                Log.d("FRACTAL FRAGMENT", "intermediate height: $intermediateHeight")
+                // Log.d("FRACTAL FRAGMENT", "intermediate height: $intermediateHeight")
                 cardBody.layoutParams.height = intermediateHeight
                 cardBody.requestLayout()
 
@@ -92,7 +89,7 @@ class SettingsFragment : Fragment() {
                             settingsScroll.scrollY = bottom - settingsScroll.height  // scroll to show bottom
                         }
                     }
-                    Log.d("FRACTAL FRAGMENT", "scroll to: ${(cardBody.parent.parent as CardView).y.toInt()}")
+                    // Log.d("FRACTAL FRAGMENT", "scroll to: ${(cardBody.parent.parent as CardView).y.toInt()}")
                 }
 
 
@@ -122,16 +119,19 @@ class SettingsFragment : Fragment() {
         renderHeaderButton.setOnClickListener(cardHeaderListener(renderCardBody))
         uiHeaderButton.setOnClickListener(cardHeaderListener(uiCardBody))
 
-        renderCardBody.layoutParams.height = 0
-        uiCardBody.layoutParams.height = 0
+//        renderCardBody.layoutParams.height = 0
+//        uiCardBody.layoutParams.height = 0
 
 
-        resolutionTabs = v.findViewById(R.id.resolutionTabs)
+        val resolutionTabs = v.findViewById<TabLayout>(R.id.resolutionTabs)
         resolutionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
                 val res = tab.text.toString()
-                callback.onSettingsParamsChanged("resolution", Resolution.valueOf(res))
+                sc.resolution = Resolution.valueOf(res)
+                fsv.r.resolutionChanged = true
+                fsv.r.renderToTex = true
+                fsv.requestRender()
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
@@ -146,45 +146,77 @@ class SettingsFragment : Fragment() {
         resolutionTabs.getTabAt(
             Resolution.valueOf(
                 savedInstanceState?.getString("resolution")
-                ?: config.resolution().name
+                ?: sc.resolution.name
             ).ordinal
         )?.select()
 
 
-        continuousRenderSwitch = v.findViewById(R.id.continuousRenderSwitch)
-        continuousRenderSwitch.setOnCheckedChangeListener {
-            _, isChecked -> callback.onSettingsParamsChanged("continuousRender", isChecked)
+        val continuousRenderSwitch = v.findViewById<Switch>(R.id.continuousRenderSwitch)
+        continuousRenderSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sc.continuousRender = isChecked
         }
         continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
-                ?: config.continuousRender()
+                ?: sc.continuousRender
 
 
         val saveToFileButton = v.findViewById<Button>(R.id.saveToFileButton)
         saveToFileButton.setOnClickListener {
-            callback.onSettingsParamsChanged("saveToFile", true)
+            if (fsv.r.isRendering) {
+                val toast = Toast.makeText(v.context, "Please wait for the image to finish rendering", Toast.LENGTH_SHORT)
+                toast.show()
+            }
+            else {
+                if (ContextCompat.checkSelfPermission(v.context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions((activity as MainActivity),
+                            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            WRITE_STORAGE_REQUEST_CODE)
+                }
+                else {
+                    fsv.r.saveImage = true
+                    fsv.requestRender()
+                    val toast = Toast.makeText(v.context, "Image saved to Gallery", Toast.LENGTH_SHORT)
+                    toast.show()
+                }
+            }
         }
         val renderButton = v.findViewById<Button>(R.id.renderButton)
         renderButton.setOnClickListener {
-            callback.onSettingsParamsChanged("render", true)
+            fsv.r.renderToTex = true
+            fsv.requestRender()
         }
 
 
-        displayParamsSwitch = v.findViewById(R.id.displayParamsSwitch)
-        displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            callback.onSettingsParamsChanged("displayParams", isChecked)
-        }
+        val displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
         displayParamsSwitch.isChecked =
                 savedInstanceState?.getBoolean("displayParams")
-                ?: config.displayParams()
+                ?: sc.displayParams
+        displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sc.displayParams = isChecked
+            (activity as MainActivity).updateDisplayParams(fsv.reaction, settingsChanged = true)
+        }
 
 
-        precisionTabs = v.findViewById(R.id.precisionTabs)
+
+        val precisionTabs = v.findViewById<TabLayout>(R.id.precisionTabs)
         precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
                 val p = tab.text.toString()
-                callback.onSettingsParamsChanged("precision", Precision.valueOf(p))
+                if (p == "AUTO") {
+                    Log.d("SETTINGS FRAGMENT", "auto selected")
+                    sc.autoPrecision = true
+                    fsv.checkThresholdCross(f.map.position.scale)
+                }
+                else {
+                    sc.precision = Precision.valueOf(p)
+                    sc.autoPrecision = false
+                }
+                fsv.r.renderShaderChanged = true
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
@@ -196,34 +228,17 @@ class SettingsFragment : Fragment() {
             }
 
         })
-        precisionTabs.getTabAt(2)?.select()
+        if (sc.autoPrecision) precisionTabs.getTabAt(2)?.select()
+        else precisionTabs.getTabAt(
+                 Precision.valueOf(
+                     savedInstanceState?.getString("precision")
+                     ?: sc.precision.name
+                 ).ordinal
+             )?.select()
 
         return v
     }
 
-    fun setOnParamChangeListener(callback: OnParamChangeListener) {
-        this.callback = callback
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString(
-                "resolution",
-                resolutionTabs.getTabAt(resolutionTabs.selectedTabPosition)?.text.toString()
-        )
-        outState.putString(
-                "precision",
-                precisionTabs.getTabAt(precisionTabs.selectedTabPosition)?.text.toString()
-        )
-        outState.putBoolean(
-                "continuousRender",
-                continuousRenderSwitch.isChecked
-        )
-        outState.putBoolean(
-                "displayParams",
-                displayParamsSwitch.isChecked
-        )
-        super.onSaveInstanceState(outState)
-    }
 
     interface OnParamChangeListener {
         fun onSettingsParamsChanged(key: String, value: Any)
