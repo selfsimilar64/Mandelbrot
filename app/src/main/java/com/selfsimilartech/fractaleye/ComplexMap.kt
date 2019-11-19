@@ -259,6 +259,8 @@ class ComplexMap (
                 icon = R.drawable.nova1_icon,
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.nova1_loop_sf,
+                conditionalDF = R.string.converge_df,
+                loopDF = R.string.nova1_loop_df,
                 positions = PositionList(Position(x = -0.3, scale = 1.5)),
                 z0 = Complex.ONE,
                 params = listOf(
@@ -274,6 +276,14 @@ class ComplexMap (
                 juliaMode = true,
                 positions = PositionList(julia = Position(x = -0.3, scale = 5.0))
         )
+        val fibonacciPowers = ComplexMap(
+                "Fibonacci Powers",
+                conditionalSF = R.string.escape_sf,
+                initSF = R.string.fibonacci_init_sf,
+                loopSF = R.string.fibonacci_loop_sf,
+                juliaMode = true,
+                bailoutRadius = 1e3f
+        )
         val test = ComplexMap(
                 "Test",
                 conditionalSF = R.string.converge_sf,
@@ -283,19 +293,18 @@ class ComplexMap (
                 positions = PositionList(Position(scale = 3.5))
         )
         val all = mapOf(
-                "Mandelbrot"             to  mandelbrot,
-                "Mandelbrot Power"       to  mandelbrotPower,
-                "Mandelbrot Dual Power"  to  mandelbrotDualPower,
-                "Burning Ship"           to  burningShip,
-                "Mandelbox"              to  mandelbox,
-                "Kali"                   to  kali,
-                "Sine 1"                 to  sine1,
-                "Sine 2"                 to  sine2,
-                "Horseshoe Crab"         to  horseshoeCrab,
-                "Kleinian"               to  kleinian,
-                "Nova 1"                 to  nova1,
-                "Nova 2"                 to  nova2,
-                "Test"                   to  test
+                mandelbrot.name             to  mandelbrot,
+                mandelbrotPower.name        to  mandelbrotPower,
+                mandelbrotDualPower.name    to  mandelbrotDualPower,
+                burningShip.name            to  burningShip,
+                mandelbox.name              to  mandelbox,
+                kali.name                   to  kali,
+                sine1.name                  to  sine1,
+                sine2.name                  to  sine2,
+                horseshoeCrab.name          to  horseshoeCrab,
+                kleinian.name               to  kleinian,
+                nova1.name                  to  nova1,
+                nova2.name                  to  nova2
         )
 
     }
@@ -307,7 +316,6 @@ class ComplexMap (
         else { Param() }
     }
     var position = if (juliaMode) positions.julia else positions.default
-
 
     override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
