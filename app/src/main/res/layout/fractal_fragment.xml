@@ -27,7 +27,7 @@
 
                 <Button
                     android:id="@+id/functionHeaderButton"
-                    style="@style/cardHeaderButtonDark"
+                    style="@style/CardHeaderButtonDark"
                     android:text="@string/shape" />
 
 
@@ -439,7 +439,7 @@
 
                 <Button
                     android:id="@+id/textureHeaderButton"
-                    style="@style/cardHeaderButtonDark"
+                    style="@style/CardHeaderButtonDark"
                     android:text="@string/texture" />
 
                 <LinearLayout
@@ -483,12 +483,14 @@
 
                         <SeekBar
                             android:id="@+id/q1Bar"
+                            style="@style/Widget.AppCompat.SeekBar.Discrete"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:layout_marginLeft="5dp"
                             android:layout_marginRight="5dp"
-                            android:layout_weight="1" />
+                            android:layout_weight="1"
+                            android:max="4" />
 
                         <EditText
                             android:id="@+id/q1Edit"
@@ -541,7 +543,7 @@
 
                 <Button
                     android:id="@+id/colorHeaderButton"
-                    style="@style/cardHeaderButtonDark"
+                    style="@style/CardHeaderButtonDark"
                     android:text="@string/color" />
 
                 <LinearLayout
@@ -634,7 +636,7 @@
 
                 <Button
                     android:id="@+id/positionHeaderButton"
-                    style="@style/cardHeaderButtonDark"
+                    style="@style/CardHeaderButtonDark"
                     android:text="@string/position" />
 
                 <LinearLayout

@@ -161,7 +161,7 @@
                 app:srcCompat="@android:drawable/arrow_down_float" />
 
             <HorizontalScrollView
-                android:id="@+id/buttonScroll"
+                android:id="@+id/buttonScroll1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -169,7 +169,7 @@
                 android:scrollbarStyle="outsideInset">
 
                 <LinearLayout
-                    android:id="@+id/uiQuick"
+                    android:id="@+id/categoryButtons"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="end"
@@ -238,7 +238,7 @@
                         android:background="@drawable/round_button_unselected"
                         android:contentDescription="@string/reaction_position"
                         android:scaleType="fitCenter"
-                        android:src="@drawable/transform"
+                        android:src="@drawable/position"
                         android:tint="#fff" />
 
                 </LinearLayout>
@@ -277,11 +277,11 @@
             android:layout_height="5dp"
             android:background="@color/colorHalfTransparent"
             android:progressBackgroundTint="@color/colorTransparent"
-            app:layout_constraintBottom_toTopOf="@id/uiFull" />
+            app:layout_constraintBottom_toTopOf="@id/ui" />
 
 
         <LinearLayout
-            android:id="@+id/uiFull"
+            android:id="@+id/ui"
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_gravity="bottom"
@@ -303,14 +303,14 @@
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:text="@string/tab_fractal" />
+                    android:text="fractal" />
 
                 <android.support.design.widget.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:text="@string/tab_settings" />
+                    android:text="@string/settings" />
             </android.support.design.widget.TabLayout>
 
             <android.support.v4.view.ViewPager
