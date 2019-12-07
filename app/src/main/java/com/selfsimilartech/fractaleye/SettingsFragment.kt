@@ -26,6 +26,12 @@ class SettingsFragment : Fragment() {
     lateinit var fsv : FractalSurfaceView
     lateinit var sc : SettingsConfig
 
+    fun passArguments(f: Fractal, fsv: FractalSurfaceView, sc: SettingsConfig) {
+        this.f = f
+        this.fsv = fsv
+        this.sc = sc
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.settings_fragment, container, false)
@@ -50,14 +56,14 @@ class SettingsFragment : Fragment() {
 
                 hStart = 0
                 hEnd = cardBody.measuredHeight
-                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_collapse, null), null)
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.expand, null), null)
 
             }
             else {
 
                 hStart = cardBody.height
                 hEnd = 0
-                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.arrow_expand, null), null)
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.collapse, null), null)
 
             }
 
@@ -109,18 +115,6 @@ class SettingsFragment : Fragment() {
             anim.start()
 
         }}
-
-        val renderCardBody = v.findViewById<LinearLayout>(R.id.renderCardBody)
-        val uiCardBody = v.findViewById<LinearLayout>(R.id.uiCardBody)
-
-        val renderHeaderButton = v.findViewById<Button>(R.id.renderHeaderButton)
-        val uiHeaderButton = v.findViewById<Button>(R.id.uiHeaderButton)
-
-        renderHeaderButton.setOnClickListener(cardHeaderListener(renderCardBody))
-        uiHeaderButton.setOnClickListener(cardHeaderListener(uiCardBody))
-
-//        renderCardBody.layoutParams.height = 0
-//        uiCardBody.layoutParams.height = 0
 
 
         val resolutionTabs = v.findViewById<TabLayout>(R.id.resolutionTabs)
@@ -194,7 +188,7 @@ class SettingsFragment : Fragment() {
                 ?: sc.displayParams
         displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
             sc.displayParams = isChecked
-            (activity as MainActivity).updateDisplayParams(fsv.reaction, settingsChanged = true)
+            (activity as MainActivity).updateDisplayParams(settingsChanged = true)
         }
 
 
@@ -207,7 +201,7 @@ class SettingsFragment : Fragment() {
                 if (p == "AUTO") {
                     Log.d("SETTINGS FRAGMENT", "auto selected")
                     sc.autoPrecision = true
-                    fsv.checkThresholdCross(f.map.position.scale)
+                    fsv.checkThresholdCross(f.position.scale)
                 }
                 else {
                     sc.precision = Precision.valueOf(p)
@@ -239,9 +233,5 @@ class SettingsFragment : Fragment() {
         return v
     }
 
-
-    interface OnParamChangeListener {
-        fun onSettingsParamsChanged(key: String, value: Any)
-    }
 
 }
