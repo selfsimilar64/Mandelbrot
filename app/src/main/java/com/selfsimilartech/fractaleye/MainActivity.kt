@@ -1,35 +1,37 @@
 package com.selfsimilartech.fractaleye
 
-import android.Manifest
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.content.res.Configuration
-import android.graphics.drawable.TransitionDrawable
 import android.os.*
 import android.support.v7.app.AppCompatActivity
 import android.support.constraint.ConstraintLayout
-import android.support.constraint.ConstraintSet
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
-import android.support.design.widget.TabLayout
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v4.view.ViewPager
-import android.util.Log
+import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.view.animation.AlphaAnimation
 import android.widget.*
-import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 import kotlin.math.*
+import android.view.MotionEvent
+import android.content.Context
+import android.support.design.widget.TabLayout
+import android.support.v4.view.ViewPager
+import android.util.AttributeSet
+import android.util.Log
+import android.view.GestureDetector
+
+
 
 
 const val SPLIT = 8193.0
-const val NUM_MAP_PARAMS = 4
+const val NUM_MAP_PARAMS = 3
 const val NUM_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
+const val ITER_MAX_POW = 12.0
+const val ITER_MIN_POW = 5.0
 //const val PLUS_UNICODE = '\u002B'
 //const val MINUS_UNICODE = '\u2212'
 
@@ -38,6 +40,11 @@ const val WRITE_STORAGE_REQUEST_CODE = 0
 operator fun Double.times(w: Complex) : Complex {
     return Complex(this*w.x, this*w.y)
 }
+fun FrameLayout.getChildAtFront() : View? {
+    return this.getChildAt(this.childCount - 1)
+}
+fun FrameLayout.hasAtFront(view: View) : Boolean = this.getChildAtFront()?.equals(view) ?: false
+fun TabLayout.getCurrentTab() : TabLayout.Tab? = this.getTabAt(this.selectedTabPosition)
 
 data class Complex(
         val x : Double,
@@ -171,11 +178,18 @@ data class DualDouble (
 }
 
 
+enum class Category(val icon: Int) {
+    SETTINGS(R.drawable.settings),
+    TEXTURE(R.drawable.texture),
+    SHAPE(R.drawable.shape),
+    COLOR(R.drawable.color),
+    POSITION(R.drawable.position)
+}
 enum class Precision(val threshold: Double) {
     SINGLE(5e-4), DUAL(1e-12), QUAD(1e-20)
 }
 enum class Reaction(val numDisplayParams: Int) {
-    POSITION(4), COLOR(2), P1(3), P2(3), P3(3), P4(3)
+    POSITION(4), COLOR(2), SHAPE(3)
 }
 enum class Resolution(val scale: Int) {
     LOW(8), MED(3), HIGH(1)
@@ -188,7 +202,7 @@ class SettingsConfig (
     var precision           : Precision     = Precision.SINGLE,
     var autoPrecision       : Boolean       = true,
     var continuousRender    : Boolean       = false,
-    var displayParams       : Boolean       = true
+    var displayParams       : Boolean       = false
 )
 
 
@@ -214,7 +228,10 @@ class Position(
         set(value) { if (!scaleLocked) { field = value } }
 
     var rotation = rotation
-        set(value) { if (!rotationLocked) { field = value } }
+        set(value) { if (!rotationLocked) {
+            val tau = 2.0*Math.PI
+            field = if (value < 0) (tau + value) % tau else value % tau
+        }}
 
 
     var xLocked: Boolean = false
@@ -316,11 +333,16 @@ class Position(
 }
 
 class PositionList(
-        val default : Position = Position(),
-        val julia   : Position = Position(scale = 3.5)
+        val default  : Position = Position(),
+        val julia    : Position = Position(scale = 3.5),
+        val other    : List<Position> = listOf()
 )
 
 
+fun Double?.inRadians() : Double? = this?.times(Math.PI/180.0)
+fun Double?.inDegrees() : Double? = this?.times(180.0/Math.PI)
+fun Double.inRadians() : Double = this*Math.PI/180.0
+fun Double.inDegrees() : Double = this*180.0/Math.PI
 
 
 fun MotionEvent.focalLength() : Float {
@@ -360,41 +382,101 @@ fun splitDD(a: DualDouble) : FloatArray {
 }
 
 
-class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
 
-    private val mFragmentList = ArrayList<Fragment>()
-    private val mFragmentTitleList = ArrayList<String>()
 
-    override fun getItem(position: Int) : Fragment {
-        return mFragmentList[position]
+
+interface ClickListener {
+    fun onClick(view: View, position: Int)
+
+    fun onLongClick(view: View, position: Int)
+}
+
+class NoScrollViewPager : ViewPager {
+
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun setCurrentItem(item: Int, smoothScroll: Boolean) {
+        super.setCurrentItem(item, false)
     }
 
-    override fun getCount() : Int {
-        return mFragmentList.size
-    }
-
-    fun addFrag(fragment: Fragment, title: String) {
-        mFragmentList.add(fragment)
-        mFragmentTitleList.add(title)
-    }
-
-    override fun getPageTitle(position: Int) : CharSequence {
-        return mFragmentTitleList[position]
+    override fun setCurrentItem(item: Int) {
+        super.setCurrentItem(item, false)
     }
 
 }
 
+class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
+
+    private val fragmentList = ArrayList<Fragment>()
+
+    override fun getItem(position: Int) : Fragment {
+        return fragmentList[position]
+    }
+
+    override fun getCount() : Int {
+        return fragmentList.size
+    }
+
+    fun addFrag(fragment: Fragment) {
+        fragmentList.add(fragment)
+    }
+
+    override fun getPageTitle(position: Int) : CharSequence? {
+        return null
+    }
+
+}
+
+class RecyclerTouchListener(
+        context: Context,
+        recyclerView: RecyclerView,
+        private val clickListener: ClickListener?
+) : RecyclerView.OnItemTouchListener {
+
+    private val gestureDetector: GestureDetector
+
+
+    init {
+        gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                return true
+            }
+
+            override fun onLongPress(e: MotionEvent) {
+                val child = recyclerView.findChildViewUnder(e.x, e.y)
+                if (child != null && clickListener != null) {
+                    clickListener.onLongClick(child, recyclerView.getChildAdapterPosition(child))
+                }
+            }
+        })
+    }
+
+    override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+        val child = rv.findChildViewUnder(e.x, e.y)
+        if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
+            clickListener.onClick(child, rv.getChildAdapterPosition(child))
+        }
+        return false
+    }
+
+    override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {}
+
+    override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {}
+}
+
+
+
+
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var f : Fractal
+    private var f : Fractal = Fractal.mandelbrot
+    private var sc : SettingsConfig = SettingsConfig()
     private lateinit var fsv : FractalSurfaceView
-    private lateinit var sc : SettingsConfig
-    private lateinit var uiQuickButtons : List<View>
-    private lateinit var displayParamRows : List<LinearLayout>
 
-    private var orientation = Configuration.ORIENTATION_UNDEFINED
-
+    // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -420,11 +502,11 @@ class MainActivity : AppCompatActivity() {
 
         // get initial values for fractalConfig
 
-//        val map = ComplexMap.all[savedInstanceState?.getString("map")] ?: ComplexMap.mandelbrot
-//        map.position.x = savedInstanceState?.getDouble("x") ?: map.position.x
-//        map.position.y = savedInstanceState?.getDouble("y") ?: map.position.y
-//        map.position.scale = savedInstanceState?.getDouble("scale") ?: map.position.scale
-//        map.position.rotation = savedInstanceState?.getDouble("rotation") ?: map.position.rotation
+//        val shape = Shape.all[savedInstanceState?.getString("shape")] ?: Shape.mandelbrot
+//        shape.position.x = savedInstanceState?.getDouble("x") ?: shape.position.x
+//        shape.position.y = savedInstanceState?.getDouble("y") ?: shape.position.y
+//        shape.position.scale = savedInstanceState?.getDouble("scale") ?: shape.position.scale
+//        shape.position.rotation = savedInstanceState?.getDouble("rotation") ?: shape.position.rotation
 //
 //        val juliaMode = savedInstanceState?.getBoolean("juliaMode") ?: false
 //        Log.e("MAIN ACTIVITY", "texture: ${savedInstanceState?.getString("texture")}")
@@ -449,11 +531,6 @@ class MainActivity : AppCompatActivity() {
 //        val continuousRender = savedInstanceState?.getBoolean("continuousRender") ?: false
 //        val displayParamsBoolean = savedInstanceState?.getBoolean("displayParams") ?: true
 
-        
-        sc = SettingsConfig()
-
-        // create fractal
-        f = Fractal()
 
 //        if (orientationChanged) {
 //            f.switchOrientation()
@@ -465,255 +542,219 @@ class MainActivity : AppCompatActivity() {
         fsv.layoutParams = ViewGroup.LayoutParams(screenWidth, screenHeight)
         fsv.hideSystemUI()
 
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main2)
 
         val fractalLayout = findViewById<FrameLayout>(R.id.layout_main)
         fractalLayout.addView(fsv)
 
 
         val displayParams = findViewById<LinearLayout>(R.id.displayParams)
-        displayParamRows = listOf(
-            findViewById(R.id.displayParamRow1),
-            findViewById(R.id.displayParamRow2),
-            findViewById(R.id.displayParamRow3),
-            findViewById(R.id.displayParamRow4)
+        val ui = findViewById<LinearLayout>(R.id.ui)
+        val overlay = findViewById<ConstraintLayout>(R.id.overlay)
+        val categoryPager = findViewById<NoScrollViewPager>(R.id.categoryPager)
+        val categoryTabs = findViewById<TabLayout>(R.id.categoryButtons)
+        val categoryNameButton = findViewById<Button>(R.id.categoryNameButton)
+
+        val displayParamRows = listOf<LinearLayout>(
+                findViewById(R.id.displayParamRow1),
+                findViewById(R.id.displayParamRow2),
+                findViewById(R.id.displayParamRow3),
+                findViewById(R.id.displayParamRow4)
         )
-        displayParams.removeViews(1, displayParams.childCount - 1)
+        displayParamRows.forEach { it.visibility = LinearLayout.GONE }
+        updateDisplayParams(reactionChanged = true, settingsChanged = true)
 
+        val pagerHeightOpen = (175*resources.displayMetrics.density).toInt()
+        val uiHeightOpen = (255*resources.displayMetrics.density).toInt()
+        val uiHeightClosed = uiHeightOpen - pagerHeightOpen
+        categoryPager.layoutParams.height = 1
+        fsv.y = -uiHeightClosed/2f
+        categoryNameButton.setOnClickListener {
 
-        val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
-        val buttonBackgrounds = arrayOf(
-            resources.getDrawable(R.drawable.round_button_unselected, null),
-            resources.getDrawable(R.drawable.round_button_selected, null)
-        )
-        uiQuickButtons = listOf(
-            findViewById(R.id.transformButton),
-            findViewById(R.id.colorButton),
-            findViewById(R.id.paramButton1),
-            findViewById(R.id.paramButton2),
-            findViewById(R.id.paramButton3),
-            findViewById(R.id.paramButton4)
-        )
-        val uiQuickButtonListener = View.OnClickListener {
-            val s = when (it) {
-                is Button -> it.text.toString()
-                is ImageButton -> it.contentDescription.toString()
-                else -> ""
-            }
-            fsv.reaction = Reaction.valueOf(s)
-            (displayParams.getChildAt(0) as TextView).text = when (fsv.reaction) {
-                Reaction.POSITION, Reaction.COLOR -> s
-                else -> "PARAMETER ${s[1]}"
-            }
-
-            if (sc.displayParams) {
-                displayParams.removeViews(1, displayParams.childCount - 1)
-                for (i in 0 until fsv.reaction.numDisplayParams) {
-                    displayParams.addView(displayParamRows[i])
-                }
-            }
-
-            for (b in uiQuickButtons) {
-                val btd = b.background as TransitionDrawable
-                if (b == it) { btd.startTransition(0) }
-                else { btd.resetTransition() }
-            }
-            updateDisplayParams(Reaction.valueOf(s), true)
-        }
-        for (b in uiQuickButtons) {
-            b.background = TransitionDrawable(buttonBackgrounds)
-            b.setOnClickListener(uiQuickButtonListener)
-        }
-        val diff = f.map.params.size - uiQuick.childCount + 2
-        uiQuick.removeViews(0, abs(diff))
-        uiQuick.bringToFront()
-        uiQuickButtons[0].performClick()
-
-        val buttonScroll = findViewById<HorizontalScrollView>(R.id.buttonScroll)
-        val leftArrow = findViewById<ImageView>(R.id.leftArrow)
-        val rightArrow = findViewById<ImageView>(R.id.rightArrow)
-        leftArrow.alpha = 0f
-        rightArrow.alpha = 0f
-
-        buttonScroll.viewTreeObserver.addOnScrollChangedListener {
-            if (uiQuick.width > buttonScroll.width) {
-                val scrollX = buttonScroll.scrollX
-                val scrollEnd = uiQuick.width - buttonScroll.width
-                // Log.d("MAIN ACTIVITY", "scrollX: $scrollX")
-                // Log.d("MAIN ACTIVITY", "scrollEnd: $scrollEnd")
-                when {
-                    scrollX > 5 -> leftArrow.alpha = 1f
-                    scrollX < 5 -> leftArrow.alpha = 0f
-                }
-                when {
-                    scrollX < scrollEnd - 5 -> rightArrow.alpha = 1f
-                    scrollX > scrollEnd - 5 -> rightArrow.alpha = 0f
-                }
-            }
-            else {
-                leftArrow.alpha = 0f
-                rightArrow.alpha = 0f
-            }
-        }
-
-
-        val uiFullTabs = findViewById<TabLayout>(R.id.uiFullTabs)
-        uiFullTabs.tabGravity = TabLayout.GRAVITY_FILL
-
-
-
-
-
-        // initialize fragments and set UI params from fractal
-        val fractalEditFragment = FractalEditFragment()
-        val settingsFragment = SettingsFragment()
-        // val saveFragment = SaveFragment()
-
-        fractalEditFragment.f = f
-        fractalEditFragment.fsv = fsv
-
-        settingsFragment.f = f
-        settingsFragment.fsv = fsv
-        settingsFragment.sc = sc
-
-
-
-
-
-
-        val adapter = ViewPagerAdapter(supportFragmentManager)
-        adapter.addFrag( fractalEditFragment,  "Fractal" )
-        adapter.addFrag( settingsFragment,  "Settings" )
-
-        val viewPager = findViewById<ViewPager>(R.id.viewPager)
-        viewPager.adapter = adapter
-        viewPager.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(uiFullTabs))
-
-        uiFullTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                viewPager.currentItem = tab.position
-                Log.d("MAIN ACTIVITY", "tab: ${tab.text}")
-                when (tab.text) {
-                    "fractal" -> {
-                        Log.d("MAIN ACTIVITY", "Fractal tab selected")
-                    }
-                    else -> {}
-                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab) {
-
-            }
-
-            override fun onTabReselected(tab: TabLayout.Tab) {
-
-            }
-        })
-
-
-
-
-
-        // val phi = 0.5*(sqrt(5.0) + 1.0)
-        // val uiFullHeightOpen = (screenHeight*(1.0 - 1.0/phi)).toInt()
-        // val uiFullHeightFullscreen = screenHeight - statusBarHeight
-        val uiFullHeightOpen = screenHeight/2
-        // fsv.y = -uiFullHeightOpen/2f
-
-        val uiFull = findViewById<LinearLayout>(R.id.uiFull)
-        uiFull.layoutParams.height = 1
-        uiFull.bringToFront()
-
-        val uiFullButton = findViewById<ImageButton>(R.id.uiFullButton)
-        uiFullButton.setOnClickListener {
             val hStart : Int
             val hEnd : Int
-            if (uiFull.height == 1) {
+
+            if (categoryPager.height == 1) {
                 hStart = 1
-                hEnd = uiFullHeightOpen
+                hEnd = pagerHeightOpen
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.collapse, null), null)
             }
             else {
-                hStart = uiFullHeightOpen
+                hStart = pagerHeightOpen
                 hEnd = 1
+                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.expand, null), null)
             }
 
             val anim = ValueAnimator.ofInt(hStart, hEnd)
             anim.addUpdateListener { animation ->
                 val intermediateHeight = animation?.animatedValue as Int
-                val c = ConstraintSet()
-                c.clone(overlay)
-                c.constrainHeight(R.id.uiFull, intermediateHeight)
-                c.applyTo(overlay)
-                fsv.y = -uiFull.height/2.0f
+                categoryPager.layoutParams.height = intermediateHeight
+                categoryPager.requestLayout()
+                fsv.y = -ui.height/2f
+                if (hEnd == 1 && anim.animatedFraction == 1f && categoryTabs.getCurrentTab()
+                        ?.contentDescription?.equals(Category.SETTINGS.name) == true) {
+                    categoryTabs.getTabAt(4)?.select()
+                } // ew
             }
-            anim.duration = 300
+            anim.duration = 200
             anim.start()
+
         }
 
-        val overlay = findViewById<ConstraintLayout>(R.id.overlay)
-        overlay.bringToFront()
 
+        val categoryPagerAdapter = ViewPagerAdapter(supportFragmentManager)
+
+        val settingsFragment  = SettingsFragment()
+        val textureFragment   = TextureFragment()
+        val shapeFragment     = ShapeFragment()
+        val colorFragment     = ColorFragment()
+        val positionFragment  = PositionFragment()
+
+        settingsFragment.passArguments(f, fsv, sc)
+        textureFragment.passArguments(f, fsv)
+        shapeFragment.passArguments(f, fsv)
+        colorFragment.passArguments(f, fsv)
+        positionFragment.passArguments(f, fsv)
+
+
+        categoryPagerAdapter.addFrag(settingsFragment)
+        categoryPagerAdapter.addFrag(textureFragment)
+        categoryPagerAdapter.addFrag(shapeFragment)
+        categoryPagerAdapter.addFrag(colorFragment)
+        categoryPagerAdapter.addFrag(positionFragment)
+        categoryPager.adapter = categoryPagerAdapter
+        categoryPager.offscreenPageLimit = 4
+
+
+        categoryTabs.setupWithViewPager(categoryPager)
+        for (i in 0..4) {
+            categoryTabs.getTabAt(i)?.contentDescription = Category.values()[i].name
+            val transparentIcon = resources.getDrawable(Category.values()[i].icon, null)
+            transparentIcon.alpha = 128
+            categoryTabs.getTabAt(i)?.icon = transparentIcon
+        }
+
+        categoryTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+
+            override fun onTabSelected(tab: TabLayout.Tab) {
+
+                tab.icon?.alpha = 255
+
+                val s = tab.contentDescription.toString()
+                Log.e("MAIN ACTIVITY", "tab selected: $s")
+
+                fsv.reaction = when (s) {
+                    Category.COLOR.name, Category.POSITION.name-> Reaction.valueOf(s)
+                    Category.SHAPE.name -> if (f.numParamsInUse != 0) Reaction.SHAPE else Reaction.POSITION
+                    Category.TEXTURE.name, Category.SETTINGS.name -> Reaction.POSITION
+                    else -> Reaction.POSITION
+                }
+
+                if (s == Category.SETTINGS.name && categoryPager.height == 1) {
+                    categoryNameButton.performClick()
+                }
+
+                categoryNameButton.text = s
+                updateDisplayParams(reactionChanged = true)
+
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) {
+                tab.icon?.alpha = 128
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab) {
+                categoryNameButton.performClick()
+                onTabSelected(tab)
+            }
+
+        })
+        categoryTabs.getTabAt(categoryTabs.tabCount - 1)?.select()
+
+
+
+//        val buttonScroll = findViewById<HorizontalScrollView>(R.id.buttonScroll1)
+//        val leftArrow = findViewById<ImageView>(R.id.leftArrow)
+//        val rightArrow = findViewById<ImageView>(R.id.rightArrow)
+//        leftArrow.alpha = 0f
+//        rightArrow.alpha = 0f
+
+//        buttonScroll.viewTreeObserver.addOnScrollChangedListener {
+//            if (uiQuick.width > buttonScroll.width) {
+//                val scrollX = buttonScroll.scrollX
+//                val scrollEnd = uiQuick.width - buttonScroll.width
+                // Log.d("MAIN ACTIVITY", "scrollX: $scrollX")
+                // Log.d("MAIN ACTIVITY", "scrollEnd: $scrollEnd")
+//                when {
+//                    scrollX > 5 -> leftArrow.alpha = 1f
+//                    scrollX < 5 -> leftArrow.alpha = 0f
+//                }
+//                when {
+//                    scrollX < scrollEnd - 5 -> rightArrow.alpha = 1f
+//                    scrollX > scrollEnd - 5 -> rightArrow.alpha = 0f
+//                }
+//            }
+//            else {
+//                leftArrow.alpha = 0f
+//                rightArrow.alpha = 0f
+//            }
+//        }
+
+
+        overlay.bringToFront()
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
-
     }
 
-
-    fun addMapParams(n: Int) {
-        val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
-        for (i in 1..n) { uiQuick.addView(uiQuickButtons[uiQuick.childCount], 0) }
-    }
-    fun removeMapParams(n: Int) {
-        val uiQuick = findViewById<LinearLayout>(R.id.uiQuick)
-        for (i in 1..n) { uiQuick.removeView(uiQuickButtons[uiQuick.childCount - 1]) }
-    }
 
     fun displayMessage(msg: String) {
-        val buttons = findViewById<LinearLayout>(R.id.buttons)
+        val ui = findViewById<LinearLayout>(R.id.ui)
         val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT)
-        val toastHeight = fsv.screenRes[1] - buttons.y.toInt() + buttons.height
+        val toastHeight = fsv.screenRes[1] - ui.height
         toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
         toast.show()
     }
-    fun updateDisplayParams(reaction: Reaction, reactionChanged: Boolean = false, settingsChanged: Boolean = false) {
+    fun updateDisplayParams(reactionChanged: Boolean = false, settingsChanged: Boolean = false) {
 
         val displayParams = findViewById<LinearLayout>(R.id.displayParams)
-
-        if (settingsChanged) {
-            if (sc.displayParams) {
-                for (i in 0 until fsv.reaction.numDisplayParams) {
-                    displayParams.addView(displayParamRows[i])
-                }
-            }
-            else {
-                displayParams.removeViews(1, displayParams.childCount - 1)
-            }
-        }
-
-        val displayParam1 = findViewById<TextView>(R.id.displayParam1)
-        val displayParam2 = findViewById<TextView>(R.id.displayParam2)
-        val displayParam3 = findViewById<TextView>(R.id.displayParam3)
-        val displayParam4 = findViewById<TextView>(R.id.displayParam4)
-        val displayParamName1 = findViewById<TextView>(R.id.displayParamName1)
-        val displayParamName2 = findViewById<TextView>(R.id.displayParamName2)
-        val displayParamName3 = findViewById<TextView>(R.id.displayParamName3)
-        val displayParamName4 = findViewById<TextView>(R.id.displayParamName4)
-        val density = resources.displayMetrics.density
-        val w : Int
-
+        val displayParamRows = listOf<LinearLayout>(
+                findViewById(R.id.displayParamRow1),
+                findViewById(R.id.displayParamRow2),
+                findViewById(R.id.displayParamRow3),
+                findViewById(R.id.displayParamRow4)
+        )
 
         if (sc.displayParams) {
-            when (reaction) {
+
+            if (settingsChanged) displayParams.visibility = LinearLayout.VISIBLE
+            if (reactionChanged) displayParamRows.forEach { it.visibility = LinearLayout.GONE }
+            if (reactionChanged || settingsChanged)
+                for (i in 0 until fsv.reaction.numDisplayParams)
+                displayParamRows[i].visibility = LinearLayout.VISIBLE
+
+            val displayParam1 = findViewById<TextView>(R.id.displayParam1)
+            val displayParam2 = findViewById<TextView>(R.id.displayParam2)
+            val displayParam3 = findViewById<TextView>(R.id.displayParam3)
+            val displayParam4 = findViewById<TextView>(R.id.displayParam4)
+            val displayParamName1 = findViewById<TextView>(R.id.displayParamName1)
+            val displayParamName2 = findViewById<TextView>(R.id.displayParamName2)
+            val displayParamName3 = findViewById<TextView>(R.id.displayParamName3)
+            val displayParamName4 = findViewById<TextView>(R.id.displayParamName4)
+            val density = resources.displayMetrics.density
+            val w: Int
+
+            // update text content
+            when (fsv.reaction) {
                 Reaction.POSITION -> {
 
                     displayParamName1.text = resources.getString(R.string.x)
                     displayParamName2.text = resources.getString(R.string.y)
-                    displayParamName3.text = resources.getString(R.string.scale_lower)
+                    displayParamName3.text = resources.getString(R.string.zoom)
                     displayParamName4.text = resources.getString(R.string.rotation_lower)
-                    displayParam1.text = "%.17f".format(f.map.position.x)
-                    displayParam2.text = "%.17f".format(f.map.position.y)
-                    displayParam3.text = "%e".format(f.map.position.scale)
-                    displayParam4.text = "%.0f".format(f.map.position.rotation * 180.0 / Math.PI)
+                    displayParam1.text = "%.17f".format(f.position.x)
+                    displayParam2.text = "%.17f".format(f.position.y)
+                    displayParam3.text = "%e".format(f.position.scale)
+                    displayParam4.text = "%.0f".format(f.position.rotation * 180.0 / Math.PI)
                     w = (60f * density).toInt()
 
                 }
@@ -726,20 +767,20 @@ class MainActivity : AppCompatActivity() {
                     w = (75f * density).toInt()
 
                 }
-                else -> {
+                Reaction.SHAPE -> {
 
-                    val i = reaction.ordinal - 2
                     displayParamName1.text = "u"
                     displayParamName2.text = "v"
                     displayParamName3.text = resources.getString(R.string.sensitivity)
-                    displayParam1.text = "%.8f".format((f.map.params[i].u))
-                    displayParam2.text = "%.8f".format((f.map.params[i].v))
-                    displayParam3.text = "%.4f".format(f.sensitivity)
+                    displayParam1.text = "%.8f".format((f.shape.activeParam.u))
+                    displayParam2.text = "%.8f".format((f.shape.activeParam.v))
+                    displayParam3.text = "%.6f".format(f.sensitivity)
                     w = (80f * density).toInt()
 
                 }
             }
 
+            // update width
             displayParamName1.width = w
             displayParamName2.width = w
             displayParamName3?.width = w
@@ -753,8 +794,7 @@ class MainActivity : AppCompatActivity() {
             displayParam3?.requestLayout()
             displayParam4?.requestLayout()
 
-        }
-        if (sc.displayParams || reactionChanged) {
+            // start fade animation
             val fadeOut = AlphaAnimation(1f, 0f)
             fadeOut.duration = 1000L
             fadeOut.startOffset = 2500L
@@ -762,40 +802,21 @@ class MainActivity : AppCompatActivity() {
             displayParams.animation = fadeOut
             displayParams.animation.start()
             displayParams.requestLayout()
+
+        }
+        else {
+            if (settingsChanged) { displayParams.visibility = LinearLayout.GONE }
         }
 
     }
-    fun updateMapParamEditText(i: Int) {
-        // Log.d("FRACTAL", "updating map param EditText $i")
+    fun updateShapeParamEditTexts() {
+        // Log.d("FRACTAL", "updating shape param EditText $i")
 
-        val xEdit : EditText?
-        val yEdit : EditText?
+        val xEdit = findViewById<EditText>(R.id.uEdit)
+        val yEdit = findViewById<EditText>(R.id.vEdit)
 
-        when (i) {
-            1 -> {
-                xEdit = findViewById(R.id.u1Edit)
-                yEdit = findViewById(R.id.v1Edit)
-            }
-            2 -> {
-                xEdit = findViewById(R.id.u2Edit)
-                yEdit = findViewById(R.id.v2Edit)
-            }
-            3 -> {
-                xEdit = findViewById(R.id.u3Edit)
-                yEdit = findViewById(R.id.v3Edit)
-            }
-            4 -> {
-                xEdit = findViewById(R.id.u4Edit)
-                yEdit = findViewById(R.id.v4Edit)
-            }
-            else -> {
-                xEdit = null
-                yEdit = null
-            }
-        }
-
-        xEdit?.setText("%.8f".format((f.map.params[i-1].u)))
-        yEdit?.setText("%.8f".format((f.map.params[i-1].v)))
+        xEdit?.setText("%.8f".format((f.shape.activeParam.u)))
+        yEdit?.setText("%.8f".format((f.shape.activeParam.v)))
 
     }
     fun updateShapeEditTexts() {
@@ -806,10 +827,7 @@ class MainActivity : AppCompatActivity() {
         bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
         bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
 
-        for (i in 1..NUM_MAP_PARAMS) {
-            updateMapParamEditText(i)
-        }
-
+        updateShapeParamEditTexts()
         updatePositionEditTexts()
 
     }
@@ -818,7 +836,7 @@ class MainActivity : AppCompatActivity() {
         val q1Edit = findViewById<EditText>(R.id.q1Edit)
         val q2Edit = findViewById<EditText>(R.id.q2Edit)
 
-        q1Edit?.setText("%.3f".format(f.texture.params[0].t))
+        q1Edit?.setText("%d".format(f.texture.params[0].t.toInt()))
         q2Edit?.setText("%.3f".format(f.texture.params[1].t))
 
     }
@@ -837,22 +855,30 @@ class MainActivity : AppCompatActivity() {
         val yCoordEdit = findViewById<EditText>(R.id.yCoordEdit)
         val scaleSignificandEdit = findViewById<EditText>(R.id.scaleSignificandEdit)
         val scaleExponentEdit = findViewById<EditText>(R.id.scaleExponentEdit)
-        val scaleStrings = "%e".format(f.map.position.scale).split("e")
+        val scaleStrings = "%e".format(f.position.scale).split("e")
         val rotationEdit = findViewById<EditText>(R.id.rotationEdit)
 
 //        Log.w("FRACTAL", "scaleExponent: %d".format(scaleStrings[1].toInt()))
 //        Log.w("FRACTAL", "bailoutExponent: %d".format(bailoutStrings[1].toInt()))
 
-        xCoordEdit?.setText("%.17f".format(f.map.position.x))
-        yCoordEdit?.setText("%.17f".format(f.map.position.y))
+        xCoordEdit?.setText("%.17f".format(f.position.x))
+        yCoordEdit?.setText("%.17f".format(f.position.y))
 
         scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
         scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
 
-        rotationEdit?.setText("%.0f".format(f.map.position.rotation * 180.0 / Math.PI))
+        rotationEdit?.setText("%.0f".format(f.position.rotation * 180.0 / Math.PI))
 
     }
 
+    override fun onPause() {
+        super.onPause()
+        fsv.onPause()
+    }
+    override fun onResume() {
+        super.onResume()
+        fsv.onResume()
+    }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) { fsv.hideSystemUI() }
@@ -861,7 +887,7 @@ class MainActivity : AppCompatActivity() {
 
 //        Log.d("MAIN ACTIVITY", "saving instance state !! outState: ${outState == null}")
 
-//        outState?.putString("map", f.map.name)
+//        outState?.putString("shape", f.shape.name)
 //        outState?.putString("texture", f.texture.name)
 //        outState?.putBoolean("juliaMode", f.juliaMode)
 //        outState?.putFloat("bailoutRadius", f.bailoutRadius)
