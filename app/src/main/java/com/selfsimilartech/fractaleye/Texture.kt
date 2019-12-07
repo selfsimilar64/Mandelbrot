@@ -4,6 +4,7 @@ import android.util.Range
 
 class Texture (
         val name            : String,
+        val icon            : Int = R.drawable.mandelbrot_icon,
         val initSF          : Int = R.string.empty,
         val loopSF          : Int = R.string.empty,
         val finalSF         : Int = R.string.empty,
@@ -47,17 +48,20 @@ class Texture (
         )
         val escape = Texture(
                 name = "Escape Time",
+                icon = R.drawable.escape,
                 finalSF = R.string.escape_final,
                 finalDF = R.string.escape_final
         )
         val escapeSmooth = Texture(
                 name = "Escape Time Smooth",
+                icon = R.drawable.escape_smooth,
                 finalSF = R.string.mandelbrot_smooth_final_sf,
                 finalDF = R.string.mandelbrot_smooth_final_df2,
                 bailoutRadius = 1e2f
         )
         val distanceEstimation = Texture(
                 name = "Distance Estimation",
+                icon = R.drawable.distance_est,
                 initSF = R.string.mandelbrot_dist_init_sf,
                 loopSF = R.string.mandelbrot_dist_loop_sf,
                 finalSF = R.string.mandelbrot_dist_final_sf,
@@ -69,6 +73,7 @@ class Texture (
         )
         val normalMap1 = Texture(
                 name = "Normal Map 1",
+                icon = R.drawable.normal_map_1,
                 initSF = R.string.mandelbrot_normal1_init_sf,
                 loopSF = R.string.mandelbrot_normal1_loop_sf,
                 finalSF = R.string.mandelbrot_normal1_final_sf,
@@ -79,6 +84,7 @@ class Texture (
         )
         val normalMap2 = Texture(
                 name = "Normal Map 2",
+                icon = R.drawable.normal_map_2,
                 initSF = R.string.mandelbrot_normal2_init_sf,
                 loopSF = R.string.mandelbrot_normal2_loop_sf,
                 finalSF = R.string.mandelbrot_normal2_final_sf,
@@ -107,6 +113,7 @@ class Texture (
         )
         val triangleIneqAvg = Texture(
                 "Triangle Inequality Average",
+                R.drawable.triangle_ineq_avg,
                 R.string.triangle_init_sf,
                 R.string.triangle_loop_sf,
                 R.string.triangle_final_sf,
@@ -117,6 +124,7 @@ class Texture (
         )
         val curvatureAvg = Texture(
                 "Curvature Average",
+                R.drawable.curvature_avg,
                 R.string.curvature_init,
                 R.string.curvature_loop_sf,
                 R.string.curvature_final_sf,
@@ -127,17 +135,19 @@ class Texture (
         )
         val stripeAvg = Texture(
                 "Stripe Average",
+                R.drawable.stripe_avg,
                 R.string.stripe_init,
                 R.string.stripe_loop_sf,
                 R.string.stripe_final_sf,
                 R.string.stripe_init,
                 R.string.stripe_loop_df,
                 R.string.stripe_final_df,
-                listOf(Param("Density", Range(0.0, 10.0), 1.0)),
+                listOf(Param("Density", Range(0.0, 5.0), 1.0)),
                 bailoutRadius = 1e6f
         )
         val orbitTrap = Texture(
                 "Orbit Trap",
+                R.drawable.orbit_trap_min_x,
                 R.string.orbittrap_init,
                 R.string.orbittrap_loop_sf,
                 R.string.orbittrap_final_radius,
@@ -148,6 +158,7 @@ class Texture (
         )
         val overlayAvg = Texture(
                 "Overlay Average",
+                R.drawable.overlay_avg,
                 R.string.overlay_init,
                 R.string.overlay_loop_sf,
                 R.string.overlay_final_sf,
@@ -159,6 +170,7 @@ class Texture (
         )
         val exponentialSmoothing = Texture(
                 "Exponential Smoothing",
+                R.drawable.exp_smooth,
                 initSF = R.string.exponential_smooth_init,
                 loopSF = R.string.exponential_smooth_loop_sf,
                 finalSF = R.string.exponential_smooth_final,
@@ -167,26 +179,26 @@ class Texture (
                 finalDF = R.string.exponential_smooth_final,
                 bailoutRadius = 5f
         )
-        val arbitrary = mapOf(
-                "Escape Time"                  to  escape               ,
-                "Curvature Average"            to  curvatureAvg         ,
-                "Stripe Average"               to  stripeAvg            ,
-                "Overlay Average"              to  overlayAvg           ,
-                "Orbit Trap"                   to  orbitTrap            ,
-                "Exponential Smoothing"        to  exponentialSmoothing
+        val arbitrary = arrayListOf(
+                escape,
+                curvatureAvg,
+                stripeAvg,
+                overlayAvg,
+                orbitTrap,
+                exponentialSmoothing
         )
-        val all = mapOf(
-                "Escape Time"                  to  escape               ,
-                "Escape Time Smooth"           to  escapeSmooth         ,
-                "Distance Estimation"          to  distanceEstimation   ,
-                "Normal Map 1"                 to  normalMap1           ,
-                "Normal Map 2"                 to  normalMap2           ,
-                "Triangle Inequality Average"  to  triangleIneqAvg      ,
-                "Curvature Average"            to  curvatureAvg         ,
-                "Stripe Average"               to  stripeAvg            ,
-                "Overlay Average"              to  overlayAvg           ,
-                "Orbit Trap"                   to  orbitTrap            ,
-                "Exponential Smoothing"        to  exponentialSmoothing
+        val all = arrayListOf(
+                escape,
+                escapeSmooth,
+                distanceEstimation,
+                normalMap1,
+                normalMap2,
+                triangleIneqAvg,
+                curvatureAvg,
+                stripeAvg,
+                overlayAvg,
+                orbitTrap,
+                exponentialSmoothing
         )
 
     }
