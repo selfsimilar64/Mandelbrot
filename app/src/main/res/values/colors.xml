@@ -12,6 +12,10 @@
     <color name="colorHalfTransparent">#a000</color>
     <color name="colorTransparent">#0000</color>
     <color name="colorAccent">#fff</color>
+    <color name="menu1">#1a1a1a</color>
+    <color name="menu2">#000</color>
+    <color name="menu3">#000000</color>
+    <color name="menu4">#1a1a1a</color>
 
 
      <!-- FRACTAL COLORS -->
@@ -34,6 +38,9 @@
     <color name="purple1">#4d0080</color>
     <color name="magenta2">#660066</color>
     <color name="purple2">#732d5a</color>
+
+
+
     <color name="q1">#001a33</color>
     <color name="darkblue1">#002640</color>
     <color name="darkblue2">#1c3040</color>
@@ -94,6 +101,22 @@
     <color name="q41">#F5705B</color>
     <color name="q42">#FCCA8D</color>
     <color name="q43">#FAFBC5</color>
+
+    <color name="q44">#000630</color>
+    <color name="q45">#011B4C</color>
+    <color name="q46">#025587</color>
+    <color name="q47">#0191AB</color>
+    <color name="q48">#82B9B3</color>
+    <color name="q49">#B8D8C0</color>
+    <color name="q50">#FEFFFB</color>
+
+    <color name="q51">#10000B</color>
+    <color name="q53">#330A33</color>
+    <color name="q54">#3F2639</color>
+    <color name="q55">#695D5D</color>
+    <color name="q56">#75776C</color>
+    <color name="q57">#ABBDA5</color>
+    <color name="q58">#FBFEF7</color>
 
 
 </resources>
