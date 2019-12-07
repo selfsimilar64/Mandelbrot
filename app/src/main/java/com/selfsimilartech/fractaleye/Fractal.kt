@@ -2,49 +2,94 @@ package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
 import android.util.Log
+import kotlin.math.pow
 
 @SuppressLint("SetTextI18n")
 class Fractal(
 
         // shape config
-        map:            ComplexMap              = ComplexMap.mandelbrot,
-        juliaMode:      Boolean                 = map.juliaMode,
+        shape:          Shape                   = Shape.mandelbrot,
+        juliaMode:      Boolean                 = shape.juliaMode,
+        var position:   Position                = if (juliaMode) shape.positions.julia else shape.positions.default,
 
         // texture config
-        texture:        Texture                 = Texture.exponentialSmoothing,
-        
+        texture:        Texture                 = Texture.escape,
+
         // color config
-        var palette:        ColorPalette            = ColorPalette.p9,
-        var frequency:      Float                   = 1f,
-        var phase:          Float                   = 0f,
+        var palette:        ColorPalette        = ColorPalette.night,
+        var frequency:      Float               = 1f,
+        phase:              Float               = 0f,
 
 
         var maxIter:        Int             = 255,
         var sensitivity:    Double          = 1.0,
-        var bailoutRadius:  Float           = 1e2f
+        var bailoutRadius:  Float           = shape.bailoutRadius ?: texture.bailoutRadius ?: 1e2f
 
 ) {
 
-    var numParamsInUse = map.numParams + if (juliaMode && !map.juliaMode) 1 else 0
+
+    companion object {
+
+        val mandelbrot = Fractal()
+        val m1 = Fractal(
+                shape = Shape.mandelbrot,
+                position = Shape.mandelbrot.positions.other[2],
+                texture = Texture.orbitTrap,
+                palette = ColorPalette.p9,
+                frequency = 71.74303f,
+                phase = -0.26012f,
+                maxIter = 2.0.pow(12).toInt()
+        )
+        val m2 = Fractal(
+                shape = Shape.mandelbrot,
+                position = Shape.mandelbrot.positions.other[0],
+                texture = Texture.overlayAvg
+        )
+        val verbose = Fractal(
+                shape = Shape.mandelbrot,
+                position = Shape.mandelbrot.positions.other[1],
+                texture = Texture.stripeAvg,
+                palette = ColorPalette.night,
+                frequency = 25.51949f,
+                phase = 0.11335f,
+                maxIter = 2.0.pow(10.25).toInt()
+        )
+
+        val mandelbrotPower = Fractal(shape = Shape.mandelbrotPower)
+        val mandelbrotDualPower = Fractal(shape = Shape.mandelbrotDualPower)
+        val mandelbox = Fractal(shape = Shape.mandelbox)
+        val kali = Fractal(shape = Shape.kali)
+        val burningShip = Fractal(shape = Shape.burningShip)
+        val sine1 = Fractal(shape = Shape.sine1)
+        val sine2 = Fractal(shape = Shape.sine2)
+        val horseshoeCrab = Fractal(shape = Shape.horseshoeCrab)
+        val kleinian = Fractal(shape = Shape.kleinian)
+        val nova1 = Fractal(shape = Shape.nova1)
+        val nova2 = Fractal(shape = Shape.nova2)
+
+    }
+
+
+    var numParamsInUse = shape.numParams + if (juliaMode && !shape.juliaMode) 1 else 0
 
     
-    var map = map
+    var shape = shape
         set (value) {
             if (field != value) {
 
-                Log.d("FRACTAL", "setting map from $field to $value")
+                Log.d("FRACTAL", "setting shape from $field to $value")
                 field = value
 
 
-                // reset texture if not compatible with new map
-                if (!map.textures.contains(texture.name)) {
+                // reset texture if not compatible with new shape
+                if (!shape.textures.contains(texture)) {
                     texture = Texture.escape
                 }
 
-                juliaMode = map.juliaMode
-                map.position = if (juliaMode) map.positions.julia else map.positions.default
-                numParamsInUse = map.numParams + if (juliaMode && !map.juliaMode) 1 else 0
-                bailoutRadius = map.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
+                juliaMode = shape.juliaMode
+                position = if (juliaMode) shape.positions.julia else shape.positions.default
+                numParamsInUse = shape.numParams + if (juliaMode && !shape.juliaMode) 1 else 0
+                bailoutRadius = shape.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
 
             }
         }
@@ -57,7 +102,7 @@ class Fractal(
                 field = value
 
                 numParamsInUse += if (value) 1 else -1
-                map.position = if (value) map.positions.julia else map.positions.default
+                position = if (value) shape.positions.julia else shape.positions.default
 
 //                if (value as Boolean) {
 //                    addMapParams(1)
@@ -69,7 +114,7 @@ class Fractal(
 //                    f.coords()[1] = 0.0
 //                    f.scale()[0] = 3.5
 //                    f.scale()[1] = 3.5 * f.screenRes[1].toDouble() / f.screenRes[0]
-//                    f.params["p${f.numParamsInUse()}"] = ComplexMap.Param(
+//                    f.params["p${f.numParamsInUse()}"] = Shape.Param(
 //                            f.savedCoords()[0],
 //                            f.savedCoords()[1]
 //                    )
@@ -94,13 +139,16 @@ class Fractal(
                 Log.d("FRACTAL", "setting texture from $field to $value")
                 field = value
 
-                bailoutRadius = map.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
+                bailoutRadius = shape.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
 
             }
         }
 
-
-
+    var phase = phase
+        set (value) {
+            val mod = value % 1f
+            field = if (value < 0f) 1f - mod else mod
+        }
 
 
     val saved = {
