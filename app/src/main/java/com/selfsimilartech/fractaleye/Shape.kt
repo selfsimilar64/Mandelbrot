@@ -2,7 +2,7 @@ package com.selfsimilartech.fractaleye
 
 import kotlin.math.sqrt
 
-class ComplexMap (
+class Shape (
         val name            : String,
         val katex           : Int                = R.string.empty,
         val icon            : Int                = R.drawable.mandelbrot_icon,
@@ -14,7 +14,7 @@ class ComplexMap (
         val initDF          : Int                = R.string.empty,
         val loopDF          : Int                = R.string.empty,
         val finalDF         : Int                = R.string.empty,
-        val textures        : List<String>       = Texture.arbitrary.keys.toList(),
+        val textures        : ArrayList<Texture> = Texture.arbitrary,
         val positions       : PositionList       = PositionList(),
         params              : List<Param>        = listOf(),
         val juliaMode       : Boolean            = false,
@@ -41,7 +41,7 @@ class ComplexMap (
             set (value) {
                 if (!uLocked) {
                     field = value
-                    // f.updateMapParamEditText(key[1].toString().toInt())
+                    // f.updateShapeParamEditTexts(key[1].toString().toInt())
                     // fsv.r.renderToTex = true
                 }
             }
@@ -49,7 +49,7 @@ class ComplexMap (
             set (value) {
                 if (!vLocked) {
                     field = value
-                    // f.updateMapParamEditText(key[1].toString().toInt())
+                    // f.updateShapeParamEditTexts(key[1].toString().toInt())
                     // fsv.r.renderToTex = true
                 }
             }
@@ -69,8 +69,8 @@ class ComplexMap (
     companion object {
 
 
-        val empty = ComplexMap("Empty")
-        val mandelbrot = ComplexMap(
+        val empty = Shape("Empty")
+        val mandelbrot = Shape(
                 "Mandelbrot",
                 katex = R.string.mandelbrot_katex,
                 icon = R.drawable.mandelbrot_icon,
@@ -78,10 +78,30 @@ class ComplexMap (
                 loopSF = R.string.mandelbrot_loop_sf,
                 conditionalDF = R.string.escape_df,
                 loopDF = R.string.mandelbrot_loop_df,
-                textures = Texture.all.keys.toList(),
-                positions = PositionList(Position(x = -0.75, scale = 3.5))
+                textures = Texture.all,
+                positions = PositionList(
+                    default = Position(x = -0.75, scale = 3.5),
+                    other = listOf(
+                        Position(
+                            x = -1.25735194436369140,
+                            y = -0.07363029998042227,
+                            scale = 1.87845e-3
+                        ),
+                        Position(
+                            x = 0.39019590054025366,
+                            y = -0.26701156160039610,
+                            scale = 9.59743e-8,
+                            rotation = 146.0.inRadians()
+                        ),
+                        Position(
+                            x = -0.48414790254135703,
+                            y = -0.59799104457234160,
+                            scale = 6.15653e-4
+                        )
+                    )
+                )
         )
-        val mandelbrotPower = ComplexMap(
+        val mandelbrotPower = Shape(
                 "Mandelbrot Power",
                 katex = R.string.mandelbrotcpow_katex,
                 icon = R.drawable.mandelbrotpower_icon,
@@ -90,7 +110,7 @@ class ComplexMap (
                 positions = PositionList(Position(scale = 3.5)),
                 params = listOf(Param(4.0, vLocked = true))
         )
-        val mandelbrotDualPower = ComplexMap(
+        val mandelbrotDualPower = Shape(
                 "Mandelbrot Dual Power",
                 katex = R.string.dualpow_katex,
                 icon = R.drawable.mandelbrotdualpower_icon,
@@ -101,7 +121,7 @@ class ComplexMap (
                 z0 = Complex.ONE,
                 params = listOf(Param(2.0, vLocked = true))
         )
-        val mandelbox = ComplexMap(
+        val mandelbox = Shape(
                 "Mandelbox",
                 katex = R.string.mandelbox_katex,
                 icon = R.drawable.mandelbox_icon,
@@ -113,7 +133,7 @@ class ComplexMap (
                 params = listOf(Param(-2.66421354, vLocked = true)),
                 bailoutRadius = 5f
         )
-        val kali = ComplexMap(
+        val kali = Shape(
                 "Kali",
                 katex = R.string.kali_katex,
                 icon = R.drawable.kali_icon,
@@ -126,7 +146,7 @@ class ComplexMap (
                 params = listOf(Param(-0.33170626, -0.18423799)),
                 bailoutRadius = 4e0f
         )
-        val kaliSquare = ComplexMap(
+        val kaliSquare = Shape(
                 "Kali Square",
                 conditionalSF = R.string.escape_sf,
                 loopSF = R.string.kalisquare_loop_sf,
@@ -134,13 +154,13 @@ class ComplexMap (
                 positions = PositionList(julia = Position(scale = 4.0)),
                 bailoutRadius = 4e0f
         )
-        val mandelbar = ComplexMap(
+        val mandelbar = Shape(
                 "Mandelbar",
                 conditionalSF = R.string.escape_sf,
                 loopSF = R.string.mandelbar_loop_sf,
                 positions = PositionList(Position(scale = 3.0))
         )
-        val logistic = ComplexMap(
+        val logistic = Shape(
                 "Logistic",
                 katex = R.string.logistic_katex,
                 conditionalSF = R.string.escape_sf,
@@ -150,7 +170,7 @@ class ComplexMap (
                 positions = PositionList(Position(scale = 3.5)),
                 z0 = Complex(0.5, 0.0)
         )
-        val burningShip = ComplexMap(
+        val burningShip = Shape(
                 "Burning Ship",
                 katex = R.string.burningship_katex,
                 icon = R.drawable.burningship_icon,
@@ -160,7 +180,7 @@ class ComplexMap (
                 loopDF = R.string.burningship_loop_df,
                 positions = PositionList(Position(-0.45, -0.25, 3.5, Math.PI))
         )
-        val magnet = ComplexMap(
+        val magnet = Shape(
                 "Magnet",
                 conditionalSF = R.string.escape_sf,
                 loopSF = R.string.magnet_loop_sf,
@@ -170,7 +190,7 @@ class ComplexMap (
                         Param(-2.0, vLocked = true)),
                 bailoutRadius = 4e0f
         )
-        val sine1 = ComplexMap(
+        val sine1 = Shape(
                 "Sine 1",
                 katex = R.string.sine1_katex,
                 icon = R.drawable.sine1_icon,
@@ -179,7 +199,7 @@ class ComplexMap (
                 positions = PositionList(Position(scale = 3.5)),
                 bailoutRadius = 1e4f
         )
-        val sine2 = ComplexMap(
+        val sine2 = Shape(
                 "Sine 2",
                 katex = R.string.sine2_katex,
                 icon = R.drawable.sine2_icon,
@@ -189,7 +209,7 @@ class ComplexMap (
                 params = listOf(Param(-0.26282884)),
                 z0 = Complex.ONE
         )
-        val sine3 = ComplexMap(
+        val sine3 = Shape(
                 "Sine 3",
                 katex = R.string.sine3_katex,
                 conditionalSF = R.string.escape_sf,
@@ -199,7 +219,7 @@ class ComplexMap (
                 z0 = Complex.ONE,
                 bailoutRadius = 1e1f
         )
-        val horseshoeCrab = ComplexMap(
+        val horseshoeCrab = Shape(
                 "Horseshoe Crab",
                 katex = R.string.horseshoecrab_katex,
                 icon = R.drawable.horseshoecrab_icon,
@@ -209,7 +229,7 @@ class ComplexMap (
                 params = listOf(Param(sqrt(2.0))),
                 z0 = Complex.ONE
         )
-        val newton2 = ComplexMap(
+        val newton2 = Shape(
                 "Newton 2",
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.newton2_loop_sf,
@@ -221,7 +241,7 @@ class ComplexMap (
                 ),
                 juliaMode = true
         )
-        val newton3 = ComplexMap(
+        val newton3 = Shape(
                 "Newton 3",
                 katex = R.string.newton3_katex,
                 conditionalSF = R.string.converge_sf,
@@ -229,7 +249,7 @@ class ComplexMap (
                 positions = PositionList(julia = Position(scale = 5.0)),
                 juliaMode = true
         )
-        val persianRug = ComplexMap(
+        val persianRug = Shape(
                 "Persian Rug",
                 katex = R.string.persianrug_katex,
                 initSF = R.string.persianrug_init_sf,
@@ -239,7 +259,7 @@ class ComplexMap (
                 params = listOf(Param(0.642, 0.0)),
                 bailoutRadius = 1e1f
         )
-        val kleinian = ComplexMap(
+        val kleinian = Shape(
                 "Kleinian",
                 icon = R.drawable.kleinian_icon,
                 conditionalSF = R.string.escape_sf,
@@ -253,7 +273,7 @@ class ComplexMap (
                 juliaMode = true,
                 bailoutRadius = 1e5f
         )
-        val nova1 = ComplexMap(
+        val nova1 = Shape(
                 "Nova 1",
                 katex = R.string.nova1_katex,
                 icon = R.drawable.nova1_icon,
@@ -267,7 +287,7 @@ class ComplexMap (
                         Param(1.0, 0.0)
                 )
         )
-        val nova2 = ComplexMap(
+        val nova2 = Shape(
                 "Nova 2",
                 katex = R.string.nova2_katex,
                 icon = R.drawable.nova2_icon,
@@ -276,7 +296,7 @@ class ComplexMap (
                 juliaMode = true,
                 positions = PositionList(julia = Position(x = -0.3, scale = 5.0))
         )
-        val fibonacciPowers = ComplexMap(
+        val fibonacciPowers = Shape(
                 "Fibonacci Powers",
                 conditionalSF = R.string.escape_sf,
                 initSF = R.string.fibonacci_init_sf,
@@ -284,7 +304,7 @@ class ComplexMap (
                 juliaMode = true,
                 bailoutRadius = 1e3f
         )
-        val test = ComplexMap(
+        val test = Shape(
                 "Test",
                 conditionalSF = R.string.converge_sf,
                 initSF = R.string.test_init_sf,
@@ -292,19 +312,19 @@ class ComplexMap (
                 z0 = Complex.ONE,
                 positions = PositionList(Position(scale = 3.5))
         )
-        val all = mapOf(
-                mandelbrot.name             to  mandelbrot,
-                mandelbrotPower.name        to  mandelbrotPower,
-                mandelbrotDualPower.name    to  mandelbrotDualPower,
-                burningShip.name            to  burningShip,
-                mandelbox.name              to  mandelbox,
-                kali.name                   to  kali,
-                sine1.name                  to  sine1,
-                sine2.name                  to  sine2,
-                horseshoeCrab.name          to  horseshoeCrab,
-                kleinian.name               to  kleinian,
-                nova1.name                  to  nova1,
-                nova2.name                  to  nova2
+        val all = arrayListOf(
+                mandelbrot,
+                mandelbrotPower,
+                mandelbrotDualPower,
+                burningShip,
+                mandelbox,
+                kali,
+                sine1,
+                sine2,
+                horseshoeCrab,
+                kleinian,
+                nova1,
+                nova2
         )
 
     }
@@ -315,11 +335,16 @@ class ComplexMap (
         if (i < params.size) { params[i] }
         else { Param() }
     }
-    var position = if (juliaMode) positions.julia else positions.default
+    var activeParamIndex = 0
+    var activeParam = this.params[0]
+        set(value) {
+            field = value
+            activeParamIndex = params.indexOf(field)
+        }
 
     override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
-        return other is ComplexMap && name == other.name
+        return other is Shape && name == other.name
     }
     override fun hashCode(): Int {
         return name.hashCode()
