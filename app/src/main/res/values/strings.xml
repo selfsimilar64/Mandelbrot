@@ -7,14 +7,17 @@
 
     <!-- LAYOUT -->
     <!-- ===================================================================================== -->
-    <string name="tab_fractal">fractal</string>
-    <string name="tab_settings">settings</string>
+
+    <string name="settings">settings</string>
+    <string name="texture">texture</string>
+    <string name="shape">shape</string>
+    <string name="color">color</string>
+    <string name="position">position</string>
+
+    <string name="zoom">zoom</string>
+
     <string name="menu">menu</string>
     <string name="function">Function</string>
-    <string name="shape">Shape</string>
-    <string name="texture">Texture</string>
-    <string name="color">Color</string>
-    <string name="position">Position</string>
     <string name="render">Render</string>
     <string name="resolution">Resolution</string>
     <string name="precision">Precision</string>
@@ -49,9 +52,9 @@
     <string name="juliaMode">Julia Mode</string>
     <string name="scale">Scale</string>
     <string name="bailout">Bailout Radius</string>
-    <string name="frequency">Frequency</string>
-    <string name="offset">Offset</string>
-    <string name="sensitivity">Sensitivity</string>
+    <string name="frequency">frequency</string>
+    <string name="offset">offset</string>
+    <string name="sensitivity">sensitivity</string>
     <string name="complex_i">+ i</string>
     <string name="e">e</string>
     <string name="ui">UI</string>
@@ -144,7 +147,8 @@
         out vec4 fragmentColor;
     </string>
     <string name="color_index">
-        float n = mod(float(numColors - 1)*(frequency*s.x + phase), float(numColors - 1));
+        float i = frequency*s.x + phase;
+        float n = mod(float(numColors - 1)*i, float(numColors - 1));
         int p = int(floor(n));
         float q = mod(n, 1.0);
         color = (1.0 - q)*palette[p] + q*palette[p + 1];

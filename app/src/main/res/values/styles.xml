@@ -40,7 +40,7 @@
 
     <style name="EditTextDark" parent="android:style/Widget.Material.TextView">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_height">40dp</item>
         <item name="android:textColor">@color/colorDarkText</item>
         <item name="android:gravity">end</item>
         <item name="android:textSize">15sp</item>
@@ -76,12 +76,9 @@
     <style name="CardHeaderTextDark" parent="TextDark">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAllCaps">false</item>
+        <item name="android:textAllCaps">true</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:paddingEnd">5dp</item>
         <item name="android:textSize">18sp</item>
-        <item name="android:drawableEnd">@drawable/arrow_collapse</item>
     </style>
 
     <style name="CardSubHeaderDark" parent="TextDark">
@@ -101,14 +98,12 @@
         <item name="android:background">@color/colorDarkSelected</item>
     </style>
 
-    <style name="cardHeaderButtonDark">
+    <style name="CardHeaderButtonDark">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:minHeight">0dp</item>
         <item name="android:paddingTop">7dp</item>
         <item name="android:paddingBottom">7dp</item>
         <item name="android:background">?attr/selectableItemBackground</item>
-        <item name="android:drawableRight">@drawable/arrow_expand</item>
         <item name="android:textAlignment">viewStart</item>
         <item name="android:textAppearance">@style/CardHeaderTextDark</item>
     </style>
@@ -147,6 +142,26 @@
         <item name="android:paddingBottom">5dp</item>
         <item name="android:layout_marginTop">2dp</item>
         <item name="android:layout_marginBottom">2dp</item>
+    </style>
+
+    <style name="menuImageButtonDark">
+        <item name="android:layout_width">45dp</item>
+        <item name="android:layout_height">45dp</item>
+        <item name="android:layout_marginStart">5dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:tint">#fff</item>
+    </style>
+
+    <style name="menuButtonDark">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
 </resources>
