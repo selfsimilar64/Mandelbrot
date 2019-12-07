@@ -1,43 +1,47 @@
 package com.selfsimilartech.fractaleye
 
-import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.BaseAdapter
+import android.widget.ImageView
 import android.widget.TextView
+import android.support.v7.widget.RecyclerView
 
+/**
+ * Created by Belal on 6/19/2017.
+ */
 
-class ColorPaletteAdapter(
-        private val context: Context,
-        private var palettes: List<ColorPalette>
-) : BaseAdapter() {
+class ColorPaletteAdapter(val colorList: ArrayList<ColorPalette>) : RecyclerView.Adapter<ColorPaletteAdapter.ColorPaletteHolder>() {
 
-    private var inflter: LayoutInflater = LayoutInflater.from(context)
-
-    override fun getCount(): Int {
-        return palettes.size
+    //this method is returning the view for each item in the list
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColorPaletteHolder {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.recycler_item, parent, false)
+        return ColorPaletteHolder(v)
     }
 
-    override fun getItem(i: Int): Any? {
-        return palettes[i]
+    //this method is binding the data on the list
+    override fun onBindViewHolder(holder: ColorPaletteHolder, position: Int) {
+        holder.bindItems(colorList[position])
     }
 
-    override fun getItemId(i: Int): Long {
-        return 0
+    //this method is giving the size of the list
+    override fun getItemCount(): Int {
+        return colorList.size
     }
 
-    override fun getView(i: Int, convertView: View?, parent: ViewGroup?): View {
-        val view = convertView ?: inflter.inflate(R.layout.color_palette_spinner_item, null)
-        val paletteNameText = view.findViewById<TextView>(R.id.paletteNameText)
-        val gradientView = view.findViewById<View>(R.id.gradientView)
-        paletteNameText.text = palettes[i].name
-        gradientView.background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                palettes[i].getColors(context.resources, palettes[i].colors)
-        )
-        return view
+    //the class is hodling the list view
+    class ColorPaletteHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        fun bindItems(palette: ColorPalette) {
+            val preview = itemView.findViewById<ImageView>(R.id.preview)
+            val name = itemView.findViewById<TextView>(R.id.name)
+            preview.setImageDrawable(GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    palette.getColors(itemView.resources, palette.colors)
+            ))
+            name.text = palette.name
+        }
     }
 
 }
