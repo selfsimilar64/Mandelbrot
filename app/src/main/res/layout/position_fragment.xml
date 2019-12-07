@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/positionLayoutScroll"
+    android:layout_width="match_parent"
+    android:layout_height="250dp">
+
+    <LinearLayout
+        android:id="@+id/positionLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/black"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp">
+
+            <TextView
+                android:id="@+id/xLabel"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/x"
+                app:layout_constraintBaseline_toBaselineOf="@id/xCoordEdit"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <EditText
+                android:id="@+id/xCoordEdit"
+                style="@style/EditTextDark"
+                android:layout_width="wrap_content"
+                android:imeOptions="actionNext"
+                app:layout_constraintEnd_toStartOf="@id/xLock"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ToggleButton
+                android:id="@+id/xLock"
+                style="@style/LockDark"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/yLabel"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/y"
+                app:layout_constraintBaseline_toBaselineOf="@id/yCoordEdit"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/xLabel" />
+
+            <EditText
+                android:id="@+id/yCoordEdit"
+                style="@style/EditTextDark"
+                android:layout_width="wrap_content"
+                android:imeOptions="actionDone"
+                app:layout_constraintEnd_toStartOf="@id/yLock"
+                app:layout_constraintTop_toBottomOf="@id/xCoordEdit" />
+
+            <ToggleButton
+                android:id="@+id/yLock"
+                style="@style/LockDark"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/xLock" />
+
+            <View
+                android:id="@+id/positionDiv1"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:background="#222"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/yLabel" />
+
+            <TextView
+                android:id="@+id/scaleLabel"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/zoom"
+                app:layout_constraintBaseline_toBaselineOf="@id/scaleSignificandEdit"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+
+            <EditText
+                android:id="@+id/scaleSignificandEdit"
+                style="@style/EditTextDark"
+                android:layout_width="wrap_content"
+                android:imeOptions="actionNext"
+                android:selectAllOnFocus="true"
+                app:layout_constraintEnd_toStartOf="@id/scaleDivider"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+
+            <TextView
+                android:id="@+id/scaleDivider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/e"
+                app:layout_constraintEnd_toStartOf="@id/scaleExponentEdit"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+
+            <EditText
+                android:id="@+id/scaleExponentEdit"
+                style="@style/EditTextDark"
+                android:layout_width="wrap_content"
+                android:imeOptions="actionDone"
+                app:layout_constraintEnd_toStartOf="@id/scaleLock"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+
+            <ToggleButton
+                android:id="@+id/scaleLock"
+                style="@style/LockDark"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+
+            <View
+                android:id="@+id/positionDiv2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:background="#222"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/scaleLabel" />
+
+            <TextView
+                android:id="@+id/rotationLabel"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="rotation"
+                app:layout_constraintBaseline_toBaselineOf="@id/rotationEdit"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv2" />
+
+            <EditText
+                android:id="@+id/rotationEdit"
+                style="@style/EditTextDark"
+                android:layout_width="wrap_content"
+                android:imeOptions="actionDone"
+                app:layout_constraintEnd_toStartOf="@id/rotationLock"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv2" />
+
+            <ToggleButton
+                android:id="@+id/rotationLock"
+                style="@style/LockDark"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/positionDiv2" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </LinearLayout>
+
+</ScrollView>
