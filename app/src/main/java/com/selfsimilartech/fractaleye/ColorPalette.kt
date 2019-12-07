@@ -2,7 +2,6 @@ package com.selfsimilartech.fractaleye
 
 import android.content.res.Resources
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import kotlin.math.floor
 
@@ -17,12 +16,12 @@ fun FloatArray.invert() : FloatArray {
 class ColorPalette (
         val name: String,
         val colors: List<Int> = listOf(),
-        oscillate: Boolean = false
+        oscillate: Boolean = true
 ) {
 
     companion object {
 
-        val bw = ColorPalette(
+        val yinyang = ColorPalette(
                 "Yin Yang", listOf(
                 R.color.black,
                 R.color.white
@@ -51,7 +50,7 @@ class ColorPalette (
                 R.color.q2,
                 R.color.q3
         ))
-        val p4 = ColorPalette(
+        val vascular = ColorPalette(
                 "Vascular", listOf(
                 R.color.yellowish1,
                 R.color.darkblue2,
@@ -59,7 +58,7 @@ class ColorPalette (
                 R.color.purple3,
                 R.color.deepred
         ))
-        val p5 = ColorPalette(
+        val flora = ColorPalette(
                 "Flora", listOf(
                 R.color.yellowish2,
                 R.color.magenta2,
@@ -76,7 +75,7 @@ class ColorPalette (
                 R.color.purple3,
                 R.color.maroon
         ))
-        val p8 = ColorPalette(
+        val groovy = ColorPalette(
                 "Groovy", listOf(
                 R.color.q4,
                 R.color.q5,
@@ -147,19 +146,42 @@ class ColorPalette (
                 R.color.q42,
                 R.color.q43
         ))
-        val all = mapOf(
-                "Yin Yang"      to  bw,
-                "Vascular"      to  p4,
-                "Flora"         to  p5,
-                "Royal"         to  royal,
-                "Groovy"        to  p8,
-                "Canyon"        to  canyon,
-                "Anubis"        to  anubis,
-                "P9"            to  p9,
-                "Virids"        to  viridis,
-                "Plasma"        to  plasma,
-                "Inferno"       to  inferno,
-                "Magma"         to  magma
+        val night = ColorPalette(
+                "Night", listOf(
+                R.color.black,
+                R.color.q44,
+                R.color.q45,
+                R.color.q46,
+                R.color.q47,
+                R.color.q48,
+                R.color.q49,
+                R.color.q50
+        ))
+        val elephant = ColorPalette(
+                "Elephant", listOf(
+                R.color.q51,
+                R.color.q53,
+                R.color.q54,
+                R.color.q55,
+                R.color.q56,
+                R.color.q57,
+                R.color.q58
+        ))
+        val all = arrayListOf(
+                yinyang,
+                p9,
+                viridis,
+                plasma,
+                inferno,
+                magma,
+                night,
+                elephant,
+                vascular,
+                flora,
+                royal,
+                groovy,
+                canyon,
+                anubis
         )
 
     }
