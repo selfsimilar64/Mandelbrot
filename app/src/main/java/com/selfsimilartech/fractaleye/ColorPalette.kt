@@ -1,6 +1,7 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import kotlin.math.floor
@@ -148,14 +149,34 @@ class ColorPalette (
         ))
         val night = ColorPalette(
                 "Night", listOf(
-                R.color.black,
-                R.color.q44,
-                R.color.q45,
-                R.color.q46,
-                R.color.q47,
-                R.color.q48,
-                R.color.q49,
-                R.color.q50
+                R.color.night1,
+                R.color.night2,
+                R.color.night3,
+                R.color.night4,
+                R.color.night5,
+                R.color.night6,
+                R.color.night7
+        ))
+        val cosmic = ColorPalette(
+                "Cosmic", listOf(
+                R.color.cosmic1,
+                R.color.cosmic2,
+                R.color.cosmic3,
+                R.color.cosmic4,
+                R.color.cosmic5,
+                R.color.cosmic6,
+                R.color.cosmic7,
+                R.color.cosmic8
+        ))
+        val oldskool = ColorPalette(
+                "Old Sk00l", listOf(
+                R.color.oldskool1,
+                R.color.oldskool2,
+                R.color.oldskool3,
+                R.color.oldskool4,
+                R.color.oldskool5,
+                R.color.oldskool6,
+                R.color.oldskool7
         ))
         val elephant = ColorPalette(
                 "Elephant", listOf(
@@ -167,15 +188,26 @@ class ColorPalette (
                 R.color.q57,
                 R.color.q58
         ))
+        val gold = ColorPalette(
+                "Gold", listOf(
+                R.color.gold1,
+                R.color.gold2,
+                R.color.gold3,
+                R.color.gold4,
+                R.color.gold5,
+                R.color.gold6
+        ))
         val all = arrayListOf(
                 yinyang,
+                night,
+                cosmic,
+                elephant,
+                oldskool,
+                gold,
                 p9,
                 viridis,
                 plasma,
-                inferno,
                 magma,
-                night,
-                elephant,
                 vascular,
                 flora,
                 royal,
@@ -197,6 +229,7 @@ class ColorPalette (
             size = if (oscillate) 2*colors.size - 1 else colors.size + 1
         }
 
+    var icon : Bitmap? = null
 
     fun reset() {
         oscillate = oscillateInit
