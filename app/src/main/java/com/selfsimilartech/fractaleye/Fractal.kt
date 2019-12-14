@@ -13,7 +13,7 @@ class Fractal(
         var position:   Position                = if (juliaMode) shape.positions.julia else shape.positions.default,
 
         // texture config
-        texture:        Texture                 = Texture.escape,
+        texture:        Texture                 = Texture.stripeAvg,
 
         // color config
         var palette:        ColorPalette        = ColorPalette.night,
@@ -61,7 +61,13 @@ class Fractal(
         val kali = Fractal(shape = Shape.kali)
         val burningShip = Fractal(shape = Shape.burningShip)
         val sine1 = Fractal(shape = Shape.sine1)
+
         val sine2 = Fractal(shape = Shape.sine2)
+        val s2_1 = Fractal(
+                shape = Shape.sine2,
+                position = Position(x = -0.26282883851642613, y = 2.042520182493586E-6)
+        )
+
         val horseshoeCrab = Fractal(shape = Shape.horseshoeCrab)
         val kleinian = Fractal(shape = Shape.kleinian)
         val nova1 = Fractal(shape = Shape.nova1)
@@ -247,5 +253,21 @@ class Fractal(
 
     }
 
+
+
+    fun clone() : Fractal {
+        return Fractal(
+                shape,
+                juliaMode,
+                position.clone(),
+                texture,
+                palette,
+                frequency,
+                phase,
+                maxIter,
+                sensitivity,
+                bailoutRadius
+        )
+    }
 
 }
