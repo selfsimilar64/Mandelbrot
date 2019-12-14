@@ -4,9 +4,6 @@ import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.support.v4.app.Fragment
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
-import android.support.design.widget.TabLayout
-import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Gravity
@@ -76,11 +73,12 @@ class ColorFragment : Fragment() {
 
         val layout = v.findViewById<LinearLayout>(R.id.colorLayout)
         val preview = v.findViewById<LinearLayout>(R.id.colorPreview)
-        val previewImage = (preview.getChildAt(0) as CardView).getChildAt(0) as ImageView
-        val previewText = preview.getChildAt(1) as TextView
+        val previewImage = v.findViewById<ImageView>(R.id.colorPreviewImage)
+        val previewText = v.findViewById<TextView>(R.id.colorPreviewName)
         val previewList = v.findViewById<RecyclerView>(R.id.colorPreviewList)
+        val previewListLayout = v.findViewById<LinearLayout>(R.id.colorPreviewListLayout)
+        val previewDoneButton = v.findViewById<Button>(R.id.previewDoneButton)
         val content = v.findViewById<LinearLayout>(R.id.colorContent)
-
 
         val frequencyEdit = v.findViewById<EditText>(R.id.frequencyEdit)
         frequencyEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
@@ -103,7 +101,10 @@ class ColorFragment : Fragment() {
         previewText.text = f.palette.name
         preview.setOnClickListener {
             content.visibility = LinearLayout.GONE
-            layout.addView(previewList)
+            layout.addView(previewListLayout)
+            fsv.renderProfile = RenderProfile.ICON
+            fsv.requestRender()
+            previewList.adapter?.notifyDataSetChanged()
         }
 
 
@@ -117,14 +118,6 @@ class ColorFragment : Fragment() {
                             override fun onClick(view: View, position: Int) {
 
                                 f.palette = ColorPalette.all[position]
-                                previewImage.setImageDrawable(GradientDrawable(
-                                        GradientDrawable.Orientation.LEFT_RIGHT,
-                                        f.palette.getColors(resources, f.palette.colors)
-                                ))
-                                previewText.text = f.palette.name
-                                layout.removeView(previewList)
-                                content.visibility = LinearLayout.VISIBLE
-
                                 fsv.requestRender()
 
                                 Log.e("MAIN ACTIVITY", "clicked palette: ${f.palette.name}")
@@ -136,8 +129,19 @@ class ColorFragment : Fragment() {
                         }
                 )
         )
-        layout.removeView(previewList)
-        previewList.visibility = RecyclerView.VISIBLE
+        layout.removeView(previewListLayout)
+        previewListLayout.visibility = RecyclerView.VISIBLE
+
+
+        previewDoneButton.setOnClickListener {
+                previewImage.setImageDrawable(GradientDrawable(
+                        GradientDrawable.Orientation.LEFT_RIGHT,
+                        f.palette.getColors(resources, f.palette.colors)
+                ))
+                previewText.text = f.palette.name
+                layout.removeView(previewListLayout)
+                content.visibility = LinearLayout.VISIBLE
+        }
 
 
         return v
