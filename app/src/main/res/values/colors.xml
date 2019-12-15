@@ -102,21 +102,46 @@
     <color name="q42">#FCCA8D</color>
     <color name="q43">#FAFBC5</color>
 
-    <color name="q44">#000630</color>
-    <color name="q45">#011B4C</color>
-    <color name="q46">#025587</color>
-    <color name="q47">#0191AB</color>
-    <color name="q48">#82B9B3</color>
-    <color name="q49">#B8D8C0</color>
-    <color name="q50">#FEFFFB</color>
+    <color name="night1">#000630</color>
+    <color name="night2">#011B4C</color>
+    <color name="night3">#025587</color>
+    <color name="night4">#0191AB</color>
+    <color name="night5">#82B9B3</color>
+    <color name="night6">#B8D8C0</color>
+    <color name="night7">#FEFFFB</color>
+
+    <color name="cosmic1">#000000</color>
+    <color name="cosmic2">#470038</color>
+    <color name="cosmic3">#7A0E7B</color>
+    <color name="cosmic4">#703EAD</color>
+    <color name="cosmic5">#6369C7</color>
+    <color name="cosmic6">#90CEE3</color>
+    <color name="cosmic7">#9AFBD2</color>
+    <color name="cosmic8">#FFFFFF</color>
 
     <color name="q51">#10000B</color>
-    <color name="q53">#330A33</color>
-    <color name="q54">#3F2639</color>
-    <color name="q55">#695D5D</color>
-    <color name="q56">#75776C</color>
-    <color name="q57">#ABBDA5</color>
-    <color name="q58">#FBFEF7</color>
+    <color name="q53">#0E061D</color>
+    <color name="q54">#231830</color>
+    <color name="q55">#49374F</color>
+    <color name="q56">#80968C</color>
+    <color name="q57">#ADCCB7</color>
+    <color name="q58">#E5F2E1</color>
+
+    <color name="gold1">#000000</color>
+    <color name="gold2">#261B10</color>
+    <color name="gold3">#47351D</color>
+    <color name="gold4">#876832</color>
+    <color name="gold5">#D2AE70</color>
+    <color name="gold6">#F5E1BE</color>
+    <color name="gold7">#FFFFFF</color>
+
+    <color name="oldskool1">#9767A7</color>
+    <color name="oldskool2">#4B978A</color>
+    <color name="oldskool3">#58A0CE</color>
+    <color name="oldskool4">#FAEE9F</color>
+    <color name="oldskool5">#E78DD2</color>
+    <color name="oldskool6">#D69989</color>
+    <color name="oldskool7">#7E4949</color>
 
 
 </resources>
