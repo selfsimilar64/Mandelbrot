@@ -141,7 +141,7 @@ class SettingsFragment : Fragment() {
             Resolution.valueOf(
                 savedInstanceState?.getString("resolution")
                 ?: sc.resolution.name
-            ).ordinal
+            ).ordinal - 1
         )?.select()
 
 
@@ -168,7 +168,7 @@ class SettingsFragment : Fragment() {
                             WRITE_STORAGE_REQUEST_CODE)
                 }
                 else {
-                    fsv.r.saveImage = true
+                    fsv.renderProfile = RenderProfile.SAVE
                     fsv.requestRender()
                     val toast = Toast.makeText(v.context, "Image saved to Gallery", Toast.LENGTH_SHORT)
                     toast.show()
