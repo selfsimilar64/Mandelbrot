@@ -2,35 +2,35 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent"
-    android:gravity="center_vertical"
-    android:orientation="vertical">
+    android:layout_height="@dimen/previewHeight"
+    android:orientation="vertical"
+    android:padding="3dp">
 
     <android.support.v7.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
         app:cardBackgroundColor="@color/colorTransparent"
         app:cardCornerRadius="25dp">
 
         <ImageView
-            android:id="@+id/preview"
-            android:layout_width="115dp"
-            android:layout_height="115dp"
+            android:id="@+id/previewImage"
+            android:layout_width="105dp"
+            android:layout_height="105dp"
             app:srcCompat="@drawable/mandelbrot_icon" />
 
     </android.support.v7.widget.CardView>
 
 
     <TextView
-        android:id="@+id/name"
+        android:id="@+id/previewText"
         style="@style/TextDark"
         android:layout_width="match_parent"
         android:layout_height="35dp"
-        android:layout_marginBottom="5dp"
-        android:gravity="center"
-        android:paddingStart="5dp"
-        android:paddingEnd="5dp"
+        android:gravity="center_horizontal|top"
+        android:paddingTop="3dp"
+        android:paddingBottom="2dp"
         android:text="Mandelbrot Dual Power"
         android:textAlignment="center"
         android:textSize="13sp" />
