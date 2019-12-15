@@ -16,7 +16,7 @@
 
         <include
             android:id="@+id/shapePreview"
-            layout="@layout/recycler_item" />
+            layout="@layout/preview_item" />
 
         <ScrollView
             android:layout_width="match_parent"
@@ -270,7 +270,7 @@
         android:scrollbars="horizontal"
         android:visibility="gone"
         app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-        tools:listitem="@layout/recycler_item">
+        tools:listitem="@layout/preview_item">
 
     </android.support.v7.widget.RecyclerView>
 
