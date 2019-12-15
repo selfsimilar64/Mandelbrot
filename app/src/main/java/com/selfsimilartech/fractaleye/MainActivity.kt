@@ -24,8 +24,6 @@ import android.util.Log
 import android.view.GestureDetector
 
 
-
-
 const val SPLIT = 8193.0
 const val NUM_MAP_PARAMS = 3
 const val NUM_TEXTURE_PARAMS = 2
@@ -192,7 +190,7 @@ enum class Reaction(val numDisplayParams: Int) {
     POSITION(4), COLOR(2), SHAPE(3)
 }
 enum class Resolution(val scale: Int) {
-    LOW(8), MED(3), HIGH(1)
+    ICON(10), LOW(8), MED(3), HIGH(1)
 }
 
 
@@ -202,7 +200,8 @@ class SettingsConfig (
     var precision           : Precision     = Precision.SINGLE,
     var autoPrecision       : Boolean       = true,
     var continuousRender    : Boolean       = false,
-    var displayParams       : Boolean       = false
+    var displayParams       : Boolean       = false,
+    var showProgress        : Boolean       = true
 )
 
 
@@ -238,6 +237,10 @@ class Position(
     var yLocked: Boolean = false
     var scaleLocked: Boolean = false
     var rotationLocked: Boolean = false
+
+    fun clone() : Position {
+        return Position(x, y, scale, rotation)
+    }
 
     private fun translate(dx: Double, dy: Double) {
 
@@ -336,7 +339,17 @@ class PositionList(
         val default  : Position = Position(),
         val julia    : Position = Position(scale = 3.5),
         val other    : List<Position> = listOf()
-)
+) {
+
+    fun clone() : PositionList {
+        return PositionList(
+                default.clone(),
+                julia.clone(),
+                List(other.size) { i -> other[i].clone() }
+        )
+    }
+
+}
 
 
 fun Double?.inRadians() : Double? = this?.times(Math.PI/180.0)
@@ -457,6 +470,7 @@ class RecyclerTouchListener(
         val child = rv.findChildViewUnder(e.x, e.y)
         if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
             clickListener.onClick(child, rv.getChildAdapterPosition(child))
+            // rv.smoothScrollToPosition(rv.getChildLayoutPosition(child) + 1)
         }
         return false
     }
@@ -643,19 +657,29 @@ class MainActivity : AppCompatActivity() {
                 val s = tab.contentDescription.toString()
                 Log.e("MAIN ACTIVITY", "tab selected: $s")
 
-                fsv.reaction = when (s) {
-                    Category.COLOR.name, Category.POSITION.name-> Reaction.valueOf(s)
-                    Category.SHAPE.name -> if (f.numParamsInUse != 0) Reaction.SHAPE else Reaction.POSITION
-                    Category.TEXTURE.name, Category.SETTINGS.name -> Reaction.POSITION
-                    else -> Reaction.POSITION
+                val category = Category.valueOf(s)
+                fsv.reaction = when (category) {
+                    Category.COLOR, Category.POSITION -> Reaction.valueOf(s)
+                    Category.SHAPE -> if (f.numParamsInUse != 0) Reaction.SHAPE else Reaction.POSITION
+                    Category.TEXTURE, Category.SETTINGS -> Reaction.POSITION
                 }
 
-                if (s == Category.SETTINGS.name && categoryPager.height == 1) {
+                if ((s == Category.SETTINGS.name || s == Category.TEXTURE.name) && categoryPager.height == 1) {
                     categoryNameButton.performClick()
                 }
 
                 categoryNameButton.text = s
                 updateDisplayParams(reactionChanged = true)
+
+                if (category == Category.COLOR) {
+
+                    fsv.renderProfile = RenderProfile.ICON
+                    fsv.requestRender()
+
+//                    fsv.profile = RenderProfile.MANUAL
+//                    fsv.requestRender()
+
+                }
 
             }
 
@@ -705,7 +729,6 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
     }
-
 
     fun displayMessage(msg: String) {
         val ui = findViewById<LinearLayout>(R.id.ui)
@@ -909,7 +932,7 @@ class MainActivity : AppCompatActivity() {
             WRITE_STORAGE_REQUEST_CODE -> {
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    fsv.r.saveImage = true
+                    fsv.renderProfile = RenderProfile.SAVE
                     fsv.requestRender()
                     val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
                     toast.show()
