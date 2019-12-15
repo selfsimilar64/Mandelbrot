@@ -15,7 +15,7 @@ class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextureHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.recycler_item, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.preview_item, parent, false)
         return TextureHolder(v)
     }
 
@@ -33,10 +33,10 @@ class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter
     class TextureHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bindItems(texture: Texture) {
-            val preview = itemView.findViewById<ImageView>(R.id.preview)
-            val name  = itemView.findViewById<TextView>(R.id.name)
-            preview.setImageResource(texture.icon)
-            name.text = texture.name
+            val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
+            val previewText = itemView.findViewById<TextView>(R.id.previewText)
+            previewImage.setImageResource(texture.icon)
+            previewText.text = texture.name
         }
     }
 

@@ -15,7 +15,7 @@ class ShapeAdapter(val shapeList: ArrayList<Shape>) : RecyclerView.Adapter<Shape
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShapeHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.recycler_item, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.preview_item, parent, false)
         return ShapeHolder(v)
     }
 
@@ -33,10 +33,10 @@ class ShapeAdapter(val shapeList: ArrayList<Shape>) : RecyclerView.Adapter<Shape
     class ShapeHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bindItems(shape: Shape) {
-            val preview = itemView.findViewById<ImageView>(R.id.preview)
-            val name  = itemView.findViewById<TextView>(R.id.name)
-            preview.setImageResource(shape.icon)
-            name.text = shape.name
+            val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
+            val previewText = itemView.findViewById<TextView>(R.id.previewText)
+            previewImage.setImageResource(shape.icon)
+            previewText.text = shape.name
         }
     }
 
