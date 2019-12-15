@@ -342,6 +342,27 @@ class Shape (
             activeParamIndex = params.indexOf(field)
         }
 
+    fun clone() : Shape {
+        return Shape(
+                name,
+                katex,
+                icon,
+                conditionalSF,
+                initSF,
+                loopSF,
+                finalSF,
+                conditionalDF,
+                initDF,
+                loopDF,
+                finalDF,
+                textures,
+                positions.clone(),
+                params,
+                juliaMode,
+                z0,
+                bailoutRadius)
+    }
+
     override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
         return other is Shape && name == other.name
