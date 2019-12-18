@@ -127,22 +127,6 @@ class ShapeFragment : Fragment() {
 
 
 
-        val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
-        val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
-        bailoutSignificandEdit.setOnEditorActionListener(
-                editListener(bailoutExponentEdit) { w: TextView ->
-                    f.bailoutRadius = "${w.text}e${bailoutExponentEdit.text}".formatToDouble()?.toFloat() ?: f.bailoutRadius
-                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
-                    w.text = "%.5f".format(bailoutStrings[0].toFloat())
-                    fsv.r.renderToTex = true
-                })
-        bailoutExponentEdit.setOnEditorActionListener(
-                editListener(null) { w: TextView ->
-                    f.bailoutRadius = "${bailoutSignificandEdit.text}e${w.text}".formatToDouble()?.toFloat() ?: f.bailoutRadius
-                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
-                    w.text = "%d".format(bailoutStrings[1].toInt())
-                    fsv.r.renderToTex = true
-                })
 
         val uEdit = v.findViewById<EditText>(R.id.uEdit)
         val vEdit = v.findViewById<EditText>(R.id.vEdit)
@@ -217,15 +201,23 @@ class ShapeFragment : Fragment() {
             fsv.checkThresholdCross(prevScale)
 
             if (f.juliaMode) {
+
                 shapeParamMenu.visibility = ConstraintLayout.VISIBLE
                 // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("P${f.numParamsInUse + 1}"))
                 shapeParamButtons.addTab(shapeParamButtons.newTab().setText(shapeParamButtonValues[f.numParamsInUse - 1]))
-                if (f.numParamsInUse == 1) fsv.reaction = Reaction.SHAPE
-            } else {
+                if (f.numParamsInUse == 1) {
+                    fsv.reaction = Reaction.SHAPE
+                    (activity as MainActivity).showTouchIcon()
+                }
+
+            }
+            else {
+
                 shapeParamButtons.removeTabAt(shapeParamButtons.tabCount - 1)
                 if (f.numParamsInUse == 0) shapeParamMenu.visibility = ConstraintLayout.GONE
                 // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("c"))
                 if (f.numParamsInUse == 0) fsv.reaction = Reaction.POSITION
+
             }
 
             // updateShapeParamEditTexts(f.numParamsInUse)

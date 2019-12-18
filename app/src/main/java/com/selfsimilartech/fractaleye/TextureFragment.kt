@@ -3,19 +3,16 @@ package com.selfsimilartech.fractaleye
 import android.content.Context
 import android.support.v4.app.Fragment
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
-import android.support.design.widget.TabLayout
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.view.Gravity
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import kotlin.math.log
-import kotlin.math.pow
 
 
 class TextureFragment : Fragment() {
@@ -28,6 +25,18 @@ class TextureFragment : Fragment() {
     fun passArguments(f: Fractal, fsv: FractalSurfaceView) {
         this.f = f
         this.fsv = fsv
+    }
+
+
+    fun String.formatToDouble() : Double? {
+        var d : Double? = null
+        try { d = this.toDouble() }
+        catch (e: NumberFormatException) {
+            val toast = Toast.makeText(context, "Invalid number format", Toast.LENGTH_LONG)
+            toast.setGravity(Gravity.BOTTOM, 0, 20)
+            toast.show()
+        }
+        return d
     }
 
 
@@ -70,16 +79,25 @@ class TextureFragment : Fragment() {
         val previewImage = (preview.getChildAt(0) as CardView).getChildAt(0) as ImageView
         val previewText = preview.getChildAt(1) as TextView
         val previewList = v.findViewById<RecyclerView>(R.id.texturePreviewList)
+        val previewListLayout = v.findViewById<LinearLayout>(R.id.texturePreviewListLayout)
         val content = v.findViewById<LinearLayout>(R.id.textureContent)
+        val doneButton = v.findViewById<Button>(R.id.textureDoneButton)
 
-        layout.removeView(previewList)
+        layout.removeView(previewListLayout)
         previewList.visibility = RecyclerView.VISIBLE
 
-        previewImage.setImageResource(f.texture.icon)
+        previewImage.setImageBitmap(f.texture.thumbnail)
         previewText.text = f.texture.name
         preview.setOnClickListener {
+
+            layout.addView(previewListLayout)
             content.visibility = LinearLayout.GONE
-            layout.addView(previewList)
+
+            fsv.renderProfile = RenderProfile.TEXTURE_THUMB
+            fsv.r.renderThumbnails = true
+            fsv.requestRender()
+
+
         }
 
         previewList.adapter = TextureAdapter(Texture.all)
@@ -92,10 +110,6 @@ class TextureFragment : Fragment() {
                             override fun onClick(view: View, position: Int) {
 
                                 f.texture = Texture.all[position]
-                                previewImage.setImageResource(f.texture.icon)
-                                previewText.text = f.texture.name
-                                layout.removeView(previewList)
-                                content.visibility = LinearLayout.VISIBLE
 
                                 fsv.r.renderShaderChanged = true
                                 fsv.r.renderToTex = true
@@ -110,6 +124,37 @@ class TextureFragment : Fragment() {
                         }
                 )
         )
+
+
+        doneButton.setOnClickListener {
+
+            previewImage.setImageBitmap(f.texture.thumbnail)
+            previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
+            previewText.text = f.texture.name
+            layout.removeView(previewListLayout)
+            content.visibility = LinearLayout.VISIBLE
+            fsv.renderProfile = RenderProfile.MANUAL
+
+        }
+
+
+
+        val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
+        val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
+        bailoutSignificandEdit.setOnEditorActionListener(
+                editListener(bailoutExponentEdit) { w: TextView ->
+                    f.bailoutRadius = "${w.text}e${bailoutExponentEdit.text}".formatToDouble()?.toFloat() ?: f.bailoutRadius
+                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+                    w.text = "%.5f".format(bailoutStrings[0].toFloat())
+                    fsv.r.renderToTex = true
+                })
+        bailoutExponentEdit.setOnEditorActionListener(
+                editListener(null) { w: TextView ->
+                    f.bailoutRadius = "${bailoutSignificandEdit.text}e${w.text}".formatToDouble()?.toFloat() ?: f.bailoutRadius
+                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+                    w.text = "%d".format(bailoutStrings[1].toInt())
+                    fsv.r.renderToTex = true
+                })
 
 
         return v

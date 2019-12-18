@@ -166,60 +166,6 @@
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp">
-
-                    <TextView
-                        style="@style/TextDark"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="@string/bailout"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <EditText
-                        android:id="@+id/bailoutSignificandEdit"
-                        style="@style/EditTextDark"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:imeOptions="actionNext"
-                        android:selectAllOnFocus="true"
-                        app:layout_constraintEnd_toStartOf="@+id/bailoutDivider"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/bailoutDivider"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="@string/e"
-                        app:layout_constraintEnd_toStartOf="@+id/bailoutExponentEdit"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <EditText
-                        android:id="@+id/bailoutExponentEdit"
-                        style="@style/EditTextDark"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:imeOptions="actionDone"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#222"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/bailoutExponentEdit" />
-                </android.support.constraint.ConstraintLayout>
-
-                <android.support.constraint.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp">
 
