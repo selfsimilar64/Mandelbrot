@@ -13,7 +13,7 @@ class Fractal(
         var position:   Position                = if (juliaMode) shape.positions.julia else shape.positions.default,
 
         // texture config
-        texture:        Texture                 = Texture.stripeAvg,
+        texture:        Texture                 = Texture.escape,
 
         // color config
         var palette:        ColorPalette        = ColorPalette.night,

@@ -1,21 +1,13 @@
 package com.selfsimilartech.fractaleye
 
-import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
-import android.opengl.GLES30
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.ArrayList
-import java.util.concurrent.Callable
-import java.util.concurrent.FutureTask
 
 class ColorPaletteAdapter(
         private val colorList: ArrayList<ColorPalette>
@@ -44,24 +36,18 @@ class ColorPaletteAdapter(
 
         fun bindItems(palette: ColorPalette) {
 
-            Log.d("COLOR PALETTE ADAPTER", "binding palette: ${palette.name}")
-
-//            fsv.f.palette = palette
-//            fsv.profile = RenderProfile.ICON
-//            fsv.requestRender()
-
             val previewImage = itemView.findViewById<ImageView>(R.id.colorPreviewImage)
             val previewPalette = itemView.findViewById<ImageView>(R.id.previewPalette)
             val previewText = itemView.findViewById<TextView>(R.id.colorPreviewText)
 
             previewPalette.setImageDrawable(GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
-                    palette.getColors(itemView.resources, palette.colors)
+                    palette.getColors(itemView.resources, palette.ids)
             ))
 
             previewText.text = palette.name
 
-            previewImage.setImageBitmap(palette.icon)
+            previewImage.setImageBitmap(palette.thumbnail)
             previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
 
         }

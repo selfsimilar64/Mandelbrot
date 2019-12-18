@@ -3,6 +3,7 @@ package com.selfsimilartech.fractaleye
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import kotlin.math.floor
 
@@ -16,7 +17,7 @@ fun FloatArray.invert() : FloatArray {
 
 class ColorPalette (
         val name: String,
-        val colors: List<Int> = listOf(),
+        val ids: List<Int> = listOf(),
         oscillate: Boolean = true
 ) {
 
@@ -53,20 +54,20 @@ class ColorPalette (
         ))
         val vascular = ColorPalette(
                 "Vascular", listOf(
-                R.color.yellowish1,
-                R.color.darkblue2,
                 R.color.black,
                 R.color.purple3,
-                R.color.deepred
+                R.color.deepred,
+                R.color.yellowish1,
+                R.color.darkblue2
         ))
         val flora = ColorPalette(
                 "Flora", listOf(
-                R.color.yellowish2,
-                R.color.magenta2,
-                R.color.white,
-                R.color.darkblue1,
-                R.color.black,
-                R.color.darkblue1
+                R.color.flora1,
+                R.color.flora2,
+                R.color.flora3,
+                R.color.flora4,
+                R.color.flora5,
+                R.color.flora6
         ))
         val royal = ColorPalette(
                 "Royal", listOf(
@@ -78,10 +79,10 @@ class ColorPalette (
         ))
         val groovy = ColorPalette(
                 "Groovy", listOf(
+                R.color.black,
                 R.color.q4,
                 R.color.q5,
-                R.color.q6,
-                R.color.black
+                R.color.q6
         ))
         val canyon = ColorPalette(
                 "Canyon", listOf(
@@ -180,13 +181,13 @@ class ColorPalette (
         ))
         val elephant = ColorPalette(
                 "Elephant", listOf(
-                R.color.q51,
-                R.color.q53,
-                R.color.q54,
-                R.color.q55,
-                R.color.q56,
-                R.color.q57,
-                R.color.q58
+                R.color.elephant1,
+                R.color.elephant2,
+                R.color.elephant3,
+                R.color.elephant4,
+                R.color.elephant5,
+                R.color.elephant6,
+                R.color.elephant7
         ))
         val gold = ColorPalette(
                 "Gold", listOf(
@@ -219,17 +220,18 @@ class ColorPalette (
     }
 
 
-    var size = if (oscillate) 2*colors.size - 1 else colors.size + 1
+    var size = if (oscillate) 2*ids.size - 1 else ids.size + 1
 
     val oscillateInit = oscillate
 
     var oscillate = oscillate
         set (value) {
             field = value
-            size = if (oscillate) 2*colors.size - 1 else colors.size + 1
+            size = if (oscillate) 2*ids.size - 1 else ids.size + 1
         }
 
-    var icon : Bitmap? = null
+    var thumbnail : Bitmap? = null
+
 
     fun reset() {
         oscillate = oscillateInit
@@ -237,8 +239,8 @@ class ColorPalette (
     fun getFlatPalette(res: Resources) : FloatArray {
 
         val palette = intArrayToList(getColors(res,
-                if (oscillate) colors.minus(colors.last()).plus(colors.reversed())
-                else colors.plus(colors.first())
+                if (oscillate) ids.minus(ids.last()).plus(ids.reversed())
+                else ids.plus(ids.first())
         ))
 
         return FloatArray(palette.size * 3) { i: Int ->

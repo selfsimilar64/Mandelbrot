@@ -77,7 +77,7 @@ class ColorFragment : Fragment() {
         val previewText = v.findViewById<TextView>(R.id.colorPreviewName)
         val previewList = v.findViewById<RecyclerView>(R.id.colorPreviewList)
         val previewListLayout = v.findViewById<LinearLayout>(R.id.colorPreviewListLayout)
-        val previewDoneButton = v.findViewById<Button>(R.id.previewDoneButton)
+        val doneButton = v.findViewById<Button>(R.id.colorDoneButton)
         val content = v.findViewById<LinearLayout>(R.id.colorContent)
 
         val frequencyEdit = v.findViewById<EditText>(R.id.frequencyEdit)
@@ -96,15 +96,19 @@ class ColorFragment : Fragment() {
 
         previewImage.setImageDrawable(GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                f.palette.getColors(resources, f.palette.colors)
+                f.palette.getColors(resources, f.palette.ids)
         ))
         previewText.text = f.palette.name
         preview.setOnClickListener {
-            content.visibility = LinearLayout.GONE
+
             layout.addView(previewListLayout)
-            fsv.renderProfile = RenderProfile.ICON
+            content.visibility = LinearLayout.GONE
+
+            fsv.renderProfile = RenderProfile.COLOR_THUMB
+            fsv.r.renderThumbnails = true
+            fsv.r.renderToTex = true
             fsv.requestRender()
-            previewList.adapter?.notifyDataSetChanged()
+
         }
 
 
@@ -133,14 +137,17 @@ class ColorFragment : Fragment() {
         previewListLayout.visibility = RecyclerView.VISIBLE
 
 
-        previewDoneButton.setOnClickListener {
+        doneButton.setOnClickListener {
+
                 previewImage.setImageDrawable(GradientDrawable(
                         GradientDrawable.Orientation.LEFT_RIGHT,
-                        f.palette.getColors(resources, f.palette.colors)
+                        f.palette.getColors(resources, f.palette.ids)
                 ))
                 previewText.text = f.palette.name
                 layout.removeView(previewListLayout)
                 content.visibility = LinearLayout.VISIBLE
+                fsv.renderProfile = RenderProfile.MANUAL
+
         }
 
 

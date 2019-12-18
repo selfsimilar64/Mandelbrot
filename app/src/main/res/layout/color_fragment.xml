@@ -28,7 +28,7 @@
             tools:listitem="@layout/color_preview_item" />
 
         <Button
-            android:id="@+id/previewDoneButton"
+            android:id="@+id/colorDoneButton"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/doneButtonHeight"
             android:layout_gravity="end"
@@ -48,43 +48,50 @@
         android:paddingBottom="5dp"
         android:visibility="visible">
 
-        <LinearLayout
-            android:id="@+id/colorPreview"
-            android:layout_width="wrap_content"
+        <android.support.v7.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="vertical"
-            android:padding="3dp">
+            app:cardBackgroundColor="@color/menu3"
+            app:cardCornerRadius="18dp">
 
-            <android.support.v7.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                app:cardBackgroundColor="@color/colorTransparent"
-                app:cardCornerRadius="18dp">
-
-                <ImageView
-                    android:id="@+id/colorPreviewImage"
-                    android:layout_width="300dp"
-                    android:layout_height="35dp" />
-
-            </android.support.v7.widget.CardView>
-
-
-            <TextView
-                android:id="@+id/colorPreviewName"
-                style="@style/TextDark"
+            <LinearLayout
+                android:id="@+id/colorPreview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal|top"
-                android:paddingTop="3dp"
-                android:paddingBottom="2dp"
-                android:text="Palette Name"
-                android:textAlignment="center"
-                android:textSize="13sp" />
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:padding="8dp">
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/colorPreviewName"
+                    style="@style/TextDark"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal|top"
+                    android:paddingBottom="3dp"
+                    android:text="Palette Name"
+                    android:textAlignment="center"
+                    android:textSize="13sp" />
+
+                <android.support.v7.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    app:cardBackgroundColor="@color/colorTransparent"
+                    app:cardCornerRadius="18dp">
+
+                    <ImageView
+                        android:id="@+id/colorPreviewImage"
+                        android:layout_width="300dp"
+                        android:layout_height="35dp" />
+
+                </android.support.v7.widget.CardView>
+
+
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
 
         <LinearLayout
             android:layout_width="match_parent"

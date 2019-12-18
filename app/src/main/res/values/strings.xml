@@ -1004,11 +1004,13 @@
 
     <!-- ABSOLUTE ESCAPE -->
     <string name="absolute_escape_final">
+        <!--  -->
         colorParams.x = floor(float(n)/float(maxIter - 1));
     </string>
 
     <!-- CONDITIONAL ITERATION -->
     <string name="escape_final">
+        <!-- [0, 1] -->
         float j = float(n)/float(maxIter);
         colorParams.x = j;
     </string>
@@ -1022,18 +1024,13 @@
 
     <!-- ESCAPE SMOOTH -->
     <string name="mandelbrot_smooth_final_sf">
+        <!-- [0, 1] -->
         float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
-        float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
-        colorParams.x = j;
+        colorParams.x = i/float(maxIter);
     </string>
     <string name="mandelbrot_smooth_final_df">
         float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
-        colorParams.x = i;
-    </string>
-    <string name="mandelbrot_smooth_final_df2">
-        float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
-        float j = 0.5*(cos(2.0*pow(i + 5.0, 0.4) -  0.3) + 1.0);
-        colorParams.x = j;
+        colorParams.x = i/float(maxIter);
     </string>
 
 
