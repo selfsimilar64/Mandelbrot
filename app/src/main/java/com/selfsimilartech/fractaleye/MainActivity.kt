@@ -22,6 +22,7 @@ import android.support.v4.view.ViewPager
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
+import java.lang.ref.WeakReference
 
 
 const val SPLIT = 8193.0
@@ -187,10 +188,10 @@ enum class Precision(val threshold: Double) {
     SINGLE(5e-4), DUAL(1e-12), QUAD(1e-20)
 }
 enum class Reaction(val numDisplayParams: Int) {
-    POSITION(4), COLOR(2), SHAPE(3)
+    NONE(0), SHAPE(3), COLOR(2), POSITION(4)
 }
 enum class Resolution(val scale: Int) {
-    ICON(10), LOW(8), MED(3), HIGH(1)
+    ICON(6), LOW(8), MED(3), HIGH(1)
 }
 
 
@@ -492,6 +493,47 @@ class MainActivity : AppCompatActivity() {
 
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
+    class ActivityHandler(activity: MainActivity) : Handler() {
+
+        private val MSG_UPDATE_COLOR_THUMBNAILS = 0
+        private val MSG_UPDATE_TEXTURE_THUMBNAILS = 1
+
+        // Weak reference to the Activity; only access this from the UI thread.
+        private val mWeakActivity : WeakReference<MainActivity> = WeakReference(activity)
+
+        /**
+         * Send an FPS update.  "fps" should be in thousands of frames per second
+         * (i.e. fps * 1000), so we can get fractional fps even though the Handler only
+         * supports passing integers.
+         * <p>
+         * Call from non-UI thread.
+         */
+        fun updateColorThumbnails() {
+            sendMessage(obtainMessage(MSG_UPDATE_COLOR_THUMBNAILS))
+        }
+
+        fun updateTextureThumbnails() {
+            sendMessage(obtainMessage(MSG_UPDATE_TEXTURE_THUMBNAILS))
+        }
+
+        // runs on UI thread
+        override fun handleMessage(msg: Message) {
+            val what = msg.what
+            //Log.d(TAG, "ActivityHandler [" + this + "]: what=" + what);
+
+            val activity = mWeakActivity.get()
+            if (activity == null) {
+                Log.w("MAIN ACTIVITY", "ActivityHandler.handleMessage: activity is null")
+            }
+
+            when(what) {
+                MSG_UPDATE_COLOR_THUMBNAILS -> activity?.updateColorThumbnails()
+                MSG_UPDATE_TEXTURE_THUMBNAILS -> activity?.updateTextureThumbnails()
+                else -> throw RuntimeException("unknown msg $what")
+            }
+        }
+    }
+
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -552,7 +594,7 @@ class MainActivity : AppCompatActivity() {
 //        }
 
 
-        fsv = FractalSurfaceView(f, sc, this, intArrayOf(screenWidth, screenHeight))
+        fsv = FractalSurfaceView(f, sc, this, ActivityHandler(this), intArrayOf(screenWidth, screenHeight))
         fsv.layoutParams = ViewGroup.LayoutParams(screenWidth, screenHeight)
         fsv.hideSystemUI()
 
@@ -658,28 +700,35 @@ class MainActivity : AppCompatActivity() {
                 Log.e("MAIN ACTIVITY", "tab selected: $s")
 
                 val category = Category.valueOf(s)
-                fsv.reaction = when (category) {
-                    Category.COLOR, Category.POSITION -> Reaction.valueOf(s)
-                    Category.SHAPE -> if (f.numParamsInUse != 0) Reaction.SHAPE else Reaction.POSITION
-                    Category.TEXTURE, Category.SETTINGS -> Reaction.POSITION
-                }
+                when (category) {
+                    Category.COLOR, Category.POSITION -> {
+                        fsv.reaction = Reaction.valueOf(s)
+                        showTouchIcon()
+                    }
+                    Category.SHAPE -> {
 
-                if ((s == Category.SETTINGS.name || s == Category.TEXTURE.name) && categoryPager.height == 1) {
-                    categoryNameButton.performClick()
+                        if (f.numParamsInUse != 0) {
+                            fsv.reaction = Reaction.SHAPE
+                            showTouchIcon()
+                        }
+                        else {
+                            fsv.reaction = Reaction.NONE
+                            hideTouchIcon()
+                            if (categoryPager.height == 1) categoryNameButton.performClick()
+                        }
+
+                    }
+                    Category.TEXTURE, Category.SETTINGS -> {
+
+                        fsv.reaction = Reaction.NONE
+                        hideTouchIcon()
+                        if (categoryPager.height == 1) categoryNameButton.performClick()
+
+                    }
                 }
 
                 categoryNameButton.text = s
                 updateDisplayParams(reactionChanged = true)
-
-                if (category == Category.COLOR) {
-
-                    fsv.renderProfile = RenderProfile.ICON
-                    fsv.requestRender()
-
-//                    fsv.profile = RenderProfile.MANUAL
-//                    fsv.requestRender()
-
-                }
 
             }
 
@@ -747,9 +796,9 @@ class MainActivity : AppCompatActivity() {
                 findViewById(R.id.displayParamRow4)
         )
 
-        if (sc.displayParams) {
+        if (sc.displayParams && fsv.reaction != Reaction.NONE) {
 
-            if (settingsChanged) displayParams.visibility = LinearLayout.VISIBLE
+            displayParams.visibility = LinearLayout.VISIBLE
             if (reactionChanged) displayParamRows.forEach { it.visibility = LinearLayout.GONE }
             if (reactionChanged || settingsChanged)
                 for (i in 0 until fsv.reaction.numDisplayParams)
@@ -768,6 +817,11 @@ class MainActivity : AppCompatActivity() {
 
             // update text content
             when (fsv.reaction) {
+                Reaction.NONE -> {
+
+                    w = (60f * density).toInt()
+
+                }
                 Reaction.POSITION -> {
 
                     displayParamName1.text = resources.getString(R.string.x)
@@ -804,16 +858,16 @@ class MainActivity : AppCompatActivity() {
             }
 
             // update width
-            displayParamName1.width = w
-            displayParamName2.width = w
+            displayParamName1?.width = w
+            displayParamName2?.width = w
             displayParamName3?.width = w
             displayParamName4?.width = w
             displayParamName1.requestLayout()
             displayParamName2.requestLayout()
             displayParamName3?.requestLayout()
             displayParamName4?.requestLayout()
-            displayParam1.requestLayout()
-            displayParam2.requestLayout()
+            displayParam1?.requestLayout()
+            displayParam2?.requestLayout()
             displayParam3?.requestLayout()
             displayParam4?.requestLayout()
 
@@ -832,6 +886,36 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+    fun showTouchIcon() {
+
+        val touchIcon = findViewById<ImageView>(R.id.touchIcon)
+
+        // start fade animation
+        val fadeOut = AlphaAnimation(1f, 0f)
+        fadeOut.duration = 1000L
+        fadeOut.startOffset = 500L
+        fadeOut.fillAfter = true
+        touchIcon.animation = fadeOut
+        touchIcon.animation.start()
+        touchIcon.requestLayout()
+
+    }
+    fun hideTouchIcon() {
+
+        val touchIcon = findViewById<ImageView>(R.id.touchIcon)
+
+
+        // start fade animation
+        val fadeOut = AlphaAnimation(1f, 0f)
+        fadeOut.duration = 0L
+        fadeOut.startOffset = 0L
+        fadeOut.fillAfter = true
+        touchIcon.animation = fadeOut
+        touchIcon.animation.start()
+        touchIcon.requestLayout()
+
+    }
+
     fun updateShapeParamEditTexts() {
         // Log.d("FRACTAL", "updating shape param EditText $i")
 
@@ -891,6 +975,20 @@ class MainActivity : AppCompatActivity() {
         scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
 
         rotationEdit?.setText("%.0f".format(f.position.rotation * 180.0 / Math.PI))
+
+    }
+
+    fun updateColorThumbnails() {
+
+        val colorPreviewList = findViewById<RecyclerView>(R.id.colorPreviewList)
+        // colorPreviewList.layoutManager?.assertNotInLayoutOrScroll(null)
+        colorPreviewList?.adapter?.notifyDataSetChanged()
+
+    }
+    fun updateTextureThumbnails() {
+
+        val texturePreviewList = findViewById<RecyclerView>(R.id.texturePreviewList)
+        texturePreviewList?.adapter?.notifyDataSetChanged()
 
     }
 
