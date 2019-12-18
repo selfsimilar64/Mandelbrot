@@ -2,6 +2,7 @@
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/positionLayoutScroll"
     android:layout_width="match_parent"
     android:layout_height="250dp">
@@ -34,15 +35,6 @@
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
                 android:imeOptions="actionNext"
-                app:layout_constraintEnd_toStartOf="@id/xLock"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ToggleButton
-                android:id="@+id/xLock"
-                style="@style/LockDark"
-                android:layout_width="30dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -62,17 +54,8 @@
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
                 android:imeOptions="actionDone"
-                app:layout_constraintEnd_toStartOf="@id/yLock"
-                app:layout_constraintTop_toBottomOf="@id/xCoordEdit" />
-
-            <ToggleButton
-                android:id="@+id/yLock"
-                style="@style/LockDark"
-                android:layout_width="30dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/xLock" />
+                app:layout_constraintTop_toBottomOf="@id/xCoordEdit" />
 
             <View
                 android:id="@+id/positionDiv1"
@@ -126,7 +109,6 @@
                 style="@style/LockDark"
                 android:layout_width="30dp"
                 android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
 
@@ -164,7 +146,6 @@
                 style="@style/LockDark"
                 android:layout_width="30dp"
                 android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/positionDiv2" />
 

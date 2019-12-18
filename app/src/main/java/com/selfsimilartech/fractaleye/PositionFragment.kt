@@ -75,9 +75,9 @@ class PositionFragment : Fragment() {
 
 
         val xCoordEdit = v.findViewById<EditText>(R.id.xCoordEdit)
-        val xLock = v.findViewById<ToggleButton>(R.id.xLock)
+        // val xLock = v.findViewById<ToggleButton>(R.id.xLock)
         val yCoordEdit = v.findViewById<EditText>(R.id.yCoordEdit)
-        val yLock = v.findViewById<ToggleButton>(R.id.yLock)
+        // val yLock = v.findViewById<ToggleButton>(R.id.yLock)
         xCoordEdit.setOnEditorActionListener(editListener(yCoordEdit) { w: TextView ->
             f.position.x = w.text.toString().formatToDouble() ?: f.position.x
             w.text = "%.17f".format(f.position.x)
@@ -88,12 +88,12 @@ class PositionFragment : Fragment() {
             w.text = "%.17f".format(f.position.y)
             fsv.r.renderToTex = true
         })
-        xLock.setOnClickListener {
-            f.position.xLocked = xLock.isChecked
-        }
-        yLock.setOnClickListener {
-            f.position.yLocked = yLock.isChecked
-        }
+        // xLock.setOnClickListener {
+        //     f.position.xLocked = xLock.isChecked
+        // }
+        // yLock.setOnClickListener {
+        //     f.position.yLocked = yLock.isChecked
+        // }
 
         val scaleSignificandEdit = v.findViewById<EditText>(R.id.scaleSignificandEdit)
         val scaleExponentEdit = v.findViewById<EditText>(R.id.scaleExponentEdit)
