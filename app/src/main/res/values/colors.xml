@@ -15,7 +15,7 @@
     <color name="menu1">#1a1a1a</color>
     <color name="menu2">#000</color>
     <color name="menu3">#000000</color>
-    <color name="menu4">#1a1a1a</color>
+    <color name="menu4">#101010</color>
 
 
      <!-- FRACTAL COLORS -->
@@ -88,7 +88,7 @@
     <color name="q30">#FBBF29</color>
     <color name="q31">#EEF622</color>
 
-    <color name="q32">#000000</color>
+    <color name="q32">@color/black</color>
     <color name="q33">#3C0965</color>
     <color name="q34">#AC305B</color>
     <color name="q35">#F1741C</color>
@@ -117,15 +117,15 @@
     <color name="cosmic5">#6369C7</color>
     <color name="cosmic6">#90CEE3</color>
     <color name="cosmic7">#9AFBD2</color>
-    <color name="cosmic8">#FFFFFF</color>
+    <color name="cosmic8">@color/white</color>
 
-    <color name="q51">#10000B</color>
-    <color name="q53">#0E061D</color>
-    <color name="q54">#231830</color>
-    <color name="q55">#49374F</color>
-    <color name="q56">#80968C</color>
-    <color name="q57">#ADCCB7</color>
-    <color name="q58">#E5F2E1</color>
+    <color name="elephant1">#10000B</color>
+    <color name="elephant2">#0E061D</color>
+    <color name="elephant3">#231830</color>
+    <color name="elephant4">#49374F</color>
+    <color name="elephant5">#80968C</color>
+    <color name="elephant6">#ADCCB7</color>
+    <color name="elephant7">#E5F2E1</color>
 
     <color name="gold1">#000000</color>
     <color name="gold2">#261B10</color>
@@ -133,7 +133,7 @@
     <color name="gold4">#876832</color>
     <color name="gold5">#D2AE70</color>
     <color name="gold6">#F5E1BE</color>
-    <color name="gold7">#FFFFFF</color>
+    <color name="gold7">@color/white</color>
 
     <color name="oldskool1">#9767A7</color>
     <color name="oldskool2">#4B978A</color>
@@ -142,6 +142,13 @@
     <color name="oldskool5">#E78DD2</color>
     <color name="oldskool6">#D69989</color>
     <color name="oldskool7">#7E4949</color>
+
+    <color name="flora1">#220022</color>
+    <color name="flora2">#660066</color>
+    <color name="flora3">#884477</color>
+    <color name="flora4">#e0bbaa</color>
+    <color name="flora5">#ffffd2</color>
+    <color name="flora6">@color/white</color>
 
 
 </resources>
