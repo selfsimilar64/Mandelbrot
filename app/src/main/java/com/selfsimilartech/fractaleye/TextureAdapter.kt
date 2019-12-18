@@ -11,7 +11,7 @@ import android.support.v7.widget.RecyclerView
  * Created by Belal on 6/19/2017.
  */
 
-class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
+class TextureAdapter(private val textureList: ArrayList<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextureHolder {
@@ -29,14 +29,17 @@ class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter
         return textureList.size
     }
 
-    //the class is hodling the list view
+    //the class is holding the list view
     class TextureHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bindItems(texture: Texture) {
+
             val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
             val previewText = itemView.findViewById<TextView>(R.id.previewText)
-            previewImage.setImageResource(texture.icon)
             previewText.text = texture.name
+            previewImage.setImageBitmap(texture.thumbnail)
+            previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
+
         }
     }
 
