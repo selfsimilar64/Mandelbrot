@@ -3,6 +3,7 @@ package com.selfsimilartech.fractaleye
 import android.content.Context
 import android.support.v4.app.Fragment
 import android.os.Bundle
+import android.os.Handler
 import android.support.constraint.ConstraintLayout
 import android.support.design.widget.TabLayout
 import android.support.v7.widget.CardView
@@ -35,9 +36,8 @@ class ShapeFragment : Fragment() {
         var d : Double? = null
         try { d = this.toDouble() }
         catch (e: NumberFormatException) {
-            val toast = Toast.makeText(context, "Invalid number format", Toast.LENGTH_LONG)
-            toast.setGravity(Gravity.BOTTOM, 0, 20)
-            toast.show()
+            val act = if (activity is MainActivity) activity as MainActivity else null
+            act?.showMessage("Invalid number format")
         }
         return d
     }
@@ -46,7 +46,7 @@ class ShapeFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val v = inflater.inflate(R.layout.shape_fragment, container, false)
-
+        val act = if (activity is MainActivity) activity as MainActivity else null
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
@@ -69,8 +69,9 @@ class ShapeFragment : Fragment() {
                 }
             }
 
-
             fsv.requestRender()
+            editText.clearFocus()
+            // act?.onWindowFocusChanged(true)
             true
 
         }}
@@ -118,10 +119,15 @@ class ShapeFragment : Fragment() {
         val previewImage = (preview.getChildAt(0) as CardView).getChildAt(0) as ImageView
         val previewText = preview.getChildAt(1) as TextView
         val previewList = v.findViewById<RecyclerView>(R.id.shapePreviewList)
+        val previewListLayout = v.findViewById<LinearLayout>(R.id.shapePreviewListLayout)
         val shapeParamMenu = v.findViewById<ConstraintLayout>(R.id.shapeParamLayout)
         val content = v.findViewById<LinearLayout>(R.id.shapeContent)
+        val contentScroll = v.findViewById<ScrollView>(R.id.shapeContentScroll)
+        val doneButton = v.findViewById<Button>(R.id.shapeDoneButton)
 
-        layout.removeView(previewList)
+
+        val handler = Handler()
+        layout.removeView(previewListLayout)
         previewList.visibility = RecyclerView.VISIBLE
 
 
@@ -134,7 +140,7 @@ class ShapeFragment : Fragment() {
         val vLock = v.findViewById<ToggleButton>(R.id.vLock)
         uEdit.setText("%.8f".format(f.shape.activeParam.u))
         vEdit.setText("%.8f".format(f.shape.activeParam.v))
-        uEdit.setOnEditorActionListener(editListener(vEdit) { w: TextView ->
+        uEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             f.shape.activeParam.u = "${w.text}".formatToDouble() ?: f.shape.activeParam.u
             w.text = "%.8f".format((f.shape.activeParam.u))
             fsv.r.renderToTex = true
@@ -186,8 +192,12 @@ class ShapeFragment : Fragment() {
         previewImage.setImageResource(f.shape.icon)
         previewText.text = f.shape.name
         preview.setOnClickListener {
-            content.visibility = LinearLayout.GONE
-            layout.addView(previewList)
+
+            handler.postDelayed({
+                content.visibility = LinearLayout.GONE
+                layout.addView(previewListLayout)
+            }, BUTTON_CLICK_DELAY)
+
         }
 
 
@@ -205,9 +215,11 @@ class ShapeFragment : Fragment() {
                 shapeParamMenu.visibility = ConstraintLayout.VISIBLE
                 // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("P${f.numParamsInUse + 1}"))
                 shapeParamButtons.addTab(shapeParamButtons.newTab().setText(shapeParamButtonValues[f.numParamsInUse - 1]))
+                shapeParamButtons.getTabAt(shapeParamButtons.tabCount - 1)?.select()
+                contentScroll.smoothScrollTo(0, 0)
                 if (f.numParamsInUse == 1) {
                     fsv.reaction = Reaction.SHAPE
-                    (activity as MainActivity).showTouchIcon()
+                    act?.showTouchIcon()
                 }
 
             }
@@ -216,13 +228,13 @@ class ShapeFragment : Fragment() {
                 shapeParamButtons.removeTabAt(shapeParamButtons.tabCount - 1)
                 if (f.numParamsInUse == 0) shapeParamMenu.visibility = ConstraintLayout.GONE
                 // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("c"))
-                if (f.numParamsInUse == 0) fsv.reaction = Reaction.POSITION
+                if (f.numParamsInUse == 0) fsv.reaction = Reaction.NONE
 
             }
 
-            // updateShapeParamEditTexts(f.numParamsInUse)
-
-            (activity as MainActivity).updateDisplayParams(reactionChanged = true)
+            act?.updateShapeEditTexts()
+            act?.updatePositionEditTexts()
+            act?.updateDisplayParams(reactionChanged = true)
 
             fsv.r.renderShaderChanged = true
             fsv.r.renderToTex = true
@@ -242,37 +254,52 @@ class ShapeFragment : Fragment() {
 
                             override fun onClick(view: View, position: Int) {
 
-                                f.shape = Shape.all[position]
-                                previewImage.setImageResource(f.shape.icon)
-                                previewText.text = f.shape.name
-                                layout.removeView(previewList)
-                                content.visibility = LinearLayout.VISIBLE
+                                if (Shape.all[position] != f.shape) {
 
-                                // update juliaModeSwitch
-                                if (f.shape.juliaMode) {
-                                    juliaLayout.visibility = LinearLayout.GONE
-                                }
-                                else {
-                                    juliaLayout.visibility = LinearLayout.VISIBLE
-                                    if (juliaModeSwitch.isChecked) {
-                                        juliaModeSwitch.setOnCheckedChangeListener { _, _ -> }
-                                        juliaModeSwitch.isChecked = false
-                                        juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
+
+                                    if (!Shape.all[position].textures.contains(f.texture)) {
+                                        val texturePreviewName = v.findViewById<TextView>(R.id.texturePreviewName)
                                     }
+
+                                    val prevScale = f.position.scale
+                                    f.shape = Shape.all[position]
+
+
+                                    // update juliaModeSwitch
+                                    if (f.shape.juliaMode) {
+                                        juliaLayout.visibility = LinearLayout.GONE
+                                    } else {
+                                        juliaLayout.visibility = LinearLayout.VISIBLE
+                                        if (juliaModeSwitch.isChecked) {
+                                            juliaModeSwitch.setOnCheckedChangeListener { _, _ -> }
+                                            juliaModeSwitch.isChecked = false
+                                            juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
+                                        }
+                                    }
+
+                                    if (f.numParamsInUse == 0) fsv.reaction = Reaction.NONE
+                                    else {
+                                        fsv.reaction = Reaction.SHAPE
+                                        act?.showTouchIcon()
+                                    }
+
+
+                                    // update parameter display
+                                    shapeParamMenu.visibility = if (f.shape.numParams == 0)
+                                        ConstraintLayout.GONE else ConstraintLayout.VISIBLE
+
+                                    shapeParamButtons.removeAllTabs()
+                                    for (i in 0 until f.shape.numParams) shapeParamButtons.addTab(
+                                            shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
+                                    )
+
+                                    fsv.checkThresholdCross(prevScale)
+
+                                    fsv.r.renderShaderChanged = true
+                                    fsv.r.renderToTex = true
+                                    fsv.requestRender()
+
                                 }
-
-                                if (f.numParamsInUse == 0) fsv.reaction = Reaction.POSITION
-
-                                // update parameter display
-                                shapeParamMenu.visibility = if (f.shape.numParams == 0) ConstraintLayout.GONE else ConstraintLayout.VISIBLE
-                                shapeParamButtons.removeAllTabs()
-                                for (i in 0 until f.shape.numParams) shapeParamButtons.addTab(
-                                        shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
-                                )
-
-                                fsv.r.renderShaderChanged = true
-                                fsv.r.renderToTex = true
-                                fsv.requestRender()
 
                                 Log.e("MAIN ACTIVITY", "clicked shape: ${f.shape.name}")
 
@@ -285,6 +312,18 @@ class ShapeFragment : Fragment() {
         )
 
 
+
+        doneButton.setOnClickListener {
+
+            previewImage.setImageResource(f.shape.icon)
+            previewText.text = f.shape.name
+            layout.removeView(previewListLayout)
+            content.visibility = LinearLayout.VISIBLE
+
+        }
+
+
+
         shapeParamButtons.removeAllTabs()
         for (i in 0 until f.shape.numParams) shapeParamButtons.addTab(
                 shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
@@ -294,6 +333,12 @@ class ShapeFragment : Fragment() {
 
 
         return v
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val act = if (activity is MainActivity) activity as MainActivity else null
+        act?.updateShapeEditTexts()
+        super.onViewCreated(view, savedInstanceState)
     }
 
 }
