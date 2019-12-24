@@ -1,20 +1,22 @@
 package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.opengl.GLES30.*
 import android.opengl.GLSurfaceView
-import android.os.Environment
-import android.support.v7.widget.RecyclerView
+import android.os.*
+import android.support.constraint.ConstraintLayout
 import android.util.Log
 import android.view.MotionEvent
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import android.widget.ProgressBar
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Thread.sleep
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -182,6 +184,7 @@ class FractalSurfaceView(
             private var viewCoordsHandle : Int
             private var iterHandle       : Int
             private var bailoutHandle    : Int
+            private var powerHandle      : Int
             private var x0Handle         : Int
             private var y0Handle         : Int
             private var xScaleHandle     : Int
@@ -380,12 +383,13 @@ class FractalSurfaceView(
                 viewCoordsHandle     =  glGetAttribLocation(   renderProgram, "viewCoords"  )
                 iterHandle           =  glGetUniformLocation(  renderProgram, "maxIter"     )
                 bailoutHandle        =  glGetUniformLocation(  renderProgram, "R"           )
-                x0Handle          =  glGetUniformLocation(  renderProgram, "x0"          )
-                y0Handle          =  glGetUniformLocation(  renderProgram, "y0"          )
+                powerHandle          =  glGetUniformLocation(  renderProgram, "power"       )
+                x0Handle             =  glGetUniformLocation(  renderProgram, "x0"          )
+                y0Handle             =  glGetUniformLocation(  renderProgram, "y0"          )
                 xScaleHandle         =  glGetUniformLocation(  renderProgram, "xScale"      )
                 yScaleHandle         =  glGetUniformLocation(  renderProgram, "yScale"      )
-                xCoordHandle        =   glGetUniformLocation(  renderProgram, "xCoord"      )
-                yCoordHandle        =   glGetUniformLocation(  renderProgram, "yCoord"      )
+                xCoordHandle         =  glGetUniformLocation(  renderProgram, "xCoord"      )
+                yCoordHandle         =  glGetUniformLocation(  renderProgram, "yCoord"      )
                 sinRotateHandle      =  glGetUniformLocation(  renderProgram, "sinRotate"   )
                 cosRotateHandle      =  glGetUniformLocation(  renderProgram, "cosRotate"   )
                 bgScaleHandle        =  glGetUniformLocation(  renderProgram, "bgScale"     )
@@ -719,12 +723,13 @@ class FractalSurfaceView(
                 viewCoordsHandle     =  glGetAttribLocation(   renderProgram, "viewCoords"  )
                 iterHandle           =  glGetUniformLocation(  renderProgram, "maxIter"     )
                 bailoutHandle        =  glGetUniformLocation(  renderProgram, "R"           )
-                x0Handle          =  glGetUniformLocation(  renderProgram, "x0"          )
-                y0Handle          =  glGetUniformLocation(  renderProgram, "y0"          )
+                powerHandle          =  glGetUniformLocation(  renderProgram, "power"       )
+                x0Handle             =  glGetUniformLocation(  renderProgram, "x0"          )
+                y0Handle             =  glGetUniformLocation(  renderProgram, "y0"          )
                 xScaleHandle         =  glGetUniformLocation(  renderProgram, "xScale"      )
                 yScaleHandle         =  glGetUniformLocation(  renderProgram, "yScale"      )
-                xCoordHandle        =  glGetUniformLocation(  renderProgram, "xCoord"     )
-                yCoordHandle        =  glGetUniformLocation(  renderProgram, "yCoord"     )
+                xCoordHandle         =  glGetUniformLocation(  renderProgram, "xCoord"     )
+                yCoordHandle         =  glGetUniformLocation(  renderProgram, "yCoord"     )
                 sinRotateHandle      =  glGetUniformLocation(  renderProgram, "sinRotate"   )
                 cosRotateHandle      =  glGetUniformLocation(  renderProgram, "cosRotate"   )
                 bgScaleHandle        =  glGetUniformLocation(  renderProgram, "bgScale"     )
@@ -849,7 +854,7 @@ class FractalSurfaceView(
                             val prevShowProgress = sc.showProgress
                             sc.showProgress = false
 
-                            Texture.all.forEach { texture ->
+                            f.shape.textures.forEach { texture ->
 
                                 f.texture = texture
                                 onRenderShaderChanged()
@@ -864,6 +869,7 @@ class FractalSurfaceView(
 
                             sc.showProgress = prevShowProgress
                             f.texture = prevTexture
+                            onRenderShaderChanged()
                             renderThumbnails = false
 
                         }
@@ -883,7 +889,7 @@ class FractalSurfaceView(
             }
             private fun renderToTexture(texture: Int) {
 
-                val t = System.currentTimeMillis()
+                // val t = System.currentTimeMillis()
                 act.findViewById<ProgressBar>(R.id.progressBar).progress = 0
 
                 glUseProgram(renderProgram)
@@ -903,7 +909,7 @@ class FractalSurfaceView(
                 // pass in texture params
                 for (i in textureParamHandles.indices) {
                     // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.params["q${i+1}"]}")
-                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf(f.texture.params[i].t.toFloat()), 0)
+                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf(f.texture.params[i].q.toFloat()), 0)
                 }
 
                 val xScaleSD = f.position.scale / 2.0
@@ -957,8 +963,12 @@ class FractalSurfaceView(
                 glUniform1fv( cosRotateHandle, 1, floatArrayOf(cos(f.position.rotation).toFloat()), 0 )
 
                 // pass in other parameters
-                glUniform1i(  iterHandle,         f.maxIter                               )
-                glUniform1fv( bailoutHandle,  1,  floatArrayOf(f.bailoutRadius),        0 )
+
+                val power = if (f.shape.hasDynamicPower) f.shape.params[0].u.toFloat() else f.shape.power
+
+                glUniform1i(  iterHandle,         f.maxIter                                )
+                glUniform1fv( bailoutHandle,  1,  floatArrayOf(f.bailoutRadius),         0 )
+                glUniform1fv( powerHandle,    1,  floatArrayOf(power),                   0 )
                 glUniform1fv( x0Handle,       1,  floatArrayOf(f.shape.z0.x.toFloat()),  0 )
                 glUniform1fv( y0Handle,       1,  floatArrayOf(f.shape.z0.y.toFloat()),  0 )
 
@@ -1199,12 +1209,12 @@ class FractalSurfaceView(
 
                 }
 
-                Log.e("RENDER ROUTINE", "renderToTexture took ${System.currentTimeMillis() - t} ms")
+                // Log.d("RENDER ROUTINE", "renderToTexture took ${System.currentTimeMillis() - t} ms")
 
             }
             private fun renderFromTexture(texture: Int, fitToScreen: Boolean = true, yOrient: Float = 1f) {
 
-                val t = System.currentTimeMillis()
+                // val t = System.currentTimeMillis()
 
                 //======================================================================================
                 // PRE-RENDER PROCESSING
@@ -1313,7 +1323,8 @@ class FractalSurfaceView(
 
                 act.findViewById<ProgressBar>(R.id.progressBar).progress = 0
 
-                Log.e("RENDER ROUTINE", "renderFromTexture took ${System.currentTimeMillis() - t} ms")
+
+                // Log.d("RENDER ROUTINE", "renderFromTexture took ${System.currentTimeMillis() - t} ms")
 
             }
             private fun renderToTexture2(current: Int) {
@@ -1410,7 +1421,7 @@ class FractalSurfaceView(
                 // pass in texture params
                 for (i in textureParamHandles.indices) {
                     // Log.d("RENDER ROUTINE", "passing q${i + 1} in as ${f.params["q${i+1}"]}")
-                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf(f.texture.params[i].t.toFloat()), 0)
+                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf(f.texture.params[i].q.toFloat()), 0)
                 }
 
                 val xScaleSD = f.position.scale / 2.0
@@ -2098,7 +2109,8 @@ class FractalSurfaceView(
             val second = c[Calendar.SECOND]
 
             // save image with unique filename
-            val file = File(dir, "/FE_%4d%02d%02d_%02d%02d%02d.png".format(year, month+1, day, hour, minute, second))
+            val subDirectory = "/FE_%4d%02d%02d_%02d%02d%02d.png".format(year, month+1, day, hour, minute, second)
+            val file = File(dir, subDirectory)
             file.createNewFile()
             val fos = FileOutputStream(file)
             fos.write(bos.toByteArray())
@@ -2108,6 +2120,8 @@ class FractalSurfaceView(
             val contentUri = Uri.fromFile(file)
             scanIntent.data = contentUri
             act.sendBroadcast(scanIntent)
+
+            handler.showImageSavedMessage("$dir$subDirectory")
 
         }
 
@@ -2149,36 +2163,42 @@ class FractalSurfaceView(
 
     val r : FractalRenderer
 
-    fun vibrate() {
+    var hasTranslated = false
+    private val minPixelMove = 2
+    private val h = Handler()
+    private var overlayHidden = false
+    private val longPressed = Runnable {
 
-        // var hasTranslated = false
-        // private val h = Handler()
-//    private val longPressed = Runnable {
-//        Log.d("SURFACE VIEW", "wow u pressed that so long")
-//
-//        // vibrate
-//        val vib = act.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            vib.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
-//        }
-//        else {
-//            //deprecated in API 26
-//            vib.vibrate(15)
-//        }
-//
-//        // toggle uiQuick
-//        val uiQuick = act.findViewById<LinearLayout>(R.id.uiQuick)
-//        val v : Int
-//        if (uiQuick.visibility == LinearLayout.VISIBLE) {
-//            v = LinearLayout.INVISIBLE
-//        }
-//        else {
-//            v = LinearLayout.VISIBLE
-//            uiQuick.bringToFront()
-//        }
-//        uiQuick.visibility = v
-//
-//    }
+        Log.d("SURFACE VIEW", "wow u pressed that so long")
+
+        // vibrate
+        val vib = act.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
+        }
+        else {
+            //deprecated in API 26
+            vib.vibrate(15)
+        }
+
+        val overlay = act.findViewById<ConstraintLayout>(R.id.overlay)
+
+        val anim : AlphaAnimation
+        anim = if (!overlayHidden) AlphaAnimation(1f, 0f) else AlphaAnimation(0f, 1f)
+        anim.duration = 500L
+        anim.fillAfter = true
+        anim.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                overlay.visibility = if (overlayHidden) ConstraintLayout.VISIBLE else ConstraintLayout.GONE
+            }
+            override fun onAnimationStart(animation: Animation?) {}
+
+        })
+        overlay.animation = anim
+        overlay.animation.start()
+        overlayHidden = !overlayHidden
+
 
     }
 
@@ -2254,7 +2274,7 @@ class FractalSurfaceView(
                 else -> null
             }
 
-            if (msg != null) act.displayMessage(msg)
+            if (msg != null) act.showMessage(msg)
 
         }
 
@@ -2444,14 +2464,11 @@ class FractalSurfaceView(
                         }
                         MotionEvent.ACTION_UP -> {
 
-                            when(renderProfile) {
+                            if ( renderProfile == RenderProfile.COLOR_THUMB ||
+                                 renderProfile == RenderProfile.TEXTURE_THUMB  ) {
 
-                                RenderProfile.COLOR_THUMB -> {
-
-                                    r.renderThumbnails = true
-                                    requestRender()
-
-                                }
+                                r.renderThumbnails = true
+                                requestRender()
 
                             }
 
@@ -2522,7 +2539,7 @@ class FractalSurfaceView(
                             return true
                         }
                         MotionEvent.ACTION_UP -> {
-                            act.updateShapeParamEditTexts()
+                            act.updateShapeEditTexts()
                             act.updateDisplayParams()
                             r.renderToTex = true
                             requestRender()
