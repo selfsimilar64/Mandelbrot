@@ -16,6 +16,7 @@ import android.content.Context.INPUT_METHOD_SERVICE
 import android.graphics.Rect
 import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.CardView
+import android.util.Range
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.inputmethod.InputMethodManager
@@ -406,7 +407,7 @@ class FractalEditFragment : Fragment() {
             f.juliaMode = isChecked
             fsv.checkThresholdCross(prevScale)
 
-            (activity as MainActivity).updateShapeParamEditTexts()
+            (activity as MainActivity).updateShapeEditTexts()
 
             fsv.r.renderShaderChanged = true
             fsv.r.renderToTex = true
@@ -430,16 +431,16 @@ class FractalEditFragment : Fragment() {
 
         val q1Edit = v.findViewById<EditText>(R.id.q1Edit)
         q1Edit.setOnEditorActionListener(editListener(null) { w: TextView ->
-            f.texture.params[0].t = w.text.toString().formatToDouble() ?: f.texture.params[0].t
-            w.text = "%d".format(f.texture.params[0].t.toInt())
-            q1Bar.progress = f.texture.params[0].t.toInt() - 1
+            f.texture.params[0].q = w.text.toString().formatToDouble() ?: f.texture.params[0].q
+            w.text = "%d".format(f.texture.params[0].q.toInt())
+            q1Bar.progress = f.texture.params[0].q.toInt() - 1
             fsv.r.renderToTex = true
         })
 
         val q2Edit = v.findViewById<EditText>(R.id.q2Edit)
         q2Edit.setOnEditorActionListener(editListener(null) { w: TextView ->
-            f.texture.params[1].t = w.text.toString().formatToDouble() ?: f.texture.params[1].t
-            w.text = "%.3f".format(f.texture.params[1].t)
+            f.texture.params[1].q = w.text.toString().formatToDouble() ?: f.texture.params[1].q
+            w.text = "%.3f".format(f.texture.params[1].q)
             fsv.r.renderToTex = true
         })
 
@@ -447,7 +448,7 @@ class FractalEditFragment : Fragment() {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
 
-                f.texture.params[0].t = (progress + 1).toDouble()
+                f.texture.params[0].q = (progress + 1).toDouble()
                 (activity as MainActivity).updateTextureEditTexts()
 
                 fsv.r.renderToTex = true
@@ -482,12 +483,12 @@ class FractalEditFragment : Fragment() {
                     }
                     (textureParamEditRows[i].getChildAt(0) as TextView).text = f.texture.params[i].name
                     if (i == 0) {
-                        val range = f.texture.params[0].range
-                        val q = (range.clamp(f.texture.params[0].t) - range.lower) / (range.upper - range.lower) * 100
+                        val range = Range(0.0, 1.0)
+                        val q = (range.clamp(f.texture.params[0].q) - range.lower) / (range.upper - range.lower) * 100
                         Log.d("FRACTAL FRAGMENT", "q: $q")
                         q1Bar?.progress = q.toInt()
                         q1Bar?.setOnSeekBarChangeListener(q1BarListener)
-                        q1Edit.setText("%.3f".format(f.texture.params[0].t))
+                        q1Edit.setText("%.3f".format(f.texture.params[0].q))
                     }
                 }
             }

@@ -2,7 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
-    android:layout_height="@dimen/previewHeight"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="10dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
     android:orientation="vertical"
     android:padding="3dp">
 
@@ -12,12 +17,12 @@
         android:layout_marginStart="5dp"
         android:layout_marginEnd="5dp"
         app:cardBackgroundColor="@color/colorTransparent"
-        app:cardCornerRadius="25dp">
+        app:cardCornerRadius="10dp">
 
         <ImageView
             android:id="@+id/previewImage"
-            android:layout_width="105dp"
-            android:layout_height="105dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             app:srcCompat="@drawable/mandelbrot_icon" />
 
     </android.support.v7.widget.CardView>

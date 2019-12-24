@@ -13,7 +13,7 @@ class Fractal(
         var position:   Position                = if (juliaMode) shape.positions.julia else shape.positions.default,
 
         // texture config
-        texture:        Texture                 = Texture.escape,
+        texture:        Texture                 = Texture.exponentialSmoothing,
 
         // color config
         var palette:        ColorPalette        = ColorPalette.night,
@@ -54,10 +54,30 @@ class Fractal(
                 phase = 0.11335f,
                 maxIter = 2.0.pow(10.25).toInt()
         )
+        val supernova = Fractal(
+                shape = Shape.mandelbrot,
+                juliaMode = true,
+                position = Position(
+                        scale = 1.18236,
+                        rotation = 347.0.inRadians()
+                ),
+                maxIter = 298,
+                frequency = 6.93958f,
+                phase = 0.39675f
+                // juliaParam = Shape.Param(0.16111111, -0.60128205)
+        )
 
         val mandelbrotPower = Fractal(shape = Shape.mandelbrotPower)
         val mandelbrotDualPower = Fractal(shape = Shape.mandelbrotDualPower)
+
         val mandelbox = Fractal(shape = Shape.mandelbox)
+        val mx1 = Fractal(
+                shape = Shape.mandelbox,
+                juliaMode = true
+                // param1 = Shape.Param(-0.93550922, -0.75157826)
+                // juliaParam = Shape.Param(-0.99635701, 2.48995369)
+        )
+
         val kali = Fractal(shape = Shape.kali)
         val burningShip = Fractal(shape = Shape.burningShip)
         val sine1 = Fractal(shape = Shape.sine1)

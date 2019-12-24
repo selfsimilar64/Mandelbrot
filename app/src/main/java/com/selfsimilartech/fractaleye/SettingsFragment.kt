@@ -35,6 +35,7 @@ class SettingsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
         val v = inflater.inflate(R.layout.settings_fragment, container, false)
+        val act = if (activity is MainActivity) activity as MainActivity else null
 
         val settingsScroll = v.findViewById<ScrollView>(R.id.settingsScroll)
         val cardHeaderListener = { cardBody: LinearLayout -> View.OnClickListener {
@@ -156,22 +157,18 @@ class SettingsFragment : Fragment() {
 
         val saveToFileButton = v.findViewById<Button>(R.id.saveToFileButton)
         saveToFileButton.setOnClickListener {
-            if (fsv.r.isRendering) {
-                val toast = Toast.makeText(v.context, "Please wait for the image to finish rendering", Toast.LENGTH_SHORT)
-                toast.show()
-            }
+            if (fsv.r.isRendering) act?.showMessage("Please wait for the image to finish rendering")
             else {
                 if (ContextCompat.checkSelfPermission(v.context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions((activity as MainActivity),
+                    ActivityCompat.requestPermissions(
+                            act!!,
                             arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                             WRITE_STORAGE_REQUEST_CODE)
                 }
                 else {
                     fsv.renderProfile = RenderProfile.SAVE
                     fsv.requestRender()
-                    val toast = Toast.makeText(v.context, "Image saved to Gallery", Toast.LENGTH_SHORT)
-                    toast.show()
                 }
             }
         }
@@ -188,7 +185,7 @@ class SettingsFragment : Fragment() {
                 ?: sc.displayParams
         displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
             sc.displayParams = isChecked
-            (activity as MainActivity).updateDisplayParams(settingsChanged = true)
+            act?.updateDisplayParams(settingsChanged = true)
         }
 
 

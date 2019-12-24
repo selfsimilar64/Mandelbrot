@@ -11,7 +11,7 @@ import android.support.v7.widget.RecyclerView
  * Created by Belal on 6/19/2017.
  */
 
-class TextureAdapter(private val textureList: ArrayList<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
+class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextureHolder {
