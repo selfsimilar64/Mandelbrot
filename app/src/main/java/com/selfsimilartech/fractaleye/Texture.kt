@@ -2,7 +2,8 @@ package com.selfsimilartech.fractaleye
 
 import android.graphics.Bitmap
 import android.util.Log
-import android.util.Range
+import kotlin.math.roundToInt
+import kotlin.reflect.typeOf
 
 class Texture (
         val name            : String,
@@ -14,27 +15,38 @@ class Texture (
         val finalDF         : Int = R.string.empty,
         params              : List<Param> = listOf(),
         val auto            : Boolean = false,
-        val bailoutRadius   : Float? = null
+        val bailoutRadius   : Float? = null,
+        val frequency       : Float? = null
 ) {
 
     class Param (
-        val name:   String = "",
-        val range:  Range<Double> = Range(0.0, 1.0),
-        t: Double = 0.0
+            val name: String = "",
+            val min: Double = 0.0,
+            val max: Double = 1.0,
+            q: Double = 0.0,
+            val discrete: Boolean = false
     ) {
 
-        private val tInit = t
-        var t = tInit
-            set (value) {
-                if (field != value) {
-                    field = value
-                    // f.updateTextureParamEditText(key[1].toString().toInt())
-                    // fsv.r.renderToTex = true
-                }
+
+        private val qInit = q
+        var q = qInit
+
+        val interval = max - min
+        var progress = 0.0
+            set(value) {
+                field = value
+                q = (1.0 - progress)*min + progress*max
+                Log.d("TEXTURE", "q progress set to $value")
+                Log.d("TEXTURE", "q set to $q")
             }
 
+
+        override fun toString(): String {
+            return if (discrete) "%d".format(q.roundToInt()) else "%.3f".format(q)
+        }
+
         fun reset() {
-            t = tInit
+            q = qInit
         }
 
     }
@@ -77,7 +89,8 @@ class Texture (
                 initDF = R.string.mandelbrot_normal1_init_df,
                 loopDF = R.string.mandelbrot_normal1_loop_df,
                 finalDF = R.string.mandelbrot_normal1_final_df,
-                bailoutRadius = 1e2f
+                bailoutRadius = 1e2f,
+                frequency = 1f
         )
         val normalMap2 = Texture(
                 name = "Normal Map 2",
@@ -87,7 +100,8 @@ class Texture (
                 initDF = R.string.mandelbrot_normal2_init_df,
                 loopDF = R.string.mandelbrot_normal2_loop_df,
                 finalDF = R.string.mandelbrot_normal2_final_df,
-                bailoutRadius = 1e2f
+                bailoutRadius = 1e2f,
+                frequency = 1f
         )
         val distanceGradient = Texture(
                 name = "Distance Gradient",
@@ -135,7 +149,7 @@ class Texture (
                 R.string.stripe_init,
                 R.string.stripe_loop_df,
                 R.string.stripe_final_df,
-                listOf(Param("Density", Range(0.0, 5.0), 1.0)),
+                listOf(Param("Stripe Density", 1.0, 10.0, 2.0, true)),
                 bailoutRadius = 1e6f
         )
         val orbitTrap = Texture(
@@ -156,7 +170,7 @@ class Texture (
                 R.string.overlay_init,
                 R.string.overlay_loop_df,
                 R.string.overlay_final_df,
-                listOf(Param("Sharpness", Range(0.0, 0.5), 0.495)),
+                listOf(Param("Sharpness", 0.4, 0.5, 0.49)),
                 bailoutRadius = 1e2f
         )
         val exponentialSmoothing = Texture(
@@ -180,15 +194,15 @@ class Texture (
         val all = arrayListOf(
                 escape,
                 escapeSmooth,
+                exponentialSmoothing,
                 distanceEstimation,
-                normalMap1,
-                normalMap2,
                 triangleIneqAvg,
                 curvatureAvg,
                 stripeAvg,
-                overlayAvg,
                 orbitTrap,
-                exponentialSmoothing
+                normalMap1,
+                normalMap2,
+                overlayAvg
         )
 
     }
