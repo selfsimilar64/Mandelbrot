@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="categoryPagerHeight">175dp</dimen>
+    <dimen name="categoryPagerHeight">185dp</dimen>
+    <dimen name="categoryNameButtonHeight">35dp</dimen>
+    <dimen name="categoryTabsHeight">45dp</dimen>
     <dimen name="previewHeight">145dp</dimen>
     <dimen name="doneButtonHeight">30dp</dimen>
+    <dimen name="toastMargin">15dp</dimen>
 
 </resources>

@@ -13,9 +13,9 @@
     <color name="colorTransparent">#0000</color>
     <color name="colorAccent">#fff</color>
     <color name="menu1">#1a1a1a</color>
-    <color name="menu2">#000</color>
-    <color name="menu3">#000000</color>
-    <color name="menu4">#101010</color>
+    <color name="menu2">#000000</color>
+    <color name="menu3">#404040</color>
+    <color name="menu4">#141414</color>
 
 
      <!-- FRACTAL COLORS -->

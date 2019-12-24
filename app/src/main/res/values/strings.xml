@@ -89,6 +89,7 @@
         precision highp float;
         uniform int maxIter;
         uniform float R;
+        uniform float power;
         uniform float x0;
         uniform float y0;
         uniform vec2 P1;
@@ -116,6 +117,7 @@
         precision highp float;
         uniform int maxIter;
         uniform float R;
+        uniform float power;
         uniform float x0;
         uniform float y0;
         uniform vec2 P1;
@@ -1012,7 +1014,7 @@
     <string name="escape_final">
         <!-- [0, 1] -->
         float j = float(n)/float(maxIter);
-        colorParams.x = j;
+        colorParams.x = 10.0*j;
     </string>
 
 
@@ -1026,11 +1028,11 @@
     <string name="mandelbrot_smooth_final_sf">
         <!-- [0, 1] -->
         float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
-        colorParams.x = i/float(maxIter);
+        colorParams.x = 10.0*i/float(maxIter);
     </string>
     <string name="mandelbrot_smooth_final_df">
         float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
-        colorParams.x = i/float(maxIter);
+        colorParams.x = 10.0*i/float(maxIter);
     </string>
 
 
@@ -1061,11 +1063,10 @@
         vec2 alpha = vec2(0.0);
     </string>
     <string name="mandelbrot_normal1_loop_sf">
-        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+        alpha = power*cMultSF(cPow3(Z1, power - 1.0), alpha) + vec2(1.0, 0.0);
     </string>
     <string name="mandelbrot_normal1_final_sf">
         vec2 u = cDivSF(Z, alpha);
-        float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
         colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
     <string name="mandelbrot_normal1_init_df">
@@ -1075,7 +1076,7 @@
     <string name="mandelbrot_normal1_loop_df">
         Z1 = vec2(X1.x, Y1.x);
         Z = vec2(X.x, Y.x);
-        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+        alpha = power*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
     </string>
     <string name="mandelbrot_normal1_final_df">
         vec2 u = cDivSF(Z, alpha);
@@ -1087,8 +1088,8 @@
         vec2 beta = vec2(0.0);
     </string>
     <string name="mandelbrot_normal2_loop_sf">
-        beta = 2.0*(cMultSF(Z1, beta) + cSqrSF(alpha));
-        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+        beta = power*((power - 1.0)*cMultSF(cPow3(Z1, power - 1.9999), cSqrSF(alpha)) + cMultSF(cPow3(Z1, power - 1.0), beta));
+        alpha = power*cMultSF(cPow3(Z1, power - 1.0), alpha) + vec2(1.0, 0.0);
     </string>
     <string name="mandelbrot_normal2_final_sf">
         float logModZ = log(modZ);
@@ -1226,17 +1227,17 @@
     <!-- TRIANGLE INEQUALITY AVERAGE -->
     <string name="triangle_init_sf" tools:ignore="TypographyOther">
         float modC = modSF(C);
-        float modSqrZ2 = 0.0;
+        float modPowZ2 = 0.0;
         float sum, sum1 = 0.0;
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
+        float il = 1.0/log(power);
+        float llr = log(log(R)/power);
     </string>
     <string name="triangle_loop_sf">
         if (n > 2) {
             sum1 = sum;
-            modSqrZ2 = modSqrSF(Z2);
-            float m = abs(modSqrZ2 - modC);
-            float M = modSqrZ2 + modC;
+            modPowZ2 = pow(modSqrSF(Z2), 0.5*power);
+            float m = abs(modPowZ2 - modC);
+            float M = modPowZ2 + modC;
             float p = modSF(Z1) - m;
             float q = M - m;
             sum += p / q;
@@ -1278,8 +1279,8 @@
         vec2 modC = modDF(A, B);
         vec2 modSqrZ2;
         vec2 sum, sum1 = vec2(0.0);
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
+        float il = 1.0/log(power);
+        float llr = log(log(R)/power);
     </string>
     <string name="triangle_loop_df">
         if (n > 2) {
@@ -1327,8 +1328,8 @@
     <!-- CURVATURE AVERAGE -->
     <string name="curvature_init">
         float sum, sum1 = 0.0;
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
+        float il = 1.0/log(power);
+        float llr = log(log(R)/power);
     </string>
     <string name="curvature_loop_sf">
         if (n > 1) {
@@ -1362,17 +1363,10 @@
 
     <!-- STRIPE AVERAGE -->
     <string name="stripe_init">
-        float pow;
-        if (P1.x == 0.0) {
-            pow = 2.0;
-        }
-        else {
-            pow = P1.x;
-        }
         float argZ;
         float sum, sum1 = 0.0;
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
+        float il = 1.0/log(power);
+        float llr = log(log(R)/power);
     </string>
     <string name="stripe_loop_sf">
         sum1 = sum;
@@ -1380,8 +1374,8 @@
         sum += 0.5*(sin(Q1*argZ) + 1.0);
     </string>
     <string name="stripe_final_sf">
-        sum /= float(n) * pi;
-        sum1 /= float(n - 1) * pi;
+        sum /= float(n);
+        sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
@@ -1434,8 +1428,8 @@
     <string name="overlay_init">
         float argZ;
         float sum, sum1 = 0.0;
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
+        float il = 1.0/log(power);
+        float llr = log(log(R)/power);
     </string>
     <string name="overlay_loop_sf">
         sum1 = sum;
@@ -1448,15 +1442,15 @@
         sum += tan(Q1*argZ);
     </string>
     <string name="overlay_final_sf">
-        sum /= float(n) * pi;
-        sum1 /= float(n - 1) * pi;
+        sum /= float(n);
+        sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
     </string>
     <string name="overlay_final_df">
-        sum /= float(n) * pi;
-        sum1 /= float(n - 1) * pi;
+        sum /= float(n);
+        sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
