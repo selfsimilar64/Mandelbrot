@@ -1,5 +1,6 @@
 package com.selfsimilartech.fractaleye
 
+import android.os.PowerManager
 import kotlin.math.sqrt
 
 class Shape (
@@ -19,7 +20,9 @@ class Shape (
         params              : List<Param>        = listOf(),
         val juliaMode       : Boolean            = false,
         val z0              : Complex            = Complex.ZERO,   // seed?
-        val bailoutRadius   : Float?             = null
+        val bailoutRadius   : Float?             = null,
+        val power           : Float              = 2f,
+        val hasDynamicPower : Boolean            = false
 ) {
 
 
@@ -107,8 +110,10 @@ class Shape (
                 icon = R.drawable.mandelbrotpower_icon,
                 conditionalSF = R.string.escape_sf,
                 loopSF = R.string.mandelbrotcpow_loop_sf,
+                textures = Texture.all,
                 positions = PositionList(Position(scale = 3.5)),
-                params = listOf(Param(4.0, vLocked = true))
+                params = listOf(Param(4.0, vLocked = true)),
+                hasDynamicPower = true
         )
         val mandelbrotDualPower = Shape(
                 "Mandelbrot Dual Power",
@@ -119,7 +124,8 @@ class Shape (
                 loopSF = R.string.dualpow_loop_sf,
                 positions = PositionList(Position(scale = 3.0)),
                 z0 = Complex.ONE,
-                params = listOf(Param(2.0, vLocked = true))
+                params = listOf(Param(2.0, vLocked = true)),
+                hasDynamicPower = true
         )
         val mandelbox = Shape(
                 "Mandelbox",
