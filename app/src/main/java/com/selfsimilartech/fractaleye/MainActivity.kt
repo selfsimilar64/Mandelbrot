@@ -31,6 +31,7 @@ const val NUM_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
 const val ITER_MAX_POW = 12.0
 const val ITER_MIN_POW = 5.0
+const val BUTTON_CLICK_DELAY = 75L
 //const val PLUS_UNICODE = '\u002B'
 //const val MINUS_UNICODE = '\u2212'
 
@@ -43,7 +44,13 @@ fun FrameLayout.getChildAtFront() : View? {
     return this.getChildAt(this.childCount - 1)
 }
 fun FrameLayout.hasAtFront(view: View) : Boolean = this.getChildAtFront()?.equals(view) ?: false
-fun TabLayout.getCurrentTab() : TabLayout.Tab? = this.getTabAt(this.selectedTabPosition)
+fun TabLayout.getCurrentTab() : TabLayout.Tab = this.getTabAt(this.selectedTabPosition) as TabLayout.Tab
+fun TabLayout.getCategory(index: Int) : MainActivity.Category = MainActivity.Category.valueOf(this.getTabAt(index)?.contentDescription.toString())
+fun TabLayout.getCurrentCategory() : MainActivity.Category = MainActivity.Category.valueOf(this.getCurrentTab().contentDescription.toString())
+fun TabLayout.getTabAt(category: MainActivity.Category) : TabLayout.Tab = this.getTabAt(category.ordinal) as TabLayout.Tab
+
+
+
 
 data class Complex(
         val x : Double,
@@ -177,13 +184,6 @@ data class DualDouble (
 }
 
 
-enum class Category(val icon: Int) {
-    SETTINGS(R.drawable.settings),
-    TEXTURE(R.drawable.texture),
-    SHAPE(R.drawable.shape),
-    COLOR(R.drawable.color),
-    POSITION(R.drawable.position)
-}
 enum class Precision(val threshold: Double) {
     SINGLE(5e-4), DUAL(1e-12), QUAD(1e-20)
 }
@@ -191,7 +191,7 @@ enum class Reaction(val numDisplayParams: Int) {
     NONE(0), SHAPE(3), COLOR(2), POSITION(4)
 }
 enum class Resolution(val scale: Int) {
-    ICON(6), LOW(8), MED(3), HIGH(1)
+    ICON(8), LOW(8), MED(3), HIGH(1)
 }
 
 
@@ -487,6 +487,7 @@ class RecyclerTouchListener(
 
 class MainActivity : AppCompatActivity() {
 
+
     private var f : Fractal = Fractal.mandelbrot
     private var sc : SettingsConfig = SettingsConfig()
     private lateinit var fsv : FractalSurfaceView
@@ -497,23 +498,20 @@ class MainActivity : AppCompatActivity() {
 
         private val MSG_UPDATE_COLOR_THUMBNAILS = 0
         private val MSG_UPDATE_TEXTURE_THUMBNAILS = 1
+        private val MSG_IMAGE_SAVED = 2
+
 
         // Weak reference to the Activity; only access this from the UI thread.
         private val mWeakActivity : WeakReference<MainActivity> = WeakReference(activity)
 
-        /**
-         * Send an FPS update.  "fps" should be in thousands of frames per second
-         * (i.e. fps * 1000), so we can get fractional fps even though the Handler only
-         * supports passing integers.
-         * <p>
-         * Call from non-UI thread.
-         */
         fun updateColorThumbnails() {
             sendMessage(obtainMessage(MSG_UPDATE_COLOR_THUMBNAILS))
         }
-
         fun updateTextureThumbnails() {
             sendMessage(obtainMessage(MSG_UPDATE_TEXTURE_THUMBNAILS))
+        }
+        fun showImageSavedMessage(dir: String) {
+            sendMessage(obtainMessage(MSG_IMAGE_SAVED, dir))
         }
 
         // runs on UI thread
@@ -529,10 +527,114 @@ class MainActivity : AppCompatActivity() {
             when(what) {
                 MSG_UPDATE_COLOR_THUMBNAILS -> activity?.updateColorThumbnails()
                 MSG_UPDATE_TEXTURE_THUMBNAILS -> activity?.updateTextureThumbnails()
+                MSG_IMAGE_SAVED -> activity?.showMessage("Image saved to ${msg.obj}")
                 else -> throw RuntimeException("unknown msg $what")
             }
         }
     }
+
+    enum class Category(val icon: Int) {
+
+        SETTINGS(R.drawable.settings) {
+            override fun onMenuClosed(act: MainActivity) {
+                act.findViewById<TabLayout>(R.id.categoryButtons).getTabAt(POSITION).select()
+            }
+            override fun onCategorySelected(act: MainActivity) {
+                val categoryPager = act.findViewById<ViewPager>(R.id.categoryPager)
+                val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
+                act.fsv.renderProfile = RenderProfile.MANUAL
+                act.fsv.reaction = Reaction.NONE
+                act.hideTouchIcon()
+                if (categoryPager.height == 1) categoryNameButton.performClick()
+            }
+            override fun onCategoryUnselected(act: MainActivity) {
+
+            }
+        },
+        TEXTURE(R.drawable.texture) {
+            override fun onMenuClosed(act: MainActivity) {
+                act.findViewById<TabLayout>(R.id.categoryButtons).getTabAt(POSITION).select()
+            }
+            override fun onCategorySelected(act: MainActivity) {
+                val categoryPager = act.findViewById<ViewPager>(R.id.categoryPager)
+                val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
+                if (act.findViewById<LinearLayout>(R.id.texturePreviewListLayout) == null) {
+                    act.fsv.renderProfile = RenderProfile.MANUAL
+                }
+                else {
+                    act.fsv.renderProfile = RenderProfile.TEXTURE_THUMB
+                    act.fsv.r.renderThumbnails = true
+                    act.fsv.requestRender()
+                }
+                act.hideTouchIcon()
+                act.fsv.reaction = Reaction.COLOR
+                if (categoryPager.height == 1) categoryNameButton.performClick()
+            }
+            override fun onCategoryUnselected(act: MainActivity) {
+                // onMenuClosed(act)
+            }
+        },
+        SHAPE(R.drawable.shape) {
+            override fun onMenuClosed(act: MainActivity) {
+                if (act.f.numParamsInUse == 0) act.findViewById<TabLayout>(R.id.categoryButtons).getTabAt(POSITION).select()
+            }
+            override fun onCategorySelected(act: MainActivity) {
+                act.fsv.renderProfile = RenderProfile.MANUAL
+                if (act.f.numParamsInUse != 0) {
+                    act.fsv.reaction = Reaction.SHAPE
+                    act.showTouchIcon()
+                }
+                else {
+                    val categoryPager = act.findViewById<ViewPager>(R.id.categoryPager)
+                    val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
+                    act.fsv.reaction = Reaction.NONE
+                    act.hideTouchIcon()
+                    if (categoryPager.height == 1) categoryNameButton.performClick()
+                }
+            }
+            override fun onCategoryUnselected(act: MainActivity) {
+
+            }
+        },
+        COLOR(R.drawable.color) {
+            override fun onMenuClosed(act: MainActivity) {}
+            override fun onCategorySelected(act: MainActivity) {
+                if (act.findViewById<LinearLayout>(R.id.colorPreviewListLayout) == null) {
+                    act.fsv.renderProfile = RenderProfile.MANUAL
+                }
+                else {
+                    act.fsv.renderProfile = RenderProfile.COLOR_THUMB
+                    act.fsv.r.renderToTex = true
+                    act.fsv.r.renderThumbnails = true
+                    act.fsv.requestRender()
+                }
+                act.fsv.reaction = Reaction.valueOf(name)
+                act.showTouchIcon()
+            }
+            override fun onCategoryUnselected(act: MainActivity) {
+                // onMenuClosed(act)
+            }
+        },
+        POSITION(R.drawable.position) {
+            override fun onMenuClosed(act: MainActivity) {}
+            override fun onCategorySelected(act: MainActivity) {
+                act.fsv.renderProfile = RenderProfile.MANUAL
+                act.fsv.reaction = Reaction.valueOf(name)
+                act.showTouchIcon()
+            }
+            override fun onCategoryUnselected(act: MainActivity) {
+
+            }
+        };
+
+        abstract fun onMenuClosed(act: MainActivity)
+        abstract fun onCategorySelected(act: MainActivity)
+        abstract fun onCategoryUnselected(act: MainActivity)
+
+    }
+
+
+
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -604,7 +706,6 @@ class MainActivity : AppCompatActivity() {
         fractalLayout.addView(fsv)
 
 
-        val displayParams = findViewById<LinearLayout>(R.id.displayParams)
         val ui = findViewById<LinearLayout>(R.id.ui)
         val overlay = findViewById<ConstraintLayout>(R.id.overlay)
         val categoryPager = findViewById<NoScrollViewPager>(R.id.categoryPager)
@@ -620,9 +721,11 @@ class MainActivity : AppCompatActivity() {
         displayParamRows.forEach { it.visibility = LinearLayout.GONE }
         updateDisplayParams(reactionChanged = true, settingsChanged = true)
 
-        val pagerHeightOpen = (175*resources.displayMetrics.density).toInt()
-        val uiHeightOpen = (255*resources.displayMetrics.density).toInt()
-        val uiHeightClosed = uiHeightOpen - pagerHeightOpen
+        val categoryPagerHeight = resources.getDimension(R.dimen.categoryPagerHeight).toInt()
+        val categoryNameButtonHeight = resources.getDimension(R.dimen.categoryNameButtonHeight).toInt()
+        val categoryTabsHeight = resources.getDimension(R.dimen.categoryTabsHeight).toInt()
+        val uiHeightOpen = categoryPagerHeight + categoryNameButtonHeight + categoryTabsHeight
+        val uiHeightClosed = uiHeightOpen - categoryPagerHeight
         categoryPager.layoutParams.height = 1
         fsv.y = -uiHeightClosed/2f
         categoryNameButton.setOnClickListener {
@@ -632,11 +735,11 @@ class MainActivity : AppCompatActivity() {
 
             if (categoryPager.height == 1) {
                 hStart = 1
-                hEnd = pagerHeightOpen
+                hEnd = categoryPagerHeight
                 (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.collapse, null), null)
             }
             else {
-                hStart = pagerHeightOpen
+                hStart = categoryPagerHeight
                 hEnd = 1
                 (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.expand, null), null)
             }
@@ -647,10 +750,20 @@ class MainActivity : AppCompatActivity() {
                 categoryPager.layoutParams.height = intermediateHeight
                 categoryPager.requestLayout()
                 fsv.y = -ui.height/2f
-                if (hEnd == 1 && anim.animatedFraction == 1f && categoryTabs.getCurrentTab()
-                        ?.contentDescription?.equals(Category.SETTINGS.name) == true) {
-                    categoryTabs.getTabAt(4)?.select()
-                } // ew
+                if (hEnd == 1 && anim.animatedFraction == 1f) {  // closing animation ended
+
+                    val texturePreviewList = findViewById<LinearLayout>(R.id.texturePreviewListLayout)
+                    if (texturePreviewList != null) findViewById<Button>(R.id.textureDoneButton).performClick()
+
+                    val colorPreviewList = findViewById<LinearLayout>(R.id.colorPreviewListLayout)
+                    if (colorPreviewList != null) findViewById<Button>(R.id.colorDoneButton).performClick()
+
+                    val shapePreviewList = findViewById<LinearLayout>(R.id.shapePreviewListLayout)
+                    if (shapePreviewList != null) findViewById<Button>(R.id.shapeDoneButton).performClick()
+
+                    categoryTabs.getCurrentCategory().onMenuClosed(this)
+
+                }
             }
             anim.duration = 200
             anim.start()
@@ -699,46 +812,20 @@ class MainActivity : AppCompatActivity() {
                 val s = tab.contentDescription.toString()
                 Log.e("MAIN ACTIVITY", "tab selected: $s")
 
-                val category = Category.valueOf(s)
-                when (category) {
-                    Category.COLOR, Category.POSITION -> {
-                        fsv.reaction = Reaction.valueOf(s)
-                        showTouchIcon()
-                    }
-                    Category.SHAPE -> {
-
-                        if (f.numParamsInUse != 0) {
-                            fsv.reaction = Reaction.SHAPE
-                            showTouchIcon()
-                        }
-                        else {
-                            fsv.reaction = Reaction.NONE
-                            hideTouchIcon()
-                            if (categoryPager.height == 1) categoryNameButton.performClick()
-                        }
-
-                    }
-                    Category.TEXTURE, Category.SETTINGS -> {
-
-                        fsv.reaction = Reaction.NONE
-                        hideTouchIcon()
-                        if (categoryPager.height == 1) categoryNameButton.performClick()
-
-                    }
-                }
+                Category.valueOf(s).onCategorySelected(this@MainActivity)
 
                 categoryNameButton.text = s
                 updateDisplayParams(reactionChanged = true)
 
             }
-
             override fun onTabUnselected(tab: TabLayout.Tab) {
                 tab.icon?.alpha = 128
+                val category = Category.valueOf(tab.contentDescription.toString())
+                category.onCategoryUnselected(this@MainActivity)
             }
-
             override fun onTabReselected(tab: TabLayout.Tab) {
-                categoryNameButton.performClick()
-                onTabSelected(tab)
+                // categoryNameButton.performClick()
+                // onTabSelected(tab)
             }
 
         })
@@ -776,13 +863,14 @@ class MainActivity : AppCompatActivity() {
 
         overlay.bringToFront()
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
 
     }
 
-    fun displayMessage(msg: String) {
+    fun showMessage(msg: String) {
         val ui = findViewById<LinearLayout>(R.id.ui)
-        val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT)
-        val toastHeight = fsv.screenRes[1] - ui.height
+        val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_LONG)
+        val toastHeight = ui.height + resources.getDimension(R.dimen.toastMargin).toInt()
         toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
         toast.show()
     }
@@ -893,7 +981,7 @@ class MainActivity : AppCompatActivity() {
         // start fade animation
         val fadeOut = AlphaAnimation(1f, 0f)
         fadeOut.duration = 1000L
-        fadeOut.startOffset = 500L
+        fadeOut.startOffset = 1500L
         fadeOut.fillAfter = true
         touchIcon.animation = fadeOut
         touchIcon.animation.start()
@@ -916,7 +1004,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun updateShapeParamEditTexts() {
+    fun updateShapeEditTexts() {
         // Log.d("FRACTAL", "updating shape param EditText $i")
 
         val xEdit = findViewById<EditText>(R.id.uEdit)
@@ -926,7 +1014,7 @@ class MainActivity : AppCompatActivity() {
         yEdit?.setText("%.8f".format((f.shape.activeParam.v)))
 
     }
-    fun updateShapeEditTexts() {
+    fun updateTextureEditTexts() {
 
         val bailoutSignificandEdit = findViewById<EditText>(R.id.bailoutSignificandEdit)
         val bailoutExponentEdit = findViewById<EditText>(R.id.bailoutExponentEdit)
@@ -934,17 +1022,11 @@ class MainActivity : AppCompatActivity() {
         bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
         bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
 
-        updateShapeParamEditTexts()
-        updatePositionEditTexts()
-
-    }
-    fun updateTextureEditTexts() {
-
         val q1Edit = findViewById<EditText>(R.id.q1Edit)
         val q2Edit = findViewById<EditText>(R.id.q2Edit)
 
-        q1Edit?.setText("%d".format(f.texture.params[0].t.toInt()))
-        q2Edit?.setText("%.3f".format(f.texture.params[1].t))
+        q1Edit?.setText("%d".format(f.texture.params[0].q.toInt()))
+        q2Edit?.setText("%.3f".format(f.texture.params[1].q))
 
     }
     fun updateColorEditTexts() {
