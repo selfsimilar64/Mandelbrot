@@ -1,9 +1,15 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
+import android.os.Build
 import android.support.v4.app.Fragment
 import android.os.Bundle
+import android.os.Handler
+import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Gravity
@@ -31,9 +37,8 @@ class ColorFragment : Fragment() {
         var d : Double? = null
         try { d = this.toDouble() }
         catch (e: NumberFormatException) {
-            val toast = Toast.makeText(context, "Invalid number format", Toast.LENGTH_LONG)
-            toast.setGravity(Gravity.BOTTOM, 0, 20)
-            toast.show()
+            val act = if (activity is MainActivity) activity as MainActivity else null
+            act?.showMessage("Invalid number format")
         }
         return d
     }
@@ -43,6 +48,7 @@ class ColorFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val v = inflater.inflate(R.layout.color_fragment, container, false)
+        val act = if (activity is MainActivity) activity as MainActivity else null
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
@@ -65,8 +71,9 @@ class ColorFragment : Fragment() {
                 }
             }
 
-
             fsv.requestRender()
+            editText.clearFocus()
+            // act?.onWindowFocusChanged(true)
             true
 
         }}
@@ -94,6 +101,7 @@ class ColorFragment : Fragment() {
 
 
 
+        val handler = Handler()
         previewImage.setImageDrawable(GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 f.palette.getColors(resources, f.palette.ids)
@@ -101,17 +109,22 @@ class ColorFragment : Fragment() {
         previewText.text = f.palette.name
         preview.setOnClickListener {
 
-            layout.addView(previewListLayout)
-            content.visibility = LinearLayout.GONE
+            handler.postDelayed({
 
-            fsv.renderProfile = RenderProfile.COLOR_THUMB
-            fsv.r.renderThumbnails = true
-            fsv.r.renderToTex = true
-            fsv.requestRender()
+                layout.addView(previewListLayout)
+                content.visibility = LinearLayout.GONE
+
+                fsv.renderProfile = RenderProfile.COLOR_THUMB
+                fsv.r.renderThumbnails = true
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
+            }, BUTTON_CLICK_DELAY)
 
         }
 
 
+        // previewList.layoutManager = GridLayoutManager(context, 3)
         previewList.adapter = ColorPaletteAdapter(ColorPalette.all)
         previewList.addOnItemTouchListener(
                 RecyclerTouchListener(
@@ -121,10 +134,15 @@ class ColorFragment : Fragment() {
 
                             override fun onClick(view: View, position: Int) {
 
-                                f.palette = ColorPalette.all[position]
-                                fsv.requestRender()
+                                val clickedLayout = view as LinearLayout
 
-                                Log.e("MAIN ACTIVITY", "clicked palette: ${f.palette.name}")
+                                if (ColorPalette.all[position] != f.palette) {
+
+                                    f.palette = ColorPalette.all[position]
+                                    fsv.requestRender()
+
+                                }
+
 
                             }
 
@@ -152,6 +170,12 @@ class ColorFragment : Fragment() {
 
 
         return v
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val act = if (activity is MainActivity) activity as MainActivity else null
+        act?.updateColorEditTexts()
+        super.onViewCreated(view, savedInstanceState)
     }
 
 }
