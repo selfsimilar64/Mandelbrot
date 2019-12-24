@@ -32,9 +32,8 @@ class PositionFragment : Fragment() {
         var d : Double? = null
         try { d = this.toDouble() }
         catch (e: NumberFormatException) {
-            val toast = Toast.makeText(context, "Invalid number format", Toast.LENGTH_LONG)
-            toast.setGravity(Gravity.BOTTOM, 0, 20)
-            toast.show()
+            val act = if (activity is MainActivity) activity as MainActivity else null
+            act?.showMessage("Invalid number format")
         }
         return d
     }
@@ -44,7 +43,7 @@ class PositionFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val v = inflater.inflate(R.layout.position_fragment, container, false)
-
+        val act = if (activity is MainActivity) activity as MainActivity else null
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
@@ -67,8 +66,9 @@ class PositionFragment : Fragment() {
                 }
             }
 
-
             fsv.requestRender()
+            editText.clearFocus()
+            // act?.onWindowFocusChanged(true)
             true
 
         }}
@@ -78,7 +78,7 @@ class PositionFragment : Fragment() {
         // val xLock = v.findViewById<ToggleButton>(R.id.xLock)
         val yCoordEdit = v.findViewById<EditText>(R.id.yCoordEdit)
         // val yLock = v.findViewById<ToggleButton>(R.id.yLock)
-        xCoordEdit.setOnEditorActionListener(editListener(yCoordEdit) { w: TextView ->
+        xCoordEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             f.position.x = w.text.toString().formatToDouble() ?: f.position.x
             w.text = "%.17f".format(f.position.x)
             fsv.r.renderToTex = true
@@ -107,10 +107,6 @@ class PositionFragment : Fragment() {
                     val scaleStrings = "%e".format(f.position.scale).split("e")
                     w.text = "%.5f".format(scaleStrings[0].toFloat())
 
-                    fsv.checkThresholdCross(prevScale)
-
-                    fsv.r.renderToTex = true
-
                 })
         scaleExponentEdit.setOnEditorActionListener(
                 editListener(null) { w: TextView ->
@@ -122,7 +118,6 @@ class PositionFragment : Fragment() {
                     w.text = "%d".format(scaleStrings[1].toInt())
 
                     fsv.checkThresholdCross(prevScale)
-
                     fsv.r.renderToTex = true
 
                 })
@@ -143,6 +138,12 @@ class PositionFragment : Fragment() {
 
 
         return v
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val act = if (activity is MainActivity) activity as MainActivity else null
+        act?.updatePositionEditTexts()
+        super.onViewCreated(view, savedInstanceState)
     }
 
 }

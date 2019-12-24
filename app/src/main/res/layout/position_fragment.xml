@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/positionLayoutScroll"
     android:layout_width="match_parent"
-    android:layout_height="250dp">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:id="@+id/positionLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:focusableInTouchMode="true"
+        android:focusable="true">
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
@@ -25,6 +26,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:drawableStart="@drawable/x"
+                android:drawablePadding="20dp"
                 android:text="@string/x"
                 app:layout_constraintBaseline_toBaselineOf="@id/xCoordEdit"
                 app:layout_constraintStart_toStartOf="parent"
@@ -34,7 +37,7 @@
                 android:id="@+id/xCoordEdit"
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
-                android:imeOptions="actionNext"
+                android:imeOptions="actionDone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -44,6 +47,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:drawableStart="@drawable/y"
+                android:drawablePadding="20dp"
                 android:text="@string/y"
                 app:layout_constraintBaseline_toBaselineOf="@id/yCoordEdit"
                 app:layout_constraintStart_toStartOf="parent"
@@ -73,6 +78,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:drawableStart="@drawable/zoom"
+                android:drawablePadding="20dp"
                 android:text="@string/zoom"
                 app:layout_constraintBaseline_toBaselineOf="@id/scaleSignificandEdit"
                 app:layout_constraintStart_toStartOf="parent"
@@ -128,6 +135,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:drawableStart="@drawable/rotate"
+                android:drawablePadding="20dp"
                 android:text="rotation"
                 app:layout_constraintBaseline_toBaselineOf="@id/rotationEdit"
                 app:layout_constraintStart_toStartOf="parent"
