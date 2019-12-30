@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.*
 import android.support.v7.app.AppCompatActivity
-import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
@@ -19,10 +18,16 @@ import android.view.MotionEvent
 import android.content.Context
 import android.support.design.widget.TabLayout
 import android.support.v4.view.ViewPager
+import android.support.v7.widget.LinearLayoutManager
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
 import java.lang.ref.WeakReference
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.texture_fragment.*
+import kotlinx.android.synthetic.main.shape_fragment.*
+import kotlinx.android.synthetic.main.color_fragment.*
+import kotlinx.android.synthetic.main.position_fragment.*
 
 
 const val SPLIT = 8193.0
@@ -184,15 +189,16 @@ data class DualDouble (
 }
 
 
-enum class Precision(val threshold: Double) {
-    SINGLE(5e-4), DUAL(1e-12), QUAD(1e-20)
+enum class Precision(val bits: Int, val threshold: Double) {
+    SINGLE(23, 5e-4), DUAL(46, 1e-12), QUAD(0, 1e-20)
 }
 enum class Reaction(val numDisplayParams: Int) {
     NONE(0), SHAPE(3), COLOR(2), POSITION(4)
 }
 enum class Resolution(val scale: Int) {
-    ICON(8), LOW(8), MED(3), HIGH(1)
+    ICON(6), LOW(8), MED(3), HIGH(1)
 }
+enum class TextureMode { OUTSIDE, INSIDE, BOTH }
 
 
 
@@ -401,7 +407,6 @@ fun splitDD(a: DualDouble) : FloatArray {
 
 interface ClickListener {
     fun onClick(view: View, position: Int)
-
     fun onLongClick(view: View, position: Int)
 }
 
@@ -464,6 +469,7 @@ class RecyclerTouchListener(
                     clickListener.onLongClick(child, recyclerView.getChildAdapterPosition(child))
                 }
             }
+
         })
     }
 
@@ -488,9 +494,9 @@ class RecyclerTouchListener(
 class MainActivity : AppCompatActivity() {
 
 
-    private var f : Fractal = Fractal.mandelbrot
-    private var sc : SettingsConfig = SettingsConfig()
-    private lateinit var fsv : FractalSurfaceView
+    var f : Fractal = Fractal.mandelbrot
+    var sc : SettingsConfig = SettingsConfig()
+    lateinit var fsv : FractalSurfaceView
 
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
@@ -500,6 +506,8 @@ class MainActivity : AppCompatActivity() {
         private val MSG_UPDATE_TEXTURE_THUMBNAILS = 1
         private val MSG_IMAGE_SAVED = 2
 
+        
+
 
         // Weak reference to the Activity; only access this from the UI thread.
         private val mWeakActivity : WeakReference<MainActivity> = WeakReference(activity)
@@ -507,8 +515,8 @@ class MainActivity : AppCompatActivity() {
         fun updateColorThumbnails() {
             sendMessage(obtainMessage(MSG_UPDATE_COLOR_THUMBNAILS))
         }
-        fun updateTextureThumbnails() {
-            sendMessage(obtainMessage(MSG_UPDATE_TEXTURE_THUMBNAILS))
+        fun updateTextureThumbnail(index: Int) {
+            sendMessage(obtainMessage(MSG_UPDATE_TEXTURE_THUMBNAILS, index))
         }
         fun showImageSavedMessage(dir: String) {
             sendMessage(obtainMessage(MSG_IMAGE_SAVED, dir))
@@ -526,7 +534,7 @@ class MainActivity : AppCompatActivity() {
 
             when(what) {
                 MSG_UPDATE_COLOR_THUMBNAILS -> activity?.updateColorThumbnails()
-                MSG_UPDATE_TEXTURE_THUMBNAILS -> activity?.updateTextureThumbnails()
+                MSG_UPDATE_TEXTURE_THUMBNAILS -> activity?.updateTextureThumbnail(msg.obj as Int)
                 MSG_IMAGE_SAVED -> activity?.showMessage("Image saved to ${msg.obj}")
                 else -> throw RuntimeException("unknown msg $what")
             }
@@ -567,7 +575,7 @@ class MainActivity : AppCompatActivity() {
                     act.fsv.requestRender()
                 }
                 act.hideTouchIcon()
-                act.fsv.reaction = Reaction.COLOR
+                act.fsv.reaction = Reaction.NONE
                 if (categoryPager.height == 1) categoryNameButton.performClick()
             }
             override fun onCategoryUnselected(act: MainActivity) {
@@ -700,23 +708,15 @@ class MainActivity : AppCompatActivity() {
         fsv.layoutParams = ViewGroup.LayoutParams(screenWidth, screenHeight)
         fsv.hideSystemUI()
 
-        setContentView(R.layout.activity_main2)
+        setContentView(R.layout.activity_main)
 
-        val fractalLayout = findViewById<FrameLayout>(R.id.layout_main)
         fractalLayout.addView(fsv)
 
-
-        val ui = findViewById<LinearLayout>(R.id.ui)
-        val overlay = findViewById<ConstraintLayout>(R.id.overlay)
-        val categoryPager = findViewById<NoScrollViewPager>(R.id.categoryPager)
-        val categoryTabs = findViewById<TabLayout>(R.id.categoryButtons)
-        val categoryNameButton = findViewById<Button>(R.id.categoryNameButton)
-
         val displayParamRows = listOf<LinearLayout>(
-                findViewById(R.id.displayParamRow1),
-                findViewById(R.id.displayParamRow2),
-                findViewById(R.id.displayParamRow3),
-                findViewById(R.id.displayParamRow4)
+                displayParamRow1,
+                displayParamRow2,
+                displayParamRow3,
+                displayParamRow4
         )
         displayParamRows.forEach { it.visibility = LinearLayout.GONE }
         updateDisplayParams(reactionChanged = true, settingsChanged = true)
@@ -752,16 +752,11 @@ class MainActivity : AppCompatActivity() {
                 fsv.y = -ui.height/2f
                 if (hEnd == 1 && anim.animatedFraction == 1f) {  // closing animation ended
 
-                    val texturePreviewList = findViewById<LinearLayout>(R.id.texturePreviewListLayout)
-                    if (texturePreviewList != null) findViewById<Button>(R.id.textureDoneButton).performClick()
+                    if (texturePreviewListLayout != null) textureDoneButton.performClick()
+                    if (colorPreviewListLayout   != null) colorDoneButton.performClick()
+                    if (shapePreviewListLayout   != null) shapeDoneButton.performClick()
 
-                    val colorPreviewList = findViewById<LinearLayout>(R.id.colorPreviewListLayout)
-                    if (colorPreviewList != null) findViewById<Button>(R.id.colorDoneButton).performClick()
-
-                    val shapePreviewList = findViewById<LinearLayout>(R.id.shapePreviewListLayout)
-                    if (shapePreviewList != null) findViewById<Button>(R.id.shapeDoneButton).performClick()
-
-                    categoryTabs.getCurrentCategory().onMenuClosed(this)
+                    categoryButtons.getCurrentCategory().onMenuClosed(this)
 
                 }
             }
@@ -795,22 +790,22 @@ class MainActivity : AppCompatActivity() {
         categoryPager.offscreenPageLimit = 4
 
 
-        categoryTabs.setupWithViewPager(categoryPager)
+        categoryButtons.setupWithViewPager(categoryPager)
         for (i in 0..4) {
-            categoryTabs.getTabAt(i)?.contentDescription = Category.values()[i].name
+            categoryButtons.getTabAt(i)?.contentDescription = Category.values()[i].name
             val transparentIcon = resources.getDrawable(Category.values()[i].icon, null)
             transparentIcon.alpha = 128
-            categoryTabs.getTabAt(i)?.icon = transparentIcon
+            categoryButtons.getTabAt(i)?.icon = transparentIcon
         }
 
-        categoryTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        categoryButtons.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
 
                 tab.icon?.alpha = 255
 
                 val s = tab.contentDescription.toString()
-                Log.e("MAIN ACTIVITY", "tab selected: $s")
+                Log.d("MAIN ACTIVITY", "tab selected: $s")
 
                 Category.valueOf(s).onCategorySelected(this@MainActivity)
 
@@ -829,7 +824,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
-        categoryTabs.getTabAt(categoryTabs.tabCount - 1)?.select()
+        categoryButtons.getTabAt(Category.POSITION).select()
 
 
 
@@ -867,8 +862,8 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+
     fun showMessage(msg: String) {
-        val ui = findViewById<LinearLayout>(R.id.ui)
         val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_LONG)
         val toastHeight = ui.height + resources.getDimension(R.dimen.toastMargin).toInt()
         toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
@@ -876,12 +871,11 @@ class MainActivity : AppCompatActivity() {
     }
     fun updateDisplayParams(reactionChanged: Boolean = false, settingsChanged: Boolean = false) {
 
-        val displayParams = findViewById<LinearLayout>(R.id.displayParams)
         val displayParamRows = listOf<LinearLayout>(
-                findViewById(R.id.displayParamRow1),
-                findViewById(R.id.displayParamRow2),
-                findViewById(R.id.displayParamRow3),
-                findViewById(R.id.displayParamRow4)
+                displayParamRow1,
+                displayParamRow2,
+                displayParamRow3,
+                displayParamRow4
         )
 
         if (sc.displayParams && fsv.reaction != Reaction.NONE) {
@@ -892,14 +886,6 @@ class MainActivity : AppCompatActivity() {
                 for (i in 0 until fsv.reaction.numDisplayParams)
                 displayParamRows[i].visibility = LinearLayout.VISIBLE
 
-            val displayParam1 = findViewById<TextView>(R.id.displayParam1)
-            val displayParam2 = findViewById<TextView>(R.id.displayParam2)
-            val displayParam3 = findViewById<TextView>(R.id.displayParam3)
-            val displayParam4 = findViewById<TextView>(R.id.displayParam4)
-            val displayParamName1 = findViewById<TextView>(R.id.displayParamName1)
-            val displayParamName2 = findViewById<TextView>(R.id.displayParamName2)
-            val displayParamName3 = findViewById<TextView>(R.id.displayParamName3)
-            val displayParamName4 = findViewById<TextView>(R.id.displayParamName4)
             val density = resources.displayMetrics.density
             val w: Int
 
@@ -976,8 +962,6 @@ class MainActivity : AppCompatActivity() {
     }
     fun showTouchIcon() {
 
-        val touchIcon = findViewById<ImageView>(R.id.touchIcon)
-
         // start fade animation
         val fadeOut = AlphaAnimation(1f, 0f)
         fadeOut.duration = 1000L
@@ -989,9 +973,6 @@ class MainActivity : AppCompatActivity() {
 
     }
     fun hideTouchIcon() {
-
-        val touchIcon = findViewById<ImageView>(R.id.touchIcon)
-
 
         // start fade animation
         val fadeOut = AlphaAnimation(1f, 0f)
@@ -1007,32 +988,20 @@ class MainActivity : AppCompatActivity() {
     fun updateShapeEditTexts() {
         // Log.d("FRACTAL", "updating shape param EditText $i")
 
-        val xEdit = findViewById<EditText>(R.id.uEdit)
-        val yEdit = findViewById<EditText>(R.id.vEdit)
-
-        xEdit?.setText("%.8f".format((f.shape.activeParam.u)))
-        yEdit?.setText("%.8f".format((f.shape.activeParam.v)))
+        uEdit?.setText("%.8f".format((f.shape.activeParam.u)))
+        vEdit?.setText("%.8f".format((f.shape.activeParam.v)))
 
     }
     fun updateTextureEditTexts() {
 
-        val bailoutSignificandEdit = findViewById<EditText>(R.id.bailoutSignificandEdit)
-        val bailoutExponentEdit = findViewById<EditText>(R.id.bailoutExponentEdit)
         val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
         bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
         bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
 
-        val q1Edit = findViewById<EditText>(R.id.q1Edit)
-        val q2Edit = findViewById<EditText>(R.id.q2Edit)
-
-        q1Edit?.setText("%d".format(f.texture.params[0].q.toInt()))
-        q2Edit?.setText("%.3f".format(f.texture.params[1].q))
+        qEdit?.setText(f.texture.params[0].toString())
 
     }
     fun updateColorEditTexts() {
-
-        val frequencyEdit = findViewById<EditText>(R.id.frequencyEdit)
-        val phaseEdit = findViewById<EditText>(R.id.phaseEdit)
 
         frequencyEdit?.setText("%.5f".format(f.frequency))
         phaseEdit?.setText("%.5f".format(f.phase))
@@ -1040,39 +1009,29 @@ class MainActivity : AppCompatActivity() {
     }
     fun updatePositionEditTexts() {
 
-        val xCoordEdit = findViewById<EditText>(R.id.xCoordEdit)
-        val yCoordEdit = findViewById<EditText>(R.id.yCoordEdit)
-        val scaleSignificandEdit = findViewById<EditText>(R.id.scaleSignificandEdit)
-        val scaleExponentEdit = findViewById<EditText>(R.id.scaleExponentEdit)
+        xEdit?.setText("%.17f".format(f.position.x))
+        yEdit?.setText("%.17f".format(f.position.y))
+
         val scaleStrings = "%e".format(f.position.scale).split("e")
-        val rotationEdit = findViewById<EditText>(R.id.rotationEdit)
-
-//        Log.w("FRACTAL", "scaleExponent: %d".format(scaleStrings[1].toInt()))
-//        Log.w("FRACTAL", "bailoutExponent: %d".format(bailoutStrings[1].toInt()))
-
-        xCoordEdit?.setText("%.17f".format(f.position.x))
-        yCoordEdit?.setText("%.17f".format(f.position.y))
-
         scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
         scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
 
-        rotationEdit?.setText("%.0f".format(f.position.rotation * 180.0 / Math.PI))
+        rotationEdit?.setText("%d".format((f.position.rotation * 180.0 / Math.PI).roundToInt()))
 
     }
 
     fun updateColorThumbnails() {
 
-        val colorPreviewList = findViewById<RecyclerView>(R.id.colorPreviewList)
-        // colorPreviewList.layoutManager?.assertNotInLayoutOrScroll(null)
         colorPreviewList?.adapter?.notifyDataSetChanged()
 
     }
-    fun updateTextureThumbnails() {
+    fun updateTextureThumbnail(index: Int) {
 
-        val texturePreviewList = findViewById<RecyclerView>(R.id.texturePreviewList)
-        texturePreviewList?.adapter?.notifyDataSetChanged()
+        // Log.e("MAIN ACTIVITY", "updateTextureThumbnail was called !!!")
+        texturePreviewList?.adapter?.notifyItemChanged(index)
 
     }
+
 
     override fun onPause() {
         super.onPause()
@@ -1114,11 +1073,9 @@ class MainActivity : AppCompatActivity() {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     fsv.renderProfile = RenderProfile.SAVE
                     fsv.requestRender()
-                    val toast = Toast.makeText(baseContext, "Image saved to Gallery", Toast.LENGTH_SHORT)
-                    toast.show()
+                    showMessage("Image saved to Gallery")
                 } else {
-                    val toast = Toast.makeText(baseContext, "Image not saved - storage permission required", Toast.LENGTH_LONG)
-                    toast.show()
+                    showMessage("Image not saved - storage permission required")
                 }
                 return
             }
