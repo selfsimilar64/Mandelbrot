@@ -3,6 +3,7 @@ package com.selfsimilartech.fractaleye
 import android.graphics.Bitmap
 import android.util.Log
 import kotlin.math.roundToInt
+import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.typeOf
 
 class Texture (
@@ -33,16 +34,25 @@ class Texture (
 
         val interval = max - min
         var progress = 0.0
-            set(value) {
-                field = value
-                q = (1.0 - progress)*min + progress*max
-                Log.d("TEXTURE", "q progress set to $value")
-                Log.d("TEXTURE", "q set to $q")
-            }
 
+
+        init {
+            setProgressFromValue()
+        }
+
+        fun setValueFromProgress() {
+            q = (1.0 - progress)*min + progress*max
+        }
+        fun setProgressFromValue() {
+            progress = (q - min) / (max - min)
+        }
 
         override fun toString(): String {
             return if (discrete) "%d".format(q.roundToInt()) else "%.3f".format(q)
+        }
+
+        fun toString(Q: Double) : String {
+            return if (discrete) "%d".format(Q.roundToInt()) else "%.3f".format(Q)
         }
 
         fun reset() {
@@ -182,6 +192,13 @@ class Texture (
                 loopDF = R.string.exponential_smooth_loop_df,
                 finalDF = R.string.exponential_smooth_final,
                 bailoutRadius = 5f
+        )
+        val orbitTrapMinXY = Texture(
+                "Orbit Trap Min XY",
+                initSF = R.string.orbittrapminxy_init,
+                loopSF = R.string.orbittrapminxy_loop_sf,
+                finalSF = R.string.orbittrapminxy_final_radius,
+                bailoutRadius = 1e2f
         )
         val arbitrary = arrayListOf(
                 escape,

@@ -6,10 +6,8 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 
-/**
- * Created by Belal on 6/19/2017.
- */
 
 class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
 
@@ -34,6 +32,8 @@ class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter
 
         fun bindItems(texture: Texture) {
 
+            // Log.d("TEXTURE ADAPTER", "binding texture ${texture.name}")
+
             val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
             val previewText = itemView.findViewById<TextView>(R.id.previewText)
             previewText.text = texture.name
@@ -41,6 +41,7 @@ class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter
             previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
 
         }
+
     }
 
 }
