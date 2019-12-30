@@ -5,9 +5,10 @@
     android:id="@+id/shapeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     android:background="@color/menu2"
-    android:focusableInTouchMode="true"
     android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical">
 
     <LinearLayout
@@ -65,7 +66,7 @@
                 app:cardCornerRadius="10dp">
 
                 <ImageView
-                    android:id="@+id/previewImage"
+                    android:id="@+id/shapePreviewImage"
                     android:layout_width="110dp"
                     android:layout_height="110dp"
                     app:srcCompat="@drawable/mandelbrot_icon" />
@@ -74,7 +75,7 @@
 
 
             <TextView
-                android:id="@+id/previewText"
+                android:id="@+id/shapePreviewText"
                 style="@style/TextDark"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
