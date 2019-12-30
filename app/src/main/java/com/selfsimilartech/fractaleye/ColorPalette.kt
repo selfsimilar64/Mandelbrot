@@ -217,6 +217,15 @@ class ColorPalette (
                 anubis
         )
 
+        fun getColors(res: Resources, ids: List<Int>) : IntArray {
+            // takes color resource ids as input and returns color ints
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
+            else IntArray(ids.size) { i: Int -> res.getColor(ids[i]) }
+        }
+        fun intToFloatArray(c: Int) : FloatArray {
+            return floatArrayOf(Color.red(c)/255f, Color.green(c)/255f, Color.blue(c)/255f)
+        }
+
     }
 
 
@@ -249,14 +258,6 @@ class ColorPalette (
             palette[a][b]
         }
 
-    }
-    fun getColors(res: Resources, ids: List<Int>) : IntArray {
-        // takes color resource ids as input and returns color ints
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
-        else IntArray(ids.size) { i: Int -> res.getColor(ids[i]) }
-    }
-    private fun intToFloatArray(c: Int) : FloatArray {
-        return floatArrayOf(Color.red(c)/255f, Color.green(c)/255f, Color.blue(c)/255f)
     }
     private fun intArrayToList(C: IntArray) : List<FloatArray> {
         return List(C.size) { i: Int -> intToFloatArray(C[i]) }

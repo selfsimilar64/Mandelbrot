@@ -42,7 +42,7 @@ class ColorPaletteAdapter(
 
             previewPalette.setImageDrawable(GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
-                    palette.getColors(itemView.resources, palette.ids)
+                    ColorPalette.getColors(itemView.resources, palette.ids)
             ))
 
             previewText.text = palette.name
