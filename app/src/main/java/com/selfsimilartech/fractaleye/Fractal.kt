@@ -8,22 +8,24 @@ import kotlin.math.pow
 class Fractal(
 
         // shape config
-        shape:          Shape                   = Shape.mandelbrot,
-        juliaMode:      Boolean                 = shape.juliaMode,
-        var position:   Position                = if (juliaMode) shape.positions.julia else shape.positions.default,
+        shape:               Shape           = Shape.mandelbrot,
+        juliaMode:           Boolean         = shape.juliaMode,
+        var position:        Position        = if (juliaMode) shape.positions.julia else shape.positions.default,
 
         // texture config
-        texture:        Texture                 = Texture.exponentialSmoothing,
+        texture:             Texture         = Texture.exponentialSmoothing,
+        var textureMode:     TextureMode     = TextureMode.OUTSIDE,
 
         // color config
-        var palette:        ColorPalette        = ColorPalette.night,
-        var frequency:      Float               = 1f,
-        phase:              Float               = 0f,
+        var palette:         ColorPalette    = ColorPalette.night,
+        var frequency:       Float           = 1f,
+        phase:               Float           = 0f,
+        var solidFillColor:  Int             = R.color.white,
 
 
-        var maxIter:        Int             = 255,
-        var sensitivity:    Double          = 1.0,
-        var bailoutRadius:  Float           = shape.bailoutRadius ?: texture.bailoutRadius ?: 1e2f
+        var maxIter:         Int             = 255,
+        var sensitivity:     Double          = 1.0,
+        var bailoutRadius:   Float           = shape.bailoutRadius ?: texture.bailoutRadius ?: 1e2f
 
 ) {
 
@@ -65,6 +67,20 @@ class Fractal(
                 frequency = 6.93958f,
                 phase = 0.39675f
                 // juliaParam = Shape.Param(0.16111111, -0.60128205)
+        )
+        val flora = Fractal(
+                shape = Shape.mandelbrot,
+                position = Position(
+                        x = -1.74911968511756500,
+                        y = -0.00031377609027430,
+                        scale = 6.48450e-8,
+                        rotation = 105.0.inRadians()
+                ),
+                maxIter = 1478,
+                texture = Texture.curvatureAvg,
+                palette = ColorPalette.flora,
+                frequency = 21.45009f,
+                phase = 0.04328f
         )
 
         val mandelbrotPower = Fractal(shape = Shape.mandelbrotPower)
@@ -281,9 +297,11 @@ class Fractal(
                 juliaMode,
                 position.clone(),
                 texture,
+                textureMode,
                 palette,
                 frequency,
                 phase,
+                solidFillColor,
                 maxIter,
                 sensitivity,
                 bailoutRadius
