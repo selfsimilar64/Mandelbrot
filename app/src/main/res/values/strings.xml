@@ -142,8 +142,10 @@
         uniform sampler2D tex;
         uniform int numColors;
         uniform vec3 palette[15];
+        uniform vec3 solidFillColor;
         uniform float frequency;
         uniform float phase;
+        uniform int textureMode;
 
         in vec2 texCoord;
         out vec4 fragmentColor;
@@ -631,8 +633,8 @@
         B = addDF(multDF(A, vec2(sinRotate, 0.0)), multDF(B, vec2(cosRotate, 0.0)));
         A = addDF(tempA, xCoord);
         B = addDF(B, yCoord);
-        vec2 X, X1, X2 = vec2(0.0, 0.0);
-        vec2 Y, Y1, Y2 = vec2(0.0, 0.0);
+        vec2 X, X1, X2 = vec2(0.0);
+        vec2 Y, Y1, Y2 = vec2(0.0);
         vec2 modZ = vec2(0.0);
         float eps = 0.0;
         float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + x0 + y0 + R;
@@ -1394,7 +1396,7 @@
     </string>
 
 
-    <!-- MINMOD -->
+    <!-- ORBIT TRAP MIN X -->
     <string name="orbittrap_init">
         float minMod = R;
         float minX = R;
@@ -1421,6 +1423,27 @@
     </string>
     <string name="orbittrap_final_iteration">
         colorParams.x = float(m)/float(maxIter);
+    </string>
+
+
+    <!-- ORBIT TRAP MIN XY -->
+    <string name="orbittrapminxy_init">
+        float minXY = R;
+        float dist = 0.0;
+        int m = 0;
+    </string>
+    <string name="orbittrapminxy_loop_sf">
+        dist = min(abs(Z.x), abs(Z.y));
+        if(dist &lt; minXY) {
+            minXY = dist;
+            m = n;
+        }
+    </string>
+    <string name="orbittrapminxy_final_radius">
+        colorParams.x = minXY;
+    </string>
+    <string name="orbittrapminxy_final_iter">
+        colorParams.x = m/float(maxIter);
     </string>
 
 
