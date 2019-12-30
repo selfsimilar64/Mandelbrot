@@ -1,167 +1,215 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/colorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/menu2"
-    android:focusableInTouchMode="true"
-    android:focusable="true"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="1dp">
 
     <LinearLayout
-        android:id="@+id/colorPreviewListLayout"
+        android:id="@+id/colorLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="visible">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/colorPreviewList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/menu2"
-            android:orientation="horizontal"
-            android:scrollbars="horizontal"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-            tools:listitem="@layout/color_preview_item" />
-
-        <Button
-            android:id="@+id/colorDoneButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/doneButtonHeight"
-            android:layout_gravity="end"
-            android:background="?attr/selectableItemBackground"
-            android:text="done" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/colorContent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="10dp"
-        android:paddingTop="5dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="5dp"
-        android:visibility="visible">
+        android:layout_height="0dp"
+        android:background="@color/menu2"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/colorPreview"
+            android:id="@+id/colorPreviewListLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginBottom="15dp"
-            android:background="@drawable/button_selector"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:visibility="visible">
 
-            <TextView
-                android:id="@+id/colorPreviewName"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:drawableEnd="@drawable/edit"
-                android:drawablePadding="10dp"
-                android:gravity="center_horizontal|center_vertical"
-                android:paddingBottom="3dp"
-                android:text="Palette Name"
-                android:textAlignment="center"
-                android:textSize="16sp" />
-
-            <android.support.v7.widget.CardView
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/colorPreviewList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                app:cardBackgroundColor="@color/colorTransparent"
-                app:cardCornerRadius="15dp">
+                android:background="@color/menu2"
+                android:orientation="horizontal"
+                android:scrollbars="horizontal"
+                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                tools:listitem="@layout/color_preview_item" />
 
-                <ImageView
-                    android:id="@+id/colorPreviewImage"
-                    android:layout_width="match_parent"
-                    android:layout_height="30dp" />
-
-            </android.support.v7.widget.CardView>
-
+            <Button
+                android:id="@+id/colorDoneButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/doneButtonHeight"
+                android:layout_gravity="end"
+                android:background="?attr/selectableItemBackground"
+                android:text="done" />
 
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/colorContent"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp"
+            android:visibility="visible">
 
             <LinearLayout
+                android:id="@+id/colorPreview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:layout_marginBottom="1dp">
-
-                <ImageView
-                    android:id="@+id/imageView2"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center_vertical"
-                    app:srcCompat="@drawable/x" />
+                android:layout_gravity="center"
+                android:background="@drawable/button_selector"
+                android:orientation="vertical"
+                android:padding="8dp">
 
                 <TextView
+                    android:id="@+id/colorPreviewName"
                     style="@style/TextDark"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="1"
-                    android:text="@string/offset" />
-
-                <EditText
-                    android:id="@+id/phaseEdit"
-                    style="@style/EditTextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
-                    android:selectAllOnFocus="true" />
+                    android:layout_gravity="center_horizontal"
+                    android:drawableEnd="@drawable/edit"
+                    android:drawablePadding="10dp"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:paddingBottom="3dp"
+                    android:text="Palette Name"
+                    android:textAlignment="center"
+                    android:textSize="16sp" />
+
+                <android.support.v7.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    app:cardBackgroundColor="@color/colorTransparent"
+                    app:cardCornerRadius="15dp">
+
+                    <ImageView
+                        android:id="@+id/colorPreviewImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp" />
+
+                </android.support.v7.widget.CardView>
+
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:layout_marginBottom="1dp">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/imageView"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center_vertical"
-                    app:srcCompat="@drawable/frequency" />
-
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="1"
-                    android:text="@string/frequency" />
+                    android:layout_marginTop="1dp"
+                    android:layout_marginBottom="1dp">
 
-                <EditText
-                    android:id="@+id/frequencyEdit"
-                    style="@style/EditTextDark"
-                    android:layout_width="wrap_content"
+                    <ImageView
+                        android:id="@+id/imageView2"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center_vertical"
+                        app:srcCompat="@drawable/x" />
+
+                    <TextView
+                        style="@style/TextDark"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_weight="1"
+                        android:text="@string/offset" />
+
+                    <EditText
+                        android:id="@+id/phaseEdit"
+                        style="@style/EditTextDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:selectAllOnFocus="true" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
-                    android:selectAllOnFocus="true" />
+                    android:layout_marginTop="1dp"
+                    android:layout_marginBottom="1dp">
 
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center_vertical"
+                        app:srcCompat="@drawable/frequency" />
+
+                    <TextView
+                        style="@style/TextDark"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_weight="1"
+                        android:text="@string/frequency" />
+
+                    <EditText
+                        android:id="@+id/frequencyEdit"
+                        style="@style/EditTextDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:selectAllOnFocus="true" />
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="#222" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        style="@style/TextDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="solid fill color" />
+
+                    <android.support.design.widget.TabLayout
+                        android:id="@+id/solidFillColorTabs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="42dp"
+                        android:layout_weight="1"
+                        app:tabBackground="@drawable/tab_color_selector"
+                        app:tabIndicatorColor="@color/colorTransparent">
+
+                        <android.support.design.widget.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="black" />
+
+                        <android.support.design.widget.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="white" />
+                    </android.support.design.widget.TabLayout>
+                </LinearLayout>
             </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

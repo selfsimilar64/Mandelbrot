@@ -1,24 +1,20 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.RippleDrawable
-import android.os.Build
 import android.support.v4.app.Fragment
 import android.os.Bundle
 import android.os.Handler
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
+import android.support.design.widget.TabLayout
 import android.support.v7.widget.RecyclerView
 import android.util.Log
-import android.view.Gravity
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import kotlinx.android.synthetic.main.color_fragment.*
 
 
 class ColorFragment : Fragment() {
@@ -43,11 +39,23 @@ class ColorFragment : Fragment() {
         return d
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val act = if (activity is MainActivity) activity as MainActivity else null
+        if (!this::f.isInitialized) f = act!!.f
+        if (!this::fsv.isInitialized) fsv = act!!.fsv
+        super.onCreate(savedInstanceState)
+    }
+
 
     // Inflate the view for the fragment based on layout XML
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        val v = inflater.inflate(R.layout.color_fragment, container, false)
+        return inflater.inflate(R.layout.color_fragment, container, false)
+
+    }
+
+    override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
+
         val act = if (activity is MainActivity) activity as MainActivity else null
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -78,22 +86,12 @@ class ColorFragment : Fragment() {
 
         }}
 
-        val layout = v.findViewById<LinearLayout>(R.id.colorLayout)
-        val preview = v.findViewById<LinearLayout>(R.id.colorPreview)
-        val previewImage = v.findViewById<ImageView>(R.id.colorPreviewImage)
-        val previewText = v.findViewById<TextView>(R.id.colorPreviewName)
-        val previewList = v.findViewById<RecyclerView>(R.id.colorPreviewList)
-        val previewListLayout = v.findViewById<LinearLayout>(R.id.colorPreviewListLayout)
-        val doneButton = v.findViewById<Button>(R.id.colorDoneButton)
-        val content = v.findViewById<LinearLayout>(R.id.colorContent)
 
-        val frequencyEdit = v.findViewById<EditText>(R.id.frequencyEdit)
         frequencyEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             f.frequency = w.text.toString().formatToDouble()?.toFloat() ?: f.frequency
             w.text = "%.5f".format(f.frequency)
         })
 
-        val phaseEdit = v.findViewById<EditText>(R.id.phaseEdit)
         phaseEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             f.phase = w.text.toString().formatToDouble()?.toFloat() ?: f.phase
             w.text = "%.5f".format(f.phase)
@@ -102,17 +100,17 @@ class ColorFragment : Fragment() {
 
 
         val handler = Handler()
-        previewImage.setImageDrawable(GradientDrawable(
+        colorPreviewImage.setImageDrawable(GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                f.palette.getColors(resources, f.palette.ids)
+                ColorPalette.getColors(resources, f.palette.ids)
         ))
-        previewText.text = f.palette.name
-        preview.setOnClickListener {
+        colorPreviewName.text = f.palette.name
+        colorPreview.setOnClickListener {
 
             handler.postDelayed({
 
-                layout.addView(previewListLayout)
-                content.visibility = LinearLayout.GONE
+                colorLayout.addView(colorPreviewListLayout)
+                colorContent.visibility = LinearLayout.GONE
 
                 fsv.renderProfile = RenderProfile.COLOR_THUMB
                 fsv.r.renderThumbnails = true
@@ -123,26 +121,34 @@ class ColorFragment : Fragment() {
 
         }
 
+        colorDoneButton.setOnClickListener {
+
+            colorPreviewImage.setImageDrawable(GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    ColorPalette.getColors(resources, f.palette.ids)
+            ))
+            colorPreviewName.text = f.palette.name
+            colorLayout.removeView(colorPreviewListLayout)
+            colorContent.visibility = LinearLayout.VISIBLE
+            fsv.renderProfile = RenderProfile.MANUAL
+
+        }
+
 
         // previewList.layoutManager = GridLayoutManager(context, 3)
-        previewList.adapter = ColorPaletteAdapter(ColorPalette.all)
-        previewList.addOnItemTouchListener(
+        colorPreviewList.adapter = ColorPaletteAdapter(ColorPalette.all)
+        colorPreviewList.addOnItemTouchListener(
                 RecyclerTouchListener(
                         v.context,
-                        previewList,
+                        colorPreviewList,
                         object : ClickListener {
 
                             override fun onClick(view: View, position: Int) {
 
-                                val clickedLayout = view as LinearLayout
-
                                 if (ColorPalette.all[position] != f.palette) {
-
                                     f.palette = ColorPalette.all[position]
                                     fsv.requestRender()
-
                                 }
-
 
                             }
 
@@ -151,31 +157,35 @@ class ColorFragment : Fragment() {
                         }
                 )
         )
-        layout.removeView(previewListLayout)
-        previewListLayout.visibility = RecyclerView.VISIBLE
 
 
-        doneButton.setOnClickListener {
+        solidFillColorTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabSelected(tab: TabLayout.Tab) {
 
-                previewImage.setImageDrawable(GradientDrawable(
-                        GradientDrawable.Orientation.LEFT_RIGHT,
-                        f.palette.getColors(resources, f.palette.ids)
-                ))
-                previewText.text = f.palette.name
-                layout.removeView(previewListLayout)
-                content.visibility = LinearLayout.VISIBLE
-                fsv.renderProfile = RenderProfile.MANUAL
+                f.solidFillColor = when (tab.text.toString()) {
+                    "black" -> R.color.black
+                    "white" -> R.color.white
+                    else -> R.color.cyan
+                }
 
-        }
+                fsv.requestRender()
+
+            }
+        })
+        solidFillColorTabs.getTabAt(1)?.select()
 
 
-        return v
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val act = if (activity is MainActivity) activity as MainActivity else null
+
+        colorLayout.removeView(colorPreviewListLayout)
+        colorPreviewListLayout.visibility = RecyclerView.VISIBLE
+
+
         act?.updateColorEditTexts()
-        super.onViewCreated(view, savedInstanceState)
+        super.onViewCreated(v, savedInstanceState)
+
     }
 
 }
