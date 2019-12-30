@@ -3,17 +3,14 @@ package com.selfsimilartech.fractaleye
 import android.content.Context
 import android.support.v4.app.Fragment
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
-import android.support.design.widget.TabLayout
-import android.support.v7.widget.RecyclerView
 import android.util.Log
-import android.view.Gravity
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import kotlinx.android.synthetic.main.position_fragment.*
 
 
 class PositionFragment : Fragment() {
@@ -38,11 +35,23 @@ class PositionFragment : Fragment() {
         return d
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val act = if (activity is MainActivity) activity as MainActivity else null
+        if (!this::f.isInitialized) f = act!!.f
+        if (!this::fsv.isInitialized) fsv = act!!.fsv
+        super.onCreate(savedInstanceState)
+    }
+
 
     // Inflate the view for the fragment based on layout XML
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        val v = inflater.inflate(R.layout.position_fragment, container, false)
+        return inflater.inflate(R.layout.position_fragment, container, false)
+
+    }
+
+    override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
+
         val act = if (activity is MainActivity) activity as MainActivity else null
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -73,17 +82,12 @@ class PositionFragment : Fragment() {
 
         }}
 
-
-        val xCoordEdit = v.findViewById<EditText>(R.id.xCoordEdit)
-        // val xLock = v.findViewById<ToggleButton>(R.id.xLock)
-        val yCoordEdit = v.findViewById<EditText>(R.id.yCoordEdit)
-        // val yLock = v.findViewById<ToggleButton>(R.id.yLock)
-        xCoordEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+        xEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             f.position.x = w.text.toString().formatToDouble() ?: f.position.x
             w.text = "%.17f".format(f.position.x)
             fsv.r.renderToTex = true
         })
-        yCoordEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+        yEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             f.position.y = w.text.toString().formatToDouble() ?: f.position.y
             w.text = "%.17f".format(f.position.y)
             fsv.r.renderToTex = true
@@ -95,9 +99,6 @@ class PositionFragment : Fragment() {
         //     f.position.yLocked = yLock.isChecked
         // }
 
-        val scaleSignificandEdit = v.findViewById<EditText>(R.id.scaleSignificandEdit)
-        val scaleExponentEdit = v.findViewById<EditText>(R.id.scaleExponentEdit)
-        val scaleLock = v.findViewById<ToggleButton>(R.id.scaleLock)
         scaleSignificandEdit.setOnEditorActionListener(
                 editListener(scaleExponentEdit) { w: TextView ->
 
@@ -125,8 +126,6 @@ class PositionFragment : Fragment() {
             f.position.scaleLocked = scaleLock.isChecked
         }
 
-        val rotationEdit = v.findViewById<EditText>(R.id.rotationEdit)
-        val rotationLock = v.findViewById<ToggleButton>(R.id.rotationLock)
         rotationEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             f.position.rotation = w.text.toString().formatToDouble()?.inRadians() ?: f.position.rotation
             w.text = "%.0f".format(f.position.rotation * 180.0 / Math.PI)
@@ -136,14 +135,9 @@ class PositionFragment : Fragment() {
             f.position.rotationLocked = rotationLock.isChecked
         }
 
-
-        return v
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val act = if (activity is MainActivity) activity as MainActivity else null
         act?.updatePositionEditTexts()
-        super.onViewCreated(view, savedInstanceState)
+        super.onViewCreated(v, savedInstanceState)
+
     }
 
 }

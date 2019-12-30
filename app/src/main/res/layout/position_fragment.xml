@@ -29,12 +29,12 @@
                 android:drawableStart="@drawable/x"
                 android:drawablePadding="20dp"
                 android:text="@string/x"
-                app:layout_constraintBaseline_toBaselineOf="@id/xCoordEdit"
+                app:layout_constraintBaseline_toBaselineOf="@id/xEdit"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <EditText
-                android:id="@+id/xCoordEdit"
+                android:id="@+id/xEdit"
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
                 android:imeOptions="actionDone"
@@ -50,17 +50,17 @@
                 android:drawableStart="@drawable/y"
                 android:drawablePadding="20dp"
                 android:text="@string/y"
-                app:layout_constraintBaseline_toBaselineOf="@id/yCoordEdit"
+                app:layout_constraintBaseline_toBaselineOf="@id/yEdit"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/xLabel" />
 
             <EditText
-                android:id="@+id/yCoordEdit"
+                android:id="@+id/yEdit"
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
                 android:imeOptions="actionDone"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/xCoordEdit" />
+                app:layout_constraintTop_toBottomOf="@id/xEdit" />
 
             <View
                 android:id="@+id/positionDiv1"
