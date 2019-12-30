@@ -18,6 +18,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import kotlin.math.roundToInt
+import kotlinx.android.synthetic.main.settings_fragment.*
 
 
 class SettingsFragment : Fragment() {
@@ -32,12 +34,24 @@ class SettingsFragment : Fragment() {
         this.sc = sc
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val act = if (activity is MainActivity) activity as MainActivity else null
+        if (!this::f.isInitialized) f = act!!.f
+        if (!this::fsv.isInitialized) fsv = act!!.fsv
+        if (!this::sc.isInitialized) sc = act!!.sc
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
-        val v = inflater.inflate(R.layout.settings_fragment, container, false)
-        val act = if (activity is MainActivity) activity as MainActivity else null
+        return inflater.inflate(R.layout.settings_fragment, container, false)
 
-        val settingsScroll = v.findViewById<ScrollView>(R.id.settingsScroll)
+    }
+
+    override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
+
+        val act = activity as? MainActivity ?: null
+
         val cardHeaderListener = { cardBody: LinearLayout -> View.OnClickListener {
 
             val card = cardBody.parent.parent as CardView
@@ -118,12 +132,14 @@ class SettingsFragment : Fragment() {
         }}
 
 
-        val resolutionTabs = v.findViewById<TabLayout>(R.id.resolutionTabs)
         resolutionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
                 val res = tab.text.toString()
                 sc.resolution = Resolution.valueOf(res)
+                val width = (fsv.screenRes[0].toFloat()/sc.resolution.scale.toFloat()).roundToInt()
+                val height = (fsv.screenRes[1].toFloat()/sc.resolution.scale.toFloat()).roundToInt()
+                resolutionDimensionsText.text = "$width x $height"
                 fsv.r.resolutionChanged = true
                 fsv.r.renderToTex = true
                 fsv.requestRender()
@@ -139,23 +155,21 @@ class SettingsFragment : Fragment() {
 
         })
         resolutionTabs.getTabAt(
-            Resolution.valueOf(
-                savedInstanceState?.getString("resolution")
-                ?: sc.resolution.name
-            ).ordinal - 1
+                Resolution.valueOf(
+                        savedInstanceState?.getString("resolution")
+                                ?: sc.resolution.name
+                ).ordinal - 1
         )?.select()
 
 
-        val continuousRenderSwitch = v.findViewById<Switch>(R.id.continuousRenderSwitch)
         continuousRenderSwitch.setOnCheckedChangeListener { _, isChecked ->
             sc.continuousRender = isChecked
         }
         continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
-                ?: sc.continuousRender
+                        ?: sc.continuousRender
 
 
-        val saveToFileButton = v.findViewById<Button>(R.id.saveToFileButton)
         saveToFileButton.setOnClickListener {
             if (fsv.r.isRendering) act?.showMessage("Please wait for the image to finish rendering")
             else {
@@ -172,17 +186,15 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
-        val renderButton = v.findViewById<Button>(R.id.renderButton)
         renderButton.setOnClickListener {
             fsv.r.renderToTex = true
             fsv.requestRender()
         }
 
 
-        val displayParamsSwitch = v.findViewById<Switch>(R.id.displayParamsSwitch)
         displayParamsSwitch.isChecked =
                 savedInstanceState?.getBoolean("displayParams")
-                ?: sc.displayParams
+                        ?: sc.displayParams
         displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
             sc.displayParams = isChecked
             act?.updateDisplayParams(settingsChanged = true)
@@ -190,10 +202,9 @@ class SettingsFragment : Fragment() {
 
 
 
-        val precisionTabs = v.findViewById<TabLayout>(R.id.precisionTabs)
         precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-
             override fun onTabSelected(tab: TabLayout.Tab) {
+
                 val p = tab.text.toString()
                 if (p == "AUTO") {
                     Log.d("SETTINGS FRAGMENT", "auto selected")
@@ -204,30 +215,25 @@ class SettingsFragment : Fragment() {
                     sc.precision = Precision.valueOf(p)
                     sc.autoPrecision = false
                 }
+                precisionBitsText.text = "${sc.precision.bits}-bit"
                 fsv.r.renderShaderChanged = true
                 fsv.r.renderToTex = true
                 fsv.requestRender()
 
             }
-
-            override fun onTabUnselected(tab: TabLayout.Tab) {
-
-            }
-
-            override fun onTabReselected(tab: TabLayout.Tab) {
-
-            }
-
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
         })
         if (sc.autoPrecision) precisionTabs.getTabAt(2)?.select()
         else precisionTabs.getTabAt(
-                 Precision.valueOf(
-                     savedInstanceState?.getString("precision")
-                     ?: sc.precision.name
-                 ).ordinal
-             )?.select()
+                Precision.valueOf(
+                        savedInstanceState?.getString("precision")
+                                ?: sc.precision.name
+                ).ordinal
+        )?.select()
 
-        return v
+        super.onViewCreated(v, savedInstanceState)
+
     }
 
 

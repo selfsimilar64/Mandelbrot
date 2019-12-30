@@ -29,14 +29,31 @@
                 android:layout_marginBottom="5dp"
                 android:orientation="horizontal">
 
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_width="90dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start|center_vertical"
-                    android:text="@string/resolution"
-                    android:textColor="@color/colorDarkText"
-                    android:textSize="14sp" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextDark"
+                        android:layout_width="90dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start|center_vertical"
+                        android:text="@string/resolution"
+                        android:textColor="@color/colorDarkText"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/resolutionDimensionsText"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="1440 x 3120"
+                        android:textColor="#888"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
 
                 <android.support.design.widget.TabLayout
                     android:id="@+id/resolutionTabs"
@@ -72,13 +89,29 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_width="90dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start|center_vertical"
-                    android:text="@string/precision"
-                    android:textColor="@color/colorDarkText" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextDark"
+                        android:layout_width="90dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start|center_vertical"
+                        android:text="@string/precision"
+                        android:textColor="@color/colorDarkText" />
+
+                    <TextView
+                        android:id="@+id/precisionBitsText"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="32-bit"
+                        android:textColor="#888"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                 <android.support.design.widget.TabLayout
                     android:id="@+id/precisionTabs"
