@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment
 import android.os.Bundle
 import android.os.Handler
 import android.support.constraint.ConstraintLayout
+import android.support.design.widget.TabLayout
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.ViewGroup
@@ -13,6 +14,9 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import kotlinx.android.synthetic.main.texture_fragment.*
+import java.util.*
+import kotlin.math.roundToInt
 
 
 class TextureFragment : Fragment() {
@@ -36,10 +40,23 @@ class TextureFragment : Fragment() {
         return d
     }
 
-    // Inflate the view for the fragment based on layout XML
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val act = if (activity is MainActivity) activity as MainActivity else null
+        if (!this::f.isInitialized) f = act!!.f
+        if (!this::fsv.isInitialized) fsv = act!!.fsv
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        val v = inflater.inflate(R.layout.texture_fragment, container, false)
+        return inflater.inflate(R.layout.texture_fragment, container, false)
+
+    }
+
+    override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
+
         val act = if (activity is MainActivity) activity as MainActivity else null
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -71,32 +88,19 @@ class TextureFragment : Fragment() {
         }}
 
 
-        val layout = v.findViewById<LinearLayout>(R.id.textureLayout)
-        val preview = v.findViewById<LinearLayout>(R.id.texturePreview)
-        val previewName = v.findViewById<TextView>(R.id.texturePreviewName)
-        // val previewImage = (previewName.getChildAt(0) as CardView).getChildAt(0) as ImageView
-        // val previewText = previewName.getChildAt(1) as TextView
-        val previewList = v.findViewById<RecyclerView>(R.id.texturePreviewList)
-        val previewListLayout = v.findViewById<LinearLayout>(R.id.texturePreviewListLayout)
-        val content = v.findViewById<LinearLayout>(R.id.textureContent)
-        val doneButton = v.findViewById<Button>(R.id.textureDoneButton)
-
-        layout.removeView(previewListLayout)
-        previewListLayout.visibility = RecyclerView.VISIBLE
-
         // previewImage.setImageBitmap(f.texture.thumbnail)
         val handler = Handler()
-        previewName.text = f.texture.name
-        preview.setOnClickListener {
+        texturePreviewName.text = f.texture.name
+        texturePreview.setOnClickListener {
 
             handler.postDelayed({
 
-                if (f.shape.textures != (previewList.adapter as TextureAdapter).textureList) {
-                    previewList.adapter = TextureAdapter(f.shape.textures)
+                if (f.shape.textures != (texturePreviewList.adapter as TextureAdapter).textureList) {
+                    texturePreviewList.adapter = TextureAdapter(f.shape.textures)
                 }
 
-                layout.addView(previewListLayout)
-                content.visibility = LinearLayout.GONE
+                textureLayout.addView(texturePreviewListLayout)
+                textureContent.visibility = LinearLayout.GONE
 
                 fsv.renderProfile = RenderProfile.TEXTURE_THUMB
                 fsv.r.renderThumbnails = true
@@ -108,22 +112,18 @@ class TextureFragment : Fragment() {
 
 
 
-
-        val qLayout = v.findViewById<ConstraintLayout>(R.id.qLayout)
-        val qBar = v.findViewById<SeekBar>(R.id.qBar)
-        val qName = v.findViewById<TextView>(R.id.qName)
-        val qEdit = v.findViewById<EditText>(R.id.qEdit)
-
         qLayout.visibility = ConstraintLayout.GONE
         qEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
 
             val param = f.texture.params[0]
             param.q = w.text.toString().formatToDouble() ?: param.q
-            param.progress = (param.q - param.min) / (param.max - param.min)
+            param.setProgressFromValue()
+
             w.text = param.toString()
             qBar.progress = (param.progress*qBar.max.toDouble()).toInt()
             Log.d("TEXTURE FRAGMENT", "param progress : ${param.progress}")
             Log.d("TEXTURE FRAGMENT", "qBar max : ${qBar.max}")
+
             fsv.r.renderToTex = true
 
         })
@@ -131,17 +131,20 @@ class TextureFragment : Fragment() {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
 
-                f.texture.params[0].progress = qBar.progress.toDouble()/qBar.max
-                qEdit.setText(f.texture.params[0].toString())
-                act?.updateTextureEditTexts()
+                // update EditText but not param
+                val param = f.texture.params[0]
+                val progressNormal = progress.toDouble()/qBar.max
+                qEdit.setText(param.toString((1.0 - progressNormal)*param.min + progressNormal*param.max))
 
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
-                f.texture.params[0].progress = qBar.progress.toDouble()/qBar.max
+                // update EditText and param -- then render
+                val param = f.texture.params[0]
+                param.progress = qBar.progress.toDouble()/qBar.max
+                param.setValueFromProgress()
                 qEdit.setText(f.texture.params[0].toString())
-                act?.updateTextureEditTexts()
 
                 fsv.r.renderToTex = true
                 fsv.requestRender()
@@ -156,11 +159,11 @@ class TextureFragment : Fragment() {
 
 
 
-        previewList.adapter = TextureAdapter(f.shape.textures)
-        previewList.addOnItemTouchListener(
+        texturePreviewList.adapter = TextureAdapter(f.shape.textures)
+        texturePreviewList.addOnItemTouchListener(
                 RecyclerTouchListener(
                         v.context,
-                        previewList,
+                        texturePreviewList,
                         object : ClickListener {
 
                             override fun onClick(view: View, position: Int) {
@@ -174,9 +177,11 @@ class TextureFragment : Fragment() {
                                         val param = f.texture.params[0]
                                         qLayout.visibility = ConstraintLayout.VISIBLE
                                         qName.text = param.name
-                                        qEdit.setText(param.toString())
+                                        Log.d("TEXTURE FRAGMENT", "q: $param")
                                         qBar.max = if (f.texture.params[0].discrete)
                                             f.texture.params[0].interval.toInt() else 100
+                                        qBar.progress = (param.progress*qBar.max.toDouble()).roundToInt()
+                                        Log.d("TEXTURE FRAGMENT", "${param.progress}")
 
                                     }
                                     else {
@@ -202,23 +207,33 @@ class TextureFragment : Fragment() {
                         }
                 )
         )
+//        previewList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+//
+//            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+//                val rv = recyclerView as CustomRecyclerView
+//                rv.updateRenderStates()
+//                if (!rv.isRenderingFromQueue && rv.renderQueue.isNotEmpty()) {
+//                    act?.renderNextTextureThumbnail()
+//                    rv.isRenderingFromQueue = true
+//                }
+//            }
+//
+//        })
 
 
-        doneButton.setOnClickListener {
+        textureDoneButton.setOnClickListener {
 
             // previewImage.setImageBitmap(f.texture.thumbnail)
             // previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
-            previewName.text = f.texture.name
-            layout.removeView(previewListLayout)
-            content.visibility = LinearLayout.VISIBLE
+            texturePreviewName.text = f.texture.name
+            textureLayout.removeView(texturePreviewListLayout)
+            textureContent.visibility = LinearLayout.VISIBLE
             fsv.renderProfile = RenderProfile.MANUAL
 
         }
 
 
 
-        val bailoutSignificandEdit = v.findViewById<EditText>(R.id.bailoutSignificandEdit)
-        val bailoutExponentEdit = v.findViewById<EditText>(R.id.bailoutExponentEdit)
         bailoutSignificandEdit.setOnEditorActionListener(
                 editListener(bailoutExponentEdit) { w: TextView ->
                     f.bailoutRadius = "${w.text}e${bailoutExponentEdit.text}".formatToDouble()?.toFloat() ?: f.bailoutRadius
@@ -234,13 +249,28 @@ class TextureFragment : Fragment() {
                 })
 
 
-        return v
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val act = if (activity is MainActivity) activity as MainActivity else null
+        textureModeTabs.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabSelected(tab: TabLayout.Tab) {
+
+                f.textureMode = TextureMode.valueOf(tab.contentDescription.toString().toUpperCase(Locale.ROOT))
+                fsv.requestRender()
+
+            }
+        })
+        textureModeTabs.getTabAt(f.textureMode.ordinal)?.select()
+
+
+
+
+        textureLayout.removeView(texturePreviewListLayout)
+        texturePreviewListLayout.visibility = RecyclerView.VISIBLE
+
+
         act?.updateTextureEditTexts()
-        super.onViewCreated(view, savedInstanceState)
+        super.onViewCreated(v, savedInstanceState)
     }
 
 }

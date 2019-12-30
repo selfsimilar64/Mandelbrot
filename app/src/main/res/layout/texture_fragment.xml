@@ -1,172 +1,236 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/textureLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/menu2"
-    android:orientation="vertical"
-    android:focusableInTouchMode="true"
-    android:focusable="true">
+    android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/textureContent"
+        android:id="@+id/textureLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:visibility="visible">
+        android:layout_height="0dp"
+        android:background="@color/menu2"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/texturePreview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="10dp"
-            android:background="@drawable/button_selector"
-            android:orientation="vertical"
-            android:padding="12dp">
-
-            <TextView
-                android:id="@+id/texturePreviewName"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:drawableEnd="@drawable/edit"
-                android:drawablePadding="10dp"
-                android:gravity="center"
-                android:text="Triangle Inequality Average"
-                android:textSize="16sp" />
-        </LinearLayout>
-
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/qLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp">
-
-            <TextView
-                android:id="@+id/qName"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Parameter"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <EditText
-                android:id="@+id/qEdit"
-                style="@style/EditTextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginStart="16dp"
-                android:imeOptions="actionDone"
-                app:layout_constraintBottom_toTopOf="@id/qBar"
-                app:layout_constraintStart_toEndOf="@id/qName"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <SeekBar
-                android:id="@+id/qBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:progressDrawable="@drawable/seekbar_progress_custom"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/qName" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="16dp"
-                android:background="#222"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/qBar" />
-
-        </android.support.constraint.ConstraintLayout>
-
-        <android.support.constraint.ConstraintLayout
+            android:id="@+id/textureContent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp">
+            android:orientation="vertical"
+            tools:visibility="visible">
 
-            <TextView
-                style="@style/TextDark"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:id="@+id/texturePreview"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
-                android:text="@string/bailout"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/button_selector"
+                android:orientation="vertical"
+                android:padding="12dp">
 
-            <EditText
-                android:id="@+id/bailoutSignificandEdit"
-                style="@style/EditTextDark"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/texturePreviewName"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:drawableEnd="@drawable/edit"
+                    android:drawablePadding="10dp"
+                    android:gravity="center"
+                    android:text="Triangle Inequality Average"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/qLayout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:imeOptions="actionNext"
-                android:selectAllOnFocus="true"
-                app:layout_constraintEnd_toStartOf="@+id/bailoutDivider"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
 
-            <TextView
-                android:id="@+id/bailoutDivider"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/qName"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Parameter"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <EditText
+                    android:id="@+id/qEdit"
+                    style="@style/EditTextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="16dp"
+                    android:imeOptions="actionDone"
+                    app:layout_constraintBottom_toTopOf="@id/qBar"
+                    app:layout_constraintStart_toEndOf="@id/qName"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <SeekBar
+                    android:id="@+id/qBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:progressDrawable="@drawable/seekbar_progress_custom"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/qName" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="#222"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/qBar" />
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
+
+                <TextView
+                    android:id="@+id/bailoutLabel"
+                    style="@style/TextDark"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/bailout"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <EditText
+                    android:id="@+id/bailoutSignificandEdit"
+                    style="@style/EditTextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionNext"
+                    android:selectAllOnFocus="true"
+                    app:layout_constraintEnd_toStartOf="@+id/bailoutDivider"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/bailoutDivider"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/e"
+                    app:layout_constraintEnd_toStartOf="@+id/bailoutExponentEdit"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <EditText
+                    android:id="@+id/bailoutExponentEdit"
+                    style="@style/EditTextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <View
+                    android:id="@+id/view"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="#222"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/bailoutLabel" />
+
+            </android.support.constraint.ConstraintLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/e"
-                app:layout_constraintEnd_toStartOf="@+id/bailoutExponentEdit"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
 
-            <EditText
-                android:id="@+id/bailoutExponentEdit"
-                style="@style/EditTextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:imeOptions="actionDone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/textView"
+                    style="@style/TextDark"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:text="Texture Mode" />
 
-        </android.support.constraint.ConstraintLayout>
+                <android.support.design.widget.TabLayout
+                    android:id="@+id/textureModeTabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    app:tabBackground="@drawable/tab_color_selector"
+                    app:tabIndicatorColor="@color/colorTransparent">
 
-    </LinearLayout>
+                    <android.support.design.widget.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="outside"
+                        android:text="out" />
 
-    <LinearLayout
-        android:id="@+id/texturePreviewListLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone">
+                    <android.support.design.widget.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="inside"
+                        android:text="in" />
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/texturePreviewList"
+                    <android.support.design.widget.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="both"
+                        android:text="both" />
+                </android.support.design.widget.TabLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/texturePreviewListLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/menu2"
-            android:orientation="horizontal"
-            android:scrollbars="horizontal"
-            android:visibility="visible"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-            tools:listitem="@layout/preview_item">
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-        </android.support.v7.widget.RecyclerView>
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/texturePreviewList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/menu2"
+                android:orientation="horizontal"
+                android:scrollbars="horizontal"
+                android:visibility="visible"
+                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                tools:listitem="@layout/preview_item">
 
-        <Button
-            android:id="@+id/textureDoneButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/doneButtonHeight"
-            android:layout_gravity="end"
-            android:background="?attr/selectableItemBackground"
-            android:text="done" />
+            </android.support.v7.widget.RecyclerView>
+
+            <Button
+                android:id="@+id/textureDoneButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/doneButtonHeight"
+                android:layout_gravity="end"
+                android:background="?attr/selectableItemBackground"
+                android:text="done" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>
