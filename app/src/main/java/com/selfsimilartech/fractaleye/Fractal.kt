@@ -14,7 +14,7 @@ class Fractal(
 
         // texture config
         texture:             Texture         = Texture.exponentialSmoothing,
-        var textureMode:     TextureMode     = TextureMode.OUTSIDE,
+        var textureMode:     TextureMode     = TextureMode.OUT,
 
         // color config
         var palette:         ColorPalette    = ColorPalette.night,
@@ -83,8 +83,22 @@ class Fractal(
                 phase = 0.04328f
         )
 
-        val mandelbrotPower = Fractal(shape = Shape.mandelbrotPower)
-        val mandelbrotDualPower = Fractal(shape = Shape.mandelbrotDualPower)
+        val mandelbrotCubic = Fractal(shape = Shape.mandelbrotCubic)
+        val mandelbrotQuartic = Fractal(shape = Shape.mandelbrotQuartic)
+
+        val mandelbrotAnyPower = Fractal(shape = Shape.mandelbrotAnyPower)
+        val nautilus = Fractal(
+                shape = Shape.mandelbrotAnyPower,
+                juliaMode = true,
+                position = Position(x = 0.5, y = 0.075, scale = 4.5),
+                texture = Texture.curvatureAvg,
+                frequency = 1.60128f,
+                phase = 0.14218f
+                // param1 = Shape.Param(1.24943476, -0.03900028)
+                // juliaParam = Shape.Param(0.25946921, -0.37223729)
+        )
+
+        val clover = Fractal(shape = Shape.clover)
 
         val mandelbox = Fractal(shape = Shape.mandelbox)
         val mx1 = Fractal(
@@ -92,6 +106,20 @@ class Fractal(
                 juliaMode = true
                 // param1 = Shape.Param(-0.93550922, -0.75157826)
                 // juliaParam = Shape.Param(-0.99635701, 2.48995369)
+        )
+        val mx2 = Fractal(
+                shape = Shape.mandelbox,
+                juliaMode = true,
+                position = Position(
+                        x = -1.08072452128498540,
+                        y = -0.91860192005481600,
+                        scale = 2.66877e-2
+                ),
+                texture = Texture.orbitTrap,
+                frequency = 0.53343f,
+                phase = 0.45405f
+                // param1 = Shape.Param(-2.66421354, 0.0)
+                // juliaParam = Shape.Param(3.26525985, 3.28239093)
         )
 
         val kali = Fractal(shape = Shape.kali)
@@ -119,14 +147,8 @@ class Fractal(
         set (value) {
             if (field != value) {
 
-                Log.d("FRACTAL", "setting shape from $field to $value")
+                // Log.d("FRACTAL", "setting shape from $field to $value")
                 field = value
-
-
-                // reset texture if not compatible with new shape
-                if (!shape.textures.contains(texture)) {
-                    texture = Texture.escape
-                }
 
                 juliaMode = shape.juliaMode
                 position = if (juliaMode) shape.positions.julia else shape.positions.default
@@ -140,7 +162,7 @@ class Fractal(
         set (value) {
             if (field != value) {
 
-                Log.d("FRACTAL", "setting juliaMode from $field to $value")
+                // Log.d("FRACTAL", "setting juliaMode from $field to $value")
                 field = value
 
                 numParamsInUse += if (value) 1 else -1
@@ -178,7 +200,7 @@ class Fractal(
         set (value) {
             if (field != value) {
 
-                Log.d("FRACTAL", "setting texture from $field to $value")
+                // Log.d("FRACTAL", "setting texture from $field to $value")
                 field = value
 
                 bailoutRadius = shape.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
