@@ -36,7 +36,7 @@ class ShapeAdapter(val shapeList: ArrayList<Shape>) : RecyclerView.Adapter<Shape
             val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
             val previewText = itemView.findViewById<TextView>(R.id.previewText)
             previewImage.setImageResource(shape.icon)
-            previewText.text = shape.name
+            previewText.text = itemView.resources.getString(shape.name)
         }
     }
 

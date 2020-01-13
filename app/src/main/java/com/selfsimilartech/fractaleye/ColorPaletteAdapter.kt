@@ -45,7 +45,7 @@ class ColorPaletteAdapter(
                     ColorPalette.getColors(itemView.resources, palette.ids)
             ))
 
-            previewText.text = palette.name
+            previewText.text = itemView.resources.getString(palette.name)
 
             previewImage.setImageBitmap(palette.thumbnail)
             previewImage.scaleType = ImageView.ScaleType.CENTER_CROP

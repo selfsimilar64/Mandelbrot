@@ -5,8 +5,8 @@
     <color name="colorPrimary">#fff</color>
     <color name="colorPrimaryDark">#1c1c1c</color>
     <color name="colorPrimaryDark2">#555</color>
-    <color name="colorDarkSelected">#383838</color>
-    <color name="colorDarkUnselected">#131313</color>
+    <color name="colorDarkSelected">#303030</color>
+    <color name="colorDarkUnselected">@color/menu4</color>
     <color name="colorDarkText">#fff</color>
     <color name="colorDarkText2">#ddd</color>
     <color name="colorHalfTransparent">#a000</color>
@@ -15,7 +15,7 @@
     <color name="menu1">#1a1a1a</color>
     <color name="menu2">#000000</color>
     <color name="menu3">#404040</color>
-    <color name="menu4">#141414</color>
+    <color name="menu4">#171717</color>
 
 
      <!-- FRACTAL COLORS -->
@@ -149,6 +149,12 @@
     <color name="flora4">#e0bbaa</color>
     <color name="flora5">#ffffd2</color>
     <color name="flora6">@color/white</color>
+
+    <color name="clover1">#3D7C61</color>
+    <color name="clover2">#75DF79</color>
+    <color name="clover3">#163A27</color>
+    <color name="clover4">#82C582</color>
+    <color name="clover5">#032E0D</color>
 
 
 </resources>

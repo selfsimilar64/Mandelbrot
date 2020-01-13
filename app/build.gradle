@@ -18,8 +18,8 @@ android {
         applicationId "com.selfsimilartech.fractaleye"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 8
-        versionName "1.2.1"
+        versionCode 9
+        versionName "1.2.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -34,6 +34,18 @@ android {
         }
 
 
+    }
+    flavorDimensions "version"
+    productFlavors {
+        free {
+            applicationId "com.selfsimilartech.fractaleye.free"
+            buildConfigField "boolean", "PAID_VERSION", "false"
+
+        }
+        paid {
+            applicationId "com.selfsimilartech.fractaleye.paid"
+            buildConfigField"boolean", "PAID_VERSION", "true"
+        }
     }
 }
 

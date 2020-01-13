@@ -36,7 +36,7 @@ class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter
 
             val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
             val previewText = itemView.findViewById<TextView>(R.id.previewText)
-            previewText.text = texture.name
+            previewText.text = itemView.resources.getString(texture.name)
             previewImage.setImageBitmap(texture.thumbnail)
             previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
 

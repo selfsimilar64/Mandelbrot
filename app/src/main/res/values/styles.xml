@@ -45,6 +45,7 @@
         <item name="android:gravity">end</item>
         <item name="android:textSize">15sp</item>
         <item name="android:inputType">numberDecimal|numberSigned</item>
+        <item name="android:digits">0123456789.,-</item>
         <item name="android:selectAllOnFocus">true</item>
         <item name="android:layout_marginTop">-4dp</item>
         <item name="android:layout_marginBottom">-4dp</item>
@@ -90,7 +91,7 @@
         <item name="android:textStyle">normal</item>
     </style>
 
-    <style name="dividerDark">
+    <style name="DividerDark">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1dp</item>
         <item name="android:layout_marginTop">0dp</item>
@@ -119,7 +120,7 @@
         <item name="android:background">@color/colorTransparent</item>
     </style>
 
-    <style name="cardBodySection">
+    <style name="CardBodySection">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">2dp</item>
@@ -132,7 +133,7 @@
         <item name="android:paddingBottom">5dp</item>
     </style>
 
-    <style name="mapParamLayoutDark">
+    <style name="MapParamLayoutDark">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@color/colorDarkUnselected</item>
@@ -144,7 +145,7 @@
         <item name="android:layout_marginBottom">2dp</item>
     </style>
 
-    <style name="menuImageButtonDark">
+    <style name="MenuImageButtonDark">
         <item name="android:layout_width">45dp</item>
         <item name="android:layout_height">45dp</item>
         <item name="android:layout_marginStart">5dp</item>
@@ -154,7 +155,7 @@
         <item name="android:tint">#fff</item>
     </style>
 
-    <style name="menuButtonDark">
+    <style name="MenuButtonDark">
         <item name="android:layout_width">40dp</item>
         <item name="android:layout_height">40dp</item>
         <item name="android:layout_weight">1</item>
@@ -162,6 +163,17 @@
         <item name="android:textAlignment">center</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="FragmentItem">
+        <item name="android:background">@drawable/rounded_rect</item>
+        <item name="android:backgroundTint">@color/menu4</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:layout_marginTop">@dimen/fragmentLayoutMargin</item>
+        <item name="android:layout_marginBottom">@dimen/fragmentLayoutMargin</item>
     </style>
 
 </resources>
