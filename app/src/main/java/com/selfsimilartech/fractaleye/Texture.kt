@@ -1,13 +1,10 @@
 package com.selfsimilartech.fractaleye
 
 import android.graphics.Bitmap
-import android.util.Log
 import kotlin.math.roundToInt
-import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.typeOf
 
 class Texture (
-        val name            : String,
+        val name            : Int,
         val initSF          : Int = R.string.empty,
         val loopSF          : Int = R.string.empty,
         val finalSF         : Int = R.string.empty,
@@ -21,7 +18,7 @@ class Texture (
 ) {
 
     class Param (
-            val name: String = "",
+            val name: Int,
             val min: Double = 0.0,
             val max: Double = 1.0,
             q: Double = 0.0,
@@ -63,36 +60,36 @@ class Texture (
 
     companion object {
 
-        val empty = Texture(name = "Empty")
+        val empty = Texture(name = R.string.empty)
         val absoluteEscape = Texture(
-                "Absolute Escape",
+                R.string.empty,
                 finalSF = R.string.absolute_escape_final,
                 finalDF = R.string.absolute_escape_final
         )
         val escape = Texture(
-                name = "Escape Time",
+                R.string.escape,
                 finalSF = R.string.escape_final,
                 finalDF = R.string.escape_final
         )
         val escapeSmooth = Texture(
-                name = "Escape Time Smooth",
+                R.string.escape_smooth,
                 finalSF = R.string.mandelbrot_smooth_final_sf,
                 finalDF = R.string.mandelbrot_smooth_final_df,
                 bailoutRadius = 1e2f
         )
-        val distanceEstimation = Texture(
-                name = "Distance Estimation",
-                initSF = R.string.mandelbrot_dist_init_sf,
-                loopSF = R.string.mandelbrot_dist_loop_sf,
-                finalSF = R.string.mandelbrot_dist_final_sf,
-                initDF = R.string.mandelbrot_dist_init_df,
-                loopDF = R.string.mandelbrot_dist_loop_df,
-                finalDF = R.string.mandelbrot_dist_final_df,
+        val distanceEstimationInt = Texture(
+                R.string.distance_est,
+                initSF = R.string.mandelbrot_dist_int_init_sf,
+                loopSF = R.string.mandelbrot_dist_int_loop_sf,
+                finalSF = R.string.mandelbrot_dist_int_final_sf,
+                initDF = R.string.mandelbrot_dist_int_init_df,
+                loopDF = R.string.mandelbrot_dist_int_loop_df,
+                finalDF = R.string.mandelbrot_dist_int_final_df,
                 auto = true,
                 bailoutRadius = 1e2f
         )
         val normalMap1 = Texture(
-                name = "Normal Map 1",
+                R.string.normal1,
                 initSF = R.string.mandelbrot_normal1_init_sf,
                 loopSF = R.string.mandelbrot_normal1_loop_sf,
                 finalSF = R.string.mandelbrot_normal1_final_sf,
@@ -103,7 +100,7 @@ class Texture (
                 frequency = 1f
         )
         val normalMap2 = Texture(
-                name = "Normal Map 2",
+                R.string.normal2,
                 initSF = R.string.mandelbrot_normal2_init_sf,
                 loopSF = R.string.mandelbrot_normal2_loop_sf,
                 finalSF = R.string.mandelbrot_normal2_final_sf,
@@ -114,7 +111,7 @@ class Texture (
                 frequency = 1f
         )
         val distanceGradient = Texture(
-                name = "Distance Gradient",
+                name = R.string.empty,
                 initSF = R.string.mandelbrot_distgrad_init_sf,
                 loopSF = R.string.mandelbrot_distgrad_loop_sf,
                 finalSF = R.string.mandelbrot_distgrad_final_sf,
@@ -123,7 +120,7 @@ class Texture (
                 finalDF = R.string.mandelbrot_distgrad_final_df
         )
         val lighting = Texture(
-                "Lighting",
+                R.string.empty,
                 R.string.mandelbrot_light_init_sf,
                 R.string.mandelbrot_light_loop_sf,
                 R.string.mandelbrot_light_final_sf,
@@ -131,39 +128,49 @@ class Texture (
                 R.string.mandelbrot_light_loop_df,
                 R.string.mandelbrot_light_final_df
         )
-        val triangleIneqAvg = Texture(
-                "Triangle Inequality Average",
+        val triangleIneqAvgInt = Texture(
+                R.string.triangle_ineq_avg,
                 R.string.triangle_init_sf,
-                R.string.triangle_loop_sf,
+                R.string.triangle_int_loop_sf,
                 R.string.triangle_final_sf,
                 R.string.triangle_init_df,
-                R.string.triangle_loop_df,
+                R.string.triangle_int_loop_df,
+                R.string.triangle_final_df,
+                bailoutRadius = 1e6f
+        )
+        val triangleIneqAvgFloat = Texture(
+                R.string.triangle_ineq_avg,
+                R.string.triangle_init_sf,
+                R.string.triangle_float_loop_sf,
+                R.string.triangle_final_sf,
+                R.string.triangle_init_df,
+                R.string.triangle_float_loop_df,
                 R.string.triangle_final_df,
                 bailoutRadius = 1e6f
         )
         val curvatureAvg = Texture(
-                "Curvature Average",
+                R.string.curvature_avg,
                 R.string.curvature_init,
                 R.string.curvature_loop_sf,
                 R.string.curvature_final_sf,
                 R.string.curvature_init,
                 R.string.curvature_loop_df,
                 R.string.curvature_final_df,
-                bailoutRadius = 1e12f
+                bailoutRadius = 1e8f
         )
         val stripeAvg = Texture(
-                "Stripe Average",
+                R.string.stripe_avg,
                 R.string.stripe_init,
                 R.string.stripe_loop_sf,
                 R.string.stripe_final_sf,
                 R.string.stripe_init,
                 R.string.stripe_loop_df,
                 R.string.stripe_final_df,
-                listOf(Param("Stripe Density", 1.0, 10.0, 2.0, true)),
+                listOf(Param(R.string.stripe_density, 1.0, 8.0, 2.0, true)),
                 bailoutRadius = 1e6f
         )
         val orbitTrap = Texture(
-                "Orbit Trap",
+                R.string.orbit_trap_miny,
                 R.string.orbittrap_init,
                 R.string.orbittrap_loop_sf,
                 R.string.orbittrap_final_radius,
@@ -173,18 +180,18 @@ class Texture (
                 bailoutRadius = 1e2f
         )
         val overlayAvg = Texture(
-                "Overlay Average",
+                R.string.overlay_avg,
                 R.string.overlay_init,
                 R.string.overlay_loop_sf,
                 R.string.overlay_final_sf,
                 R.string.overlay_init,
                 R.string.overlay_loop_df,
                 R.string.overlay_final_df,
-                listOf(Param("Sharpness", 0.4, 0.5, 0.49)),
+                listOf(Param(R.string.sharpness, 0.4, 0.5, 0.49)),
                 bailoutRadius = 1e2f
         )
         val exponentialSmoothing = Texture(
-                "Exponential Smoothing",
+                R.string.exponential_smooth,
                 initSF = R.string.exponential_smooth_init,
                 loopSF = R.string.exponential_smooth_loop_sf,
                 finalSF = R.string.exponential_smooth_final,
@@ -194,7 +201,7 @@ class Texture (
                 bailoutRadius = 5f
         )
         val orbitTrapMinXY = Texture(
-                "Orbit Trap Min XY",
+                R.string.empty,
                 initSF = R.string.orbittrapminxy_init,
                 loopSF = R.string.orbittrapminxy_loop_sf,
                 finalSF = R.string.orbittrapminxy_final_radius,
@@ -208,12 +215,26 @@ class Texture (
                 orbitTrap,
                 exponentialSmoothing
         )
+        val main = arrayListOf(
+                escape,
+                escapeSmooth,
+                exponentialSmoothing,
+                distanceEstimationInt,
+                triangleIneqAvgInt,
+                curvatureAvg,
+                stripeAvg,
+                orbitTrap,
+                normalMap1,
+                normalMap2,
+                overlayAvg
+        )
         val all = arrayListOf(
                 escape,
                 escapeSmooth,
                 exponentialSmoothing,
-                distanceEstimation,
-                triangleIneqAvg,
+                distanceEstimationInt,
+                triangleIneqAvgInt,
+                triangleIneqAvgFloat,
                 curvatureAvg,
                 stripeAvg,
                 orbitTrap,
@@ -227,28 +248,17 @@ class Texture (
     val numParamsInUse = params.size
     val params = List(NUM_TEXTURE_PARAMS) { i: Int ->
         if (i < params.size) params[i]
-        else Param()
+        else Param(R.string.empty)
     }
 
     var thumbnail : Bitmap? = null
 
-    fun add(alg : Texture) : Texture {
-        return Texture(
-                "$name with ${alg.name}",
-                initSF + alg.initSF,
-                loopSF + alg.loopSF,
-                finalSF + alg.finalSF,
-                initDF + alg.initDF,
-                loopDF + alg.loopDF,
-                finalDF + alg.finalDF
-        )
-    }
-    override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
-        return other is Texture && name == other.name
+        return other is Texture && hashCode() == other.hashCode()
     }
+
     override fun hashCode(): Int {
-        return name.hashCode()
+        return loopSF.hashCode()
     }
 
 }
