@@ -1,17 +1,16 @@
 package com.selfsimilartech.fractaleye
 
-import android.os.PowerManager
 import kotlin.math.sqrt
 
 class Shape (
-        val name            : String,
+        val name            : Int,
         val katex           : Int                = R.string.empty,
         val icon            : Int                = R.drawable.mandelbrot_icon,
-        val conditionalSF   : Int                = R.string.empty,
+        val conditionalSF   : Int                = R.string.escape_sf,
         val initSF          : Int                = R.string.empty,
-        val loopSF          : Int                = R.string.empty,
+        val loopSF          : Int,
         val finalSF         : Int                = R.string.empty,
-        val conditionalDF   : Int                = R.string.empty,
+        val conditionalDF   : Int                = R.string.escape_df,
         val initDF          : Int                = R.string.empty,
         val loopDF          : Int                = R.string.empty,
         val finalDF         : Int                = R.string.empty,
@@ -72,16 +71,13 @@ class Shape (
     companion object {
 
 
-        val empty = Shape("Empty")
         val mandelbrot = Shape(
-                "Mandelbrot",
+                R.string.mandelbrot,
                 katex = R.string.mandelbrot_katex,
                 icon = R.drawable.mandelbrot_icon,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.mandelbrot_loop_sf,
-                conditionalDF = R.string.escape_df,
                 loopDF = R.string.mandelbrot_loop_df,
-                textures = Texture.all,
+                textures = Texture.main,
                 positions = PositionList(
                     default = Position(x = -0.75, scale = 3.5),
                     other = listOf(
@@ -104,91 +100,105 @@ class Shape (
                     )
                 )
         )
-        val mandelbrotPower = Shape(
-                "Mandelbrot Power",
-                katex = R.string.mandelbrotcpow_katex,
-                icon = R.drawable.mandelbrotpower_icon,
-                conditionalSF = R.string.escape_sf,
-                loopSF = R.string.mandelbrotcpow_loop_sf,
-                textures = Texture.all,
+        val mandelbrotCubic = Shape(
+                R.string.mandelbrot_cubic,
+                icon = R.drawable.mandelbrotcubic_icon,
+                loopSF = R.string.mandelbrotcubic_loop_sf,
+                loopDF = R.string.mandelbrotcubic_loop_df,
+                textures = Texture.main,
                 positions = PositionList(Position(scale = 3.5)),
-                params = listOf(Param(4.0, vLocked = true)),
+                power = 3f
+        )
+        val mandelbrotQuartic = Shape(
+                R.string.mandelbrot_quartic,
+                icon = R.drawable.mandelbrotquartic_icon,
+                loopSF = R.string.mandelbrotquartic_loop_sf,
+                loopDF = R.string.mandelbrotquartic_loop_df,
+                textures = Texture.main,
+                positions = PositionList(Position(x = -0.175, scale = 3.5)),
+                power = 4f
+        )
+        val mandelbrotQuintic = Shape(
+                R.string.mandelbrot_quintic,
+                icon = R.drawable.mandelbrotquintic_icon,
+                loopSF = R.string.mandelbrotquintic_loop_sf,
+                loopDF = R.string.mandelbrotquintic_loop_df,
+                textures = Texture.main,
+                positions = PositionList(Position(scale = 3.5)),
+                power = 5f
+        )
+        val mandelbrotAnyPower = Shape(
+                R.string.mandelbrot_anypow,
+                katex = R.string.mandelbrotanypow_katex,
+                icon = R.drawable.mandelbrotanypow_icon,
+                loopSF = R.string.mandelbrotanypow_loop_sf,
+                textures = Texture.main.replace(Texture.triangleIneqAvgInt, Texture.triangleIneqAvgFloat),
+                positions = PositionList(Position(x = -0.55, y = 0.5, scale = 5.0)),
+                params = listOf(Param(16.0, 4.0)),
                 hasDynamicPower = true
         )
-        val mandelbrotDualPower = Shape(
-                "Mandelbrot Dual Power",
+        val clover = Shape(
+                R.string.clover,
                 katex = R.string.dualpow_katex,
-                icon = R.drawable.mandelbrotdualpower_icon,
-                conditionalSF = R.string.escape_sf,
+                icon = R.drawable.clover_icon,
                 initSF = R.string.dualpow_init_sf,
                 loopSF = R.string.dualpow_loop_sf,
-                positions = PositionList(Position(scale = 3.0)),
+                positions = PositionList(Position(scale = 2.0, rotation = 45.0.inRadians())),
                 z0 = Complex.ONE,
                 params = listOf(Param(2.0, vLocked = true)),
                 hasDynamicPower = true
         )
         val mandelbox = Shape(
-                "Mandelbox",
+                R.string.mandelbox,
                 katex = R.string.mandelbox_katex,
                 icon = R.drawable.mandelbox_icon,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.mandelbox_loop_sf,
-                conditionalDF = R.string.escape_df,
                 loopDF = R.string.mandelbox_loop_df,
-                positions = PositionList(Position(scale = 5.0)),
+                positions = PositionList(Position(scale = 6.5)),
                 params = listOf(Param(-2.66421354, vLocked = true)),
                 bailoutRadius = 5f
         )
         val kali = Shape(
-                "Kali",
+                R.string.kali,
                 katex = R.string.kali_katex,
                 icon = R.drawable.kali_icon,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.kali_loop_sf,
                 conditionalDF = R.string.escape_df,
-                loopDF = R.string.kali_loop_df,
                 juliaMode = true,
-                positions = PositionList(julia = Position(scale = 2.0)),
+                positions = PositionList(julia = Position(scale = 3.0)),
                 params = listOf(Param(-0.33170626, -0.18423799)),
                 bailoutRadius = 4e0f
         )
         val kaliSquare = Shape(
-                "Kali Square",
-                conditionalSF = R.string.escape_sf,
+                R.string.empty,
                 loopSF = R.string.kalisquare_loop_sf,
                 juliaMode = true,
                 positions = PositionList(julia = Position(scale = 4.0)),
                 bailoutRadius = 4e0f
         )
         val mandelbar = Shape(
-                "Mandelbar",
-                conditionalSF = R.string.escape_sf,
+                R.string.empty,
                 loopSF = R.string.mandelbar_loop_sf,
                 positions = PositionList(Position(scale = 3.0))
         )
         val logistic = Shape(
-                "Logistic",
+                R.string.empty,
                 katex = R.string.logistic_katex,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.logistic_loop_sf,
-                conditionalDF = R.string.escape_df,
                 loopDF = R.string.logistic_loop_df,
                 positions = PositionList(Position(scale = 3.5)),
                 z0 = Complex(0.5, 0.0)
         )
         val burningShip = Shape(
-                "Burning Ship",
+                R.string.burning_ship,
                 katex = R.string.burningship_katex,
                 icon = R.drawable.burningship_icon,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.burningship_loop_sf,
-                conditionalDF = R.string.escape_df,
                 loopDF = R.string.burningship_loop_df,
-                positions = PositionList(Position(-0.45, -0.25, 3.5, Math.PI))
+                positions = PositionList(Position(-0.4, -0.6, 4.0, Math.PI))
         )
         val magnet = Shape(
-                "Magnet",
-                conditionalSF = R.string.escape_sf,
+                R.string.empty,
                 loopSF = R.string.magnet_loop_sf,
                 positions = PositionList(Position(scale = 3.5)),
                 params = listOf(
@@ -197,28 +207,25 @@ class Shape (
                 bailoutRadius = 4e0f
         )
         val sine1 = Shape(
-                "Sine 1",
+                R.string.sine1,
                 katex = R.string.sine1_katex,
                 icon = R.drawable.sine1_icon,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.sine1_loop_sf,
-                positions = PositionList(Position(scale = 3.5)),
+                positions = PositionList(Position(scale = 6.0)),
                 bailoutRadius = 1e4f
         )
         val sine2 = Shape(
-                "Sine 2",
+                R.string.sine2,
                 katex = R.string.sine2_katex,
                 icon = R.drawable.sine2_icon,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.sine2_loop_sf,
                 positions = PositionList(Position(scale = 3.5)),
                 params = listOf(Param(-0.26282884)),
                 z0 = Complex.ONE
         )
         val sine3 = Shape(
-                "Sine 3",
+                R.string.empty,
                 katex = R.string.sine3_katex,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.sine3_loop_sf,
                 positions = PositionList(Position(scale = 3.5)),
                 params = listOf(Param(0.31960705187983646, vLocked = true)),
@@ -226,17 +233,16 @@ class Shape (
                 bailoutRadius = 1e1f
         )
         val horseshoeCrab = Shape(
-                "Horseshoe Crab",
+                R.string.horseshoe_crab,
                 katex = R.string.horseshoecrab_katex,
                 icon = R.drawable.horseshoecrab_icon,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.horseshoecrab_loop_sf,
-                positions = PositionList(Position(scale = 5.0)),
+                positions = PositionList(Position(x = -0.25, scale = 6.0, rotation = 90.0.inRadians())),
                 params = listOf(Param(sqrt(2.0))),
                 z0 = Complex.ONE
         )
         val newton2 = Shape(
-                "Newton 2",
+                R.string.empty,
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.newton2_loop_sf,
                 positions = PositionList(julia = Position(scale = 3.5)),
@@ -248,7 +254,7 @@ class Shape (
                 juliaMode = true
         )
         val newton3 = Shape(
-                "Newton 3",
+                R.string.empty,
                 katex = R.string.newton3_katex,
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.newton3_loop_sf,
@@ -256,45 +262,43 @@ class Shape (
                 juliaMode = true
         )
         val persianRug = Shape(
-                "Persian Rug",
+                R.string.empty,
                 katex = R.string.persianrug_katex,
                 initSF = R.string.persianrug_init_sf,
-                conditionalSF = R.string.escape_sf,
                 loopSF = R.string.persianrug_loop_sf,
                 positions = PositionList(Position(scale = 1.5)),
                 params = listOf(Param(0.642, 0.0)),
                 bailoutRadius = 1e1f
         )
         val kleinian = Shape(
-                "Kleinian",
+                R.string.kleinian,
                 icon = R.drawable.kleinian_icon,
-                conditionalSF = R.string.escape_sf,
                 initSF = R.string.kleinian_init_sf,
                 loopSF = R.string.kleinian_loop_sf,
-                positions = PositionList(julia = Position(y = -0.5, scale = 1.2)),
+                positions = PositionList(julia = Position(y = -0.5, scale = 1.5)),
                 params = listOf(
-                        Param(2.0, vLocked = true),
+                        Param(1.41421538, vLocked = true),
                         Param(0.0, -1.0)
                 ),
                 juliaMode = true,
                 bailoutRadius = 1e5f
         )
         val nova1 = Shape(
-                "Nova 1",
+                R.string.nova1,
                 katex = R.string.nova1_katex,
                 icon = R.drawable.nova1_icon,
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.nova1_loop_sf,
                 conditionalDF = R.string.converge_df,
                 loopDF = R.string.nova1_loop_df,
-                positions = PositionList(Position(x = -0.3, scale = 1.5)),
+                positions = PositionList(Position(x = -0.3, scale = 1.75, rotation = 90.0.inRadians())),
                 z0 = Complex.ONE,
                 params = listOf(
                         Param(1.0, 0.0)
                 )
         )
         val nova2 = Shape(
-                "Nova 2",
+                R.string.nova2,
                 katex = R.string.nova2_katex,
                 icon = R.drawable.nova2_icon,
                 conditionalSF = R.string.converge_sf,
@@ -303,25 +307,41 @@ class Shape (
                 positions = PositionList(julia = Position(x = -0.3, scale = 5.0))
         )
         val fibonacciPowers = Shape(
-                "Fibonacci Powers",
-                conditionalSF = R.string.escape_sf,
+                R.string.empty,
                 initSF = R.string.fibonacci_init_sf,
                 loopSF = R.string.fibonacci_loop_sf,
                 juliaMode = true,
                 bailoutRadius = 1e3f
         )
         val test = Shape(
-                "Test",
+                R.string.empty,
                 conditionalSF = R.string.converge_sf,
                 initSF = R.string.test_init_sf,
                 loopSF = R.string.test_loop_sf,
                 z0 = Complex.ONE,
                 positions = PositionList(Position(scale = 3.5))
         )
-        val all = arrayListOf(
+        val pro = arrayListOf(
                 mandelbrot,
-                mandelbrotPower,
-                mandelbrotDualPower,
+                mandelbrotCubic,
+                mandelbrotQuartic,
+                mandelbrotQuintic,
+                mandelbrotAnyPower,
+                clover,
+                burningShip,
+                mandelbox,
+                kali,
+                sine1,
+                sine2,
+                horseshoeCrab,
+                kleinian,
+                nova1,
+                nova2
+        )
+        val free = arrayListOf(
+                mandelbrot,
+                mandelbrotAnyPower,
+                clover,
                 burningShip,
                 mandelbox,
                 kali,
@@ -369,7 +389,6 @@ class Shape (
                 bailoutRadius)
     }
 
-    override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
         return other is Shape && name == other.name
     }
