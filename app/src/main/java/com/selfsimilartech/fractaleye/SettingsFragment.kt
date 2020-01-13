@@ -18,8 +18,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import kotlin.math.roundToInt
 import kotlinx.android.synthetic.main.settings_fragment.*
+import java.util.*
 
 
 class SettingsFragment : Fragment() {
@@ -132,34 +132,31 @@ class SettingsFragment : Fragment() {
         }}
 
 
-        resolutionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        resolutionBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                val res = tab.text.toString()
-                sc.resolution = Resolution.valueOf(res)
-                val width = (fsv.screenRes[0].toFloat()/sc.resolution.scale.toFloat()).roundToInt()
-                val height = (fsv.screenRes[1].toFloat()/sc.resolution.scale.toFloat()).roundToInt()
-                resolutionDimensionsText.text = "$width x $height"
-                fsv.r.resolutionChanged = true
-                fsv.r.renderToTex = true
-                fsv.requestRender()
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val dimensions = Resolution.values()[progress].scaleRes(fsv.screenRes)
+                resolutionDimensionsText.text = "${dimensions[0]} x ${dimensions[1]}"
             }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
-            override fun onTabUnselected(tab: TabLayout.Tab) {
+                val newRes = Resolution.values()[resolutionBar.progress]
 
-            }
+                if (sc.resolution != newRes) {
 
-            override fun onTabReselected(tab: TabLayout.Tab) {
+                    sc.resolution = newRes
+                    fsv.r.fgResolutionChanged = true
+                    fsv.r.renderToTex = true
+                    fsv.requestRender()
+
+                }
 
             }
 
         })
-        resolutionTabs.getTabAt(
-                Resolution.valueOf(
-                        savedInstanceState?.getString("resolution")
-                                ?: sc.resolution.name
-                ).ordinal - 1
-        )?.select()
+        resolutionBar.max = if (BuildConfig.PAID_VERSION) Resolution.NUM_VALUES_PRO - 1 else Resolution.NUM_VALUES_FREE - 1
+        resolutionBar.progress = sc.resolution.ordinal
 
 
         continuousRenderSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -170,8 +167,29 @@ class SettingsFragment : Fragment() {
                         ?: sc.continuousRender
 
 
+        displayParamsSwitch.isChecked =
+                savedInstanceState?.getBoolean("displayParams")
+                        ?: sc.displayParams
+        displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sc.displayParams = isChecked
+            act?.updateDisplayParams(settingsChanged = true)
+        }
+
+
+        renderBackgroundSwitch.isChecked = sc.renderBackground
+        renderBackgroundSwitch.setOnCheckedChangeListener { _, isChecked ->
+
+            sc.renderBackground = isChecked
+
+            fsv.r.bgResolutionChanged = true
+            fsv.r.renderToTex = true
+            fsv.requestRender()
+
+        }
+
+
         saveToFileButton.setOnClickListener {
-            if (fsv.r.isRendering) act?.showMessage("Please wait for the image to finish rendering")
+            if (fsv.r.isRendering) act?.showMessage(resources.getString(R.string.msg_save_wait))
             else {
                 if (ContextCompat.checkSelfPermission(v.context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
@@ -192,27 +210,17 @@ class SettingsFragment : Fragment() {
         }
 
 
-        displayParamsSwitch.isChecked =
-                savedInstanceState?.getBoolean("displayParams")
-                        ?: sc.displayParams
-        displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            sc.displayParams = isChecked
-            act?.updateDisplayParams(settingsChanged = true)
-        }
-
-
 
         precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
 
-                val p = tab.text.toString()
-                if (p == "AUTO") {
+                if (tab.position == 2) {
                     Log.d("SETTINGS FRAGMENT", "auto selected")
                     sc.autoPrecision = true
                     fsv.checkThresholdCross(f.position.scale)
                 }
                 else {
-                    sc.precision = Precision.valueOf(p)
+                    sc.precision = Precision.values()[tab.position]
                     sc.autoPrecision = false
                 }
                 precisionBitsText.text = "${sc.precision.bits}-bit"
