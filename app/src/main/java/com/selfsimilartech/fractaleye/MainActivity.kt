@@ -18,7 +18,6 @@ import android.view.MotionEvent
 import android.content.Context
 import android.support.design.widget.TabLayout
 import android.support.v4.view.ViewPager
-import android.support.v7.widget.LinearLayoutManager
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -32,7 +31,7 @@ import kotlinx.android.synthetic.main.position_fragment.*
 
 const val SPLIT = 8193.0
 const val NUM_MAP_PARAMS = 3
-const val NUM_TEXTURE_PARAMS = 2
+const val NUM_TEXTURE_PARAMS = 1
 const val WRITE_STORAGE_REQUEST_CODE = 0
 const val ITER_MAX_POW = 12.0
 const val ITER_MIN_POW = 5.0
@@ -53,6 +52,15 @@ fun TabLayout.getCurrentTab() : TabLayout.Tab = this.getTabAt(this.selectedTabPo
 fun TabLayout.getCategory(index: Int) : MainActivity.Category = MainActivity.Category.valueOf(this.getTabAt(index)?.contentDescription.toString())
 fun TabLayout.getCurrentCategory() : MainActivity.Category = MainActivity.Category.valueOf(this.getCurrentTab().contentDescription.toString())
 fun TabLayout.getTabAt(category: MainActivity.Category) : TabLayout.Tab = this.getTabAt(category.ordinal) as TabLayout.Tab
+fun ArrayList<Texture>.replace(old: Texture, new: Texture) : ArrayList<Texture> {
+
+    val newList = ArrayList(this)
+    val index = this.indexOf(old)
+    newList.remove(old)
+    newList.add(index, new)
+    return newList
+
+}
 
 
 
@@ -195,20 +203,31 @@ enum class Precision(val bits: Int, val threshold: Double) {
 enum class Reaction(val numDisplayParams: Int) {
     NONE(0), SHAPE(3), COLOR(2), POSITION(4)
 }
-enum class Resolution(val scale: Int) {
-    ICON(6), LOW(8), MED(3), HIGH(1)
+enum class Resolution(val scale: Float, val square: Boolean = false) {
+    EIGHTH(1/8f), SIXTH(1/6f), FOURTH(1/4f), HALF(1/2f), FULL(1f), DOUBLE(2f), TEST(2.5f), THUMB(1/6f, true);
+    fun scaleRes(screenRes: IntArray) : IntArray {
+        return intArrayOf((screenRes[0]*scale).roundToInt(), (screenRes[1]*scale).roundToInt())
+    }
+    companion object {
+        private const val NUM_VALUES_GT_SCREEN_DIMS = 2
+        val NUM_VALUES_PRO = values().size - 1
+        val NUM_VALUES_FREE = values().size - NUM_VALUES_GT_SCREEN_DIMS - 1
+        val HIGHEST = if (BuildConfig.PAID_VERSION) TEST else FULL
+    }
 }
-enum class TextureMode { OUTSIDE, INSIDE, BOTH }
+enum class TextureMode { OUT, IN, BOTH }
 
 
 
 class SettingsConfig (
-    var resolution          : Resolution    = Resolution.HIGH,
-    var precision           : Precision     = Precision.SINGLE,
-    var autoPrecision       : Boolean       = true,
-    var continuousRender    : Boolean       = false,
-    var displayParams       : Boolean       = false,
-    var showProgress        : Boolean       = true
+    var resolution              : Resolution    = Resolution.FULL,
+    var precision               : Precision     = Precision.SINGLE,
+    var autoPrecision           : Boolean       = true,
+    var continuousRender        : Boolean       = false,
+    var displayParams           : Boolean       = false,
+    var showProgress            : Boolean       = true,
+    var sampleOnStrictTranslate : Boolean       = false,
+    var renderBackground        : Boolean       = true
 )
 
 
@@ -415,6 +434,20 @@ class NoScrollViewPager : ViewPager {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
+    override fun onTouchEvent(ev: MotionEvent?): Boolean {
+        performClick()
+        return false
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return false
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        return false
+    }
+
     override fun setCurrentItem(item: Int, smoothScroll: Boolean) {
         super.setCurrentItem(item, false)
     }
@@ -535,15 +568,18 @@ class MainActivity : AppCompatActivity() {
             when(what) {
                 MSG_UPDATE_COLOR_THUMBNAILS -> activity?.updateColorThumbnails()
                 MSG_UPDATE_TEXTURE_THUMBNAILS -> activity?.updateTextureThumbnail(msg.obj as Int)
-                MSG_IMAGE_SAVED -> activity?.showMessage("Image saved to ${msg.obj}")
+                MSG_IMAGE_SAVED -> activity?.showMessage(
+                        "${activity.resources.getString(R.string.msg_save_successful)} ${msg.obj}"
+                )
                 else -> throw RuntimeException("unknown msg $what")
             }
         }
     }
 
-    enum class Category(val icon: Int) {
 
-        SETTINGS(R.drawable.settings) {
+    enum class Category(val displayName: Int, val icon: Int) {
+
+        SETTINGS(R.string.settings, R.drawable.settings) {
             override fun onMenuClosed(act: MainActivity) {
                 act.findViewById<TabLayout>(R.id.categoryButtons).getTabAt(POSITION).select()
             }
@@ -559,30 +595,35 @@ class MainActivity : AppCompatActivity() {
 
             }
         },
-        TEXTURE(R.drawable.texture) {
+        TEXTURE(R.string.texture, R.drawable.texture) {
             override fun onMenuClosed(act: MainActivity) {
                 act.findViewById<TabLayout>(R.id.categoryButtons).getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
-                val categoryPager = act.findViewById<ViewPager>(R.id.categoryPager)
-                val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
-                if (act.findViewById<LinearLayout>(R.id.texturePreviewListLayout) == null) {
+                if (act.texturePreviewListLayout == null) {
                     act.fsv.renderProfile = RenderProfile.MANUAL
                 }
                 else {
+
+                    if (act.f.shape.textures != (act.texturePreviewList.adapter as TextureAdapter).textureList) {
+                        Log.e("MAIN ACTIVITY", "new texture adapter")
+                        act.texturePreviewList.adapter = TextureAdapter(act.f.shape.textures)
+                    }
+
                     act.fsv.renderProfile = RenderProfile.TEXTURE_THUMB
                     act.fsv.r.renderThumbnails = true
                     act.fsv.requestRender()
+
                 }
                 act.hideTouchIcon()
                 act.fsv.reaction = Reaction.NONE
-                if (categoryPager.height == 1) categoryNameButton.performClick()
+                if (act.categoryPager.height == 1) act.categoryNameButton.performClick()
             }
             override fun onCategoryUnselected(act: MainActivity) {
                 // onMenuClosed(act)
             }
         },
-        SHAPE(R.drawable.shape) {
+        SHAPE(R.string.shape, R.drawable.shape) {
             override fun onMenuClosed(act: MainActivity) {
                 if (act.f.numParamsInUse == 0) act.findViewById<TabLayout>(R.id.categoryButtons).getTabAt(POSITION).select()
             }
@@ -604,7 +645,7 @@ class MainActivity : AppCompatActivity() {
 
             }
         },
-        COLOR(R.drawable.color) {
+        COLOR(R.string.color, R.drawable.color) {
             override fun onMenuClosed(act: MainActivity) {}
             override fun onCategorySelected(act: MainActivity) {
                 if (act.findViewById<LinearLayout>(R.id.colorPreviewListLayout) == null) {
@@ -623,7 +664,7 @@ class MainActivity : AppCompatActivity() {
                 // onMenuClosed(act)
             }
         },
-        POSITION(R.drawable.position) {
+        POSITION(R.string.position, R.drawable.position) {
             override fun onMenuClosed(act: MainActivity) {}
             override fun onCategorySelected(act: MainActivity) {
                 act.fsv.renderProfile = RenderProfile.MANUAL
@@ -643,9 +684,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
-
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility", "ShowToast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -657,8 +696,16 @@ class MainActivity : AppCompatActivity() {
         // get screen dimensions
         val displayMetrics = baseContext.resources.displayMetrics
         windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+
+
+//        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+//        val statusBarHeight = if (resourceId > 0) resources.getDimensionPixelOffset(resourceId) else 0
+        val statusBarHeight = (24 * resources.displayMetrics.scaledDensity).toInt()
+
         val screenWidth = displayMetrics.widthPixels
-        val screenHeight = displayMetrics.heightPixels
+        val screenHeight = displayMetrics.heightPixels - statusBarHeight
+        Log.d("MAIN ACTIVITY", "status bar height : $statusBarHeight")
+        Log.d("MAIN ACTIVITY", "screen resolution : ($screenWidth, $screenHeight)")
         val aspectRatio = screenHeight.toDouble() / screenWidth
 
         // val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -752,9 +799,9 @@ class MainActivity : AppCompatActivity() {
                 fsv.y = -ui.height/2f
                 if (hEnd == 1 && anim.animatedFraction == 1f) {  // closing animation ended
 
-                    if (texturePreviewListLayout != null) textureDoneButton.performClick()
-                    if (colorPreviewListLayout   != null) colorDoneButton.performClick()
-                    if (shapePreviewListLayout   != null) shapeDoneButton.performClick()
+                    if (texturePreviewListLayout != null) textureDoneButton?.performClick()
+                    if (colorPreviewListLayout   != null) colorDoneButton?.performClick()
+                    if (shapePreviewListLayout   != null) shapeDoneButton?.performClick()
 
                     categoryButtons.getCurrentCategory().onMenuClosed(this)
 
@@ -792,7 +839,7 @@ class MainActivity : AppCompatActivity() {
 
         categoryButtons.setupWithViewPager(categoryPager)
         for (i in 0..4) {
-            categoryButtons.getTabAt(i)?.contentDescription = Category.values()[i].name
+            categoryButtons.getTabAt(i)?.contentDescription = resources.getString(Category.values()[i].displayName).toUpperCase(Locale.getDefault())
             val transparentIcon = resources.getDrawable(Category.values()[i].icon, null)
             transparentIcon.alpha = 128
             categoryButtons.getTabAt(i)?.icon = transparentIcon
@@ -804,18 +851,17 @@ class MainActivity : AppCompatActivity() {
 
                 tab.icon?.alpha = 255
 
-                val s = tab.contentDescription.toString()
-                Log.d("MAIN ACTIVITY", "tab selected: $s")
+                val category = Category.values()[tab.position]
 
-                Category.valueOf(s).onCategorySelected(this@MainActivity)
+                category.onCategorySelected(this@MainActivity)
 
-                categoryNameButton.text = s
+                categoryNameButton.text = resources.getString(category.displayName)
                 updateDisplayParams(reactionChanged = true)
 
             }
             override fun onTabUnselected(tab: TabLayout.Tab) {
                 tab.icon?.alpha = 128
-                val category = Category.valueOf(tab.contentDescription.toString())
+                val category = Category.values()[tab.position]
                 category.onCategoryUnselected(this@MainActivity)
             }
             override fun onTabReselected(tab: TabLayout.Tab) {
@@ -901,7 +947,7 @@ class MainActivity : AppCompatActivity() {
                     displayParamName1.text = resources.getString(R.string.x)
                     displayParamName2.text = resources.getString(R.string.y)
                     displayParamName3.text = resources.getString(R.string.zoom)
-                    displayParamName4.text = resources.getString(R.string.rotation_lower)
+                    displayParamName4.text = resources.getString(R.string.rotation)
                     displayParam1.text = "%.17f".format(f.position.x)
                     displayParam2.text = "%.17f".format(f.position.y)
                     displayParam3.text = "%e".format(f.position.scale)
@@ -994,7 +1040,7 @@ class MainActivity : AppCompatActivity() {
     }
     fun updateTextureEditTexts() {
 
-        val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+        val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
         bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
         bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
 
@@ -1012,12 +1058,15 @@ class MainActivity : AppCompatActivity() {
         xEdit?.setText("%.17f".format(f.position.x))
         yEdit?.setText("%.17f".format(f.position.y))
 
-        val scaleStrings = "%e".format(f.position.scale).split("e")
+        val scaleStrings = "%e".format(Locale.US, f.position.scale).split("e")
         scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
         scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
 
-        rotationEdit?.setText("%d".format((f.position.rotation * 180.0 / Math.PI).roundToInt()))
+        rotationEdit?.setText("%d".format(f.position.rotation.inDegrees().roundToInt()))
 
+    }
+    fun updateTexturePreviewName() {
+        texturePreviewName.text = resources.getString(f.texture.name)
     }
 
     fun updateColorThumbnails() {
@@ -1073,9 +1122,8 @@ class MainActivity : AppCompatActivity() {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     fsv.renderProfile = RenderProfile.SAVE
                     fsv.requestRender()
-                    showMessage("Image saved to Gallery")
                 } else {
-                    showMessage("Image not saved - storage permission required")
+                    showMessage(resources.getString(R.string.msg_save_failed))
                 }
                 return
             }
