@@ -21,15 +21,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
             tools:visibility="visible">
 
             <LinearLayout
                 android:id="@+id/texturePreview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="10dp"
+                android:layout_marginTop="@dimen/fragmentLayoutMargin"
+                android:layout_marginBottom="@dimen/fragmentLayoutMargin"
                 android:background="@drawable/button_selector"
                 android:orientation="vertical"
                 android:padding="12dp">
@@ -43,24 +44,25 @@
                     android:drawableEnd="@drawable/edit"
                     android:drawablePadding="10dp"
                     android:gravity="center"
-                    android:text="Triangle Inequality Average"
+                    android:text="@string/texture_name"
                     android:textSize="16sp" />
             </LinearLayout>
 
             <android.support.constraint.ConstraintLayout
                 android:id="@+id/qLayout"
+                style="@style/FragmentItem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp">
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
 
                 <TextView
                     android:id="@+id/qName"
                     style="@style/TextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Parameter"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/texture_param_name"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
@@ -70,6 +72,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="40dp"
                     android:layout_marginStart="16dp"
+                    android:layout_marginBottom="8dp"
                     android:imeOptions="actionDone"
                     app:layout_constraintBottom_toTopOf="@id/qBar"
                     app:layout_constraintStart_toEndOf="@id/qName"
@@ -80,29 +83,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:progressDrawable="@drawable/seekbar_progress_custom"
+                    android:max="100"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/qName" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="#222"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/qBar" />
-
             </android.support.constraint.ConstraintLayout>
 
             <android.support.constraint.ConstraintLayout
+                style="@style/FragmentItem"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp">
+                android:layout_height="match_parent">
 
                 <TextView
                     android:id="@+id/bailoutLabel"
@@ -142,35 +133,19 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <View
-                    android:id="@+id/view"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="#222"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/bailoutLabel" />
-
             </android.support.constraint.ConstraintLayout>
 
             <LinearLayout
+                style="@style/FragmentItem"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:orientation="horizontal"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp">
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView"
                     style="@style/TextDark"
-                    android:layout_width="100dp"
+                    android:layout_width="120dp"
                     android:layout_height="wrap_content"
-                    android:text="Texture Mode" />
+                    android:text="@string/texture_mode" />
 
                 <android.support.design.widget.TabLayout
                     android:id="@+id/textureModeTabs"
@@ -182,20 +157,17 @@
                     <android.support.design.widget.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="outside"
-                        android:text="out" />
+                        android:text="@string/texture_mode_out" />
 
                     <android.support.design.widget.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="inside"
-                        android:text="in" />
+                        android:text="@string/texture_mode_in" />
 
                     <android.support.design.widget.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="both"
-                        android:text="both" />
+                        android:text="@string/texture_mode_both" />
                 </android.support.design.widget.TabLayout>
             </LinearLayout>
 
@@ -206,7 +178,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/texturePreviewList"
@@ -223,11 +195,13 @@
 
             <Button
                 android:id="@+id/textureDoneButton"
+                style="@style/FragmentItem"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/doneButtonHeight"
                 android:layout_gravity="end"
-                android:background="?attr/selectableItemBackground"
-                android:text="done" />
+                android:layout_marginStart="3dp"
+                android:layout_marginRight="3dp"
+                android:text="@string/done" />
 
         </LinearLayout>
 

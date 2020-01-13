@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/positionLayoutScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -10,155 +8,139 @@
         android:id="@+id/positionLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/menu2"
+        android:focusable="true"
         android:focusableInTouchMode="true"
-        android:focusable="true">
+        android:orientation="vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp">
 
-        <android.support.constraint.ConstraintLayout
+        <LinearLayout
+            style="@style/FragmentItem"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/black"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/xLabel"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:drawableStart="@drawable/x"
-                android:drawablePadding="20dp"
-                android:text="@string/x"
-                app:layout_constraintBaseline_toBaselineOf="@id/xEdit"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <EditText
-                android:id="@+id/xEdit"
-                style="@style/EditTextDark"
-                android:layout_width="wrap_content"
-                android:imeOptions="actionDone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/yLabel"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:drawableStart="@drawable/y"
-                android:drawablePadding="20dp"
-                android:text="@string/y"
-                app:layout_constraintBaseline_toBaselineOf="@id/yEdit"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/xLabel" />
-
-            <EditText
-                android:id="@+id/yEdit"
-                style="@style/EditTextDark"
-                android:layout_width="wrap_content"
-                android:imeOptions="actionDone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/xEdit" />
-
-            <View
-                android:id="@+id/positionDiv1"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="16dp"
-                android:background="#222"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/yLabel" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/xLabel"
+                    style="@style/TextDark"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:drawableStart="@drawable/x"
+                    android:drawablePadding="20dp"
+                    android:text="@string/x" />
+
+                <EditText
+                    android:id="@+id/xEdit"
+                    style="@style/EditTextDark"
+                    android:layout_width="wrap_content"
+                    android:imeOptions="actionDone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/yLabel"
+                    style="@style/TextDark"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:drawableStart="@drawable/y"
+                    android:drawablePadding="20dp"
+                    android:text="@string/y" />
+
+                <EditText
+                    android:id="@+id/yEdit"
+                    style="@style/EditTextDark"
+                    android:layout_width="wrap_content"
+                    android:imeOptions="actionDone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/scaleLabel"
                 style="@style/TextDark"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:drawableStart="@drawable/zoom"
                 android:drawablePadding="20dp"
-                android:text="@string/zoom"
-                app:layout_constraintBaseline_toBaselineOf="@id/scaleSignificandEdit"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+                android:text="@string/zoom" />
 
             <EditText
                 android:id="@+id/scaleSignificandEdit"
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:imeOptions="actionNext"
-                android:selectAllOnFocus="true"
-                app:layout_constraintEnd_toStartOf="@id/scaleDivider"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+                android:selectAllOnFocus="true" />
 
             <TextView
                 android:id="@+id/scaleDivider"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/e"
-                app:layout_constraintEnd_toStartOf="@id/scaleExponentEdit"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+                android:text="@string/e" />
 
             <EditText
                 android:id="@+id/scaleExponentEdit"
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
-                android:imeOptions="actionDone"
-                app:layout_constraintEnd_toStartOf="@id/scaleLock"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+                android:layout_gravity="center_vertical"
+                android:imeOptions="actionDone" />
 
             <ToggleButton
                 android:id="@+id/scaleLock"
                 style="@style/LockDark"
                 android:layout_width="30dp"
-                android:layout_height="40dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv1" />
+                android:layout_height="40dp" />
+        </LinearLayout>
 
-            <View
-                android:id="@+id/positionDiv2"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="16dp"
-                android:background="#222"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/scaleLabel" />
+        <LinearLayout
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/rotationLabel"
                 style="@style/TextDark"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:drawableStart="@drawable/rotate"
                 android:drawablePadding="20dp"
-                android:text="rotation"
-                app:layout_constraintBaseline_toBaselineOf="@id/rotationEdit"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv2" />
+                android:text="@string/rotation" />
 
             <EditText
                 android:id="@+id/rotationEdit"
                 style="@style/EditTextDark"
                 android:layout_width="wrap_content"
-                android:imeOptions="actionDone"
-                app:layout_constraintEnd_toStartOf="@id/rotationLock"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv2" />
+                android:layout_gravity="center_vertical"
+                android:imeOptions="actionDone" />
 
             <ToggleButton
                 android:id="@+id/rotationLock"
                 style="@style/LockDark"
                 android:layout_width="30dp"
-                android:layout_height="40dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/positionDiv2" />
-
-        </android.support.constraint.ConstraintLayout>
+                android:layout_height="40dp" />
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -11,143 +11,147 @@
         android:id="@+id/settingsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/black"
+        android:background="@color/menu2"
         android:orientation="vertical"
         android:paddingStart="10dp"
         android:paddingEnd="10dp">
 
-        <LinearLayout
-            android:id="@+id/renderCardBody"
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fragmentLayoutMargin"
+            android:layout_marginBottom="@dimen/fragmentLayoutMargin"
+            android:background="@drawable/rounded_rect"
+            android:backgroundTint="@color/menu4"
+            android:orientation="vertical"
+            android:padding="6dp">
+
+            <TextView
+                android:id="@+id/resolutionLabel"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/resolution"
+                android:textColor="@color/colorDarkText"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/resolution_high"
+                app:layout_constraintBottom_toTopOf="@+id/resolutionBar"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/resolution_low"
+                app:layout_constraintBottom_toTopOf="@id/resolutionBar"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/resolutionDimensionsText"
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/resolution_dims"
+                android:textColor="#888"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/resolutionLabel" />
+
+            <SeekBar
+                android:id="@+id/resolutionBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:max="5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/resolutionDimensionsText" />
+
+        </android.support.constraint.ConstraintLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fragmentLayoutMargin"
+            android:layout_marginBottom="@dimen/fragmentLayoutMargin"
+            android:background="@drawable/rounded_rect"
+            android:backgroundTint="@color/menu4"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/TextDark"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start|center_vertical"
+                    android:text="@string/precision"
+                    android:textColor="@color/colorDarkText" />
+
+                <TextView
+                    android:id="@+id/precisionBitsText"
+                    style="@style/TextDark"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/precision_bits"
+                    android:textColor="#888"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <android.support.design.widget.TabLayout
+                android:id="@+id/precisionTabs"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                app:tabBackground="@drawable/tab_color_selector"
+                app:tabIndicatorColor="@android:color/transparent"
+                app:tabIndicatorFullWidth="true"
+                app:tabIndicatorGravity="bottom"
+                app:tabPaddingEnd="10dp"
+                app:tabPaddingStart="10dp">
+
+                <android.support.design.widget.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/precision_single" />
+
+                <android.support.design.widget.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/precision_dual" />
+
+                <android.support.design.widget.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/precision_auto" />
+            </android.support.design.widget.TabLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/TextDark"
-                        android:layout_width="90dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start|center_vertical"
-                        android:text="@string/resolution"
-                        android:textColor="@color/colorDarkText"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/resolutionDimensionsText"
-                        style="@style/TextDark"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="1440 x 3120"
-                        android:textColor="#888"
-                        android:textSize="12sp" />
-
-                </LinearLayout>
-
-                <android.support.design.widget.TabLayout
-                    android:id="@+id/resolutionTabs"
-                    android:layout_width="match_parent"
-                    android:layout_height="42dp"
-                    app:tabBackground="@drawable/tab_color_selector"
-                    app:tabIndicatorColor="@android:color/transparent"
-                    app:tabIndicatorFullWidth="true"
-                    app:tabIndicatorGravity="bottom"
-                    app:tabPaddingEnd="10dp"
-                    app:tabPaddingStart="10dp">
-
-                    <android.support.design.widget.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/resolution_low" />
-
-                    <android.support.design.widget.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/resolution_med" />
-
-                    <android.support.design.widget.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/resolution_high" />
-
-                </android.support.design.widget.TabLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/TextDark"
-                        android:layout_width="90dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start|center_vertical"
-                        android:text="@string/precision"
-                        android:textColor="@color/colorDarkText" />
-
-                    <TextView
-                        android:id="@+id/precisionBitsText"
-                        style="@style/TextDark"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="32-bit"
-                        android:textColor="#888"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <android.support.design.widget.TabLayout
-                    android:id="@+id/precisionTabs"
-                    android:layout_width="match_parent"
-                    android:layout_height="42dp"
-                    app:tabBackground="@drawable/tab_color_selector"
-                    app:tabIndicatorColor="@android:color/transparent"
-                    app:tabIndicatorFullWidth="true"
-                    app:tabIndicatorGravity="bottom"
-                    app:tabPaddingEnd="10dp"
-                    app:tabPaddingStart="10dp">
-
-                    <android.support.design.widget.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/precision_single" />
-
-                    <android.support.design.widget.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/precision_dual" />
-
-                    <android.support.design.widget.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/precision_auto" />
-                </android.support.design.widget.TabLayout>
-            </LinearLayout>
-
-            <View
-                style="@style/dividerDark"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="#222" />
 
             <Switch
                 android:id="@+id/continuousRenderSwitch"
@@ -156,81 +160,66 @@
                 android:layout_height="wrap_content"
                 android:text="@string/continuous_render" />
 
-            <LinearLayout
+            <Switch
+                android:id="@+id/displayParamsSwitch"
+                style="@style/SwitchDark"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:text="@string/display_params"
+                android:textColor="@color/colorDarkText" />
+
+            <Switch
+                android:id="@+id/renderBackgroundSwitch"
+                style="@style/SwitchDark"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:checked="false"
+                android:text="@string/render_background" />
+        </LinearLayout>
 
-                <TextView
-                    android:id="@+id/textView3"
-                    style="@style/TextDark"
-                    android:layout_width="90dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/display_params" />
+        <LinearLayout
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp">
 
-                <Switch
-                    android:id="@+id/displayParamsSwitch"
-                    style="@style/SwitchDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:textColor="@color/colorDarkText"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <View
-                style="@style/dividerDark"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="#222" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
+            <Button
+                android:id="@+id/renderButton"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_gravity="end"
+                android:layout_weight="1"
+                android:background="#0000"
+                android:clickable="true"
+                android:drawableTop="@drawable/render"
+                android:drawablePadding="10dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingTop="15dp"
+                android:paddingBottom="10dp"
+                android:text="@string/reload" />
 
-                <Button
-                    android:id="@+id/renderButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="15dp"
-                    android:layout_weight="1"
-                    android:background="#0000"
-                    android:clickable="true"
-                    android:drawableTop="@drawable/render"
-                    android:drawablePadding="10dp"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackgroundBorderless"
-                    android:paddingTop="15dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/render" />
-
-                <Button
-                    android:id="@+id/saveToFileButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="15dp"
-                    android:layout_weight="1"
-                    android:background="#0000"
-                    android:clickable="true"
-                    android:drawableTop="@drawable/save"
-                    android:drawablePadding="10dp"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackgroundBorderless"
-                    android:paddingTop="15dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/save" />
-
-            </LinearLayout>
+            <Button
+                android:id="@+id/saveToFileButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_weight="1"
+                android:background="#0000"
+                android:clickable="true"
+                android:drawableTop="@drawable/save"
+                android:drawablePadding="10dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingTop="15dp"
+                android:paddingBottom="10dp"
+                android:text="@string/save" />
 
         </LinearLayout>
 
     </LinearLayout>
-
 </ScrollView>

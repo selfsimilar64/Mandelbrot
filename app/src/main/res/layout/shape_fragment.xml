@@ -1,151 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/shapeLayout"
+    android:id="@+id/shapeLayoutScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:background="@color/menu2"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/shapePreviewListLayout"
+        android:id="@+id/shapeLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:visibility="gone">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/shapePreviewList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/menu2"
-            android:orientation="horizontal"
-            android:scrollbars="horizontal"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-            tools:listitem="@layout/preview_item">
-
-        </android.support.v7.widget.RecyclerView>
-
-        <Button
-            android:id="@+id/shapeDoneButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/doneButtonHeight"
-            android:layout_gravity="end"
-            android:background="?attr/selectableItemBackground"
-            android:text="done" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/shapeContent"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        tools:visibility="visible">
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:background="@color/menu2"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/shapePreview"
-            android:layout_width="wrap_content"
+            android:id="@+id/shapePreviewListLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/button_selector"
-            android:clickable="true"
-            android:focusable="true"
             android:orientation="vertical"
-            android:padding="3dp">
+            tools:visibility="visible">
 
-            <android.support.v7.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                app:cardBackgroundColor="@color/colorTransparent"
-                app:cardCornerRadius="10dp">
-
-                <ImageView
-                    android:id="@+id/shapePreviewImage"
-                    android:layout_width="110dp"
-                    android:layout_height="110dp"
-                    app:srcCompat="@drawable/mandelbrot_icon" />
-
-            </android.support.v7.widget.CardView>
-
-
-            <TextView
-                android:id="@+id/shapePreviewText"
-                style="@style/TextDark"
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/shapePreviewList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawableEnd="@drawable/edit"
-                android:drawablePadding="3dp"
-                android:gravity="center"
-                android:lines="2"
-                android:paddingStart="3dp"
-                android:paddingTop="3dp"
-                android:paddingEnd="3dp"
-                android:paddingBottom="2dp"
-                android:text="Mandelbrot"
-                android:textAlignment="center"
-                android:textSize="13sp" />
+                android:background="@color/menu4"
+                android:orientation="horizontal"
+                android:scrollbars="horizontal"
+                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                tools:listitem="@layout/preview_item">
+
+            </android.support.v7.widget.RecyclerView>
+
+            <Button
+                android:id="@+id/shapeDoneButton"
+                style="@style/FragmentItem"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/doneButtonHeight"
+                android:layout_gravity="end"
+                android:layout_marginStart="3dp"
+                android:layout_marginEnd="3dp"
+                android:text="@string/done" />
 
         </LinearLayout>
 
-        <ScrollView
-            android:id="@+id/shapeContentScroll"
+        <LinearLayout
+            android:id="@+id/shapeContent"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/shapePreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/fragmentLayoutMargin"
+                android:layout_marginBottom="@dimen/fragmentLayoutMargin"
+                android:background="@drawable/button_selector"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <android.support.v7.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    app:cardBackgroundColor="@color/colorTransparent"
+                    app:cardCornerRadius="10dp">
+
+                    <ImageView
+                        android:id="@+id/shapePreviewImage"
+                        android:contentDescription="@string/dscript_shape_preview"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        app:srcCompat="@drawable/mandelbrot_icon" />
+
+                </android.support.v7.widget.CardView>
+
+
+                <TextView
+                    android:id="@+id/shapePreviewText"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableEnd="@drawable/edit"
+                    android:drawablePadding="10dp"
+                    android:gravity="center"
+                    android:text="@string/shape_name"
+                    android:textAlignment="center"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <android.support.constraint.ConstraintLayout
-                    android:id="@+id/shapeParamLayout"
+                <LinearLayout
+                    android:id="@+id/juliaLayout"
+                    style="@style/FragmentItem"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginEnd="5dp"
-                    android:paddingStart="5dp"
-                    android:paddingEnd="5dp">
+                    android:orientation="vertical">
+
+                    <Switch
+                        android:id="@+id/juliaModeSwitch"
+                        style="@style/SwitchDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="5dp"
+                        android:text="@string/juliaMode"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <android.support.constraint.ConstraintLayout
+                    android:id="@+id/shapeParamLayout"
+                    style="@style/FragmentItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
                     <android.support.design.widget.TabLayout
                         android:id="@+id/shapeParamButtons"
                         android:layout_width="0dp"
                         android:layout_height="35dp"
-                        android:layout_marginTop="5dp"
-                        android:background="@color/menu1"
-                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:tabIndicatorFullWidth="true">
+                        app:tabGravity="center"
+                        app:tabIndicatorFullWidth="false"
+                        app:tabMinWidth="50dp">
 
                         <android.support.design.widget.TabItem
                             android:id="@+id/p1Button"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="P1" />
+                            android:text="@string/param1" />
 
                         <android.support.design.widget.TabItem
                             android:id="@+id/p2Button"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="P2" />
+                            android:text="@string/param2" />
 
                         <android.support.design.widget.TabItem
                             android:id="@+id/p3Button"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="P3" />
+                            android:text="@string/param3" />
 
                     </android.support.design.widget.TabLayout>
 
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:background="@color/menu1"
+                        android:layout_marginTop="5dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/shapeParamButtons">
@@ -157,7 +178,7 @@
                             android:layout_height="40dp"
                             android:layout_marginStart="16dp"
                             android:gravity="center_vertical"
-                            android:text="u"
+                            android:text="@string/u"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
@@ -170,7 +191,7 @@
                             android:gravity="center_vertical"
                             android:paddingTop="5dp"
                             android:paddingBottom="5dp"
-                            android:text="v"
+                            android:text="@string/v"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/uLabel" />
 
@@ -179,7 +200,6 @@
                             style="@style/LockDark"
                             android:layout_width="30dp"
                             android:layout_height="40dp"
-                            android:layout_marginEnd="8dp"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
@@ -188,7 +208,6 @@
                             style="@style/LockDark"
                             android:layout_width="30dp"
                             android:layout_height="40dp"
-                            android:layout_marginEnd="8dp"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/uLock" />
 
@@ -213,37 +232,10 @@
 
                 </android.support.constraint.ConstraintLayout>
 
-                <LinearLayout
-                    android:id="@+id/juliaLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp">
-
-                    <Switch
-                        android:id="@+id/juliaModeSwitch"
-                        style="@style/SwitchDark"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingTop="8dp"
-                        android:paddingBottom="5dp"
-                        android:text="@string/juliaMode"
-                        android:textSize="14sp" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginBottom="5dp"
-                        android:background="#222" />
-                </LinearLayout>
-
                 <android.support.constraint.ConstraintLayout
+                    style="@style/FragmentItem"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp">
+                    android:layout_height="match_parent">
 
                     <TextView
                         android:id="@+id/maxIterLabel"
@@ -260,6 +252,7 @@
                         android:id="@+id/maxIterEdit"
                         style="@style/EditTextDark"
                         android:layout_marginStart="16dp"
+                        android:imeOptions="actionDone"
                         app:layout_constraintStart_toEndOf="@+id/maxIterLabel"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -272,7 +265,6 @@
                         android:layout_marginBottom="8dp"
                         android:layout_weight="1"
                         android:progress="25"
-                        android:progressDrawable="@drawable/seekbar_progress_custom"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -280,8 +272,9 @@
                 </android.support.constraint.ConstraintLayout>
 
             </LinearLayout>
-        </ScrollView>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

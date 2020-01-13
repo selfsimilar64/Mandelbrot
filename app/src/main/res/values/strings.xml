@@ -1,6 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Fractal Eye</string>
     <string name="title_activity_settings">Settings</string>
+    <string name="app_name">Fractal Eye</string>
+    <string name="fe_abbrev">FE</string>
 
 
 
@@ -8,69 +9,163 @@
     <!-- LAYOUT -->
     <!-- ===================================================================================== -->
 
+
+
+    <!-- MAIN -->
     <string name="settings">settings</string>
     <string name="texture">texture</string>
     <string name="shape">shape</string>
     <string name="color">color</string>
     <string name="position">position</string>
+    <string name="reaction" translatable="false">reaction</string>
+    <string name="display_param1" translatable="false">param1</string>
+    <string name="display_param2" translatable="false">param2</string>
+    <string name="display_param3" translatable="false">param3</string>
+    <string name="display_param4" translatable="false">param4</string>
+    <string name="e" translatable="false">e</string>
+    <string name="done">done</string>
+    <string name="welcome_message" translatable="false">Welcome to Fractal Eye!</string>
+    <string name="tutorial_position1" tools:ignore="ExtraTranslation" translatable="false">To move around and explore the fractal, click the POSITION button.</string>
+    <string name="tutorial_position2" translatable="false">Swipe in any direction to move</string>
+    <string name="tutorial_position3" translatable="false">Pinch to zoom in or out!</string>
+    <string name="tutorial_color1" translatable="false">To change how the fractal is colored, click the COLOR button.</string>
+    <string name="tutorial_color2" translatable="false">Swipe left or right to shift the colors</string>
+    <string name="tutorial_color3" translatable="false">Pinch to make the colors change more or less frequently!</string>
+    <string name="empty" translatable="false"> </string>
 
-    <string name="zoom">zoom</string>
 
-    <string name="menu">menu</string>
-    <string name="function">Function</string>
-    <string name="render">Render</string>
+
+    <!-- SETTINGS FRAGMENT -->
+    <string name="reload">reload</string>
     <string name="resolution">Resolution</string>
+    <string name="resolution_dims" translatable="false">width x height</string>
     <string name="precision">Precision</string>
-    <string name="transform">transform</string>
-    <string name="reaction">REACTION</string>
-    <string name="reaction_position">POSITION</string>
-    <string name="reaction_color">COLOR</string>
-    <string name="resolution_low">LOW</string>
-    <string name="resolution_med">MED</string>
-    <string name="resolution_high">HIGH</string>
-    <string name="precision_single">SINGLE</string>
-    <string name="precision_dual">DUAL</string>
-    <string name="precision_auto">AUTO</string>
+    <string name="precision_bits" translatable="false">32-bit</string>
+    <string name="resolution_low">Low</string>
+    <string name="resolution_high">High</string>
+    <string name="precision_single">single</string>
+    <string name="precision_dual">dual</string>
+    <string name="precision_auto">auto</string>
     <string name="save">save</string>
     <string name="continuous_render">Continuous Render</string>
     <string name="display_params">Display Parameters</string>
-    <string name="display_param1">param1</string>
-    <string name="display_param2">param2</string>
-    <string name="display_param3">param3</string>
-    <string name="display_param4">param4</string>
-    <string name="param1">P1</string>
-    <string name="param2">P2</string>
-    <string name="param3">P3</string>
-    <string name="param4">P4</string>
-    <string name="tex_param1">Q1</string>
-    <string name="tex_param2">Q2</string>
+    <string name="render_background">Render Background</string>
+
+
+    <!-- TEXTURE FRAGMENT -->
+    <string name="texture_name" translatable="false">Texture Name</string>
+    <string name="texture_param_name" translatable="false">Texture Parameter Name</string>
+    <string name="bailout">Escape Radius</string>
+    <string name="texture_mode">Texture Mode</string>
+    <string name="texture_mode_out">out</string>
+    <string name="texture_mode_in">in</string>
+    <string name="texture_mode_both">both</string>
+
+
+
+    <!-- SHAPE FRAGMENT -->
+    <string name="shape_name" translatable="false">Shape Name</string>
+    <string name="dscript_shape_preview">shape preview image</string>
+    <string name="u">u</string>
+    <string name="v">v</string>
+    <string name="param1">Param 1</string>
+    <string name="param2">Param 2</string>
+    <string name="param3">Param 3</string>
+    <string name="param4">Param 4</string>
+    <string name="sensitivity">sensitivity</string>
+    <string name="maxIter">Maximum Iterations</string>
+    <string name="juliaMode">Julia Mode</string>
+
+
+
+    <!-- COLOR FRAGMENT -->
+    <string name="palette_name" translatable="false">Palette Name</string>
+    <string name="frequency">Frequency</string>
+    <string name="offset">Phase</string>
+    <string name="solid_fill">Solid Fill Color</string>
+    <string name="solid_fill_white">white</string>
+    <string name="solid_fill_black">black</string>
+
+
+
+    <!-- POSITION FRAGMENT -->
     <string name="x">x</string>
     <string name="y">y</string>
-    <string name="scale_lower">scale</string>
-    <string name="rotation_lower">rotation</string>
-    <string name="maxIter">Max Iterations</string>
-    <string name="juliaMode">Julia Mode</string>
-    <string name="scale">Scale</string>
-    <string name="bailout">Bailout Radius</string>
-    <string name="frequency">frequency</string>
-    <string name="offset">offset</string>
-    <string name="sensitivity">sensitivity</string>
-    <string name="complex_i">+ i</string>
-    <string name="e">e</string>
-    <string name="ui">UI</string>
-    <string name="left_arrow">left arrow</string>
-    <string name="right_arrow">right arrow</string>
-    <string name="equation">Equation</string>
+    <string name="zoom">Zoom</string>
+    <string name="rotation">Rotation</string>
 
-    <string name="welcome_message">Welcome to Fractal Eye!</string>
-    <string name="tutorial_position1" tools:ignore="ExtraTranslation">To move around and explore the fractal, click the POSITION button.</string>
-    <string name="tutorial_position2">Swipe in any direction to move</string>
-    <string name="tutorial_position3">Pinch to zoom in or out!</string>
-    <string name="tutorial_color1">To change how the fractal is colored, click the COLOR button.</string>
-    <string name="tutorial_color2">Swipe left or right to shift the colors</string>
-    <string name="tutorial_color3">Pinch to make the colors change more or less frequently!</string>
 
-    <string name="empty"> </string>
+
+    <!-- SHAPE NAMES -->
+    <string name="mandelbrot" translatable="false">Mandelbrot</string>
+    <string name="mandelbrot_cubic">Mandelbrot Cubic</string>
+    <string name="mandelbrot_quartic">Mandelbrot Quartic</string>
+    <string name="mandelbrot_quintic">Mandelbrot Quintic</string>
+    <string name="mandelbrot_anypow">Mandelbrot Any Power</string>
+    <string name="clover">Clover</string>
+    <string name="burning_ship">Burning Ship</string>
+    <string name="mandelbox">Mandelbox</string>
+    <string name="kali" translatable="false">Kali</string>
+    <string name="sine1">Sine 1</string>
+    <string name="sine2">Sine 2</string>
+    <string name="horseshoe_crab">Horseshoe Crab</string>
+    <string name="kleinian" translatable="false">Kleinian</string>
+    <string name="nova1" translatable="false">Nova 1</string>
+    <string name="nova2" translatable="false">Nova 2</string>
+
+
+
+    <!-- PALETTE NAMES -->
+    <string name="yinyang">Yin Yang</string>
+    <string name="night">Night</string>
+    <string name="cosmic">Cosmic</string>
+    <string name="elephant">Elephant</string>
+    <string name="oldskool">Old Sk00l</string>
+    <string name="gold">Gold</string>
+    <string name="p9">P9</string>
+    <string name="viridis">Viridis</string>
+    <string name="plasma">Plasma</string>
+    <string name="magma">Magma</string>
+    <string name="vascular">Vascular</string>
+    <string name="flora">Flora</string>
+    <string name="royal">Royal</string>
+    <string name="groovy">Groovy</string>
+    <string name="canyon">Canyon</string>
+    <string name="anubis">Anubis</string>
+
+
+
+    <!-- TEXTURE NAMES -->
+    <string name="escape">Escape Time</string>
+    <string name="escape_smooth">Escape Time (Smooth)</string>
+    <string name="exponential_smooth">Exponential Smoothing</string>
+    <string name="distance_est">Distance Estimation</string>
+    <string name="triangle_ineq_avg">Triangle Inequality Average</string>
+    <string name="curvature_avg">Curvature Average</string>
+    <string name="stripe_avg">Stripe Average</string>
+    <string name="orbit_trap_miny">Orbit Trap</string>
+    <string name="normal1">Normal Map 1</string>
+    <string name="normal2">Normal Map 2</string>
+    <string name="overlay_avg">Overlay Average</string>
+
+
+
+    <!-- TEXTURE PARAM NAMES -->
+    <string name="stripe_density">Stripe Density</string>
+    <string name="sharpness">Sharpness</string>
+
+
+
+    <!-- MESSAGES -->
+    <string name="msg_invalid_format">Invalid number format</string>
+    <string name="msg_zoom_limit">Zoom limit reached</string>
+    <string name="msg_dual_in1">Switching to dual-precision…</string>
+    <string name="msg_dual_in2">Image generation will be slower</string>
+    <string name="msg_dual_out1">Switching to single-precision…</string>
+    <string name="msg_dual_out2">Image generation will be faster</string>
+    <string name="msg_save_successful">Image saved to </string>
+    <string name="msg_save_failed">Image not saved: storage permission required</string>
+    <string name="msg_save_wait">Please wait for the image to finish rendering</string>
 
 
 
@@ -78,7 +173,7 @@
 
     <!-- UTILITY -->
     <!-- ===================================================================================== -->
-    <string name="header_sf">#version 300 es\n
+    <string name="header_sf" translatable="false">#version 300 es\n
         #define pi 3.141592654\n
         #define Sn 1e-8\n
         #define Sp 1e8\n
@@ -107,7 +202,7 @@
         in vec4 viewPos;
         out vec4 fragmentColor;
     </string>
-    <string name="header_df">#version 300 es\n
+    <string name="header_df" translatable="false">#version 300 es\n
         #define SPLIT 8097.\n
         #define pi 3.141592654\n
         #define Sn 1e-8\n
@@ -136,7 +231,7 @@
         out vec4 fragmentColor;
     </string>
 
-    <string name="color_header">#version 300 es\n
+    <string name="color_header" translatable="false">#version 300 es\n
 
         precision highp float;
         uniform sampler2D tex;
@@ -148,9 +243,9 @@
         uniform int textureMode;
 
         in vec2 texCoord;
-        out vec4 fragmentColor;
+        out vec3 fragmentColor;
     </string>
-    <string name="color_index">
+    <string name="color_index" translatable="false">
         float i = frequency*s.x + phase;
         float n = mod(float(numColors - 1)*i, float(numColors - 1));
         int p = int(floor(n));
@@ -158,7 +253,7 @@
         color = (1.0 - q)*palette[p] + q*palette[p + 1];
 
     </string>
-    <string name="color_lighting">
+    <string name="color_lighting" translatable="false">
         vec3 normRay = vec3(cos(s.x), sin(s.x), 1.0);
         normRay /= length(normRay);
         float lightHeight = 1.0;
@@ -182,7 +277,7 @@
         color = diffuse*color + specular;
     </string>
 
-    <string name="arithmetic_util">
+    <string name="arithmetic_util" translatable="false">
 
         vec2 quickTwoSum(float a, float b) {
             float s = a + b + 1e-45;
@@ -252,7 +347,7 @@
         }
 
     </string>
-    <string name="arithmetic_sf">
+    <string name="arithmetic_sf" translatable="false">
 
         vec2 cConjSF(vec2 w) {
             return vec2(w.x, -w.y);
@@ -449,7 +544,7 @@
         }
 
     </string>
-    <string name="arithmetic_df">
+    <string name="arithmetic_df" translatable="false">
 
         vec2 addDF(vec2 a, vec2 b) {
             vec2 s;
@@ -615,7 +710,7 @@
 
     </string>
 
-    <string name="general_init_sf">
+    <string name="general_init_sf" translatable="false">
         vec4 colorParams = vec4(0.0);
         vec2 C = vec2(xScale.x*viewPos.x, yScale.x*viewPos.y);
         C = vec2(C.x*cosRotate - C.y*sinRotate, C.x*sinRotate + C.y*cosRotate);
@@ -625,7 +720,7 @@
         float eps = 0.0;
         vec2 useUniforms = P1 + P2 + P3 + P4 + Q1 + x0 + y0 + R;
     </string>
-    <string name="general_init_df">
+    <string name="general_init_df" translatable="false">
         vec4 colorParams = vec4(0.0);
         vec2 A = multDF(xScale, vec2(viewPos.x, 0.0));
         vec2 B = multDF(yScale, vec2(viewPos.y, 0.0));
@@ -639,11 +734,11 @@
         float eps = 0.0;
         float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + x0 + y0 + R;
     </string>
-    <string name="general_loop_sf">
+    <string name="general_loop_sf" translatable="false">
         Z2 = Z1;
         Z1 = Z;
     </string>
-    <string name="general_loop_df">
+    <string name="general_loop_df" translatable="false">
         X2 = X1;
         X1 = X;
         Y2 = Y1;
@@ -654,188 +749,225 @@
 
 
 
-    <!-- COMPLEX MAPS -->
+
+
+
+    <!-- SHAPES -->
     <!-- ===================================================================================== -->
 
     <!-- MANDELBROT -->
-    <string name="mandelbrot_loop_sf">
+    <string name="mandelbrot_loop_sf" translatable="false">
         Z = cSqrSF(Z1) + C;
     </string>
-    <string name="mandelbrot_loop_df">
-        vec4 Q = cSqrDF(X1, Y1);
-        X = addDF(Q.xy, A);
-        Y = addDF(Q.zw, B);
+    <string name="mandelbrot_loop_df" translatable="false">
+        vec4 W = cSqrDF(X1, Y1);
+        X = addDF(W.xy, A);
+        Y = addDF(W.zw, B);
     </string>
-    <string name="mandelbrot_katex">
+    <string name="mandelbrot_katex" translatable="false">
         $z_{n+1} = z_{n}^2 + %s$
     </string>
 
-    <!-- MANDELBROT CPOW -->
-    <string name="mandelbrotcpow_loop_sf">
+    <!-- MANDELBROT CUBIC -->
+    <string name="mandelbrotcubic_loop_sf" translatable="false">
+        Z = cMultSF(Z1, cSqrSF(Z1)) + C;
+    </string>
+    <string name="mandelbrotcubic_loop_df" translatable="false">
+        vec4 W1 = cSqrDF(X1, Y1);
+        vec4 W2 = cMultDF(X1, Y1, W1.xy, W1.zw);
+        X = addDF(W2.xy, A);
+        Y = addDF(W2.zw, B);
+    </string>
+
+    <!-- MANDELBROT QUARTIC -->
+    <string name="mandelbrotquartic_loop_sf" translatable="false">
+        Z = cSqrSF(cSqrSF(Z1)) + C;
+    </string>
+    <string name="mandelbrotquartic_loop_df" translatable="false">
+        vec4 W1 = cSqrDF(X1, Y1);
+        vec4 W2 = cSqrDF(W1.xy, W1.zw);
+        X = addDF(W2.xy, A);
+        Y = addDF(W2.zw, B);
+    </string>
+
+    <!-- MANDELBROT QUINTIC -->
+    <string name="mandelbrotquintic_loop_sf" translatable="false">
+        Z = cMultSF(Z1, cSqrSF(cSqrSF(Z1))) + C;
+    </string>
+    <string name="mandelbrotquintic_loop_df" translatable="false">
+        vec4 W1 = cSqrDF(X1, Y1);
+        vec4 W2 = cSqrDF(W1.xy, W1.zw);
+        vec4 W3 = cMultDF(X1, Y1, W2.xy, W2.zw);
+        X = addDF(W3.xy, A);
+        Y = addDF(W3.zw, B);
+    </string>
+
+    <!-- MANDELBROT ANY POWER -->
+    <string name="mandelbrotanypow_loop_sf" translatable="false">
         Z = cPow4(Z1, P1) + C;
     </string>
-    <string name="mandelbrotcpow_katex">
+    <string name="mandelbrotanypow_katex" translatable="false">
         $z_{n+1} = z_{n}^{P1} + %s$
     </string>
 
     <!-- DUALPOW -->
-    <string name="dualpow_init_sf">
+    <string name="dualpow_init_sf" translatable="false">
         vec2 alpha = vec2(1.0, 0.0);
         vec2 beta = vec2(1.0, 0.0);
     </string>
-    <string name="dualpow_loop_sf">
+    <string name="dualpow_loop_sf" translatable="false">
         Z = cMultSF(C, cMultSF(alpha, cPow4(Z, P1)) + cMultSF(beta, cPow4(Z, -P1)));
     </string>
-    <string name="dualpow_katex">
+    <string name="dualpow_katex" translatable="false">
         $z_{n+1} = %s \\cdot (z_{n}^{P1} + z_{n}^{-P1})$
     </string>
 
     <!-- MANDELBOX -->
-    <string name="mandelbox_loop_sf">
+    <string name="mandelbox_loop_sf" translatable="false">
         Z = cMultSF(P1, ballFoldSF(boxFoldSF(Z1))) - C;
     </string>
-    <string name="mandelbox_loop_df">
-        vec4 Q1 = boxFoldDF(X1, Y1);
-        vec4 Q2 = ballFoldDF(Q1.xy, Q1.zw);
-        vec4 Q3 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), Q2.xy, Q2.zw);
-        X = addDF(Q3.xy, -A);
-        Y = addDF(Q3.zw, -B);
+    <string name="mandelbox_loop_df" translatable="false">
+        vec4 W1 = boxFoldDF(X1, Y1);
+        vec4 W2 = ballFoldDF(W1.xy, W1.zw);
+        vec4 W3 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), W2.xy, W2.zw);
+        X = addDF(W3.xy, -A);
+        Y = addDF(W3.zw, -B);
     </string>
-    <string name="mandelbox_katex">
+    <string name="mandelbox_katex" translatable="false">
         $z_{n+1} = \\footnotesize P1\\cdot\\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) - %s$
     </string>
 
     <!-- KALI -->
-    <string name="kali_loop_sf">
-        vec2 Q = abs(Z1);
-        Z = Q/modSqrSF(Q) + P1;
+    <string name="kali_loop_sf" translatable="false">
+        vec2 W = abs(Z1);
+        Z = W/modSqrSF(W) + P1;
     </string>
-    <string name="kali_loop_df">
-        vec2 Q1 = absDF(X1);
-        vec2 Q2 = absDF(Y1);
-        vec2 Q3 = modSqrDF(Q1, Q2);
-        X = addDF(divDF(Q1, Q3), vec2(P1.x, 0.0));
-        Y = addDF(divDF(Q2, Q3), vec2(P1.y, 0.0));
+    <string name="kali_loop_df" translatable="false">
+        vec2 W1 = absDF(X1);
+        vec2 W2 = absDF(Y1);
+        vec2 W3 = modSqrDF(W1, W2);
+        X = addDF(divDF(W1, W3), vec2(P1.x, 0.0));
+        Y = addDF(divDF(W2, W3), vec2(P1.y, 0.0));
     </string>
-    <string name="kali_katex">
+    <string name="kali_katex" translatable="false">
         $z_{n+1} = \\large\\frac{\\textrm{abs}(z_n)}{|\\textrm{abs}(z_n)|^2} +\\small P1$
     </string>
 
-    <string name="kalisquare_loop_sf">
+    <string name="kalisquare_loop_sf" translatable="false">
         Z = abs(Z1)/(Z1.x*Z1.y) + P1;
     </string>
 
     <!-- MANDELBAR -->
-    <string name="mandelbar_loop_sf">
+    <string name="mandelbar_loop_sf" translatable="false">
         Z = cSqrSF(conjSF(Z1)) + C;
     </string>
 
     <!-- LOGISTIC -->
-    <string name="logistic_loop_sf">
+    <string name="logistic_loop_sf" translatable="false">
         Z = cDivSF(Z1 - cSqrSF(Z1), C);
     </string>
-    <string name="logistic_loop_df">
-        vec4 Q1 = cSqrDF(X1, Y1);
-        vec2 Q2 = addDF(X1, -Q1.xy);
-        vec2 Q3 = addDF(Y1, -Q1.zw);
-        vec4 Q4 = cDivDF(Q2, Q3, A, B);
-        X = Q4.xy;
-        Y = Q4.zw;
+    <string name="logistic_loop_df" translatable="false">
+        vec4 W1 = cSqrDF(X1, Y1);
+        vec2 W2 = addDF(X1, -W1.xy);
+        vec2 W3 = addDF(Y1, -W1.zw);
+        vec4 W4 = cDivDF(W2, W3, A, B);
+        X = W4.xy;
+        Y = W4.zw;
     </string>
-    <string name="logistic_katex">
+    <string name="logistic_katex" translatable="false">
         $z_{n+1} = \\Large \\frac{z_n - z_n^2}{%s}$
     </string>
 
     <!-- BURNING SHIP -->
-    <string name="burningship_loop_sf">
+    <string name="burningship_loop_sf" translatable="false">
         Z = cSqrSF(abs(Z1)) + C;
     </string>
-    <string name="burningship_loop_df">
-        vec4 Q = cSqrDF(absDF(X1), absDF(Y1));
-        X = addDF(Q.xy, A);
-        Y = addDF(Q.zw, B);
+    <string name="burningship_loop_df" translatable="false">
+        vec4 W = cSqrDF(absDF(X1), absDF(Y1));
+        X = addDF(W.xy, A);
+        Y = addDF(W.zw, B);
     </string>
-    <string name="burningship_katex">
+    <string name="burningship_katex" translatable="false">
         $z_{n+1} = \\textrm{abs}(z_n)^2 + %s$
     </string>
 
     <!-- MAGNET -->
-    <string name="magnet_loop_sf">
+    <string name="magnet_loop_sf" translatable="false">
         Z = cSqrSF(cDivSF(cSqrSF(Z1) + C + P1, 2.0*Z1 + C + P2));
     </string>
 
     <!-- SINE -->
-    <string name="sine1_loop_sf">
+    <string name="sine1_loop_sf" translatable="false">
         Z = sinSF(Z1) + C;
     </string>
-    <string name="sine1_loop_df">
-        vec4 Q1 = cSinDF(X1, Y1, 10);
-        X = addDF(Q1.xy, A);
-        Y = addDF(Q1.zw, B);
+    <string name="sine1_loop_df" translatable="false">
+        vec4 W1 = cSinDF(X1, Y1, 10);
+        X = addDF(W1.xy, A);
+        Y = addDF(W1.zw, B);
     </string>
-    <string name="sine1_katex">
+    <string name="sine1_katex" translatable="false">
         $z_{n+1} = \\sin(z_n) + %s$
     </string>
 
-    <string name="sine2_loop_sf">
+    <string name="sine2_loop_sf" translatable="false">
         Z = sinSF(cDivSF(cSqrSF(Z1) + P1, C));
     </string>
-    <string name="sine2_loop_df">
-        vec4 Q1 = cSqrDF(X1, Y1);
-        vec2 Q2 = addDF(Q1.xy, vec2(P1.x, 0.0));
-        vec2 Q3 = addDF(Q1.zw, vec2(P1.y, 0.0));
-        vec4 Q4 = cDivDF(Q2, Q3, A, B);
-        vec4 Q5 = cSinDF(Q4.xy, Q4.zw, 8);
-        X = Q5.xy;
-        Y = Q5.zw;
+    <string name="sine2_loop_df" translatable="false">
+        vec4 W1 = cSqrDF(X1, Y1);
+        vec2 W2 = addDF(W1.xy, vec2(P1.x, 0.0));
+        vec2 W3 = addDF(W1.zw, vec2(P1.y, 0.0));
+        vec4 W4 = cDivDF(W2, W3, A, B);
+        vec4 W5 = cSinDF(W4.xy, W4.zw, 8);
+        X = W5.xy;
+        Y = W5.zw;
     </string>
-    <string name="sine2_katex">
+    <string name="sine2_katex" translatable="false">
         $z_{n+1} = \\sin(\\large\\frac{z_n^2 + P1}{%s}\\normalsize)$
     </string>
 
-    <string name="sine3_loop_sf">
+    <string name="sine3_loop_sf" translatable="false">
         Z = sinSF(cDivSF(cPow3(Z1, P1.x), C));
     </string>
-    <string name="sine3_katex">
+    <string name="sine3_katex" translatable="false">
         $z_{n+1} = \\sin(\\frac{z_n^{\\operatorname{Re}(P1)}}{%s})$
     </string>
 
     <!-- HORSESHOE CRAB -->
-    <string name="horseshoecrab_loop_sf">
+    <string name="horseshoecrab_loop_sf" translatable="false">
         Z = sinSF(cDivSF(P1, Z1) + cDivSF(Z1, C));
     </string>
-    <string name="horseshoecrab_loop_df">
+    <string name="horseshoecrab_loop_df" translatable="false">
         vec4 S1 = cDivDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), X1, Y1);
         vec4 S2 = cDivDF(X1, Y1, A, B);
         vec2 U = addDF(S1.xy, S2.xy);
         vec2 V = addDF(S1.zw, S2.zw);
-        vec4 Q = cSinDF(U, V, 8);
-        X = Q.xy;
-        Y = Q.zw;
+        vec4 W = cSinDF(U, V, 8);
+        X = W.xy;
+        Y = W.zw;
     </string>
-    <string name="horseshoecrab_katex">
+    <string name="horseshoecrab_katex" translatable="false">
         $f(z) = \\sin (\\frac{P1}{z} + \\frac{z}{%s})$
     </string>
 
     <!-- PERSIAN RUG -->
-    <string name="persianrug_init_sf">
+    <string name="persianrug_init_sf" translatable="false">
         Z = C;
     </string>
-    <string name="persianrug_loop_sf">
+    <string name="persianrug_loop_sf" translatable="false">
         Z = cMultSF(Z1, sinSF(tanSF(P1 - cDivSF(C, Z1))) + Z1 + tanSF(Z1));
     </string>
-    <string name="persianrug_katex">
+    <string name="persianrug_katex" translatable="false">
         $z_{n+1} = z \\cdot \\big(\\sin\\big(\\tan(P1 - \\large\\frac{%s}{z_n}\\normalsize)\\big) + z_n + \\tan(z_n)\\big)$
     </string>
 
     <!-- KLEINIAN -->
-    <string name="kleinian_init_sf">
+    <string name="kleinian_init_sf" translatable="false">
         vec2 P = P2;
         vec2 q = Z - P;
         float h = atan(q.y, q.x);
         Z = P + vec2(cos(h), sin(h))/modSF(q);
     </string>
-    <string name="kleinian_loop_sf">
+    <string name="kleinian_loop_sf" translatable="false">
         if (Z.y &lt; 0.0 || Z.y &gt; P1.x) {
             break;
         }
@@ -849,14 +981,14 @@
             Z = cDivSF(vec2(0.0, 1.0), cMultSF(vec2(0.0, 1.0), Z) + vec2(P1.x, 0.0));
         }
     </string>
-    <string name="kleinian_init_df">
+    <string name="kleinian_init_df" translatable="false">
         vec2 P = P2;
         vec2 q = vec2(X.x, Y.x) - P;
         float h = atan(q.y, q.x);
         X = vec2(P.x + cos(h)/modSF(q), 0.0);
         Y = vec2(P.y + sin(h)/modSF(q), 0.0);
     </string>
-    <string name="kleinian_loop_df">
+    <string name="kleinian_loop_df" translatable="false">
         if (Y.x &lt; 0.0 || Y.x &gt; P1.x) {
             break;
         }
@@ -872,58 +1004,58 @@
     </string>
 
     <!-- NEWTON -->
-    <string name="newton1_loop_sf">
+    <string name="newton1_loop_sf" translatable="false">
         Z = Z - cDivSF(cSqrSF(cSqrSF(Z)) - vec2(1.0, 0.0), 4.0*cMultSF(Z, cSqrSF(Z)));
     </string>
 
-    <string name="newton2_loop_sf">
+    <string name="newton2_loop_sf" translatable="false">
         vec2 W = cMultSF(Z - P1, Z - P2);
         vec2 numerator = cMultSF(W, Z - P3);
         vec2 denominator = W + cMultSF(Z - P3, 2.0*Z - P1 - P2);
         Z = Z - cDivSF(numerator, denominator);
     </string>
 
-    <string name="newton3_loop_sf">
+    <string name="newton3_loop_sf" translatable="false">
         Z = Z1 - cDivSF(coshSF(Z1) - vec2(1.0, 0.0), sinhSF(Z1));
     </string>
-    <string name="newton3_katex">
+    <string name="newton3_katex" translatable="false">
         $z_{n+1} = z_n - \\large\\frac{\\cosh(z_n) - 1}{\\sinh(z_n)} \\normalsize$
     </string>
 
 
     <!-- NOVA -->
-    <string name="nova1_loop_sf">
+    <string name="nova1_loop_sf" translatable="false">
         vec2 zSqr = cSqrSF(Z1);
         Z = Z1 - cMultSF(P1, cDivSF(cMultSF(Z1, zSqr) - vec2(1.0, 0.0), 3.0*zSqr)) + C;
     </string>
-    <string name="nova1_loop_df">
+    <string name="nova1_loop_df" translatable="false">
         vec4 zSqr = cSqrDF(X1, Y1);
         vec4 zCub = cMultDF(X1, Y1, zSqr.xy, zSqr.zw);
-        vec4 Q1 = cDivDF(addDF(zCub.xy, vec2(-1.0, 0.0)), zCub.zw, multDF(vec2(3.0, 0.0), zSqr.xy), multDF(vec2(3.0, 0.0), zSqr.zw));
-        vec4 Q2 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), Q1.xy, Q1.zw);
-        X = addDF(addDF(X1, -Q2.xy), A);
-        Y = addDF(addDF(Y1, -Q2.zw), B);
+        vec4 W1 = cDivDF(addDF(zCub.xy, vec2(-1.0, 0.0)), zCub.zw, multDF(vec2(3.0, 0.0), zSqr.xy), multDF(vec2(3.0, 0.0), zSqr.zw));
+        vec4 W2 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), W1.xy, W1.zw);
+        X = addDF(addDF(X1, -W2.xy), A);
+        Y = addDF(addDF(Y1, -W2.zw), B);
     </string>
-    <string name="nova1_katex">
+    <string name="nova1_katex" translatable="false">
         $z_{n+1} = z_n -\\small P1\\cdot\\Large\\frac{z_n^3 - 1}{3z_n^2} \\normalsize + %s$
     </string>
 
-    <string name="nova2_loop_sf">
+    <string name="nova2_loop_sf" translatable="false">
         vec2 zSqr = cSqrSF(Z1);
         Z = Z1 - cDivSF(sinSF(zSqr) - Z1, 2.0*cMultSF(Z1, cosSF(zSqr)) - vec2(1.0, 0.0));
     </string>
-    <string name="nova2_katex">
+    <string name="nova2_katex" translatable="false">
         $z_{n+1} = z_n - \\Large\\frac{\\sin(z_n^2) - z_n}{2z_n\\cos(z_n^2)} \\normalsize + %s$
     </string>
 
 
     <!-- FIBONACCI POWERS -->
-    <string name="fibonacci_init_sf">
+    <string name="fibonacci_init_sf" translatable="false">
         int k1 = 0;
         int k = 1;
         int ktemp;
     </string>
-    <string name="fibonacci_loop_sf">
+    <string name="fibonacci_loop_sf" translatable="false">
         Z = Z1 + cPow3(ONE + cInverseSF(Z1), float(k)) + C;
         ktemp = k;
         k = k + k1;
@@ -932,88 +1064,39 @@
 
 
     <!-- TEST -->
-    <string name="test_init_sf">
+    <string name="test_init_sf" translatable="false">
     </string>
-    <string name="test_loop_sf">
+    <string name="test_loop_sf" translatable="false">
         Z = abs(sinSF(cSqrSF(Z1) - cMultSF(vec2(0.0, 1.0), Z1))) + C;
     </string>
-    <string name="test_loop_df">
-        vec4 Q1 = cSqrDF(X1, Y1);
-        vec2 Q2 = addDF(Q1.xy, vec2(P1.x, 0.0));
-        vec2 Q3 = addDF(Q1.zw, vec2(P1.y, 0.0));
-        vec4 Q4 = ballFoldDF(Q2, Q3);
-        X = addDF(Q4.xy, A);
-        Y = addDF(Q4.zw, B);
+    <string name="test_loop_df" translatable="false">
+        vec4 W1 = cSqrDF(X1, Y1);
+        vec2 W2 = addDF(W1.xy, vec2(P1.x, 0.0));
+        vec2 W3 = addDF(W1.zw, vec2(P1.y, 0.0));
+        vec4 W4 = ballFoldDF(W2, W3);
+        X = addDF(W4.xy, A);
+        Y = addDF(W4.zw, B);
     </string>
 
 
 
 
-    <!-- CONDITIONALS -->
-    <!-- ===================================================================================== -->
-
-    <!-- ESCAPE -->
-    <string name="escape_sf">
-        modZ = modSF(Z);
-        if (modZ > R || isinf(Z.x*Z.x) || isinf(Z.y*Z.y) || isinf(modSqrSF(Z)))
-    </string>
-    <string name="escape_df_2">
-        modZ = modDF(X, Y);
-        if (modZ.x > R || !(modZ.x &lt; 0.0 || 0.0 &lt; modZ.x))
-    </string>
-    <string name="escape_df">
-        modZ = modDF(X, Y);
-        if (modZ.x > R || isinf(X.x*X.x) || isinf(Y.x*Y.x) || isinf(X.x*X.x + Y.x*Y.x))
-    </string>
-
-    <!-- CONVERGE -->
-    <string name="converge_sf">
-        eps = modSF(Z - Z1);
-        if (eps &lt; 1e-4)
-    </string>
-    <string name="converge_df">
-        eps = modSqrDF(addDF(X, -X1), addDF(Y, -Y1)).x;
-        if (eps &lt; 1e-9)
-    </string>
 
 
 
 
-    <!-- INITIALIZATIONS -->
-    <!-- ===================================================================================== -->
 
-    <!-- CONSTANT -->
-    <string name="constant_sf">
-        Z = vec2(x0, y0);
-    </string>
-    <string name="constant_df">
-        X = vec2(x0, 0.0);
-        Y = vec2(y0, 0.0);
-    </string>
-
-    <!-- JULIA -->
-    <string name="julia_sf">
-        Z = C;
-    </string>
-    <string name="julia_df">
-        X = A;
-        Y = B;
-    </string>
-
-
-
-
-    <!-- TEXTURE ALGORITHMS -->
+    <!-- TEXTURES -->
     <!-- ===================================================================================== -->
 
     <!-- ABSOLUTE ESCAPE -->
-    <string name="absolute_escape_final">
+    <string name="absolute_escape_final" translatable="false">
         <!--  -->
         colorParams.x = floor(float(n)/float(maxIter - 1));
     </string>
 
     <!-- CONDITIONAL ITERATION -->
-    <string name="escape_final">
+    <string name="escape_final" translatable="false">
         <!-- [0, 1] -->
         float j = float(n)/float(maxIter);
         colorParams.x = 10.0*j;
@@ -1021,127 +1104,137 @@
 
 
     <!-- CONVERGE SMOOTH -->
-    <string name="converge_smooth_final">
+    <string name="converge_smooth_final" translatable="false">
 
     </string>
 
 
     <!-- ESCAPE SMOOTH -->
-    <string name="mandelbrot_smooth_final_sf">
+    <string name="mandelbrot_smooth_final_sf" translatable="false">
         <!-- [0, 1] -->
         float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
         colorParams.x = 10.0*i/float(maxIter);
     </string>
-    <string name="mandelbrot_smooth_final_df">
+    <string name="mandelbrot_smooth_final_df" translatable="false">
         float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
         colorParams.x = 10.0*i/float(maxIter);
     </string>
 
 
     <!-- DISTANCE ESTIMATION -->
-    <string name="mandelbrot_dist_init_sf">
+    <string name="mandelbrot_dist_int_init_sf" translatable="false">
         vec2 alpha = vec2(0.0);
+        vec2 powZ1;
     </string>
-    <string name="mandelbrot_dist_loop_sf">
-        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+    <string name="mandelbrot_dist_int_loop_sf" translatable="false">
+        powZ1 = Z1;
+        for (int i = 1; i &lt; int(power) - 1; i++) {
+            powZ1 = cMultSF(powZ1, Z1);
+        }
+        alpha = power*cMultSF(powZ1, alpha) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_dist_final_sf">
+    <string name="mandelbrot_dist_int_final_sf" translatable="false">
         colorParams.x = modZ*log(modZ)/modSF(alpha)/xScale.x;
     </string>
-    <string name="mandelbrot_dist_init_df">
+    <string name="mandelbrot_dist_int_init_df" translatable="false">
         vec2 alpha = vec2(0.0);
         vec2 Z, Z1;
+        vec2 powZ1;
     </string>
-    <string name="mandelbrot_dist_loop_df">
+    <string name="mandelbrot_dist_int_loop_df" translatable="false">
         Z1 = vec2(X1.x, Y1.x);
         Z = vec2(X.x, Y.x);
-        alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
+        powZ1 = Z1;
+        for (int i = 1; i &lt; int(power) - 1; i++) {
+            powZ1 = cMultSF(powZ1, Z1);
+        }
+        alpha = power*cMultSF(powZ1, alpha) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_dist_final_df">
+    <string name="mandelbrot_dist_int_final_df" translatable="false">
         colorParams.x = divDF(vec2(modZ.x*log(modZ.x)/modSF(alpha), 0.0), xScale).x;
     </string>
 
-    <string name="mandelbrot_normal1_init_sf">
+    <string name="mandelbrot_normal1_init_sf" translatable="false">
         vec2 alpha = vec2(0.0);
     </string>
-    <string name="mandelbrot_normal1_loop_sf">
+    <string name="mandelbrot_normal1_loop_sf" translatable="false">
         alpha = power*cMultSF(cPow3(Z1, power - 1.0), alpha) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_normal1_final_sf">
+    <string name="mandelbrot_normal1_final_sf" translatable="false">
         vec2 u = cDivSF(Z, alpha);
         colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
-    <string name="mandelbrot_normal1_init_df">
+    <string name="mandelbrot_normal1_init_df" translatable="false">
         vec2 alpha = vec2(0.0);
         vec2 Z, Z1;
     </string>
-    <string name="mandelbrot_normal1_loop_df">
+    <string name="mandelbrot_normal1_loop_df" translatable="false">
         Z1 = vec2(X1.x, Y1.x);
         Z = vec2(X.x, Y.x);
         alpha = power*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_normal1_final_df">
+    <string name="mandelbrot_normal1_final_df" translatable="false">
         vec2 u = cDivSF(Z, alpha);
         colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
 
-    <string name="mandelbrot_normal2_init_sf">
+    <string name="mandelbrot_normal2_init_sf" translatable="false">
         vec2 alpha = vec2(0.0);
         vec2 beta = vec2(0.0);
     </string>
-    <string name="mandelbrot_normal2_loop_sf">
+    <string name="mandelbrot_normal2_loop_sf" translatable="false">
         beta = power*((power - 1.0)*cMultSF(cPow3(Z1, power - 1.9999), cSqrSF(alpha)) + cMultSF(cPow3(Z1, power - 1.0), beta));
         alpha = power*cMultSF(cPow3(Z1, power - 1.0), alpha) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_normal2_final_sf">
+    <string name="mandelbrot_normal2_final_sf" translatable="false">
         float logModZ = log(modZ);
         vec2 u = cMultSF(cMultSF(Z, alpha), (logModZ + 1.0)*cConjSF(cSqrSF(alpha)) - logModZ*cConjSF(cMultSF(Z, beta)));
         colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
-    <string name="mandelbrot_normal2_init_df">
+    <string name="mandelbrot_normal2_init_df" translatable="false">
         vec2 alpha = vec2(0.0);
         vec2 beta = vec2(0.0);
         vec2 Z, Z1;
     </string>
-    <string name="mandelbrot_normal2_loop_df">
+    <string name="mandelbrot_normal2_loop_df" translatable="false">
         Z1 = vec2(X1.x, Y1.x);
         Z = vec2(X.x, Y.x);
         beta = 2.0*(cMultSF(Z1, beta) + cSqrSF(alpha));
         alpha = 2.0*cMultSF(Z1, alpha) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_normal2_final_df">
+    <string name="mandelbrot_normal2_final_df" translatable="false">
         float logModZ = log(modZ.x);
         vec2 u = cMultSF(cMultSF(Z, alpha), (logModZ + 1.0)*cConjSF(cSqrSF(alpha)) - logModZ*cConjSF(cMultSF(Z, beta)));
         colorParams.x = atan(u.y, u.x)/(2.0*pi) + 1.0;
     </string>
 
-    <string name="mandelbrot_distgrad_init_sf">
+    <string name="mandelbrot_distgrad_init_sf" translatable="false">
         vec2 alpha = vec2(0.0);
         vec2 beta = vec2(0.0);
     </string>
-    <string name="mandelbrot_distgrad_loop_sf">
+    <string name="mandelbrot_distgrad_loop_sf" translatable="false">
         beta = 2.0*(cMultSF(beta, Z1) + cSqrSF(alpha));
         alpha = 2.0*cMultSF(alpha, Z1) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_distgrad_final_sf">
+    <string name="mandelbrot_distgrad_final_sf" translatable="false">
         float logModZ = log(modZ);
         float modAlpha = modSF(alpha);
         float dist = 2.0*modZ*logModZ/modAlpha;
         vec2 grad = 2.0*cMultSF(alpha/modAlpha, (logModZ + 1.0)/modZ*Z - modZ*logModZ/(modAlpha*modAlpha)*beta);
         colorParams.x = atan(grad.y, grad.x)/(2.0*pi) + 1.0;
     </string>
-    <string name="mandelbrot_distgrad_init_df">
+    <string name="mandelbrot_distgrad_init_df" translatable="false">
         vec2 alpha = vec2(0.0);
         vec2 beta = vec2(0.0);
         vec2 Z, Z1 = vec2(0.0);
     </string>
-    <string name="mandelbrot_distgrad_loop_df">
+    <string name="mandelbrot_distgrad_loop_df" translatable="false">
         Z = vec2(X.x, Y.x);
         Z1 = vec2(X1.x, Y1.x);
         beta = 2.0*(cMultSF(beta, Z) + cSqrSF(alpha));
         alpha = 2.0*cMultSF(alpha, Z) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_distgrad_final_df">
+    <string name="mandelbrot_distgrad_final_df" translatable="false">
         float logModZ = log(modZ.x);
         float modAlpha = modSF(alpha);
         float dist = 2.0*modZ.x*logModZ/modAlpha;
@@ -1150,67 +1243,67 @@
     </string>
 
     <!-- FIELD LINES -->
-    <string name="mandelbrot_fieldlines_init_sf">
+    <string name="mandelbrot_fieldlines_init_sf" translatable="false">
         vec2 alpha = vec2(0.0);
     </string>
-    <string name="mandelbrot_fieldlines_loop_sf">
+    <string name="mandelbrot_fieldlines_loop_sf" translatable="false">
         alpha = 2.0*cMultSF(alpha, Z1) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_fieldlines_final_sf">
+    <string name="mandelbrot_fieldlines_final_sf" translatable="false">
         vec2 q = cMultSF(cMultSF(vec2(0.0, 1.0), Z), alpha) / (2.0*modZ*modZ);
         colorParams.x = atan(q.y, q.x);
     </string>
 
 
     <!-- EXPONENTIAL SMOOTHING -->
-    <string name="exponential_smooth_init">
+    <string name="exponential_smooth_init" translatable="false">
         float sum = 0.0;
     </string>
-    <string name="exponential_smooth_loop_sf">
+    <string name="exponential_smooth_loop_sf" translatable="false">
         sum = sum + exp(-modZ);
     </string>
-    <string name="exponential_smooth_loop_df">
+    <string name="exponential_smooth_loop_df" translatable="false">
         sum = sum + exp(-modZ.x);
     </string>
-    <string name="exponential_smooth_final">
+    <string name="exponential_smooth_final" translatable="false">
         colorParams.x = log(log(sum + 1.0) + 1.0);
     </string>
 
 
     <!-- LIGHTING -->
-    <string name="mandelbrot_light_init_sf">
+    <string name="mandelbrot_light_init_sf" translatable="false">
         vec2 a = vec2(0.0);
         vec2 b = vec2(0.0);
     </string>
-    <string name="mandelbrot_light_loop_sf">
+    <string name="mandelbrot_light_loop_sf" translatable="false">
         b = 2.0*(cMultSF(b, Z1) + cSqrSF(a));
         a = 2.0*cMultSF(a, Z1) + vec2(1.0, 0.0);
     </string>
-    <string name="mandelbrot_light_final_sf">
+    <string name="mandelbrot_light_final_sf" translatable="false">
         vec2 u = cDivSF(Z, a);
         float theta = atan(u.y, u.x);
         colorParams.x = theta;
     </string>
-    <string name="mandelbrot_light_final2_sf">
+    <string name="mandelbrot_light_final2_sf" translatable="false">
         vec2 u = cMultSF(cMultSF(Z, a), (log(modZ) + 1.0)*cConjSF(cSqrSF(a)) - log(modZ)*cConjSF(cMultSF(Z, b)));
         float theta = atan(u.y, u.x);
         colorParams.x = theta;
     </string>
-    <string name="mandelbrot_light_init_df">
+    <string name="mandelbrot_light_init_df" translatable="false">
         vec4 a = vec4(0.0);
     </string>
-    <string name="mandelbrot_light_loop_df">
+    <string name="mandelbrot_light_loop_df" translatable="false">
         a = cMultDF(a.xy, a.zw, X1, Y1);
         a.xy = multDF(vec2(2.0, 0.0), a.xy);
         a.zw = multDF(vec2(2.0, 0.0), a.zw);
         a.xy = addDF(a.xy, vec2(1.0, 0.0));
     </string>
-    <string name="mandelbrot_light_final_df">
+    <string name="mandelbrot_light_final_df" translatable="false">
         vec4 u = cDivDF(X1, Y1, a.xy, a.zw);
         float theta = atan(u.z, u.x);
         colorParams.x = theta;
     </string>
-    <string name="mandelbrot_light_color_sf">
+    <string name="mandelbrot_light_color_sf" translatable="false">
         float theta = colorParams.x;
         vec3 normRay = vec3(cos(theta), sin(theta), 1.0);
         normRay = normalize(normRay);
@@ -1227,14 +1320,30 @@
 
 
     <!-- TRIANGLE INEQUALITY AVERAGE -->
-    <string name="triangle_init_sf" tools:ignore="TypographyOther">
+    <string name="triangle_init_sf" tools:ignore="TypographyOther" translatable="false">
         float modC = modSF(C);
-        float modPowZ2 = 0.0;
+        float modZ2;
+        float modPowZ2;
         float sum, sum1 = 0.0;
         float il = 1.0/log(power);
         float llr = log(log(R)/power);
     </string>
-    <string name="triangle_loop_sf">
+    <string name="triangle_int_loop_sf" translatable="false">
+        if (n > 2) {
+            sum1 = sum;
+            modZ2 = modSF(Z2);
+            modPowZ2 = modZ2;
+            for (int i = 1; i &lt; int(power); i++) {
+                modPowZ2 = modPowZ2 * modZ2;
+            }
+            float m = abs(modPowZ2 - modC);
+            float M = modPowZ2 + modC;
+            float p = modSF(Z1) - m;
+            float q = M - m;
+            sum += p / q;
+        }
+    </string>
+    <string name="triangle_float_loop_sf" translatable="false">
         if (n > 2) {
             sum1 = sum;
             modPowZ2 = pow(modSqrSF(Z2), 0.5*power);
@@ -1245,116 +1354,84 @@
             sum += p / q;
         }
     </string>
-    <string name="triangle_final_sf">
+    <string name="triangle_final_sf" translatable="false">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
     </string>
-    <string name="triangle_init_sf2" tools:ignore="TypographyOther">
-        float _modC = modSF(C)*Sn;
-        float _modSqrZ2 = 0.0;
-        float sum, sum1 = 0.0;
-        float il = 1.0/log(2.0);
-        float llr = log(log(R)/2.0);
-    </string>
-    <string name="triangle_loop_sf2">
-        if (n > 2) {
-            sum1 = sum;
-            _modSqrZ2 = _modSqrSF(Z2*Sn);
-            float _m = abs(_modSqrZ2 - _modC);
-            float _M = _modSqrZ2 + _modC;
-            float _p = _modSF(Z1*Sn) - _m;
-            float _q = _M - _m;
-            sum += _p / _q;
-        }
-    </string>
-    <string name="triangle_final_sf2">
-        sum /= float(n);
-        sum1 /= float(n - 1);
-        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
-        float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.x = s;
-    </string>
-    <string name="triangle_init_df" tools:ignore="TypographyOther">
+    <string name="triangle_init_df" tools:ignore="TypographyOther" translatable="false">
         vec2 modC = modDF(A, B);
-        vec2 modSqrZ2;
+        vec2 modZ2;
+        vec2 modPowZ2;
         vec2 sum, sum1 = vec2(0.0);
         float il = 1.0/log(power);
         float llr = log(log(R)/power);
     </string>
-    <string name="triangle_loop_df">
+    <string name="triangle_int_loop_df" translatable="false">
         if (n > 2) {
             sum1 = sum;
-            modSqrZ2 = modSqrDF(X2, Y2);
-            vec2 m = absDF(addDF(modSqrZ2, -modC));
-            vec2 M = addDF(modSqrZ2, modC);
+            modZ2 = modDF(X2, Y2);
+            modPowZ2 = modZ2;
+            for (int i = 1; i &lt; int(power); i++) {
+                modPowZ2 = multDF(modPowZ2, modZ2);
+            }
+            vec2 m = absDF(addDF(modPowZ2, -modC));
+            vec2 M = addDF(modPowZ2, modC);
             vec2 p = addDF(modDF(X1, Y1), -m);
             vec2 q = addDF(M, -m);
             sum = addDF(sum, divDF(p, q));
         }
     </string>
-    <string name="triangle_final_df">
+    <string name="triangle_float_loop_df" translatable="false">
+        if (n > 2) {
+            sum1 = sum;
+            modPowZ2 = vec2(pow(modSqrDF(X2, Y2).x, 0.5*power), 0.0);
+            vec2 m = absDF(addDF(modPowZ2, -modC));
+            vec2 M = addDF(modPowZ2, modC);
+            vec2 p = addDF(modDF(X1, Y1), -m);
+            vec2 q = addDF(M, -m);
+            sum = addDF(sum, divDF(p, q));
+        }
+    </string>
+    <string name="triangle_final_df" translatable="false">
         sum = multDF(sum, vec2(1.0/float(n), 0.0));
         sum1 = multDF(sum1, vec2(1.0/float(n - 1), 0.0));
         float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
         float s = sum1.x + (sum.x - sum1.x)*(r + 1.0);
         colorParams.x = s;
     </string>
-    <string name="triangle_init_df2" tools:ignore="TypographyOther">
-        float modC = modDF(A, B).x;
-        float modSqrZ1;
-        float sum, sum1 = 0.0;
-    </string>
-    <string name="triangle_loop_df2">
-        if (n > 0) {
-            sum1 = sum;
-            modSqrZ1 = modSqrDF(X1, Y1).x;
-            float m = abs(modSqrZ1 - modC);
-            float M = modSqrZ1 + modC;
-            float p = modZ.x - m;
-            float q = M - m;
-            sum += p / q;
-        }
-    </string>
-    <string name="triangle_final_df2">
-        sum /= float(n);
-        sum1 /= float(n - 1);
-        float r = il*llr - il*log(0.5*log(modSqrDF(X1, Y1).x));
-        float s = sum1 + (sum - sum1)*(r + 1.0);
-        colorParams.x = s;
-    </string>
-
-
+    
+    
     <!-- CURVATURE AVERAGE -->
-    <string name="curvature_init">
+    <string name="curvature_init" translatable="false">
         float sum, sum1 = 0.0;
         float il = 1.0/log(power);
         float llr = log(log(R)/power);
     </string>
-    <string name="curvature_loop_sf">
+    <string name="curvature_loop_sf" translatable="false">
         if (n > 1) {
             sum1 = sum;
             vec2 w = cDivSF(Z - Z1, Z1 - Z2);
             sum += abs(atan(w.y, w.x));
         }
     </string>
-    <string name="curvature_final_sf">
+    <string name="curvature_final_sf" translatable="false">
         sum /= float(n) * pi;
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
     </string>
-    <string name="curvature_loop_df">
+    <string name="curvature_loop_df" translatable="false">
         if (n > 1) {
             sum1 = sum;
             vec2 w = cDivSF(vec2(X.x - X1.x, Y.x - Y1.x), vec2(X1.x - X2.x, Y1.x - Y2.x));
             sum += abs(atan(w.y, w.x));
         }
     </string>
-    <string name="curvature_final_df">
+    <string name="curvature_final_df" translatable="false">
         sum /= float(n) * pi;
         sum1 /= float(n - 1) * pi;
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
@@ -1364,30 +1441,30 @@
 
 
     <!-- STRIPE AVERAGE -->
-    <string name="stripe_init">
+    <string name="stripe_init" translatable="false">
         float argZ;
         float sum, sum1 = 0.0;
         float il = 1.0/log(power);
         float llr = log(log(R)/power);
     </string>
-    <string name="stripe_loop_sf">
+    <string name="stripe_loop_sf" translatable="false">
         sum1 = sum;
         argZ = atan(Z.y, Z.x);
         sum += 0.5*(sin(Q1*argZ) + 1.0);
     </string>
-    <string name="stripe_final_sf">
+    <string name="stripe_final_sf" translatable="false">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
     </string>
-    <string name="stripe_loop_df">
+    <string name="stripe_loop_df" translatable="false">
         sum1 = sum;
         argZ = atan(Y.x, X.x);
         sum += 0.5*(sin(Q1*argZ) + 1.0);
     </string>
-    <string name="stripe_final_df">
+    <string name="stripe_final_df" translatable="false">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
@@ -1397,86 +1474,151 @@
 
 
     <!-- ORBIT TRAP MIN X -->
-    <string name="orbittrap_init">
+    <string name="orbittrap_init" translatable="false">
         float minMod = R;
         float minX = R;
         float minY = R;
         float dist = 0.0;
         int m = 0;
     </string>
-    <string name="orbittrap_loop_sf">
+    <string name="orbittrap_loop_sf" translatable="false">
         dist = abs(Z.x);
         if(dist &lt; minX) {
             minX = dist;
             m = n;
         }
     </string>
-    <string name="orbittrap_loop_df">
+    <string name="orbittrap_loop_df" translatable="false">
         dist = abs(X.x);
         if(dist &lt; minX) {
             minX = dist;
             m = n;
         }
     </string>
-    <string name="orbittrap_final_radius">
+    <string name="orbittrap_final_radius" translatable="false">
         colorParams.x = minX;
     </string>
-    <string name="orbittrap_final_iteration">
+    <string name="orbittrap_final_iteration" translatable="false">
         colorParams.x = float(m)/float(maxIter);
     </string>
 
 
     <!-- ORBIT TRAP MIN XY -->
-    <string name="orbittrapminxy_init">
+    <string name="orbittrapminxy_init" translatable="false">
         float minXY = R;
         float dist = 0.0;
         int m = 0;
     </string>
-    <string name="orbittrapminxy_loop_sf">
+    <string name="orbittrapminxy_loop_sf" translatable="false">
         dist = min(abs(Z.x), abs(Z.y));
         if(dist &lt; minXY) {
             minXY = dist;
             m = n;
         }
     </string>
-    <string name="orbittrapminxy_final_radius">
+    <string name="orbittrapminxy_final_radius" translatable="false">
         colorParams.x = minXY;
     </string>
-    <string name="orbittrapminxy_final_iter">
+    <string name="orbittrapminxy_final_iter" translatable="false">
         colorParams.x = m/float(maxIter);
     </string>
 
 
     <!-- OVERLAY -->
-    <string name="overlay_init">
+    <string name="overlay_init" translatable="false">
         float argZ;
         float sum, sum1 = 0.0;
         float il = 1.0/log(power);
         float llr = log(log(R)/power);
     </string>
-    <string name="overlay_loop_sf">
+    <string name="overlay_loop_sf" translatable="false">
         sum1 = sum;
         argZ = atan(Z.y, Z.x);
         sum += tan(Q1*argZ);
     </string>
-    <string name="overlay_loop_df">
+    <string name="overlay_loop_df" translatable="false">
         sum1 = sum;
         argZ = atan(Y.x, X.x);
         sum += tan(Q1*argZ);
     </string>
-    <string name="overlay_final_sf">
+    <string name="overlay_final_sf" translatable="false">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
     </string>
-    <string name="overlay_final_df">
+    <string name="overlay_final_df" translatable="false">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
+    </string>
+
+
+
+
+
+
+
+
+
+    <!-- CONDITIONALS -->
+    <!-- ===================================================================================== -->
+
+    <!-- ESCAPE -->
+    <string name="escape_sf" translatable="false">
+        modZ = modSF(Z);
+        if (modZ > R || isinf(Z.x*Z.x) || isinf(Z.y*Z.y) || isinf(modSqrSF(Z)))
+    </string>
+    <string name="escape_df_2" translatable="false">
+        modZ = modDF(X, Y);
+        if (modZ.x > R || !(modZ.x &lt; 0.0 || 0.0 &lt; modZ.x))
+    </string>
+    <string name="escape_df" translatable="false">
+        modZ = modDF(X, Y);
+        if (modZ.x > R || isinf(X.x*X.x) || isinf(Y.x*Y.x) || isinf(X.x*X.x + Y.x*Y.x))
+    </string>
+
+    <!-- CONVERGE -->
+    <string name="converge_sf" translatable="false">
+        eps = modSF(Z - Z1);
+        if (eps &lt; 1e-4)
+    </string>
+    <string name="converge_df" translatable="false">
+        eps = modSqrDF(addDF(X, -X1), addDF(Y, -Y1)).x;
+        if (eps &lt; 1e-9)
+    </string>
+
+
+
+
+
+
+
+
+
+
+    <!-- INITIALIZATIONS -->
+    <!-- ===================================================================================== -->
+
+    <!-- CONSTANT -->
+    <string name="constant_sf" translatable="false">
+        Z = vec2(x0, y0);
+    </string>
+    <string name="constant_df" translatable="false">
+        X = vec2(x0, 0.0);
+        Y = vec2(y0, 0.0);
+    </string>
+
+    <!-- JULIA -->
+    <string name="julia_sf" translatable="false">
+        Z = C;
+    </string>
+    <string name="julia_df" translatable="false">
+        X = A;
+        Y = B;
     </string>
 
 
