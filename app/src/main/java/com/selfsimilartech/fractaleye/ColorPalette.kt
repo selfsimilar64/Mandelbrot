@@ -16,7 +16,7 @@ fun FloatArray.invert() : FloatArray {
 }
 
 class ColorPalette (
-        val name: String,
+        val name: Int,
         val ids: List<Int> = listOf(),
         oscillate: Boolean = true
 ) {
@@ -24,12 +24,12 @@ class ColorPalette (
     companion object {
 
         val yinyang = ColorPalette(
-                "Yin Yang", listOf(
+                R.string.yinyang, listOf(
                 R.color.black,
                 R.color.white
         ))
         val beach = ColorPalette(
-                "Beach", listOf(
+                R.string.empty, listOf(
                 R.color.yellowish1,
                 R.color.darkblue1,
                 R.color.black,
@@ -37,7 +37,7 @@ class ColorPalette (
                 R.color.tusk
         ))
         val p1 = ColorPalette(
-                "P1", listOf(
+                R.string.empty, listOf(
                 R.color.white,
                 R.color.purple1,
                 R.color.black,
@@ -45,7 +45,7 @@ class ColorPalette (
                 R.color.white
         ))
         val p3 = ColorPalette(
-                "P3", listOf(
+                R.string.empty, listOf(
                 R.color.q1,
                 R.color.darkblue1,
                 R.color.white,
@@ -53,7 +53,7 @@ class ColorPalette (
                 R.color.q3
         ))
         val vascular = ColorPalette(
-                "Vascular", listOf(
+                R.string.vascular, listOf(
                 R.color.black,
                 R.color.purple3,
                 R.color.deepred,
@@ -61,7 +61,7 @@ class ColorPalette (
                 R.color.darkblue2
         ))
         val flora = ColorPalette(
-                "Flora", listOf(
+                R.string.flora, listOf(
                 R.color.flora1,
                 R.color.flora2,
                 R.color.flora3,
@@ -70,7 +70,7 @@ class ColorPalette (
                 R.color.flora6
         ))
         val royal = ColorPalette(
-                "Royal", listOf(
+                R.string.royal, listOf(
                 R.color.yellowish1,
                 R.color.darkblue1,
                 R.color.softgreen2,
@@ -78,14 +78,14 @@ class ColorPalette (
                 R.color.maroon
         ))
         val groovy = ColorPalette(
-                "Groovy", listOf(
+                R.string.groovy, listOf(
                 R.color.black,
                 R.color.q4,
                 R.color.q5,
                 R.color.q6
         ))
         val canyon = ColorPalette(
-                "Canyon", listOf(
+                R.string.canyon, listOf(
                 R.color.deepred2,
                 R.color.q6,
                 R.color.q8,
@@ -93,7 +93,7 @@ class ColorPalette (
                 R.color.purple3
         ))
         val anubis = ColorPalette(
-                "Anubis", listOf(
+                R.string.anubis, listOf(
                 R.color.black,
                 R.color.purple2,
                 R.color.mint,
@@ -102,7 +102,7 @@ class ColorPalette (
                 R.color.tangerine
         ))
         val p9 = ColorPalette(
-                "P9", listOf(
+                R.string.p9, listOf(
                 R.color.q12,
                 R.color.q13,
                 R.color.q14,
@@ -112,7 +112,7 @@ class ColorPalette (
                 R.color.q18
         ))
         val viridis = ColorPalette(
-                "Viridis", listOf(
+                R.string.viridis, listOf(
                 R.color.q19,
                 R.color.q20,
                 R.color.q21,
@@ -121,7 +121,7 @@ class ColorPalette (
                 R.color.q24
         ))
         val plasma = ColorPalette(
-                "Plasma", listOf(
+                R.string.plasma, listOf(
                 R.color.q25,
                 R.color.q26,
                 R.color.q27,
@@ -131,7 +131,7 @@ class ColorPalette (
                 R.color.q31
         ))
         val inferno = ColorPalette(
-                "Inferno", listOf(
+                R.string.empty, listOf(
                 R.color.q32,
                 R.color.q33,
                 R.color.q34,
@@ -140,7 +140,7 @@ class ColorPalette (
                 R.color.q37
         ))
         val magma = ColorPalette(
-                "Magma", listOf(
+                R.string.magma, listOf(
                 R.color.q38,
                 R.color.q39,
                 R.color.q40,
@@ -149,7 +149,7 @@ class ColorPalette (
                 R.color.q43
         ))
         val night = ColorPalette(
-                "Night", listOf(
+                R.string.night, listOf(
                 R.color.night1,
                 R.color.night2,
                 R.color.night3,
@@ -159,7 +159,7 @@ class ColorPalette (
                 R.color.night7
         ))
         val cosmic = ColorPalette(
-                "Cosmic", listOf(
+                R.string.cosmic, listOf(
                 R.color.cosmic1,
                 R.color.cosmic2,
                 R.color.cosmic3,
@@ -170,7 +170,7 @@ class ColorPalette (
                 R.color.cosmic8
         ))
         val oldskool = ColorPalette(
-                "Old Sk00l", listOf(
+                R.string.oldskool, listOf(
                 R.color.oldskool1,
                 R.color.oldskool2,
                 R.color.oldskool3,
@@ -180,7 +180,7 @@ class ColorPalette (
                 R.color.oldskool7
         ))
         val elephant = ColorPalette(
-                "Elephant", listOf(
+                R.string.elephant, listOf(
                 R.color.elephant1,
                 R.color.elephant2,
                 R.color.elephant3,
@@ -190,13 +190,21 @@ class ColorPalette (
                 R.color.elephant7
         ))
         val gold = ColorPalette(
-                "Gold", listOf(
+                R.string.gold, listOf(
                 R.color.gold1,
                 R.color.gold2,
                 R.color.gold3,
                 R.color.gold4,
                 R.color.gold5,
                 R.color.gold6
+        ))
+        val clover = ColorPalette(
+                R.string.empty, listOf(
+                R.color.clover1,
+                R.color.clover2,
+                R.color.clover3,
+                R.color.clover4,
+                R.color.clover5
         ))
         val all = arrayListOf(
                 yinyang,
@@ -263,7 +271,6 @@ class ColorPalette (
         return List(C.size) { i: Int -> intToFloatArray(C[i]) }
     }
 
-    override fun toString() : String { return name }
     override fun equals(other: Any?): Boolean {
         return other is ColorPalette && other.name == name
     }
