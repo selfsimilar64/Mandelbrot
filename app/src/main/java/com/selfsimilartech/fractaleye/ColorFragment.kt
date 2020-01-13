@@ -1,6 +1,7 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
 import android.support.v4.app.Fragment
 import android.os.Bundle
@@ -15,6 +16,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import kotlinx.android.synthetic.main.color_fragment.*
+import java.text.NumberFormat
+import java.text.ParseException
 
 
 class ColorFragment : Fragment() {
@@ -22,6 +25,7 @@ class ColorFragment : Fragment() {
     // Store instance variables
     private lateinit var f: Fractal
     private lateinit var fsv: FractalSurfaceView
+    private val nf = NumberFormat.getInstance()
 
     // newInstance constructor for creating fragment with arguments
     fun passArguments(f: Fractal, fsv: FractalSurfaceView) {
@@ -29,12 +33,12 @@ class ColorFragment : Fragment() {
         this.fsv = fsv
     }
 
-    fun String.formatToDouble() : Double? {
+    private fun String.formatToDouble() : Double? {
         var d : Double? = null
-        try { d = this.toDouble() }
-        catch (e: NumberFormatException) {
+        try { d = nf.parse(this)?.toDouble() }
+        catch (e: ParseException) {
             val act = if (activity is MainActivity) activity as MainActivity else null
-            act?.showMessage("Invalid number format")
+            act?.showMessage(resources.getString(R.string.msg_invalid_format))
         }
         return d
     }
@@ -88,12 +92,18 @@ class ColorFragment : Fragment() {
 
 
         frequencyEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
-            f.frequency = w.text.toString().formatToDouble()?.toFloat() ?: f.frequency
+            val result = w.text.toString().formatToDouble()?.toFloat()
+            if (result != null) {
+                f.frequency = result
+            }
             w.text = "%.5f".format(f.frequency)
         })
 
         phaseEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
-            f.phase = w.text.toString().formatToDouble()?.toFloat() ?: f.phase
+            val result = w.text.toString().formatToDouble()?.toFloat()
+            if (result != null) {
+                f.phase = result
+            }
             w.text = "%.5f".format(f.phase)
         })
 
@@ -104,7 +114,7 @@ class ColorFragment : Fragment() {
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 ColorPalette.getColors(resources, f.palette.ids)
         ))
-        colorPreviewName.text = f.palette.name
+        colorPreviewName.text = resources.getString(f.palette.name)
         colorPreview.setOnClickListener {
 
             handler.postDelayed({
@@ -127,7 +137,7 @@ class ColorFragment : Fragment() {
                     GradientDrawable.Orientation.LEFT_RIGHT,
                     ColorPalette.getColors(resources, f.palette.ids)
             ))
-            colorPreviewName.text = f.palette.name
+            colorPreviewName.text = resources.getString(f.palette.name)
             colorLayout.removeView(colorPreviewListLayout)
             colorContent.visibility = LinearLayout.VISIBLE
             fsv.renderProfile = RenderProfile.MANUAL
@@ -164,9 +174,9 @@ class ColorFragment : Fragment() {
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabSelected(tab: TabLayout.Tab) {
 
-                f.solidFillColor = when (tab.text.toString()) {
-                    "black" -> R.color.black
-                    "white" -> R.color.white
+                f.solidFillColor = when (tab.position) {
+                    0 -> R.color.black
+                    1 -> R.color.white
                     else -> R.color.cyan
                 }
 
@@ -183,6 +193,13 @@ class ColorFragment : Fragment() {
         colorPreviewListLayout.visibility = RecyclerView.VISIBLE
 
 
+
+        val thumbRes = Resolution.THUMB.scaleRes(fsv.screenRes)
+        ColorPalette.all.forEach {
+            if (it.thumbnail == null) {
+                it.thumbnail = Bitmap.createBitmap(thumbRes[0], thumbRes[0], Bitmap.Config.ARGB_8888)
+            }
+        }
         act?.updateColorEditTexts()
         super.onViewCreated(v, savedInstanceState)
 

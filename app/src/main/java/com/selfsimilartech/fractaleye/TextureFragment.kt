@@ -1,6 +1,8 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
+import android.graphics.Bitmap
+import java.text.NumberFormat
 import android.support.v4.app.Fragment
 import android.os.Bundle
 import android.os.Handler
@@ -15,6 +17,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import kotlinx.android.synthetic.main.texture_fragment.*
+import java.text.ParseException
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -24,18 +27,21 @@ class TextureFragment : Fragment() {
     // Store instance variables
     private lateinit var f: Fractal
     private lateinit var fsv: FractalSurfaceView
+    private val nf = NumberFormat.getInstance()
 
     // newInstance constructor for creating fragment with arguments
     fun passArguments(f: Fractal, fsv: FractalSurfaceView) {
         this.f = f
         this.fsv = fsv
     }
-    fun String.formatToDouble() : Double? {
+    private fun String.formatToDouble(showMsg: Boolean = true) : Double? {
         var d : Double? = null
-        try { d = this.toDouble() }
-        catch (e: NumberFormatException) {
-            val act = if (activity is MainActivity) activity as MainActivity else null
-            act?.showMessage("Invalid number format")
+        try { d = nf.parse(this)?.toDouble() }
+        catch (e: ParseException) {
+            if (showMsg) {
+                val act = if (activity is MainActivity) activity as MainActivity else null
+                act?.showMessage(resources.getString(R.string.msg_invalid_format))
+            }
         }
         return d
     }
@@ -74,13 +80,13 @@ class TextureFragment : Fragment() {
                     imm.hideSoftInputFromWindow(v.windowToken, 0)
                     editText.clearFocus()
                     editText.isSelected = false
+                    fsv.requestRender()
                 }
                 else -> {
                     Log.d("EQUATION FRAGMENT", "some other action")
                 }
             }
 
-            fsv.requestRender()
             editText.clearFocus()
             // act?.onWindowFocusChanged(true)
             true
@@ -90,7 +96,7 @@ class TextureFragment : Fragment() {
 
         // previewImage.setImageBitmap(f.texture.thumbnail)
         val handler = Handler()
-        texturePreviewName.text = f.texture.name
+        texturePreviewName.text = resources.getString(f.texture.name)
         texturePreview.setOnClickListener {
 
             handler.postDelayed({
@@ -116,15 +122,17 @@ class TextureFragment : Fragment() {
         qEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
 
             val param = f.texture.params[0]
-            param.q = w.text.toString().formatToDouble() ?: param.q
+            val result = w.text.toString().formatToDouble()
+            if (result != null) {
+                param.q = result
+                fsv.r.renderToTex = true
+            }
             param.setProgressFromValue()
 
             w.text = param.toString()
             qBar.progress = (param.progress*qBar.max.toDouble()).toInt()
-            Log.d("TEXTURE FRAGMENT", "param progress : ${param.progress}")
-            Log.d("TEXTURE FRAGMENT", "qBar max : ${qBar.max}")
-
-            fsv.r.renderToTex = true
+            // Log.d("TEXTURE FRAGMENT", "param progress : ${param.progress}")
+            // Log.d("TEXTURE FRAGMENT", "qBar max : ${qBar.max}")
 
         })
         qBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -133,7 +141,7 @@ class TextureFragment : Fragment() {
 
                 // update EditText but not param
                 val param = f.texture.params[0]
-                val progressNormal = progress.toDouble()/qBar.max
+                val progressNormal = progress.toDouble()/seekBar!!.max
                 qEdit.setText(param.toString((1.0 - progressNormal)*param.min + progressNormal*param.max))
 
             }
@@ -176,7 +184,7 @@ class TextureFragment : Fragment() {
 
                                         val param = f.texture.params[0]
                                         qLayout.visibility = ConstraintLayout.VISIBLE
-                                        qName.text = param.name
+                                        qName.text = resources.getString(param.name)
                                         Log.d("TEXTURE FRAGMENT", "q: $param")
                                         qBar.max = if (f.texture.params[0].discrete)
                                             f.texture.params[0].interval.toInt() else 100
@@ -198,7 +206,7 @@ class TextureFragment : Fragment() {
 
                                 }
 
-                                Log.e("MAIN ACTIVITY", "clicked texture: ${f.texture.name}")
+                                // Log.e("MAIN ACTIVITY", "clicked texture: ${f.texture.name}")
 
                             }
 
@@ -225,7 +233,7 @@ class TextureFragment : Fragment() {
 
             // previewImage.setImageBitmap(f.texture.thumbnail)
             // previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
-            texturePreviewName.text = f.texture.name
+            texturePreviewName.text = resources.getString(f.texture.name)
             textureLayout.removeView(texturePreviewListLayout)
             textureContent.visibility = LinearLayout.VISIBLE
             fsv.renderProfile = RenderProfile.MANUAL
@@ -236,16 +244,35 @@ class TextureFragment : Fragment() {
 
         bailoutSignificandEdit.setOnEditorActionListener(
                 editListener(bailoutExponentEdit) { w: TextView ->
-                    f.bailoutRadius = "${w.text}e${bailoutExponentEdit.text}".formatToDouble()?.toFloat() ?: f.bailoutRadius
-                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+                    val result1 = w.text.toString().formatToDouble()
+                    val result2 = bailoutExponentEdit.text.toString().formatToDouble()
+                    val result3 = "${w.text}e${bailoutExponentEdit.text}".formatToDouble()?.toFloat()
+                    if (result1 != null && result2 != null && result3 != null) {
+                        f.bailoutRadius = result3
+                        fsv.r.renderToTex = true
+                    }
+                    else {
+                        act?.showMessage(resources.getString(R.string.msg_invalid_format))
+                    }
+                    val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
                     w.text = "%.5f".format(bailoutStrings[0].toFloat())
+                    bailoutExponentEdit.setText("%d".format(bailoutStrings[1].toInt()))
                 })
         bailoutExponentEdit.setOnEditorActionListener(
                 editListener(null) { w: TextView ->
-                    f.bailoutRadius = "${bailoutSignificandEdit.text}e${w.text}".formatToDouble()?.toFloat() ?: f.bailoutRadius
-                    val bailoutStrings = "%e".format(f.bailoutRadius).split("e")
+                    val result1 = bailoutSignificandEdit.text.toString().formatToDouble()
+                    val result2 = w.text.toString().formatToDouble()
+                    val result3 = "${bailoutSignificandEdit.text}e${w.text}".formatToDouble()?.toFloat()
+                    if (result1 != null && result2 != null && result3 != null) {
+                        f.bailoutRadius = result3
+                        fsv.r.renderToTex = true
+                    }
+                    else {
+                        act?.showMessage(resources.getString(R.string.msg_invalid_format))
+                    }
+                    val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
+                    bailoutSignificandEdit.setText("%.5f".format(bailoutStrings[0].toFloat()))
                     w.text = "%d".format(bailoutStrings[1].toInt())
-                    fsv.r.renderToTex = true
                 })
 
 
@@ -255,7 +282,7 @@ class TextureFragment : Fragment() {
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabSelected(tab: TabLayout.Tab) {
 
-                f.textureMode = TextureMode.valueOf(tab.contentDescription.toString().toUpperCase(Locale.ROOT))
+                f.textureMode = TextureMode.values()[tab.position]
                 fsv.requestRender()
 
             }
@@ -269,6 +296,12 @@ class TextureFragment : Fragment() {
         texturePreviewListLayout.visibility = RecyclerView.VISIBLE
 
 
+        val thumbRes = Resolution.THUMB.scaleRes(fsv.screenRes)
+        Texture.all.forEach {
+            if (it.thumbnail == null) {
+                it.thumbnail = Bitmap.createBitmap(thumbRes[0], thumbRes[0], Bitmap.Config.ARGB_8888)
+            }
+        }
         act?.updateTextureEditTexts()
         super.onViewCreated(v, savedInstanceState)
     }
