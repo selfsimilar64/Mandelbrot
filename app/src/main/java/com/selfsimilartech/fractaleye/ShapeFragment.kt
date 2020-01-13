@@ -17,7 +17,8 @@ import android.widget.*
 import kotlin.math.log
 import kotlin.math.pow
 import kotlinx.android.synthetic.main.shape_fragment.*
-import kotlinx.android.synthetic.main.texture_fragment.texturePreviewName
+import java.text.NumberFormat
+import java.text.ParseException
 
 
 class ShapeFragment : Fragment() {
@@ -25,6 +26,7 @@ class ShapeFragment : Fragment() {
     // Store instance variables
     private lateinit var f: Fractal
     private lateinit var fsv: FractalSurfaceView
+    private val nf = NumberFormat.getInstance()
 
     // newInstance constructor for creating fragment with arguments
     fun passArguments(f: Fractal, fsv: FractalSurfaceView) {
@@ -32,12 +34,12 @@ class ShapeFragment : Fragment() {
         this.fsv = fsv
     }
 
-    fun String.formatToDouble() : Double? {
+    private fun String.formatToDouble() : Double? {
         var d : Double? = null
-        try { d = this.toDouble() }
-        catch (e: NumberFormatException) {
+        try { d = nf.parse(this)?.toDouble() }
+        catch (e: ParseException) {
             val act = if (activity is MainActivity) activity as MainActivity else null
-            act?.showMessage("Invalid number format")
+            act?.showMessage(resources.getString(R.string.msg_invalid_format))
         }
         return d
     }
@@ -60,6 +62,7 @@ class ShapeFragment : Fragment() {
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
         val act = if (activity is MainActivity) activity as MainActivity else null
+        val shapeList = if (BuildConfig.PAID_VERSION) Shape.pro else Shape.free
 
         val handler = Handler()
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -79,7 +82,7 @@ class ShapeFragment : Fragment() {
                     editText.isSelected = false
                 }
                 else -> {
-                    Log.d("EQUATION FRAGMENT", "some other action")
+                    Log.d("SHAPE FRAGMENT", "some other action")
                 }
             }
 
@@ -108,7 +111,7 @@ class ShapeFragment : Fragment() {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
 
-                val i = tab.text?.get(1)?.toString()?.toInt() ?: 1
+                val i = tab.text?.last()?.toString()?.toInt() ?: 1
                 f.shape.activeParam = f.shape.params[i - 1]
 
                 val param = f.shape.activeParam
@@ -116,6 +119,8 @@ class ShapeFragment : Fragment() {
                 vEdit.setText("%.8f".format(param.v))
                 uLock.isChecked = param.uLocked
                 vLock.isChecked = param.vLocked
+
+                act?.showTouchIcon()
 
             }
 
@@ -138,14 +143,20 @@ class ShapeFragment : Fragment() {
         uEdit.setText("%.8f".format(f.shape.activeParam.u))
         vEdit.setText("%.8f".format(f.shape.activeParam.v))
         uEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
-            f.shape.activeParam.u = "${w.text}".formatToDouble() ?: f.shape.activeParam.u
+            val result = "${w.text}".formatToDouble()
+            if (result != null) {
+                f.shape.activeParam.u = result
+                fsv.r.renderToTex = true
+            }
             w.text = "%.8f".format((f.shape.activeParam.u))
-            fsv.r.renderToTex = true
         })
         vEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
-            f.shape.activeParam.v = "${w.text}".formatToDouble() ?: f.shape.activeParam.v
+            val result = "${w.text}".formatToDouble()
+            if (result != null) {
+                f.shape.activeParam.v = result
+                fsv.r.renderToTex = true
+            }
             w.text = "%.8f".format((f.shape.activeParam.v))
-            fsv.r.renderToTex = true
         })
         uLock.setOnClickListener(lockListener(0))
         vLock.setOnClickListener(lockListener(1))
@@ -180,14 +191,18 @@ class ShapeFragment : Fragment() {
         maxIterBar.progress = ((log(f.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*100.0).toInt()
         maxIterEdit.setText("%d".format(f.maxIter))
         maxIterEdit.setOnEditorActionListener(editListener(null) {
-            f.maxIter = "${it.text}".formatToDouble()?.toInt() ?: f.maxIter
-            fsv.r.renderToTex = true
+            val result = "${it.text}".formatToDouble()?.toInt()
+            if (result != null) {
+                f.maxIter = result
+                fsv.r.renderToTex = true
+            }
+            maxIterEdit.setText("%d".format(f.maxIter))
         })
 
 
 
         shapePreviewImage.setImageResource(f.shape.icon)
-        shapePreviewText.text = f.shape.name
+        shapePreviewText.text = resources.getString(f.shape.name)
         shapePreview.setOnClickListener {
 
             handler.postDelayed({
@@ -214,12 +229,13 @@ class ShapeFragment : Fragment() {
                 // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("P${f.numParamsInUse + 1}"))
                 shapeParamButtons.addTab(shapeParamButtons.newTab().setText(shapeParamButtonValues[f.numParamsInUse - 1]))
                 shapeParamButtons.getTabAt(shapeParamButtons.tabCount - 1)?.select()
-                shapeContentScroll.smoothScrollTo(0, 0)
+                handler.postDelayed({
+                    shapeLayoutScroll.smoothScrollTo(0, shapeParamLayout.y.toInt())
+                }, BUTTON_CLICK_DELAY)
                 if (f.numParamsInUse == 1) {
                     fsv.reaction = Reaction.SHAPE
                     act?.showTouchIcon()
                 }
-
             }
             else {
 
@@ -243,7 +259,7 @@ class ShapeFragment : Fragment() {
         juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
 
 
-        shapePreviewList.adapter = ShapeAdapter(Shape.all)
+        shapePreviewList.adapter = ShapeAdapter(shapeList)
         shapePreviewList.addOnItemTouchListener(
                 RecyclerTouchListener(
                         v.context,
@@ -252,15 +268,17 @@ class ShapeFragment : Fragment() {
 
                             override fun onClick(view: View, position: Int) {
 
-                                if (Shape.all[position] != f.shape) {
+                                if (shapeList[position] != f.shape) {
 
 
-                                    if (!Shape.all[position].textures.contains(f.texture)) {
-                                        texturePreviewName.text = Texture.exponentialSmoothing.name
+                                    // reset texture if not compatible with new shape
+                                    if (!shapeList[position].textures.contains(f.texture)) {
+                                        f.texture = Texture.exponentialSmoothing
+                                        act?.updateTexturePreviewName()
                                     }
 
                                     val prevScale = f.position.scale
-                                    f.shape = Shape.all[position]
+                                    f.shape = shapeList[position]
 
 
                                     // update juliaModeSwitch
@@ -285,7 +303,6 @@ class ShapeFragment : Fragment() {
                                     // update parameter display
                                     shapeParamLayout.visibility = if (f.shape.numParams == 0)
                                         ConstraintLayout.GONE else ConstraintLayout.VISIBLE
-
                                     shapeParamButtons.removeAllTabs()
                                     for (i in 0 until f.shape.numParams) shapeParamButtons.addTab(
                                             shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
@@ -301,8 +318,6 @@ class ShapeFragment : Fragment() {
 
                                 }
 
-                                Log.e("MAIN ACTIVITY", "clicked shape: ${f.shape.name}")
-
                             }
 
                             override fun onLongClick(view: View, position: Int) {}
@@ -315,7 +330,7 @@ class ShapeFragment : Fragment() {
         shapeDoneButton.setOnClickListener {
 
             shapePreviewImage.setImageResource(f.shape.icon)
-            shapePreviewText.text = f.shape.name
+            shapePreviewText.text = resources.getString(f.shape.name)
             shapeLayout.removeView(shapePreviewListLayout)
             shapeContent.visibility = LinearLayout.VISIBLE
 
