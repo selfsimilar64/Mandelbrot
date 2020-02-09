@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="categoryPagerHeight">195dp</dimen>
+    <dimen name="categoryPagerHeight">215dp</dimen>
     <dimen name="categoryNameButtonHeight">40dp</dimen>
     <dimen name="categoryTabsHeight">45dp</dimen>
     <dimen name="previewHeight">145dp</dimen>
     <dimen name="doneButtonHeight">35dp</dimen>
     <dimen name="toastMargin">15dp</dimen>
     <dimen name="fragmentLayoutMargin">3dp</dimen>
+    <dimen name="fragmentItemCornerRadius">11dp</dimen>
 
 </resources>

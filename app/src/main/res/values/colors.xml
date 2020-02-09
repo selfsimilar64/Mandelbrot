@@ -5,17 +5,18 @@
     <color name="colorPrimary">#fff</color>
     <color name="colorPrimaryDark">#1c1c1c</color>
     <color name="colorPrimaryDark2">#555</color>
-    <color name="colorDarkSelected">#303030</color>
+    <color name="colorDarkSelected">#3a3a3a</color>
     <color name="colorDarkUnselected">@color/menu4</color>
-    <color name="colorDarkText">#fff</color>
-    <color name="colorDarkText2">#ddd</color>
-    <color name="colorHalfTransparent">#a000</color>
-    <color name="colorTransparent">#0000</color>
+    <color name="colorDarkText">#ffffff</color>
+    <color name="colorDescriptionDark">#9a9a9a</color>
+    <color name="halfTransparentBlack">#a000</color>
+    <color name="halfTransparentWhite">#3fff</color>
+    <color name="transparent">#0000</color>
     <color name="colorAccent">#fff</color>
     <color name="menu1">#1a1a1a</color>
     <color name="menu2">#000000</color>
     <color name="menu3">#404040</color>
-    <color name="menu4">#171717</color>
+    <color name="menu4">#202020</color>
 
 
      <!-- FRACTAL COLORS -->
@@ -95,7 +96,7 @@
     <color name="q36">#F9BD24</color>
     <color name="q37">#FAFDA1</color>
 
-    <color name="q38">#000000</color>
+    <color name="q38">@color/black</color>
     <color name="q39">#410F73</color>
     <color name="q40">#A4307D</color>
     <color name="q41">#F5705B</color>
@@ -110,14 +111,16 @@
     <color name="night6">#B8D8C0</color>
     <color name="night7">#FEFFFB</color>
 
-    <color name="cosmic1">#000000</color>
-    <color name="cosmic2">#470038</color>
-    <color name="cosmic3">#7A0E7B</color>
-    <color name="cosmic4">#703EAD</color>
-    <color name="cosmic5">#6369C7</color>
-    <color name="cosmic6">#90CEE3</color>
-    <color name="cosmic7">#9AFBD2</color>
-    <color name="cosmic8">@color/white</color>
+    <color name="cosmic1">@color/black</color>
+    <color name="cosmic2">#0B0022</color>
+    <color name="cosmic3">#190329</color>
+    <color name="cosmic4">#3A0742</color>
+    <color name="cosmic5">#520066</color>
+    <color name="cosmic6">#583B75</color>
+    <color name="cosmic7">#548788</color>
+    <color name="cosmic8">#8FC8B5</color>
+    <color name="cosmic9">#CAF9D5</color>
+    <color name="cosmic10">@color/white</color>
 
     <color name="elephant1">#10000B</color>
     <color name="elephant2">#0E061D</color>
@@ -127,7 +130,7 @@
     <color name="elephant6">#ADCCB7</color>
     <color name="elephant7">#E5F2E1</color>
 
-    <color name="gold1">#000000</color>
+    <color name="gold1">@color/black</color>
     <color name="gold2">#261B10</color>
     <color name="gold3">#47351D</color>
     <color name="gold4">#876832</color>
@@ -155,6 +158,19 @@
     <color name="clover3">#163A27</color>
     <color name="clover4">#82C582</color>
     <color name="clover5">#032E0D</color>
+
+    <color name="peacock1">@color/black</color>
+    <color name="peacock2">#0B0018</color>
+    <color name="peacock3">#100027</color>
+    <color name="peacock4">#160738</color>
+    <color name="peacock5">#160745</color>
+    <color name="peacock6">#071D5F</color>
+    <color name="peacock7">#004E62</color>
+    <color name="peacock8">#007B69</color>
+    <color name="peacock9">#6C8E6D</color>
+    <color name="peacock10">#BDB671</color>
+    <color name="peacock11">#F5EBC4</color>
+    <color name="peacock12">#FFF7F2</color>
 
 
 </resources>
