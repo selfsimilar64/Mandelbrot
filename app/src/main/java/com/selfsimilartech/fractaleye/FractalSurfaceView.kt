@@ -1,6 +1,7 @@
 package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,7 +9,8 @@ import android.net.Uri
 import android.opengl.GLES30.*
 import android.opengl.GLSurfaceView
 import android.os.*
-import android.support.constraint.ConstraintLayout
+import android.provider.MediaStore
+import androidx.constraintlayout.widget.ConstraintLayout
 import android.util.Log
 import android.view.MotionEvent
 import android.view.animation.AlphaAnimation
@@ -29,6 +31,8 @@ import javax.microedition.khronos.egl.EGLContext
 import javax.microedition.khronos.egl.EGLDisplay
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.*
+
+
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
@@ -182,6 +186,8 @@ class FractalSurfaceView(
                      1f,   1f,  0f )    // top right
             private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
 
+
+            // create render program handles
             private val renderProgram = glCreateProgram()
             private var viewCoordsHandle  : Int = 0
             private var iterHandle        : Int = 0
@@ -196,19 +202,30 @@ class FractalSurfaceView(
             private var sinRotateHandle   : Int = 0
             private var cosRotateHandle   : Int = 0
             private var bgScaleHandle     : Int = 0
-            private val mapParamHandles   : IntArray = IntArray(NUM_MAP_PARAMS)
-            private val textureParamHandles : IntArray = IntArray(NUM_TEXTURE_PARAMS)
+            private var juliaParamHandle  : Int = 0
+            private val mapParamHandles   : IntArray = IntArray(MAX_SHAPE_PARAMS)
+            private val textureParamHandles : IntArray = IntArray(MAX_TEXTURE_PARAMS)
 
 
-            // private val orbitHandle : Int
+            // create perturbation handles
+//            private val orbitHandle : Int
+//            private val orbitIterHandle : Int
+//            private val skipIterHandle: Int
+//            private val aHandle : Int
+//            private val bHandle : Int
+//            private val cHandle : Int
+//            private val expShiftHandle : Int
 
 
+            // create sample program handles
             private val sampleProgram = glCreateProgram()
             private val viewCoordsSampleHandle : Int
             private val quadCoordsSampleHandle : Int
             private val textureSampleHandle    : Int
             private val yOrientSampleHandle    : Int
 
+
+            // create color program handles
             private val colorProgram = glCreateProgram()
             private val viewCoordsColorHandle : Int
             private val quadCoordsColorHandle : Int
@@ -222,6 +239,7 @@ class FractalSurfaceView(
             private val textureModeHandle     : Int
 
 
+
             private val vRenderShader : Int
             private val vSampleShader : Int
 
@@ -233,7 +251,9 @@ class FractalSurfaceView(
             private val bgTexRes = if (sc.continuousRender) intArrayOf(1, 1) else Resolution.EIGHTH.scaleRes(screenRes)
             private val fgTexRes = sc.resolution.scaleRes(screenRes)
             private val thumbTexRes = Resolution.THUMB.scaleRes(screenRes)
-            // private val perturbationRes = intArrayOf(f.maxIter, 1)
+
+//            private val maxOrbitSize = 8192
+//            private val perturbationRes = intArrayOf(maxOrbitSize, 1)
 
 
             // generate textures
@@ -242,7 +262,7 @@ class FractalSurfaceView(
             private var foreground2  = GLTexture(fgTexRes,    GL_NEAREST, GL_RG16F, 2)
             private val thumbnail    = GLTexture(thumbTexRes, GL_NEAREST, GL_RG16F, 3)
             private val textures = arrayOf(background, foreground1, foreground2, thumbnail)
-            // private val orbit        =  GLTexture(perturbationRes, GL_NEAREST, GL_RG32F, 4)
+            //private val orbit        =  GLTexture(perturbationRes, GL_NEAREST, GL_RG32F, 4)
 
             private val thumbBuffer = ByteBuffer.allocateDirect(thumbnail.res[0]*thumbnail.res[1]*4).order(ByteOrder.nativeOrder())
 
@@ -307,18 +327,18 @@ class FractalSurfaceView(
                 val vSampleCode = Scanner(s).useDelimiter("\\Z").next()
                 s.close()
 
-                s = act.resources.openRawResource(R.raw.precision_test)
-                val precisionCode = Scanner(s).useDelimiter("\\Z").next()
-                s.close()
+                // s = act.resources.openRawResource(R.raw.precision_test)
+                // val precisionCode = Scanner(s).useDelimiter("\\Z").next()
+                // s.close()
 
                 s = act.resources.openRawResource(R.raw.sample)
                 val fSampleCode = Scanner(s).useDelimiter("\\Z").next()
                 s.close()
 
 
-//                s = act.resources.openRawResource(R.raw.perturbation)
-//                val perturbationCode = Scanner(s).useDelimiter("\\Z").next()
-//                s.close()
+                //s = act.resources.openRawResource(R.raw.perturbation)
+                //val perturbationCode = Scanner(s).useDelimiter("\\Z").next()
+                //s.close()
 
 
                 // create and compile shaders
@@ -328,7 +348,7 @@ class FractalSurfaceView(
                 checkThresholdCross(f.position.scale)
                 updateRenderShader()
                 fRenderShader = loadShader(GL_FRAGMENT_SHADER, renderShader)
-//                fRenderShader = loadShader(GL_FRAGMENT_SHADER, perturbationCode)
+                //fRenderShader = loadShader(GL_FRAGMENT_SHADER, perturbationCode)
 
                 fSampleShader = loadShader(GL_FRAGMENT_SHADER, fSampleCode)
                 fColorShader  = loadShader(GL_FRAGMENT_SHADER, colorShader)
@@ -364,9 +384,6 @@ class FractalSurfaceView(
 
                 getRenderUniformLocations()
 
-
-                // orbitHandle          =  glGetUniformLocation(  renderProgram, "orbit"       )
-
                 glAttachShader(sampleProgram, vSampleShader)
                 glAttachShader(sampleProgram, fSampleShader)
                 glLinkProgram(sampleProgram)
@@ -401,7 +418,7 @@ class FractalSurfaceView(
                         header      = resources.getString(R.string.header_sf)
                         arithmetic  = resources.getString(R.string.arithmetic_sf)
                         init        = resources.getString(R.string.general_init_sf)
-                        init += if (f.juliaMode) {
+                        init += if (f.shape.juliaMode) {
                             resources.getString(R.string.julia_sf)
                         } else {
                             resources.getString(R.string.constant_sf)
@@ -411,8 +428,8 @@ class FractalSurfaceView(
                         mapInit     = resources.getString(f.shape.initSF)
                         algInit     = resources.getString(f.texture.initSF)
                         mapLoop     = resources.getString(f.shape.loopSF)
-                        if (f.juliaMode && !f.shape.juliaMode) {
-                            mapLoop = mapLoop.replace("C", "P${f.numParamsInUse}", false)
+                        if (f.shape.juliaMode) {
+                            mapLoop = mapLoop.replace("C", "J", false)
                         }
                         algLoop     = resources.getString(f.texture.loopSF)
                         mapFinal    = resources.getString(f.shape.finalSF)
@@ -425,16 +442,16 @@ class FractalSurfaceView(
                         arithmetic += resources.getString(R.string.arithmetic_sf)
                         arithmetic += resources.getString(R.string.arithmetic_df)
                         init        = resources.getString(R.string.general_init_df)
-                        init += if (f.juliaMode) { resources.getString(R.string.julia_df) }
+                        init += if (f.shape.juliaMode) { resources.getString(R.string.julia_df) }
                         else { resources.getString(R.string.constant_df) }
                         loop        = resources.getString(R.string.general_loop_df)
                         conditional = resources.getString(f.shape.conditionalDF)
                         mapInit     = resources.getString(f.shape.initDF)
                         algInit     = resources.getString(f.texture.initDF)
                         mapLoop     = resources.getString(f.shape.loopDF)
-                        if (f.juliaMode && !f.shape.juliaMode) {
-                            mapLoop = mapLoop.replace("A", "vec2(P${f.shape.numParams + 1}.x, 0.0)", false)
-                            mapLoop = mapLoop.replace("B", "vec2(P${f.shape.numParams + 1}.y, 0.0)", false)
+                        if (f.shape.juliaMode) {
+                            mapLoop = mapLoop.replace("A", "vec2(J.x, 0.0)", false)
+                            mapLoop = mapLoop.replace("B", "vec2(J.y, 0.0)", false)
                         }
                         algLoop     = resources.getString(f.texture.loopDF)
                         mapFinal    = resources.getString(f.shape.finalDF)
@@ -531,104 +548,215 @@ class FractalSurfaceView(
             }
             private fun perturbation() {
 
-                // TESTING PERTURBATION
-                val numProbes = 25
-                var orbitArray : FloatArray = floatArrayOf()
-                var z : Complex
-                var c = Complex(f.position.x, f.position.y)
-                var modZ = 0.0
-                var alpha : Complex
-                var beta : Complex
-                val iterations = IntArray(numProbes)
-                val distances = DoubleArray(numProbes)
-                val gradientAngles = DoubleArray(numProbes)
-
-                var maxIterFound = false
-
-
-
-                for (j in 0 until numProbes) {
-
-                    Log.d("RENDER ROUTINE", "j: $j")
-
-                    orbitArray = FloatArray(f.maxIter*2) { 0f }
-                    z = Complex(0.0, 0.0)
-                    alpha = Complex(0.0, 0.0)
-                    beta = Complex(0.0, 0.0)
-
-                    for (i in 0 until f.maxIter) {
-
-                        orbitArray[2 * i] = z.x.toFloat()
-                        orbitArray[2 * i + 1] = z.y.toFloat()
-
-                        // iterate second derivative
-                        beta = 2.0*beta*z + alpha*alpha
-
-                        // iterate first derivative
-                        alpha = 2.0*alpha*z + Complex(1.0, 0.0)
-
-                        // iterate z
-                        z = z*z + c
-                        modZ = z.mod()
-                        //Log.d("RENDER ROUTINE", "x: $x, y: $y")
-
-                        if (i == f.maxIter - 1) {
-                            Log.d("RENDER ROUTINE", "maxIter !!!!!")
-                            maxIterFound = true
-                            iterations[j] = i
-                        }
-                        if (modZ > f.bailoutRadius) {
-                            Log.d("RENDER ROUTINE", "i: $i")
-                            iterations[j] = i
-                            break
-                        }
-
-                    }
-
-                    if (maxIterFound) {
-                        break
-                    }
-
-
-                    var grad = z/alpha
-                    grad /= grad.mod()
-                    grad = -grad
-                    distances[j] = modZ*log(modZ, Math.E)/alpha.mod()
-                    gradientAngles[j] = atan2(grad.y, grad.x)
-
-                    c += 1.5*distances[j]*grad
-                    Log.d("RENDER ROUTINE", "c_prime: $c")
-
-
-                }
-
-                var s = ""
-                gradientAngles.forEach { s += "$it   " }
-                Log.d("RENDER ROUTINE", "\ngradientAngles: $s")
-
-                s = ""
-                iterations.forEach { s += "$it   " }
-                Log.d("RENDER ROUTINE", "\niterations: $s")
-
-//                orbit.buffer.position(0)
-//                orbit.buffer.put(orbitArray)
-//                orbit.buffer.position(0)
-
-                // define texture specs
-//                glTexImage2D(
-//                        GL_TEXTURE_2D,      // target
-//                        0,                  // mipmap level
-//                        GL_RG32F,           // internal format
-//                        f.maxIter, 1,       // texture resolution
-//                        0,                  // border
-//                        GL_RG,              // internalFormat
-//                        GL_FLOAT,           // type
-//                        orbit.buffer        // memory pointer
+//                // TESTING PERTURBATION
+//                var orbitArray: FloatArray = floatArrayOf()
+//                val z0 = Apcomplex(f.position.xap, f.position.yap)
+//                var z1 = z0
+//                var z = z0
+//
+//                val deltaMag = 0.5  // 0.5 is image corners
+//                var approx : Apcomplex
+//                var error : Apfloat
+//                val errorThreshold = 1e-12
+//                var skipIter = -1
+//
+//                val d1 = MutableList<Apcomplex>(4) { Apcomplex.ZERO }   // D_{n-1}
+//                val d0 = MutableList<Apcomplex>(4) { Apcomplex.ZERO }   // D_0
+//                val delta = Apcomplex(
+//                        Apfloat(deltaMag*0.5*f.position.scale,             AP_DIGITS),
+//                        Apfloat(deltaMag*0.5*f.position.scale*aspectRatio, AP_DIGITS)
 //                )
-
-                // glUniform1i(orbitHandle, perturbationIndex)
-                val xCoordSD = f.position.x - c.x
-                val yCoordSD = f.position.y - c.y
+//                d0[0] = Apcomplex( delta.real(),           delta.imag()          )
+//                d0[1] = Apcomplex( delta.real(),           delta.imag().negate() )
+//                d0[2] = Apcomplex( delta.real().negate(),  delta.imag()          )
+//                d0[3] = Apcomplex( delta.real().negate(),  delta.imag().negate() )
+////                    Log.d("FSV", "D[ 1: ${d0[0]}")
+////                    Log.d("FSV", "probe 2: ${d0[1]}")
+////                    Log.d("FSV", "probe 3: ${d0[2]}")
+////                    Log.d("FSV", "probe 4: ${d0[3]}")
+//                val d = MutableList(4) { index -> d0[index] }    // D_{n}
+//
+//
+//                Log.e("FSV", "x_ap: ${f.position.xap}")
+//                Log.e("FSV", "y_ap: ${f.position.yap}")
+//                // var c = Complex(f.position.x, f.position.y)
+//                var modZ: Apfloat
+//                var seriesAcc : Double
+//
+//                val ONE = Apcomplex(Apfloat("1.0", AP_DIGITS), Apfloat("0.0", AP_DIGITS))
+//                val TWO = Apcomplex(Apfloat("2.0", AP_DIGITS), Apfloat("0.0", AP_DIGITS))
+//                var a1 = Apcomplex(
+//                        Apfloat("1.0", AP_DIGITS),
+//                        Apfloat("0.0", AP_DIGITS)
+//                )
+//                var b1 = Apcomplex(
+//                        Apfloat("0.0", AP_DIGITS),
+//                        Apfloat("0.0", AP_DIGITS)
+//                )
+//                var c1 = Apcomplex(
+//                        Apfloat("0.0", AP_DIGITS),
+//                        Apfloat("0.0", AP_DIGITS)
+//                )
+//
+//                var a : Apcomplex
+//                var b : Apcomplex
+//                var c : Apcomplex
+//
+//                var aBest = a1
+//                var bBest = b1
+//                var cBest = c1
+//
+//
+//                orbitArray = FloatArray(maxOrbitSize * 2) { 0f }
+//                var orbitIter = 0
+//
+//
+//
+//
+//
+//                for (i in 0 until f.maxIter) {
+//
+//                    //if (texture != background) {
+//                        act.findViewById<ProgressBar>(R.id.progressBar).progress =
+//                                (i.toFloat() / f.maxIter.toFloat() * 100.0f).toInt()
+//                    //}
+//
+//                    orbitArray[2*i]     = z.real().toFloat()
+//                    orbitArray[2*i + 1] = z.imag().toFloat()
+//
+//                    //Log.d("RENDER ROUTINE", "i: $i --- (${orbitArray[2*i]}, ${orbitArray[2*i + 1]})")
+//
+//                    // iterate second derivative
+//                    // beta = 2.0*beta*z + alpha*alpha
+//
+//                    // iterate first derivative
+//                    // alpha = 2.0*alpha*z + Complex(1.0, 0.0)
+//
+//                    // iterate z
+//                    z = z1.sqr().add(z0)
+//
+//                    modZ = z.mod()
+//
+//
+//                    if (skipIter == -1) {
+//
+//                        // iterate series approximation
+//                        a = TWO.multiply(z1.multiply(a1)).add(ONE)
+//                        b = TWO.multiply(z1.multiply(b1)).add(a1.sqr())
+//                        c = TWO.multiply(z1.multiply(c1).add(a1.multiply(b1)))
+//
+//                        seriesAcc = c.multiply(d0[0].cube()).mod().divide(b.multiply(d0[0].sqr()).mod()).toDouble()
+//                        Log.d("FSV", "seriesAcc := |c*d^3| / |b*d^2| == $seriesAcc")
+//
+//                        //Log.d("FSV", "a$i: ${a.real().toDouble()}, ${a.imag().toDouble()}")
+//                        //Log.d("FSV", "b$i: ${b.real().toDouble()}, ${b.imag().toDouble()}")
+//                        //Log.d("FSV", "c$i: ${c.real().toDouble()}, ${c.imag().toDouble()}")
+//
+////                            for (j in 0 until d.size) {
+////
+////                                // iterate probe points
+////                                d[j] = TWO.multiply(z1.multiply(d1[j])).add(d1[j].sqr()).add(d0[j])
+////
+////                                // construct approximation from only initial deltas and calculated series terms
+////                                approx = a.multiply(d0[j]).add(b.multiply(d0[j].sqr())).add(c.multiply(d0[j].cube()))
+////
+////                                // calculate error between probe point and approximation
+////                                error = (d[j].subtract(approx)).mod()
+////                                //Log.d("FSV", "probe $j error: $error")
+////
+////                            }
+//
+//                        if (seriesAcc > 0.0005) {
+//
+//                            //Log.e("FSV", "i: $i -- series error: ${error.toDouble()}")
+//                            aBest = a1
+//                            bBest = b1
+//                            cBest = c1
+//                            skipIter = i
+//
+//                        }
+//
+//                        a1 = a
+//                        b1 = b
+//                        c1 = c
+//
+//
+//                    }
+//
+//
+//                    //Log.d("RENDER ROUTINE", "x: $x, y: $y")
+//
+//                    if (i == f.maxIter - 1) {
+//                        Log.d("RENDER ROUTINE", "maxIter reached")
+//                        orbitIter = f.maxIter
+//                    }
+//                    if (modZ.toDouble() > f.bailoutRadius) {
+//                        Log.d("RENDER ROUTINE", "bailout at i=$i")
+//                        orbitIter = i
+//                        break
+//                    }
+//
+//                    z1 = z
+//                    //for (j in 0 until d.size) d1[j] = d[j]
+//
+//                }
+//
+//
+//
+//
+//
+////                orbit.buffer.position(0)
+////                orbit.buffer.put(orbitArray)
+////                orbit.buffer.position(0)
+//
+//                // define texture specs
+////                glTexImage2D(
+////                        GL_TEXTURE_2D,      // target
+////                        0,                  // mipmap level
+////                        GL_RG32F,           // internal format
+////                        maxOrbitSize, 1,    // texture resolution
+////                        0,                  // border
+////                        GL_RG,              // internalFormat
+////                        GL_FLOAT,           // type
+////                        orbit.buffer        // memory pointer
+////                )
+//
+////                glUniform1i(orbitHandle, orbit.index)
+////                glUniform1i(orbitIterHandle, orbitIter)
+////                glUniform1i(skipIterHandle, skipIter)
+//                glUniform1i(iterHandle, maxOrbitSize)
+//
+//                Log.d("FSV", "orbitIter: $orbitIter")
+//                Log.d("FSV", "skipIter: $skipIter")
+//
+//                // shift series term exponents to allow for exponents outside normal range
+//                val p = when {
+//                    f.position.scale > 1e-5 -> 0
+//                    f.position.scale < 1e-5 && f.position.scale > 1e-15 -> 10
+//                    f.position.scale < 1e-15 && f.position.scale > 1e-25 -> 20
+//                    f.position.scale < 1e-25 && f.position.scale > 1e-35 -> 25
+//                    else -> 30
+//                }
+//                Log.d("FSV", "p: $p")
+//                val expShift = Apfloat("1E$p", AP_DIGITS).toFloat()
+//                aBest = Apfloat("1E-$p",     AP_DIGITS).multiply(aBest)
+//                bBest = Apfloat("1E-${2*p}", AP_DIGITS).multiply(bBest)
+//                cBest = Apfloat("1E-${3*p}", AP_DIGITS).multiply(cBest)
+//
+////                glUniform2fv(aHandle, 1, floatArrayOf(aBest.real().toFloat(), aBest.imag().toFloat()), 0)
+////                glUniform2fv(bHandle, 1, floatArrayOf(bBest.real().toFloat(), bBest.imag().toFloat()), 0)
+////                glUniform2fv(cHandle, 1, floatArrayOf(cBest.real().toFloat(), cBest.imag().toFloat()), 0)
+////                glUniform1fv(expShiftHandle, 1, floatArrayOf(expShift), 0)
+//
+//                Log.d("FSV", "aBest: ${aBest.real().toDouble()}, ${aBest.imag().toDouble()}")
+//                Log.d("FSV", "bBest: ${bBest.real().toDouble()}, ${bBest.imag().toDouble()}")
+//                Log.d("FSV", "cBest: ${cBest.real().toDouble()}, ${cBest.imag().toDouble()}")
+//
+////                val xCoordSD = f.position.x
+////                val yCoordSD = f.position.y
+//
+//                val xScaleSD = f.position.scale / 2.0 * expShift
+//                val yScaleSD = f.position.scale*aspectRatio / 2.0 * expShift
 
             }
             private fun getRenderUniformLocations() {
@@ -646,11 +774,23 @@ class FractalSurfaceView(
                 sinRotateHandle      =  glGetUniformLocation(  renderProgram, "sinRotate"   )
                 cosRotateHandle      =  glGetUniformLocation(  renderProgram, "cosRotate"   )
                 bgScaleHandle        =  glGetUniformLocation(  renderProgram, "bgScale"     )
+                juliaParamHandle     =  glGetUniformLocation(  renderProgram, "J"           )
+
+
+                // get perturbation uniform locations
+//                orbitHandle          =  glGetUniformLocation(  renderProgram, "orbit"       )
+//                orbitIterHandle      =  glGetUniformLocation(  renderProgram, "orbitIter"   )
+//                skipIterHandle       =  glGetUniformLocation(  renderProgram, "skipIter"    )
+//                aHandle              =  glGetUniformLocation(  renderProgram, "A"           )
+//                bHandle              =  glGetUniformLocation(  renderProgram, "B"           )
+//                cHandle              =  glGetUniformLocation(  renderProgram, "C"           )
+//                expShiftHandle       =  glGetUniformLocation(  renderProgram, "expShift"    )
 
                 for (i in mapParamHandles.indices) {
                     mapParamHandles[i] = glGetUniformLocation(renderProgram, "P${i+1}")
                 }
                 for (i in textureParamHandles.indices) {
+
                     textureParamHandles[i] = glGetUniformLocation(renderProgram, "Q${i+1}")
                 }
 
@@ -817,7 +957,7 @@ class FractalSurfaceView(
                             val prevShowProgress = sc.showProgress
                             sc.showProgress = false
 
-                            f.shape.textures.forEach { texture ->
+                            f.shape.compatTextures.forEach { texture ->
 
                                 f.texture = texture
                                 onRenderShaderChanged()
@@ -826,7 +966,7 @@ class FractalSurfaceView(
                                 renderFromTexture(thumbnail, true)
                                 migrate(thumbnail, texture.thumbnail!!)
 
-                                handler.updateTextureThumbnail(f.shape.textures.indexOf(texture))
+                                handler.updateTextureThumbnail(f.shape.compatTextures.indexOf(texture))
 
                             }
 
@@ -857,13 +997,14 @@ class FractalSurfaceView(
 
                 glUseProgram(renderProgram)
 
-                // perturbation()
+
                 glBindFramebuffer(GL_FRAMEBUFFER, fboIDs[0])      // use external framebuffer
 
                 // pass in shape params
+                glUniform2fv(juliaParamHandle, 1, f.shape.params.julia.toFloatArray(), 0)
                 for (i in mapParamHandles.indices) {
                     val pArray =
-                            if (i < f.numParamsInUse) floatArrayOf(f.shape.params[i].u.toFloat(), f.shape.params[i].v.toFloat())
+                            if (i < f.shape.params.size) f.shape.params.at(i).toFloatArray()
                             else floatArrayOf(0f, 0f)
                     // Log.d("RENDER ROUTINE", "passing p${i+1} in as (${pArray[0]}, ${pArray[1]})")
                     glUniform2fv(mapParamHandles[i], 1, pArray, 0)
@@ -871,8 +1012,13 @@ class FractalSurfaceView(
 
                 // pass in texture params
                 for (i in textureParamHandles.indices) {
-                    glUniform1fv(textureParamHandles[i], 1, floatArrayOf(f.texture.params[i].q.toFloat()), 0)
+                    val qArray =
+                            if (i < f.texture.params.size) floatArrayOf(f.texture.params[i].q.toFloat())
+                            else floatArrayOf(0f)
+                    // Log.d("RENDER ROUTINE", "passing in Q${i+1} as ${qArray[0]}")
+                    glUniform1fv(textureParamHandles[i], 1, qArray, 0)
                 }
+
 
                 val xScaleSD = f.position.scale / 2.0
                 val yScaleSD = f.position.scale*aspectRatio / 2.0
@@ -926,7 +1072,7 @@ class FractalSurfaceView(
 
                 // pass in other parameters
 
-                val power = if (f.shape.hasDynamicPower) f.shape.params[0].u.toFloat() else f.shape.power
+                val power = if (f.shape.hasDynamicPower) f.shape.params.at(0).u.toFloat() else f.shape.power
 
                 glUniform1i(  iterHandle,         f.maxIter                                )
                 glUniform1fv( bailoutHandle,  1,  floatArrayOf(f.bailoutRadius),         0 )
@@ -1161,7 +1307,7 @@ class FractalSurfaceView(
                             glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
                             glFinish()   // force chunk to finish rendering before continuing
                             chunksRendered++
-                            if (!sc.continuousRender && sc.showProgress) {
+                            if (!(sc.continuousRender || reaction == Reaction.SHAPE) && sc.showProgress) {
                                 act.findViewById<ProgressBar>(R.id.progressBar).progress =
                                         (chunksRendered.toFloat() / totalChunks.toFloat() * 100.0f).toInt()
                             }
@@ -1191,7 +1337,7 @@ class FractalSurfaceView(
 
                 val viewportWidth = if (external) texture.res[0] else screenRes[0]
                 val viewportHeight = if (external) texture.res[1] else screenRes[1]
-                val yOrient = if(external) -1f else 1f
+                val yOrient = if (external) -1f else 1f
 
                 glViewport(0, 0, viewportWidth, viewportHeight)
 
@@ -1292,6 +1438,39 @@ class FractalSurfaceView(
                 act.findViewById<ProgressBar>(R.id.progressBar).progress = 0
 
 
+
+
+//                if (texture == foreground) {
+//
+//                    val bufferSize = texture.res[0] * texture.res[1] * 4
+//                    val imBuffer = ByteBuffer.allocateDirect(bufferSize).order(ByteOrder.nativeOrder())
+//                    imBuffer.rewind()
+//
+//                    glReadPixels(
+//                            0, 0,
+//                            texture.res[0],
+//                            texture.res[1],
+//                            GL_RGBA,
+//                            GL_UNSIGNED_BYTE,
+//                            imBuffer
+//                    )
+//
+//                    val bmp = Bitmap.createBitmap(texture.res[0], texture.res[1], Bitmap.Config.ARGB_8888)
+//                    bmp.copyPixelsFromBuffer(imBuffer)
+//
+//                    for (i in 0 until texture.res[0] step 8) {
+//                        for (j in 0 until texture.res[1] step 8) {
+//
+//                            Log.d("FSV", "i: $i, j: $j -- ${bmp.getColor(i, j).red()}")
+//
+//                        }
+//                    }
+//
+//                }
+
+
+
+
                 // Log.d("RENDER ROUTINE", "renderFromTexture took ${System.currentTimeMillis() - t} ms")
 
             }
@@ -1378,10 +1557,6 @@ class FractalSurfaceView(
         private var hasTranslated = false
         private var hasScaled = false
         private var hasRotated = false
-        fun transformIsStrictTranslate() : Boolean {
-            return hasTranslated && !hasScaled && !hasRotated
-        }
-
 
         private val quadCoords = floatArrayOf(0f, 0f)
         private val quadFocus = floatArrayOf(0f, 0f)
@@ -1491,28 +1666,18 @@ class FractalSurfaceView(
             quadRotation = 0f
 
         }
+        fun transformIsStrictTranslate() : Boolean {
+            return hasTranslated && !hasScaled && !hasRotated
+        }
+
+
         private fun saveImage(im: Bitmap) {
 
-            // convert bitmap to png
+            // convert bitmap to jpeg
             val bos = ByteArrayOutputStream()
-            val compressed = im.compress(Bitmap.CompressFormat.PNG, 100, bos)
+            val compressed = im.compress(Bitmap.CompressFormat.JPEG, 100, bos)
             if (!compressed) { Log.e("RENDERER", "could not compress image") }
             im.recycle()
-
-            // app external storage directory
-            val dir = File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES), resources.getString(R.string.app_name))
-
-            // create directory if not already created
-            if (!dir.exists()) {
-                Log.d("MAIN ACTIVITY", "Directory does not exist -- creating...")
-                if (dir.mkdir()) {
-                    Log.d("MAIN ACTIVITY", "Directory created")
-                }
-                else {
-                    Log.e("MAIN ACTIVITY", "Directory could not be created")
-                }
-            }
 
             // get current date and time
             val c = GregorianCalendar(TimeZone.getDefault())
@@ -1524,21 +1689,65 @@ class FractalSurfaceView(
             val minute = c[Calendar.MINUTE]
             val second = c[Calendar.SECOND]
 
-            // save image with unique filename
             val appNameAbbrev = resources.getString(R.string.fe_abbrev)
-            val subDirectory = "/${appNameAbbrev}_%4d%02d%02d_%02d%02d%02d.png".format(year, month+1, day, hour, minute, second)
-            val file = File(dir, subDirectory)
-            file.createNewFile()
-            val fos = FileOutputStream(file)
-            fos.write(bos.toByteArray())
-            fos.close()
+            val subDirectory = Environment.DIRECTORY_PICTURES + "/" + resources.getString(R.string.app_name)
+            val imageName = "${appNameAbbrev}_%4d%02d%02d_%02d%02d%02d".format(year, month + 1, day, hour, minute, second)
 
-            val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-            val contentUri = Uri.fromFile(file)
-            scanIntent.data = contentUri
-            act.sendBroadcast(scanIntent)
 
-            handler.showImageSavedMessage("$dir$subDirectory")
+            // save image with unique filename
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+
+                // app external storage directory
+                val dir = File(Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_PICTURES),
+                        resources.getString(R.string.app_name
+                ))
+
+                // create directory if not already created
+                if (!dir.exists()) {
+                    Log.d("MAIN ACTIVITY", "Directory does not exist -- creating...")
+                    if (dir.mkdir()) {
+                        Log.d("MAIN ACTIVITY", "Directory created")
+                    }
+                    else {
+                        Log.e("MAIN ACTIVITY", "Directory could not be created")
+                    }
+                }
+
+                val file = File(dir, "$imageName.jpg")
+                file.createNewFile()
+                val fos = FileOutputStream(file)
+                fos.write(bos.toByteArray())
+                fos.close()
+
+                val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                val contentUri = Uri.fromFile(file)
+                scanIntent.data = contentUri
+                act.sendBroadcast(scanIntent)
+
+            }
+            else {
+
+                val resolver = context.contentResolver
+
+                val imageCollection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+
+                val imageDetails = ContentValues().apply {
+                    put(MediaStore.Images.ImageColumns.RELATIVE_PATH, subDirectory)
+                    put(MediaStore.Images.ImageColumns.DISPLAY_NAME, imageName)
+                    put(MediaStore.Images.ImageColumns.MIME_TYPE, "image/jpeg")
+                    //put(MediaStore.Images.ImageColumns.WIDTH, im.width)
+                    //put(MediaStore.Images.ImageColumns.HEIGHT, im.height)
+                }
+
+                val contentUri = resolver.insert(imageCollection, imageDetails)
+                val fos = resolver.openOutputStream(contentUri!!, "w")
+                fos?.write(bos.toByteArray())
+                fos?.close()
+
+            }
+
+            handler.showImageSavedMessage("/$subDirectory")
 
         }
 
@@ -1650,23 +1859,32 @@ class FractalSurfaceView(
     }
 
 
-    fun hideSystemUI() {
-        // Enables regular immersive mode.
-        // For "lean back" mode, remove SYSTEM_UI_FLAG_IMMERSIVE.
-        // Or for "sticky immersive," replace it with SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        systemUiVisibility = (
-            SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            // Set the content to appear under the system bars so that the
-            // content doesn't resize when the system bars hide and show.
-            or SYSTEM_UI_FLAG_LAYOUT_STABLE
-            or SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            or SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            // Hide the nav bar and status bar
-            or SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            or SYSTEM_UI_FLAG_FULLSCREEN
-        )
+    fun updateSystemUI() {
 
-
+        act.recalculateSurfaceViewLayout()
+        if (sc.hideNavBar) {
+            systemUiVisibility = (
+                SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                // Set the content to appear under the system bars so that the
+                // content doesn't resize when the system bars hide and show.
+                or SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                // Hide the nav bar and status bar
+                or SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or SYSTEM_UI_FLAG_FULLSCREEN
+            )
+        }
+        else {
+            act.window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                resources.getColor(R.color.menu2, null) else resources.getColor(R.color.menu2)
+            systemUiVisibility = (
+                SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or SYSTEM_UI_FLAG_FULLSCREEN
+            )
+        }
 
     }
     fun checkThresholdCross(prevScale: Double) {
@@ -1906,7 +2124,6 @@ class FractalSurfaceView(
                     }
                 }
                 Reaction.SHAPE -> {
-                    // actions change light position
                     when (e?.actionMasked) {
 
                         MotionEvent.ACTION_DOWN -> {
@@ -1932,8 +2149,8 @@ class FractalSurfaceView(
                             // Log.d("PARAMETER", "MOVE -- dx: $dx, dy: $dy")
                             when (e.pointerCount) {
                                 1 -> {
-                                    f.shape.activeParam.u += f.sensitivity*dx/screenRes[0]
-                                    f.shape.activeParam.v -= f.sensitivity*dy/screenRes[1]
+                                    f.shape.params.active.u += f.sensitivity*dx/screenRes[0]
+                                    f.shape.params.active.v -= f.sensitivity*dy/screenRes[1]
                                     prevFocus[0] = focus[0]
                                     prevFocus[1] = focus[1]
                                     r.renderToTex = true
