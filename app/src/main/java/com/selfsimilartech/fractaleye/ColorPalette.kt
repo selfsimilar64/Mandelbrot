@@ -21,6 +21,7 @@ class ColorPalette (
         oscillate: Boolean = true
 ) {
 
+
     companion object {
 
         val yinyang = ColorPalette(
@@ -28,13 +29,20 @@ class ColorPalette (
                 R.color.black,
                 R.color.white
         ))
-        val beach = ColorPalette(
-                R.string.empty, listOf(
-                R.color.yellowish1,
-                R.color.darkblue1,
-                R.color.black,
-                R.color.turquoise,
-                R.color.tusk
+        val peacock = ColorPalette(
+                R.string.peacock, listOf(
+                R.color.peacock1,
+                R.color.peacock2,
+                R.color.peacock3,
+                R.color.peacock4,
+                R.color.peacock5,
+                R.color.peacock6,
+                R.color.peacock7,
+                R.color.peacock8,
+                R.color.peacock9,
+                R.color.peacock10,
+                R.color.peacock11,
+                R.color.peacock12
         ))
         val p1 = ColorPalette(
                 R.string.empty, listOf(
@@ -47,9 +55,8 @@ class ColorPalette (
         val p3 = ColorPalette(
                 R.string.empty, listOf(
                 R.color.q1,
-                R.color.darkblue1,
-                R.color.white,
                 R.color.q2,
+                R.color.white,
                 R.color.q3
         ))
         val vascular = ColorPalette(
@@ -167,17 +174,16 @@ class ColorPalette (
                 R.color.cosmic5,
                 R.color.cosmic6,
                 R.color.cosmic7,
-                R.color.cosmic8
+                R.color.cosmic8,
+                R.color.cosmic9,
+                R.color.cosmic10
         ))
         val oldskool = ColorPalette(
                 R.string.oldskool, listOf(
-                R.color.oldskool1,
                 R.color.oldskool2,
                 R.color.oldskool3,
                 R.color.oldskool4,
-                R.color.oldskool5,
-                R.color.oldskool6,
-                R.color.oldskool7
+                R.color.oldskool5
         ))
         val elephant = ColorPalette(
                 R.string.elephant, listOf(
@@ -210,6 +216,7 @@ class ColorPalette (
                 yinyang,
                 night,
                 cosmic,
+                peacock,
                 elephant,
                 oldskool,
                 gold,
@@ -269,6 +276,14 @@ class ColorPalette (
     }
     private fun intArrayToList(C: IntArray) : List<FloatArray> {
         return List(C.size) { i: Int -> intToFloatArray(C[i]) }
+    }
+    fun getGradientDrawable(res: Resources) : GradientDrawable {
+
+        return GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                getColors(res, ids)
+        )
+
     }
 
     override fun equals(other: Any?): Boolean {
