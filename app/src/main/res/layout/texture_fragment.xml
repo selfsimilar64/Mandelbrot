@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="1dp">
 
     <LinearLayout
         android:id="@+id/textureLayout"
@@ -21,18 +22,18 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
             tools:visibility="visible">
 
             <LinearLayout
                 android:id="@+id/texturePreview"
+                style="@style/FragmentItem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/fragmentLayoutMargin"
                 android:layout_marginBottom="@dimen/fragmentLayoutMargin"
-                android:background="@drawable/button_selector"
-                android:orientation="vertical"
+                android:foreground="@drawable/button_selector"
+                android:gravity="center"
+                android:orientation="horizontal"
                 android:padding="12dp">
 
                 <TextView
@@ -40,31 +41,48 @@
                     style="@style/TextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
                     android:drawableEnd="@drawable/edit"
                     android:drawablePadding="10dp"
-                    android:gravity="center"
                     android:text="@string/texture_name"
                     android:textSize="16sp" />
             </LinearLayout>
 
-            <android.support.constraint.ConstraintLayout
-                android:id="@+id/qLayout"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/textureParamLayout"
                 style="@style/FragmentItem"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp">
+                android:layout_height="match_parent">
 
-                <TextView
-                    android:id="@+id/qName"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/texture_param_name"
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/textureParamButtons"
+                    android:layout_width="0dp"
+                    android:layout_height="35dp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tabGravity="center"
+                    app:tabIndicatorFullWidth="false"
+                    app:tabMinWidth="80dp">
+
+                    <com.google.android.material.tabs.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="density" />
+
+                    <com.google.android.material.tabs.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/thickness" />
+
+                </com.google.android.material.tabs.TabLayout>
+
+                <SeekBar
+                    android:id="@+id/qBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:max="100"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/textureParamButtons" />
 
                 <EditText
                     android:id="@+id/qEdit"
@@ -72,35 +90,25 @@
                     android:layout_width="wrap_content"
                     android:layout_height="40dp"
                     android:layout_marginStart="16dp"
-                    android:layout_marginBottom="8dp"
                     android:imeOptions="actionDone"
-                    app:layout_constraintBottom_toTopOf="@id/qBar"
-                    app:layout_constraintStart_toEndOf="@id/qName"
+                    app:layout_constraintStart_toEndOf="@id/textureParamButtons"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <SeekBar
-                    android:id="@+id/qBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:max="100"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/qName" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-            </android.support.constraint.ConstraintLayout>
-
-            <android.support.constraint.ConstraintLayout
+            <LinearLayout
                 style="@style/FragmentItem"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
 
                 <TextView
                     android:id="@+id/bailoutLabel"
                     style="@style/TextDark"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_weight="1"
                     android:text="@string/bailout"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -113,16 +121,15 @@
                     android:imeOptions="actionNext"
                     android:selectAllOnFocus="true"
                     app:layout_constraintEnd_toStartOf="@+id/bailoutDivider"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
 
                 <TextView
                     android:id="@+id/bailoutDivider"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
                     android:text="@string/e"
                     app:layout_constraintEnd_toStartOf="@+id/bailoutExponentEdit"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
 
                 <EditText
                     android:id="@+id/bailoutExponentEdit"
@@ -131,9 +138,9 @@
                     android:layout_height="wrap_content"
                     android:imeOptions="actionDone"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
 
-            </android.support.constraint.ConstraintLayout>
+            </LinearLayout>
 
             <LinearLayout
                 style="@style/FragmentItem"
@@ -147,28 +154,28 @@
                     android:layout_height="wrap_content"
                     android:text="@string/texture_mode" />
 
-                <android.support.design.widget.TabLayout
+                <com.google.android.material.tabs.TabLayout
                     android:id="@+id/textureModeTabs"
                     android:layout_width="match_parent"
                     android:layout_height="42dp"
                     app:tabBackground="@drawable/tab_color_selector"
-                    app:tabIndicatorColor="@color/colorTransparent">
+                    app:tabIndicatorColor="@color/transparent">
 
-                    <android.support.design.widget.TabItem
+                    <com.google.android.material.tabs.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/texture_mode_out" />
 
-                    <android.support.design.widget.TabItem
+                    <com.google.android.material.tabs.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/texture_mode_in" />
 
-                    <android.support.design.widget.TabItem
+                    <com.google.android.material.tabs.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/texture_mode_both" />
-                </android.support.design.widget.TabLayout>
+                </com.google.android.material.tabs.TabLayout>
             </LinearLayout>
 
         </LinearLayout>
@@ -180,18 +187,18 @@
             android:orientation="vertical"
             android:visibility="visible">
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/texturePreviewList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/menu2"
+                android:background="@color/menu4"
                 android:orientation="horizontal"
                 android:scrollbars="horizontal"
                 android:visibility="visible"
-                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/preview_item">
 
-            </android.support.v7.widget.RecyclerView>
+            </androidx.recyclerview.widget.RecyclerView>
 
             <Button
                 android:id="@+id/textureDoneButton"
