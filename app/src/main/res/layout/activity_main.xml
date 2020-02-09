@@ -5,12 +5,12 @@
     android:id="@+id/fractalLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#a6a"
+    android:background="@color/menu2"
     android:orientation="vertical"
     tools:context="com.selfsimilartech.fractaleye.MainActivity">
 
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -139,8 +139,8 @@
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
             android:layout_height="5dp"
-            android:background="@color/colorHalfTransparent"
-            android:progressBackgroundTint="@color/colorTransparent"
+            android:background="@color/halfTransparentBlack"
+            android:progressBackgroundTint="@color/transparent"
             app:layout_constraintBottom_toTopOf="@id/ui" />
 
 
@@ -168,14 +168,25 @@
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
                 android:text="category"
-                android:textAppearance="@style/CardHeaderTextDark" />
+                android:textAllCaps="true"
+                android:textAppearance="@style/TextDark"
+                android:textStyle="bold" />
 
-            <com.selfsimilartech.fractaleye.NoScrollViewPager
-                android:id="@+id/categoryPager"
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/categoryPagerHeight" />
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                app:cardBackgroundColor="@color/transparent"
+                app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
-            <android.support.design.widget.TabLayout
+                <com.selfsimilartech.fractaleye.NoScrollViewPager
+                    android:id="@+id/categoryPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/categoryPagerHeight" />
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.tabs.TabLayout
                 android:id="@+id/categoryButtons"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/categoryTabsHeight"
@@ -183,47 +194,47 @@
                 android:layout_marginEnd="20dp"
                 app:tabIndicatorColor="#0000">
 
-                <android.support.design.widget.TabItem
+                <com.google.android.material.tabs.TabItem
                     android:id="@+id/settingsButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/settings"
                     android:icon="@drawable/settings" />
 
-                <android.support.design.widget.TabItem
+                <com.google.android.material.tabs.TabItem
                     android:id="@+id/textureButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/texture"
                     android:icon="@drawable/texture" />
 
-                <android.support.design.widget.TabItem
+                <com.google.android.material.tabs.TabItem
                     android:id="@+id/shapeButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/shape"
                     android:icon="@drawable/shape" />
 
-                <android.support.design.widget.TabItem
+                <com.google.android.material.tabs.TabItem
                     android:id="@+id/colorButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/color"
                     android:icon="@drawable/color" />
 
-                <android.support.design.widget.TabItem
+                <com.google.android.material.tabs.TabItem
                     android:id="@+id/positionButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/position"
                     android:icon="@drawable/position" />
-            </android.support.design.widget.TabLayout>
+            </com.google.android.material.tabs.TabLayout>
 
 
         </LinearLayout>
 
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 </FrameLayout>
