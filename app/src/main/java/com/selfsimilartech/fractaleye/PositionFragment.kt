@@ -1,7 +1,7 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.util.Log
 import android.view.ViewGroup
@@ -19,34 +19,18 @@ import kotlin.math.roundToInt
 
 class PositionFragment : Fragment() {
 
-    // Store instance variables
-    private lateinit var f: Fractal
-    private lateinit var fsv: FractalSurfaceView
     private val nf = NumberFormat.getInstance()
-
-    // newInstance constructor for creating fragment with arguments
-    fun passArguments(f: Fractal, fsv: FractalSurfaceView) {
-        this.f = f
-        this.fsv = fsv
-    }
 
     private fun String.formatToDouble(showMsg: Boolean = true) : Double? {
         var d : Double? = null
         try { d = nf.parse(this)?.toDouble() }
         catch (e: ParseException) {
             if (showMsg) {
-                val act = if (activity is MainActivity) activity as MainActivity else null
-                act?.showMessage(resources.getString(R.string.msg_invalid_format))
+                val act =activity as MainActivity
+                act.showMessage(resources.getString(R.string.msg_invalid_format))
             }
         }
         return d
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        val act = if (activity is MainActivity) activity as MainActivity else null
-        if (!this::f.isInitialized) f = act!!.f
-        if (!this::fsv.isInitialized) fsv = act!!.fsv
-        super.onCreate(savedInstanceState)
     }
 
 
@@ -59,7 +43,9 @@ class PositionFragment : Fragment() {
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
-        val act = if (activity is MainActivity) activity as MainActivity else null
+        val act = activity as MainActivity
+        val f = act.f
+        val fsv = act.fsv
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
@@ -84,7 +70,7 @@ class PositionFragment : Fragment() {
             }
 
             editText.clearFocus()
-            // act?.onWindowFocusChanged(true)
+            fsv.updateSystemUI()
             true
 
         }}
@@ -123,7 +109,7 @@ class PositionFragment : Fragment() {
                         fsv.r.renderToTex = true
                     }
                     else {
-                        act?.showMessage(resources.getString(R.string.msg_invalid_format))
+                        act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
                     val scaleStrings = "%e".format(Locale.US, f.position.scale).split("e")
                     w.text = "%.5f".format(scaleStrings[0].toFloat())
@@ -142,7 +128,7 @@ class PositionFragment : Fragment() {
                         fsv.r.renderToTex = true
                     }
                     else {
-                        act?.showMessage(resources.getString(R.string.msg_invalid_format))
+                        act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
                     val scaleStrings = "%e".format(Locale.US, f.position.scale).split("e")
                     scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
@@ -168,7 +154,18 @@ class PositionFragment : Fragment() {
             f.position.rotationLocked = rotationLock.isChecked
         }
 
-        act?.updatePositionEditTexts()
+
+        positionResetButton.setOnClickListener {
+
+            f.position.reset()
+            act.updatePositionEditTexts()
+            fsv.r.renderToTex = true
+            fsv.requestRender()
+
+        }
+
+
+        act.updatePositionEditTexts()
         super.onViewCreated(v, savedInstanceState)
 
     }
