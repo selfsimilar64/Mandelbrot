@@ -11,10 +11,12 @@ class Texture (
         val initDF          : Int = R.string.empty,
         val loopDF          : Int = R.string.empty,
         val finalDF         : Int = R.string.empty,
-        params              : List<Param> = listOf(),
+        val params          : List<Param> = listOf(),
         val auto            : Boolean = false,
         val bailoutRadius   : Float? = null,
-        val frequency       : Float? = null
+        val frequency       : Float? = null,
+        val proFeature      : Boolean = false,
+        val displayName     : Int = name
 ) {
 
     class Param (
@@ -22,7 +24,8 @@ class Texture (
             val min: Double = 0.0,
             val max: Double = 1.0,
             q: Double = 0.0,
-            val discrete: Boolean = false
+            val discrete: Boolean = false,
+            val proFeature: Boolean = false
     ) {
 
 
@@ -129,24 +132,26 @@ class Texture (
                 R.string.mandelbrot_light_final_df
         )
         val triangleIneqAvgInt = Texture(
-                R.string.triangle_ineq_avg,
+                R.string.triangle_ineq_avg_int,
                 R.string.triangle_init_sf,
                 R.string.triangle_int_loop_sf,
                 R.string.triangle_final_sf,
                 R.string.triangle_init_df,
                 R.string.triangle_int_loop_df,
                 R.string.triangle_final_df,
-                bailoutRadius = 1e6f
+                bailoutRadius = 1e6f,
+                displayName = R.string.triangle_ineq_avg
         )
         val triangleIneqAvgFloat = Texture(
-                R.string.triangle_ineq_avg,
+                R.string.triangle_ineq_avg_float,
                 R.string.triangle_init_sf,
                 R.string.triangle_float_loop_sf,
                 R.string.triangle_final_sf,
                 R.string.triangle_init_df,
                 R.string.triangle_float_loop_df,
                 R.string.triangle_final_df,
-                bailoutRadius = 1e6f
+                bailoutRadius = 1e6f,
+                displayName = R.string.triangle_ineq_avg
         )
         val curvatureAvg = Texture(
                 R.string.curvature_avg,
@@ -156,6 +161,9 @@ class Texture (
                 R.string.curvature_init,
                 R.string.curvature_loop_df,
                 R.string.curvature_final_df,
+                listOf(
+                        Param(R.string.thickness, 0.075, 2.0, 1.0, false, proFeature = true)
+                ),
                 bailoutRadius = 1e8f
         )
         val stripeAvg = Texture(
@@ -166,8 +174,22 @@ class Texture (
                 R.string.stripe_init,
                 R.string.stripe_loop_df,
                 R.string.stripe_final_df,
-                listOf(Param(R.string.stripe_density, 1.0, 8.0, 2.0, true)),
+                listOf(
+                        Param(R.string.density, 1.0, 8.0, 2.0, true),
+                        Param(R.string.thickness, 0.075, 2.0, 1.0, false, proFeature = true)
+                ),
                 bailoutRadius = 1e6f
+        )
+        val stripeMedianBins = Texture(
+                R.string.stripe_median_bins,
+                R.string.stripe_bins_init,
+                R.string.stripe_bins_loop_sf,
+                R.string.stripe_bins_median_final_sf,
+                params = listOf(
+                        Param(R.string.density, 1.0, 8.0, 2.0, true)
+                ),
+                bailoutRadius = 1e9f,
+                proFeature = true
         )
         val orbitTrap = Texture(
                 R.string.orbit_trap_miny,
@@ -207,28 +229,17 @@ class Texture (
                 finalSF = R.string.orbittrapminxy_final_radius,
                 bailoutRadius = 1e2f
         )
-        val arbitrary = arrayListOf(
+        val arbitrary = mutableListOf(
                 escape,
+                exponentialSmoothing,
                 curvatureAvg,
                 stripeAvg,
                 overlayAvg,
-                orbitTrap,
-                exponentialSmoothing
+                orbitTrap
         )
-        val main = arrayListOf(
-                escape,
-                escapeSmooth,
-                exponentialSmoothing,
-                distanceEstimationInt,
-                triangleIneqAvgInt,
-                curvatureAvg,
-                stripeAvg,
-                orbitTrap,
-                normalMap1,
-                normalMap2,
-                overlayAvg
-        )
-        val all = arrayListOf(
+
+        val all = mutableListOf(
+                stripeMedianBins,
                 escape,
                 escapeSmooth,
                 exponentialSmoothing,
@@ -245,16 +256,16 @@ class Texture (
 
     }
 
-    val numParamsInUse = params.size
-    val params = List(NUM_TEXTURE_PARAMS) { i: Int ->
-        if (i < params.size) params[i]
-        else Param(R.string.empty)
+    val numParamsInUse = if (BuildConfig.PAID_VERSION) params.size else {
+
+        params.filter { param -> !param.proFeature } .size
+
     }
 
     var thumbnail : Bitmap? = null
 
     override fun equals(other: Any?): Boolean {
-        return other is Texture && hashCode() == other.hashCode()
+        return other is Texture && name == other.name
     }
 
     override fun hashCode(): Int {
