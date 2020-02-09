@@ -3,19 +3,30 @@
 
 precision highp float;
 uniform sampler2D orbit;
+uniform int orbitIter;
+uniform int skipIter;
 uniform int maxIter;
+uniform vec2 A;
+uniform vec2 B;
+uniform vec2 C;
+uniform float expShift;
 uniform float R;
+uniform float power;
 uniform float x0;
 uniform float y0;
+uniform vec2 J;
 uniform vec2 P1;
 uniform vec2 P2;
 uniform vec2 P3;
 uniform vec2 P4;
 uniform float Q1;
+uniform float Q2;
 uniform vec2 xScale;
 uniform vec2 yScale;
-uniform vec2 xOffset;
-uniform vec2 yOffset;
+uniform vec2 xCoord;
+uniform vec2 yCoord;
+uniform float sinRotate;
+uniform float cosRotate;
 
 in vec4 viewPos;
 out vec4 fragmentColor;
@@ -29,6 +40,9 @@ vec2 cMultSF(vec2 w1, vec2 w2) {
 }
 vec2 cSqrSF(vec2 w) {
     return vec2(w.x*w.x - w.y*w.y, 2.0*w.x*w.y);
+}
+vec2 cCubeSF(vec2 w) {
+    return cMultSF(w, cSqrSF(w));
 }
 vec2 conjSF(vec2 w) {
     return vec2(w.x, -w.y);
@@ -127,12 +141,16 @@ void main() {
 
     // GENERAL INIT
     vec4 colorParams = vec4(0.0);
-    vec2 E, E1 = vec2(0.0);
-    vec2 D = vec2(xScale.x*viewPos.x + xOffset.x, yScale.x*viewPos.y + yOffset.x);
-    vec2 Z = vec2(0.0);
-    float modZ = 0.0;
+    vec2 Z, Z1;
+    vec2 D0 = vec2(xScale.x*viewPos.x, yScale.x*viewPos.y);
+    D0 = vec2(D0.x*cosRotate - D0.y*sinRotate, D0.x*sinRotate + D0.y*cosRotate);
+    vec2 D;
+    vec2 D1 = cMultSF(A, D0) + cMultSF(B, cSqrSF(D0)) + cMultSF(C, cCubeSF(D0));
     float maxIterFloat = float(maxIter);
-    float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + x0 + y0 + R + xOffset.x + yOffset.x;
+    vec2 W = vec2(0.0);
+    float modW = 1.0;
+    float modZ = 1.0;
+    float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + Q2 + x0 + y0 + R;
 
 
     // MAP INIT
@@ -143,28 +161,46 @@ void main() {
 
 
     // MAIN LOOP
-    for (int n = 0; n < maxIter; n++) {
-        if (n == maxIter - 1) {
-            float j = float(n)/float(maxIter);
-            colorParams.z = j;
-            colorParams.w = -2.0;
+    for (int i = skipIter; i < orbitIter; i++) {
+
+        // MAP LOOP
+        Z  = texture(orbit, vec2( float(i+1) / maxIterFloat, 0.0) ).xy;
+        Z1 = texture(orbit, vec2( float(i)   / maxIterFloat, 0.0) ).xy;
+
+        D = 2.0*cMultSF(Z1, D1) + cSqrSF(D1) + D0;
+        W = Z + D;
+
+        modW = modSF(W);
+        modZ = modSF(Z);
+
+        if (modW > R) {
+
+            float j = float(i)-log(0.5*log(modW))/log(2.0);
+            colorParams.x = 10.0*j/float(maxIter);
             break;
+
+        }
+
+        if (i == orbitIter - 1) {
+
+            float j = float(i)-log(0.5*log(modW))/log(2.0);
+            colorParams.x = 10.0*j/float(maxIter);
+            break;
+
+        }
+
+        if (modW/modZ < 0.001) {
+
+            float j = float(i)-log(0.5*log(modW))/log(2.0);
+            colorParams.x = 10.0*j/float(maxIter);
+            colorParams.y = 1.0;
+            break;
+
         }
 
         // GENERAL LOOP
-        E1 = E;
+        D1 = D;
 
-        // MAP LOOP
-        E = 2.0*cMultSF(texture(orbit, vec2(float(n)/maxIterFloat, 0.0)).xy, E1) + cSqrSF(E1) + D;
-        Z = texture(orbit, vec2(float(n + 1)/maxIterFloat, 0.0)).xy + E;
-        modZ = modSF(Z);
-        if (modZ > R) {
-
-            float j = float(n)/float(maxIter);
-            colorParams.z = j;
-
-            break;
-        }
     }
 
 
