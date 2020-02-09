@@ -1,13 +1,16 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.BlendMode
+import android.graphics.PorterDuff
 import android.graphics.drawable.GradientDrawable
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.os.Handler
-import android.support.design.widget.TabLayout
-import android.support.v7.widget.RecyclerView
+import com.google.android.material.tabs.TabLayout
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -22,34 +25,17 @@ import java.text.ParseException
 
 class ColorFragment : Fragment() {
 
-    // Store instance variables
-    private lateinit var f: Fractal
-    private lateinit var fsv: FractalSurfaceView
     private val nf = NumberFormat.getInstance()
-
-    // newInstance constructor for creating fragment with arguments
-    fun passArguments(f: Fractal, fsv: FractalSurfaceView) {
-        this.f = f
-        this.fsv = fsv
-    }
 
     private fun String.formatToDouble() : Double? {
         var d : Double? = null
         try { d = nf.parse(this)?.toDouble() }
         catch (e: ParseException) {
-            val act = if (activity is MainActivity) activity as MainActivity else null
-            act?.showMessage(resources.getString(R.string.msg_invalid_format))
+            val act =activity as MainActivity
+            act.showMessage(resources.getString(R.string.msg_invalid_format))
         }
         return d
     }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        val act = if (activity is MainActivity) activity as MainActivity else null
-        if (!this::f.isInitialized) f = act!!.f
-        if (!this::fsv.isInitialized) fsv = act!!.fsv
-        super.onCreate(savedInstanceState)
-    }
-
 
     // Inflate the view for the fragment based on layout XML
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -60,7 +46,9 @@ class ColorFragment : Fragment() {
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
-        val act = if (activity is MainActivity) activity as MainActivity else null
+        val act = activity as MainActivity
+        val f = act.f
+        val fsv = act.fsv
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
@@ -85,7 +73,7 @@ class ColorFragment : Fragment() {
 
             fsv.requestRender()
             editText.clearFocus()
-            // act?.onWindowFocusChanged(true)
+            fsv.updateSystemUI()
             true
 
         }}
@@ -110,10 +98,8 @@ class ColorFragment : Fragment() {
 
 
         val handler = Handler()
-        colorPreviewImage.setImageDrawable(GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                ColorPalette.getColors(resources, f.palette.ids)
-        ))
+
+        paletteCard.foreground = f.palette.getGradientDrawable(resources)
         colorPreviewName.text = resources.getString(f.palette.name)
         colorPreview.setOnClickListener {
 
@@ -133,10 +119,7 @@ class ColorFragment : Fragment() {
 
         colorDoneButton.setOnClickListener {
 
-            colorPreviewImage.setImageDrawable(GradientDrawable(
-                    GradientDrawable.Orientation.LEFT_RIGHT,
-                    ColorPalette.getColors(resources, f.palette.ids)
-            ))
+            paletteCard.foreground = f.palette.getGradientDrawable(resources)
             colorPreviewName.text = resources.getString(f.palette.name)
             colorLayout.removeView(colorPreviewListLayout)
             colorContent.visibility = LinearLayout.VISIBLE
@@ -200,7 +183,7 @@ class ColorFragment : Fragment() {
                 it.thumbnail = Bitmap.createBitmap(thumbRes[0], thumbRes[0], Bitmap.Config.ARGB_8888)
             }
         }
-        act?.updateColorEditTexts()
+        act.updateColorEditTexts()
         super.onViewCreated(v, savedInstanceState)
 
     }
