@@ -16,11 +16,11 @@ android {
     buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "com.selfsimilartech.fractaleye"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 29
-        versionCode 9
-        versionName "1.2.2"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionCode 11
+        versionName "1.2.4"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -38,27 +38,28 @@ android {
     flavorDimensions "version"
     productFlavors {
         free {
-            applicationId "com.selfsimilartech.fractaleye.free"
+            applicationId "com.selfsimilartech.fractaleye"
             buildConfigField "boolean", "PAID_VERSION", "false"
 
         }
         paid {
             applicationId "com.selfsimilartech.fractaleye.paid"
-            buildConfigField"boolean", "PAID_VERSION", "true"
+            buildConfigField "boolean", "PAID_VERSION", "true"
         }
     }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:support-v4:28.0.0'
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50"
-    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     testImplementation 'junit:junit:4.12'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    implementation 'com.android.support:design:28.0.0'
-    implementation 'in.hourglass.mathrender:katexmathview:1.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'io.github.kexanie.library:MathView:0.0.6'
+    implementation 'org.apfloat:apfloat:1.9.1'
 }
