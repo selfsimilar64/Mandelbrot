@@ -2,30 +2,34 @@ package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
 import android.util.Log
-import kotlin.math.pow
+import org.apfloat.Apfloat
+import org.apfloat.ApfloatMath.sqrt
+import kotlin.math.cos
+import kotlin.math.sin
 
 @SuppressLint("SetTextI18n")
 class Fractal(
 
         // shape config
-        shape:               Shape           = Shape.mandelbrot,
-        juliaMode:           Boolean         = shape.juliaMode,
-        var position:        Position        = if (juliaMode) shape.positions.julia else shape.positions.default,
+        shape:               Shape              = Shape.mandelbrot,
+        shapeParams:         Shape.ParamList?   = null,
+        // juliaMode:           Boolean            = shape.juliaMode,
+        var position:        Position           = if (shape.juliaMode) shape.positions.julia else shape.positions.default,
 
         // texture config
-        texture:             Texture         = Texture.exponentialSmoothing,
-        var textureMode:     TextureMode     = TextureMode.OUT,
+        texture:             Texture            = Texture.exponentialSmoothing,
+        var textureMode:     TextureMode        = TextureMode.OUT,
 
         // color config
-        var palette:         ColorPalette    = ColorPalette.night,
-        var frequency:       Float           = 1f,
-        phase:               Float           = 0f,
-        var solidFillColor:  Int             = R.color.white,
+        var palette:         ColorPalette       = ColorPalette.night,
+        var frequency:       Float              = 1f,
+        phase:               Float              = 0f,
+        var solidFillColor:  Int                = R.color.white,
 
 
-        var maxIter:         Int             = 255,
-        var sensitivity:     Double          = 1.0,
-        var bailoutRadius:   Float           = shape.bailoutRadius ?: texture.bailoutRadius ?: 1e2f
+        var maxIter:         Int                = 255,
+        var sensitivity:     Double             = 2.0,
+        var bailoutRadius:   Float              = shape.bailoutRadius ?: texture.bailoutRadius ?: 1e2f
 
 ) {
 
@@ -33,114 +37,239 @@ class Fractal(
     companion object {
 
         val mandelbrot = Fractal()
-        val m1 = Fractal(
-                shape = Shape.mandelbrot,
-                position = Shape.mandelbrot.positions.other[2],
-                texture = Texture.orbitTrap,
-                palette = ColorPalette.p9,
-                frequency = 71.74303f,
-                phase = -0.26012f,
-                maxIter = 2.0.pow(12).toInt()
-        )
-        val m2 = Fractal(
-                shape = Shape.mandelbrot,
-                position = Shape.mandelbrot.positions.other[0],
-                texture = Texture.overlayAvg
-        )
-        val verbose = Fractal(
-                shape = Shape.mandelbrot,
-                position = Shape.mandelbrot.positions.other[1],
-                texture = Texture.stripeAvg,
-                palette = ColorPalette.night,
-                frequency = 25.51949f,
-                phase = 0.11335f,
-                maxIter = 2.0.pow(10.25).toInt()
-        )
-        val supernova = Fractal(
-                shape = Shape.mandelbrot,
-                juliaMode = true,
-                position = Position(
-                        scale = 1.18236,
-                        rotation = 347.0.inRadians()
-                ),
-                maxIter = 298,
-                frequency = 6.93958f,
-                phase = 0.39675f
-                // juliaParam = Shape.Param(0.16111111, -0.60128205)
-        )
-        val flora = Fractal(
-                shape = Shape.mandelbrot,
-                position = Position(
-                        x = -1.74911968511756500,
-                        y = -0.00031377609027430,
-                        scale = 6.48450e-8,
-                        rotation = 105.0.inRadians()
-                ),
-                maxIter = 1478,
-                texture = Texture.curvatureAvg,
-                palette = ColorPalette.flora,
-                frequency = 21.45009f,
-                phase = 0.04328f
-        )
+//        val mSeriesApproxTest1 = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        scale = 1e-36,
+//                        rotationLocked = true,
+//                        xap = Apfloat("-1.7698932575350291605327642596051289784358915304", AP_DIGITS),
+//                        yap = Apfloat("3.6665870040147116377855723420874234222248717255e-3", AP_DIGITS)
+//                ),
+//                maxIter = 4096
+//        )
+//        val mSeriesApproxTest2 = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(rotationLocked = true),
+//                frequency = 28f,
+//                phase = 0.25f
+//        )
+//        val mDeepest = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = -1.24375615535091620,
+//                        y = 0.11621137117223326,
+//                        scale = 6.39541e-24
+//                ),
+//                maxIter = 8192,
+//                phase = 0.284f,
+//                frequency = 111.73709f
+//        )
+//        val m1 = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = -0.48414790254135703,
+//                        y = -0.59799104457234160,
+//                        scale = 6.15653e-4
+//                ),
+//                texture = Texture.orbitTrap,
+//                palette = ColorPalette.p9,
+//                frequency = 71.74303f,
+//                phase = -0.26012f,
+//                maxIter = 2.0.pow(12).toInt()
+//        )
+//        val m2 = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = -1.25735194436369140,
+//                        y = -0.07363029998042227,
+//                        scale = 1.87845e-3
+//                ),
+//                texture = Texture.overlayAvg
+//        )
+//        val verbose = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = 0.39019590054025366,
+//                        y = -0.26701156160039610,
+//                        scale = 9.59743e-8,
+//                        rotation = 146.0.inRadians()
+//                ),
+//                texture = Texture.stripeAvg,
+//                palette = ColorPalette.night,
+//                frequency = 25.51949f,
+//                phase = 0.11335f,
+//                maxIter = 2.0.pow(10.25).toInt()
+//        )
+//        val supernova = Fractal(
+//                shape = Shape.mandelbrot,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(julia = Shape.Param(0.16111111, -0.60128205)),
+//                texture = Texture.stripeAvg,
+//                position = Position(
+//                        scale = 1.18236,
+//                        rotation = 347.0.inRadians()
+//                ),
+//                maxIter = 298,
+//                frequency = 6.93958f,
+//                phase = 0.39675f
+//        )
+//        val flora = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = -1.74911968511756500,
+//                        y = -0.00031377609027430,
+//                        scale = 6.48450e-8,
+//                        rotation = 105.0.inRadians()
+//                ),
+//                maxIter = 1478,
+//                texture = Texture.curvatureAvg,
+//                palette = ColorPalette.flora,
+//                frequency = 27.22222f,
+//                phase = 0.20167f
+//        )
 
         val mandelbrotCubic = Fractal(shape = Shape.mandelbrotCubic)
         val mandelbrotQuartic = Fractal(shape = Shape.mandelbrotQuartic)
 
-        val mandelbrotAnyPower = Fractal(shape = Shape.mandelbrotAnyPower)
-        val nautilus = Fractal(
-                shape = Shape.mandelbrotAnyPower,
-                juliaMode = true,
-                position = Position(x = 0.5, y = 0.075, scale = 4.5),
-                texture = Texture.curvatureAvg,
-                frequency = 1.60128f,
-                phase = 0.14218f
-                // param1 = Shape.Param(1.24943476, -0.03900028)
-                // juliaParam = Shape.Param(0.25946921, -0.37223729)
-        )
+        val mandelbrotAnyPower = Fractal(shape = Shape.mandelbrotAnyPow)
+//        val nautilus = Fractal(
+//                shape = Shape.mandelbrotAnyPower,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(1.24943476, -0.03900028)),
+//                        Shape.Param(0.25946921, -0.37223729)
+//                ),
+//                position = Position(x = -0.75, y = 0.075, scale = 4.5),
+//                texture = Texture.curvatureAvg,
+//                frequency = 1.60128f,
+//                phase = 0.14218f
+//        )
+//        val mp1 = Fractal(
+//                shape = Shape.mandelbrotAnyPower,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(1.31423213, 2.86942864)),
+//                        Shape.Param(-0.84765975, -0.02321229)
+//                )
+//        )
 
         val clover = Fractal(shape = Shape.clover)
+//        val c1 = Fractal(
+//                shape = Shape.clover,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(3.06925369, 0.0)),
+//                        Shape.Param(-0.53906421, 0.00876671)
+//                ),
+//                position = Position(-1.0, 0.0, 3.41891e-1, 0.0),
+//                texture = Texture.curvatureAvg,
+//                // textureParams = Texture.ParamList(Texture.Param(30.0))
+//                palette = ColorPalette.peacock,
+//                frequency = 0.67508f,
+//                phase = 0.97322f
+//        )
 
         val mandelbox = Fractal(shape = Shape.mandelbox)
-        val mx1 = Fractal(
-                shape = Shape.mandelbox,
-                juliaMode = true
-                // param1 = Shape.Param(-0.93550922, -0.75157826)
-                // juliaParam = Shape.Param(-0.99635701, 2.48995369)
-        )
-        val mx2 = Fractal(
-                shape = Shape.mandelbox,
-                juliaMode = true,
-                position = Position(
-                        x = -1.08072452128498540,
-                        y = -0.91860192005481600,
-                        scale = 2.66877e-2
-                ),
-                texture = Texture.orbitTrap,
-                frequency = 0.53343f,
-                phase = 0.45405f
-                // param1 = Shape.Param(-2.66421354, 0.0)
-                // juliaParam = Shape.Param(3.26525985, 3.28239093)
-        )
+//        val mx1 = Fractal(
+//                shape = Shape.mandelbox,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(-0.95421800, -0.76819397)),
+//                        Shape.Param(-0.99635701, 2.48995369)
+//                )
+//        )
+//        val mx2 = Fractal(
+//                shape = Shape.mandelbox,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(-2.66421354, 0.0)),
+//                        Shape.Param(3.26525985, 3.28239093)
+//                ),
+//                position = Position(
+//                        x = -1.08072452128498540,
+//                        y = -0.91860192005481600,
+//                        scale = 2.66877e-2
+//                ),
+//                texture = Texture.orbitTrap,
+//                frequency = 0.53343f,
+//                phase = 0.45405f
+//        )
 
         val kali = Fractal(shape = Shape.kali)
+
         val burningShip = Fractal(shape = Shape.burningShip)
+
+//        val bsp1 = Fractal(
+//                shape = Shape.burningshipAnyPow,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(0.24805465, -2.54550288)),
+//                        Shape.Param(-14.29522458, -15.71238251)
+//                ),
+//                bailoutRadius = 1e2f,
+//                texture = Texture.escape
+//        )
+//        val bsp2 = Fractal(
+//                shape = Shape.burningshipAnyPow,
+//                // juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(0.62440492, -1.67226752)),
+//                        Shape.Param(-24.79982625, -39.39248709)
+//                ),
+//                position = Position(scale = 6.0),
+//                texture = Texture.escape,
+//                frequency = 0.29723f,
+//                phase = 0.48f
+//        )
+//        val bsp3 = Fractal(
+//                shape = Shape.burningshipAnyPow,
+//                // juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(1.67084550, 1.05489061)),
+//                        Shape.Param(0.22192777, -1.20128181)
+//                ),
+//                position = Position(scale = 1.2e1),
+//                texture = Texture.exponentialSmoothing
+//        )
+
         val sine1 = Fractal(shape = Shape.sine1)
 
         val sine2 = Fractal(shape = Shape.sine2)
-        val s2_1 = Fractal(
-                shape = Shape.sine2,
-                position = Position(x = -0.26282883851642613, y = 2.042520182493586E-6)
-        )
+//        val s2_1 = Fractal(
+//                shape = Shape.sine2,
+//                position = Position(x = -0.26282883851642613, y = 2.042520182493586E-6)
+//        )
 
         val horseshoeCrab = Fractal(shape = Shape.horseshoeCrab)
+//        val hc1 = Fractal(
+//                shape = Shape.horseshoeCrab,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(-0.02955925, 0.49291033)),
+//                        Shape.Param(-0.75224080, -0.93949126)
+//                ),
+//                textureMode = TextureMode.BOTH,
+//                bailoutRadius = 1e5f,
+//                frequency = 0.47227f,
+//                phase = 0.19166f
+//        )
+//        val hc2 = Fractal(
+//                shape = Shape.horseshoeCrab,
+//                juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        listOf(Shape.Param(-0.02926709, 0.48591950)),
+//                        Shape.Param(-0.74308518, -0.94826022)
+//                ),
+//                textureMode = TextureMode.BOTH,
+//                bailoutRadius = 1e5f,
+//                frequency = 0.47227f,
+//                phase = 0.19166f
+//        )
+
         val kleinian = Fractal(shape = Shape.kleinian)
         val nova1 = Fractal(shape = Shape.nova1)
         val nova2 = Fractal(shape = Shape.nova2)
 
     }
-
-
-    var numParamsInUse = shape.numParams + if (juliaMode && !shape.juliaMode) 1 else 0
 
     
     var shape = shape
@@ -150,49 +279,9 @@ class Fractal(
                 // Log.d("FRACTAL", "setting shape from $field to $value")
                 field = value
 
-                juliaMode = shape.juliaMode
-                position = if (juliaMode) shape.positions.julia else shape.positions.default
-                numParamsInUse = shape.numParams + if (juliaMode && !shape.juliaMode) 1 else 0
+                position = if (shape.juliaMode) shape.positions.julia else shape.positions.default
                 bailoutRadius = shape.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
 
-            }
-        }
-
-    var juliaMode = juliaMode
-        set (value) {
-            if (field != value) {
-
-                // Log.d("FRACTAL", "setting juliaMode from $field to $value")
-                field = value
-
-                numParamsInUse += if (value) 1 else -1
-                position = if (value) shape.positions.julia else shape.positions.default
-
-//                if (value as Boolean) {
-//                    addMapParams(1)
-//                    f.savedCoords()[0] = f.coords()[0]
-//                    f.savedCoords()[1] = f.coords()[1]
-//                    f.savedScale()[0] = f.scale()[0]
-//                    f.savedScale()[1] = f.scale()[1]
-//                    f.coords()[0] = 0.0
-//                    f.coords()[1] = 0.0
-//                    f.scale()[0] = 3.5
-//                    f.scale()[1] = 3.5 * f.screenRes[1].toDouble() / f.screenRes[0]
-//                    f.params["p${f.numParamsInUse()}"] = Shape.Param(
-//                            f.savedCoords()[0],
-//                            f.savedCoords()[1]
-//                    )
-//                }
-//                else {
-//                    removeMapParams(1)
-//                    f.coords()[0] = f.savedCoords()[0]
-//                    f.coords()[1] = f.savedCoords()[1]
-//                    f.scale()[0] = f.savedScale()[0]
-//                    f.scale()[1] = f.savedScale()[1]
-//                }
-//                f.updateMapParamEditTexts()
-//                f.renderShaderChanged = true
-//                fsv.r.renderToTex = true
             }
         }
 
@@ -215,6 +304,15 @@ class Fractal(
         }
 
 
+
+    init {
+
+        // set shape params here
+        if (shapeParams != null) { shape.params.setFrom(shapeParams) }
+
+    }
+
+
     val saved = {
 
         // SINE2 :: (-0.26282883851642613, 2.042520182493586E-6)
@@ -234,37 +332,14 @@ class Fractal(
         // MANDELBROT
         //      JULIA :: (0.38168508, -0.20594095) + TRIANGLE INEQ
 
-        // MANDELBROT @
-        //      x:         -1.25735194436369140
-        //      y:         -0.07363029998042227
-        //      scale:      1.87845e-3
-        // MANDELBROT @
-        //      x:          0.39019590054025366
-        //      y:         -0.26701156160039610
-        //      scale:      9.59743e-8
-        //      rotation:   146
-        // MANDELBROT @
-        //      x:         -0.48414790254135703
-        //      y:         -0.59799104457234160
-        //      scale:      6.15653e-4
-        //      rotation:   2
-        //      texture:    orbit trap
-        //      palette:    p9
-        //      frequency:  71.74303
-        //      offset:     -0.26012
-        //      maxIter:    1047
-
-        // MANDELBROT CPOW :: (1.31423213, 2.86942864)
-        //      JULIA :: (-0.84765975, -0.02321229)
 
         // SINE4 :: (1.41421356, 0.0)
         //      JULIA :: (-2.16074089, 0.0)
 
-        // HORSESHOE CRAB :: (-0.02955925, 0.49291033)
-        //      JULIA :: (-0.75224080, -0.93949126)
 
-        // HORSESHOE CRAB :: (-0.02926709, 0.48591950)
-        //      JULIA :: (-0.74308518, -0.94826022)
+
+        // HORSESHOE CRAB ::
+        //      JULIA ::
 
         // HORSESHOE CRAB :: (1.0, 0.0) @
         //      x:          -1.58648660503412890
@@ -311,12 +386,10 @@ class Fractal(
 
     }
 
-
-
     fun clone() : Fractal {
         return Fractal(
                 shape,
-                juliaMode,
+                shape.params, // clone?
                 position.clone(),
                 texture,
                 textureMode,
@@ -329,5 +402,6 @@ class Fractal(
                 bailoutRadius
         )
     }
+
 
 }
