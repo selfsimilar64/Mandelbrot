@@ -5,13 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * Created by Belal on 6/19/2017.
  */
 
-class ShapeAdapter(val shapeList: ArrayList<Shape>) : RecyclerView.Adapter<ShapeAdapter.ShapeHolder>() {
+class ShapeAdapter(val shapeList: List<Shape>) : RecyclerView.Adapter<ShapeAdapter.ShapeHolder>() {
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShapeHolder {

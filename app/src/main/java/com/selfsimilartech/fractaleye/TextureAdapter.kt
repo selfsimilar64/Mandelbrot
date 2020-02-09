@@ -5,11 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 
 
-class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
+class TextureAdapter(val textureList: List<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextureHolder {
@@ -36,7 +36,7 @@ class TextureAdapter(val textureList: ArrayList<Texture>) : RecyclerView.Adapter
 
             val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
             val previewText = itemView.findViewById<TextView>(R.id.previewText)
-            previewText.text = itemView.resources.getString(texture.name)
+            previewText.text = itemView.resources.getString(texture.displayName)
             previewImage.setImageBitmap(texture.thumbnail)
             previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
 

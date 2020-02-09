@@ -1,12 +1,13 @@
 package com.selfsimilartech.fractaleye
 
 import android.graphics.drawable.GradientDrawable
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import java.util.ArrayList
 
 class ColorPaletteAdapter(
@@ -37,13 +38,10 @@ class ColorPaletteAdapter(
         fun bindItems(palette: ColorPalette) {
 
             val previewImage = itemView.findViewById<ImageView>(R.id.colorPreviewImage)
-            val previewPalette = itemView.findViewById<ImageView>(R.id.previewPalette)
+            val previewGradient = itemView.findViewById<CardView>(R.id.colorPreviewGradient)
             val previewText = itemView.findViewById<TextView>(R.id.colorPreviewText)
 
-            previewPalette.setImageDrawable(GradientDrawable(
-                    GradientDrawable.Orientation.LEFT_RIGHT,
-                    ColorPalette.getColors(itemView.resources, palette.ids)
-            ))
+            previewGradient.foreground = palette.getGradientDrawable(itemView.resources)
 
             previewText.text = itemView.resources.getString(palette.name)
 
