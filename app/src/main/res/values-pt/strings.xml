@@ -14,9 +14,9 @@
     <string name="frequency">Frequência</string>
     <string name="gold">Ouro</string>
     <string name="groovy">Groovy</string>
-    <string name="juliaMode">Modo Julia</string>
+    <string name="julia_mode">Modo Julia</string>
     <string name="magma">Magma</string>
-    <string name="maxIter">Iterações Máximas</string>
+    <string name="max_iter">Iterações Máximas</string>
     <string name="zoom">Zoom</string>
     <string name="yinyang">Yin Yang</string>
     <string name="x">x</string>
@@ -34,7 +34,7 @@
     <string name="solid_fill_white">branco</string>
     <string name="solid_fill_black">preto</string>
     <string name="solid_fill">Cor de Preenchimento Sólido</string>
-    <string name="shape">forma</string>
+    <string name="shape">Forma</string>
     <string name="settings">definições</string>
     <string name="sensitivity">sensibilidade</string>
     <string name="save">salvar</string>
@@ -79,7 +79,7 @@
     <string name="normal2">Mapa de Normais 2</string>
     <string name="orbit_trap_miny">Armadilha da Órbita</string>
     <string name="overlay_avg">Média de Sobreposição</string>
-    <string name="stripe_density">Densidade de Listras</string>
+    <string name="density">Densidade de Listras</string>
     <string name="sharpness">Nitidez</string>
     <string name="mandelbrot_cubic">Mandelbrot Cúbico</string>
     <string name="mandelbrot_quartic">Mandelbrot  Quártico</string>
@@ -93,4 +93,14 @@
     <string name="burning_ship">Navio em Chamas</string>
     <string name="app_name">Olho Fractal</string>
     <string name="fe_abbrev">OF</string>
+    <string name="fit_viewport">Caber Imagem à Janela de Exibição</string>
+    <string name="msg_save_enabled">Salvamento  de imagem ativada - clique novamente para salvar</string>
+    <string name="peacock">Pavão</string>
+    <string name="hide_nav_bar">Ocultar Barra de Navegação</string>
+    <string name="palette">Paleta de Cores</string>
+    <string name="reset">Reinicializar</string>
+    <string name="continuous_render_hint">Renderizar a imagem durante as alterações de posição</string>
+    <string name="display_params_hint">Mostrar janela com parâmetros relevantes durante gestos de toque</string>
+    <string name="fit_viewport_hint">Mostrar toda a imagem renderizada</string>
+    <string name="render_background_hint">Renderizar uma imagem maior de baixa resolução abaixo da imagem principal</string>
 </resources>

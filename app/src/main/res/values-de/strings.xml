@@ -6,8 +6,8 @@
     <string name="done">erledigt</string>
     <string name="dscript_shape_preview">Form Vorschaubild</string>
     <string name="frequency">Frequenz</string>
-    <string name="juliaMode">Juliamodus</string>
-    <string name="maxIter">Maximale Iterationen</string>
+    <string name="julia_mode">Juliamodus</string>
+    <string name="max_iter">Maximale Iterationen</string>
     <string name="msg_invalid_format">Ungültige Nummer Format</string>
     <string name="msg_save_failed">Bild nicht gespeichert: Speichererlaubnis erforderlich</string>
     <string name="msg_zoom_limit">Zoomgrenze erreicht</string>
@@ -30,7 +30,7 @@
     <string name="save">speichern</string>
     <string name="sensitivity">feinheit</string>
     <string name="settings">einstellungen</string>
-    <string name="shape">form</string>
+    <string name="shape">Form</string>
     <string name="solid_fill">Kompakte Füllfarbe</string>
     <string name="solid_fill_black">schwarz</string>
     <string name="solid_fill_white">weiß</string>
@@ -79,7 +79,7 @@
     <string name="normal2">Normale Zuordnung 2</string>
     <string name="orbit_trap_miny">Orbitfalle</string>
     <string name="overlay_avg">Überlagerungsdurchschnitt</string>
-    <string name="stripe_density">Streifendichte</string>
+    <string name="density">Streifendichte</string>
     <string name="sharpness">Schärfe</string>
     <string name="mandelbrot_cubic">Mandelbrot Kubisch</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartisch</string>
@@ -93,4 +93,14 @@
     <string name="burning_ship">Brennendes Schiff</string>
     <string name="app_name">Fraktales Auge</string>
     <string name="fe_abbrev">FA</string>
+    <string name="fit_viewport">Bild an Ansichtsfenster Anpassen</string>
+    <string name="msg_save_enabled">Bildspeicherung aktiviert - Zum Speichern erneut klicken</string>
+    <string name="peacock">Pfau</string>
+    <string name="hide_nav_bar">Navigationsleiste Ausblenden</string>
+    <string name="palette">Palette</string>
+    <string name="reset">Reinitialisieren</string>
+    <string name="continuous_render_hint">Rendern Sie das Bild bei Positionsänderungen</string>
+    <string name="display_params_hint">Fenster mit relevanten Parametern während Berührungsgesten anzeigen</string>
+    <string name="fit_viewport_hint">Zeigt das gesamte gerenderte Bild an</string>
+    <string name="render_background_hint">Rendern Sie ein größeres Bild mit niedriger Auflösung unter dem Hauptbild</string>
 </resources>

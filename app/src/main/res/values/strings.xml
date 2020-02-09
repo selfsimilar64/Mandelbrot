@@ -14,7 +14,7 @@
     <!-- MAIN -->
     <string name="settings">settings</string>
     <string name="texture">texture</string>
-    <string name="shape">shape</string>
+    <string name="shape">Shape</string>
     <string name="color">color</string>
     <string name="position">position</string>
     <string name="reaction" translatable="false">reaction</string>
@@ -32,6 +32,7 @@
     <string name="tutorial_color2" translatable="false">Swipe left or right to shift the colors</string>
     <string name="tutorial_color3" translatable="false">Pinch to make the colors change more or less frequently!</string>
     <string name="empty" translatable="false"> </string>
+    <string name="reset">Reset</string>
 
 
 
@@ -50,6 +51,13 @@
     <string name="continuous_render">Continuous Render</string>
     <string name="display_params">Display Parameters</string>
     <string name="render_background">Render Background</string>
+    <string name="hide_nav_bar">Hide Navigation Bar</string>
+    <string name="fit_viewport">Fit Image To Display Window</string>
+    <string name="show_hints" translatable="false">Show Hints</string>
+    <string name="continuous_render_hint">Render the image during position changes</string>
+    <string name="render_background_hint">Render a larger low-resolution image underneath the main image</string>
+    <string name="display_params_hint">Show window with relevant parameters during touch gestures</string>
+    <string name="fit_viewport_hint">Show the entire rendered image</string>
 
 
     <!-- TEXTURE FRAGMENT -->
@@ -60,6 +68,7 @@
     <string name="texture_mode_out">out</string>
     <string name="texture_mode_in">in</string>
     <string name="texture_mode_both">both</string>
+    <string name="bailout_hint" translatable="false">Determines how large the numbers can get during calcualtion before terminating</string>
 
 
 
@@ -68,23 +77,31 @@
     <string name="dscript_shape_preview">shape preview image</string>
     <string name="u">u</string>
     <string name="v">v</string>
+    <string name="julia" translatable="false">Julia</string>
     <string name="param1">Param 1</string>
     <string name="param2">Param 2</string>
     <string name="param3">Param 3</string>
     <string name="param4">Param 4</string>
     <string name="sensitivity">sensitivity</string>
-    <string name="maxIter">Maximum Iterations</string>
-    <string name="juliaMode">Julia Mode</string>
+    <string name="max_iter">Maximum Iterations</string>
+    <string name="julia_mode">Julia Mode</string>
+    <string name="max_iter_hint" translatable="false">Determines the maximum number of calculations per pixel.
+        Increasing will make shape more defined but increase render time.</string>
+    <string name="julia_mode_hint" translatable="false">Use a parameter to create each type of shape that can be found within the main shape</string>
+
 
 
 
     <!-- COLOR FRAGMENT -->
+    <string name="palette">Palette</string>
     <string name="palette_name" translatable="false">Palette Name</string>
     <string name="frequency">Frequency</string>
     <string name="offset">Phase</string>
     <string name="solid_fill">Solid Fill Color</string>
     <string name="solid_fill_white">white</string>
     <string name="solid_fill_black">black</string>
+    <string name="phase_hint" translatable="false">Determines the color offset. Swipe left or right with one finger to change.</string>
+    <string name="freq_hint" translatable="false">Determines how frequently the colors change. Use pinch gestures to change.</string>
 
 
 
@@ -119,6 +136,7 @@
     <string name="yinyang">Yin Yang</string>
     <string name="night">Night</string>
     <string name="cosmic">Cosmic</string>
+    <string name="peacock">Peacock</string>
     <string name="elephant">Elephant</string>
     <string name="oldskool">Old Sk00l</string>
     <string name="gold">Gold</string>
@@ -141,17 +159,23 @@
     <string name="exponential_smooth">Exponential Smoothing</string>
     <string name="distance_est">Distance Estimation</string>
     <string name="triangle_ineq_avg">Triangle Inequality Average</string>
+    <string name="triangle_ineq_avg_int" translatable="false">Triangle Inequality Average (Int)</string>
+    <string name="triangle_ineq_avg_float" translatable="false">Triangle Inequality Average (Float)</string>
     <string name="curvature_avg">Curvature Average</string>
     <string name="stripe_avg">Stripe Average</string>
     <string name="orbit_trap_miny">Orbit Trap</string>
     <string name="normal1">Normal Map 1</string>
     <string name="normal2">Normal Map 2</string>
     <string name="overlay_avg">Overlay Average</string>
+    <string name="stripe_avg_bins" translatable="false">Stripe Average (Bins)</string>
+    <string name="stripe_median_bins" translatable="false">Stripe Median (Bins)</string>
+    <string name="stripe_mode_bins" translatable="false">Stripe Mode (Bins)</string>
 
 
 
     <!-- TEXTURE PARAM NAMES -->
-    <string name="stripe_density">Stripe Density</string>
+    <string name="density">Density</string>
+    <string name="thickness" translatable="false">Thickness</string>
     <string name="sharpness">Sharpness</string>
 
 
@@ -166,6 +190,7 @@
     <string name="msg_save_successful">Image saved to </string>
     <string name="msg_save_failed">Image not saved: storage permission required</string>
     <string name="msg_save_wait">Please wait for the image to finish rendering</string>
+    <string name="msg_save_enabled">Image saving enabled - click again to save</string>
 
 
 
@@ -187,11 +212,13 @@
         uniform float power;
         uniform float x0;
         uniform float y0;
+        uniform vec2 J;
         uniform vec2 P1;
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
         uniform float Q1;
+        uniform float Q2;
         uniform vec2 xScale;
         uniform vec2 yScale;
         uniform vec2 xCoord;
@@ -215,11 +242,13 @@
         uniform float power;
         uniform float x0;
         uniform float y0;
+        uniform vec2 J;
         uniform vec2 P1;
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
         uniform float Q1;
+        uniform float Q2;
         uniform vec2 xScale;
         uniform vec2 yScale;
         uniform vec2 xCoord;
@@ -236,7 +265,7 @@
         precision highp float;
         uniform sampler2D tex;
         uniform int numColors;
-        uniform vec3 palette[15];
+        uniform vec3 palette[25];
         uniform vec3 solidFillColor;
         uniform float frequency;
         uniform float phase;
@@ -718,7 +747,7 @@
         vec2 Z, Z1, Z2 = vec2(0.0);
         float modZ = 0.0;
         float eps = 0.0;
-        vec2 useUniforms = P1 + P2 + P3 + P4 + Q1 + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + Q2 + x0 + y0 + R;
     </string>
     <string name="general_init_df" translatable="false">
         vec4 colorParams = vec4(0.0);
@@ -732,7 +761,7 @@
         vec2 Y, Y1, Y2 = vec2(0.0);
         vec2 modZ = vec2(0.0);
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + Q2 + x0 + y0 + R;
     </string>
     <string name="general_loop_sf" translatable="false">
         Z2 = Z1;
@@ -840,17 +869,17 @@
     <!-- KALI -->
     <string name="kali_loop_sf" translatable="false">
         vec2 W = abs(Z1);
-        Z = W/modSqrSF(W) + P1;
+        Z = W/modSqrSF(W) + C;
     </string>
     <string name="kali_loop_df" translatable="false">
         vec2 W1 = absDF(X1);
         vec2 W2 = absDF(Y1);
         vec2 W3 = modSqrDF(W1, W2);
-        X = addDF(divDF(W1, W3), vec2(P1.x, 0.0));
-        Y = addDF(divDF(W2, W3), vec2(P1.y, 0.0));
+        X = addDF(divDF(W1, W3), A);
+        Y = addDF(divDF(W2, W3), B);
     </string>
     <string name="kali_katex" translatable="false">
-        $z_{n+1} = \\large\\frac{\\textrm{abs}(z_n)}{|\\textrm{abs}(z_n)|^2} +\\small P1$
+        $z_{n+1} = \\large\\frac{\\textrm{abs}(z_n)}{|\\textrm{abs}(z_n)|^2} +\\small J$
     </string>
 
     <string name="kalisquare_loop_sf" translatable="false">
@@ -962,10 +991,9 @@
 
     <!-- KLEINIAN -->
     <string name="kleinian_init_sf" translatable="false">
-        vec2 P = P2;
-        vec2 q = Z - P;
+        vec2 q = Z - J;
         float h = atan(q.y, q.x);
-        Z = P + vec2(cos(h), sin(h))/modSF(q);
+        Z = J + vec2(cos(h), sin(h))/modSF(q);
     </string>
     <string name="kleinian_loop_sf" translatable="false">
         if (Z.y &lt; 0.0 || Z.y &gt; P1.x) {
@@ -982,11 +1010,10 @@
         }
     </string>
     <string name="kleinian_init_df" translatable="false">
-        vec2 P = P2;
-        vec2 q = vec2(X.x, Y.x) - P;
+        vec2 q = vec2(X.x, Y.x) - C;
         float h = atan(q.y, q.x);
-        X = vec2(P.x + cos(h)/modSF(q), 0.0);
-        Y = vec2(P.y + sin(h)/modSF(q), 0.0);
+        X = vec2(C.x + cos(h)/modSF(q), 0.0);
+        Y = vec2(C.y + sin(h)/modSF(q), 0.0);
     </string>
     <string name="kleinian_loop_df" translatable="false">
         if (Y.x &lt; 0.0 || Y.x &gt; P1.x) {
@@ -1042,7 +1069,7 @@
 
     <string name="nova2_loop_sf" translatable="false">
         vec2 zSqr = cSqrSF(Z1);
-        Z = Z1 - cDivSF(sinSF(zSqr) - Z1, 2.0*cMultSF(Z1, cosSF(zSqr)) - vec2(1.0, 0.0));
+        Z = Z1 - cDivSF(sinSF(zSqr) - Z1, 2.0*cMultSF(Z1, cosSF(zSqr)) - vec2(1.0, 0.0)) + C;
     </string>
     <string name="nova2_katex" translatable="false">
         $z_{n+1} = z_n - \\Large\\frac{\\sin(z_n^2) - z_n}{2z_n\\cos(z_n^2)} \\normalsize + %s$
@@ -1063,19 +1090,19 @@
     </string>
 
 
-    <!-- TEST -->
-    <string name="test_init_sf" translatable="false">
+    <!-- BURNING SHIP ANY POWER -->
+    <string name="burningshipanypow_loop_sf" translatable="false">
+        Z = cPow4(abs(Z1), P1) + C;
     </string>
-    <string name="test_loop_sf" translatable="false">
-        Z = abs(sinSF(cSqrSF(Z1) - cMultSF(vec2(0.0, 1.0), Z1))) + C;
+
+
+    <!-- COLLATZ -->
+    <string name="collatz_init_sf" translatable="false">
+        vec2 w;
     </string>
-    <string name="test_loop_df" translatable="false">
-        vec4 W1 = cSqrDF(X1, Y1);
-        vec2 W2 = addDF(W1.xy, vec2(P1.x, 0.0));
-        vec2 W3 = addDF(W1.zw, vec2(P1.y, 0.0));
-        vec4 W4 = ballFoldDF(W2, W3);
-        X = addDF(W4.xy, A);
-        Y = addDF(W4.zw, B);
+    <string name="collatz_loop_sf" translatable="false">
+        w = cSqrSF(sinSF(0.5*pi*Z1));
+        Z = 0.5*cMultSF(Z1, ONE - w) + cMultSF(0.5*(3.0*Z1 + ONE), w) + C;
     </string>
 
 
@@ -1099,7 +1126,7 @@
     <string name="escape_final" translatable="false">
         <!-- [0, 1] -->
         float j = float(n)/float(maxIter);
-        colorParams.x = 10.0*j;
+        colorParams.x = log(log(j+1.0)+1.0);
     </string>
 
 
@@ -1113,11 +1140,11 @@
     <string name="mandelbrot_smooth_final_sf" translatable="false">
         <!-- [0, 1] -->
         float i = float(n)-log(0.5*log(modSF(Z1)))/log(2.0);
-        colorParams.x = 10.0*i/float(maxIter);
+        colorParams.x = i/float(maxIter);
     </string>
     <string name="mandelbrot_smooth_final_df" translatable="false">
         float i = float(n)-log(0.5*log(modDF(X1, Y1).x))/log(2.0);
-        colorParams.x = 10.0*i/float(maxIter);
+        colorParams.x = i/float(maxIter);
     </string>
 
 
@@ -1414,12 +1441,12 @@
         if (n > 1) {
             sum1 = sum;
             vec2 w = cDivSF(Z - Z1, Z1 - Z2);
-            sum += abs(atan(w.y, w.x));
+            sum += pow(abs(atan(w.y, w.x)) / pi, Q1);
         }
     </string>
     <string name="curvature_final_sf" translatable="false">
-        sum /= float(n) * pi;
-        sum1 /= float(n - 1) * pi;
+        sum /= float(n);
+        sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
@@ -1428,12 +1455,12 @@
         if (n > 1) {
             sum1 = sum;
             vec2 w = cDivSF(vec2(X.x - X1.x, Y.x - Y1.x), vec2(X1.x - X2.x, Y1.x - Y2.x));
-            sum += abs(atan(w.y, w.x));
+            sum += pow(abs(atan(w.y, w.x)) / pi, Q1);
         }
     </string>
     <string name="curvature_final_df" translatable="false">
-        sum /= float(n) * pi;
-        sum1 /= float(n - 1) * pi;
+        sum /= float(n);
+        sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
         colorParams.x = s;
@@ -1450,7 +1477,7 @@
     <string name="stripe_loop_sf" translatable="false">
         sum1 = sum;
         argZ = atan(Z.y, Z.x);
-        sum += 0.5*(sin(Q1*argZ) + 1.0);
+        sum += pow(0.5*(sin(Q1*argZ) + 1.0), Q2);
     </string>
     <string name="stripe_final_sf" translatable="false">
         sum /= float(n);
@@ -1462,13 +1489,110 @@
     <string name="stripe_loop_df" translatable="false">
         sum1 = sum;
         argZ = atan(Y.x, X.x);
-        sum += 0.5*(sin(Q1*argZ) + 1.0);
+        sum += pow(0.5*(sin(Q1*argZ) + 1.0), Q2);
     </string>
     <string name="stripe_final_df" translatable="false">
         sum /= float(n);
         sum1 /= float(n - 1);
         float r = il*llr - il*log(0.5*log(modSqrSF(vec2(X1.x, Y1.x))));
         float s = sum1 + (sum - sum1)*(r + 1.0);
+        colorParams.x = s;
+    </string>
+
+
+    <!-- TEST AVERAGE -->
+    <string name="stripe_bins_init" translatable="false">
+        const int binSize = 20;
+        int[] bins = int[binSize](0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        float argZ;
+        float q;
+        int binIndex;
+        float il = 1.0/log(power);
+        float llr = log(log(R)/power);
+    </string>
+    <string name="stripe_bins_loop_sf" translatable="false">
+        argZ = atan(Z.y, Z.x);
+        q = 0.5*(sin(Q1*argZ) + 1.0);
+        binIndex = int(floor((float(binSize) - 0.001)*q));
+        bins[binIndex] += 1;
+    </string>
+    <string name="stripe_bins_avg_final_sf" translatable="false">
+        float v = 0.0;
+        float v1 = 0.0;
+
+        for (int i = 1; i &lt; binSize; i++) {
+            v += float(bins[i])*float(i)/float(binSize);
+        }
+
+        bins[binIndex] -= 1;
+
+        for (int i = 1; i &lt; binSize; i++) {
+            v1 += float(bins[i])*float(i)/float(binSize);
+        }
+
+        v /= float(n);
+        v1 /= float(n - 1);
+
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = v1 + (v - v1)*(r + 1.0);
+        colorParams.x = s;
+    </string>
+    <string name="stripe_bins_median_final_sf" translatable="false">
+        float v = 0.0;
+        float v1 = 0.0;
+        int medianIndexDist = n/2;
+
+        for (int i = 0; i &lt; binSize; i++) {
+            if (bins[i] >= medianIndexDist) {
+                v = float(i)/float(binSize);
+                break;
+            }
+            else {
+                medianIndexDist -= bins[i];
+            }
+        }
+
+        bins[binIndex] -= 1;
+        medianIndexDist = (n-1)/2;
+
+        for (int i = 0; i &lt; binSize; i++) {
+            if (bins[i] >= medianIndexDist) {
+                v1 = float(i)/float(binSize);
+                break;
+            }
+            else {
+                medianIndexDist -= bins[i];
+            }
+        }
+
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = v1 + (v - v1)*(r + 1.0);
+        colorParams.x = s;
+    </string>
+    <string name="stripe_bins_mode_final_sf" translatable="false">
+        float v = 0.0;
+        float v1 = 0.0;
+        int mode = 0;
+
+        for (int i = 0; i &lt; binSize; i++) {
+            if (bins[i] >= mode) {
+                mode = bins[i];
+                v = float(i)/float(binSize);
+            }
+        }
+
+        bins[binIndex] -= 1;
+        mode = 0;
+
+        for (int i = 0; i &lt; binSize; i++) {
+            if (bins[i] >= mode) {
+                mode = bins[i];
+                v1 = float(i)/float(binSize);
+            }
+        }
+
+        float r = il*llr - il*log(0.5*log(modSqrSF(Z1)));
+        float s = v1 + (v - v1)*(r + 1.0);
         colorParams.x = s;
     </string>
 

@@ -7,8 +7,8 @@
     <string name="done">fini</string>
     <string name="dscript_shape_preview">image d\'aperçu de forme</string>
     <string name="frequency">Fréquence</string>
-    <string name="juliaMode">Mode Julia</string>
-    <string name="maxIter">Itérations Maximums</string>
+    <string name="julia_mode">Mode Julia</string>
+    <string name="max_iter">Itérations Maximums</string>
     <string name="msg_dual_in1">Passer à la double précision…</string>
     <string name="msg_dual_in2">La génération d\'images sera plus lente</string>
     <string name="msg_dual_out1">Passer à la seul précision…</string>
@@ -35,7 +35,7 @@
     <string name="save">enregistrer</string>
     <string name="sensitivity">sensibilité</string>
     <string name="settings">paramètres</string>
-    <string name="shape">forme</string>
+    <string name="shape">Forme</string>
     <string name="solid_fill">Couleur de Remplissage</string>
     <string name="solid_fill_black">noir</string>
     <string name="solid_fill_white">blanc</string>
@@ -79,7 +79,7 @@
     <string name="normal1">Affectation Normale 1</string>
     <string name="normal2">Affectation Normale 2</string>
     <string name="orbit_trap_miny">Piège d\'Orbite</string>
-    <string name="stripe_density">Densité de Rayures</string>
+    <string name="density">Densité de Rayures</string>
     <string name="sharpness">Tranchant</string>
     <string name="mandelbrot_cubic">Mandelbrot Cubique</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartique</string>
@@ -93,4 +93,14 @@
     <string name="burning_ship">Navire en Feu</string>
     <string name="app_name">Oeil Fractal</string>
     <string name="fe_abbrev">OF</string>
+    <string name="fit_viewport">Adapter Image à Fenêtre D\'Affichage</string>
+    <string name="msg_save_enabled">Enregistrement d\'image activé - cliquez à nouveau pour enregistrer</string>
+    <string name="peacock">Paon</string>
+    <string name="hide_nav_bar">Masquer Barre de Navigation</string>
+    <string name="palette">Palette</string>
+    <string name="reset">Réinitialiser</string>
+    <string name="continuous_render_hint">Rendre l\'image lors des changements de position</string>
+    <string name="display_params_hint">Afficher la fenêtre avec les paramètres pertinents lors des gestes tactiles</string>
+    <string name="fit_viewport_hint">Afficher l\'intégralité de l\'image rendue</string>
+    <string name="render_background_hint">Rendre une image basse résolution plus grande sous l\'image principale</string>
 </resources>
