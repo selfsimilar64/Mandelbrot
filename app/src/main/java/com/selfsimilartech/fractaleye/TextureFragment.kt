@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.Handler
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.tabs.TabLayout
-import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -16,9 +15,12 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.texture_fragment.*
 import java.text.ParseException
 import java.util.*
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 
@@ -50,6 +52,7 @@ class TextureFragment : Fragment() {
         val act = activity as MainActivity
         val f = act.f
         val fsv = act.fsv
+        val sc = act.sc
 
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -81,31 +84,24 @@ class TextureFragment : Fragment() {
         }}
 
 
-        // previewImage.setImageBitmap(f.texture.thumbnail)
         val handler = Handler()
         texturePreviewName.text = resources.getString(f.texture.displayName)
-        texturePreview.setOnClickListener {
-
-            handler.postDelayed({
-
-                if (f.shape.compatTextures != (texturePreviewList.adapter as TextureAdapter).textureList) {
-                    texturePreviewList.adapter = TextureAdapter(f.shape.compatTextures)
-                }
-
-                textureLayout.addView(texturePreviewListLayout)
-                textureContent.visibility = LinearLayout.GONE
-
-                fsv.renderProfile = RenderProfile.TEXTURE_THUMB
-                fsv.r.renderThumbnails = true
-                fsv.requestRender()
-
-            }, BUTTON_CLICK_DELAY)
-
-        }
 
 
 
-        textureParamLayout.visibility = ConstraintLayout.GONE
+        val previewListWidth = fsv.screenRes[0] -
+                2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) -
+                resources.getDimension(R.dimen.navButtonSize)
+        val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) +
+                2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
+        Log.e("COLOR FRAGMENT", "texturePreviewListWidth: $previewListWidth")
+        Log.e("COLOR FRAGMENT", "texturePreviewGridWidth: $previewGridWidth")
+        val spanCount = floor(previewListWidth.toDouble() / previewGridWidth).toInt()
+        Log.e("COLOR FRAGMENT", "spanCount: ${previewListWidth.toDouble() / previewGridWidth}")
+
+
+
+        textureParamLayout.hide()
         textureParamButtons.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
             override fun onTabReselected(tab: TabLayout.Tab) {}
             override fun onTabUnselected(tab: TabLayout.Tab) {}
@@ -141,17 +137,17 @@ class TextureFragment : Fragment() {
             fun updateEditTextOnly() {
 
                 // update EditText but not param
-                val param = f.texture.params[textureParamButtons.selectedTabPosition]
+                val param = if (f.texture.params.isNotEmpty()) f.texture.params[textureParamButtons.selectedTabPosition] else null
                 val progressNormal = qBar.progress.toDouble()/qBar.max
-                qEdit.setText(param.toString((1.0 - progressNormal)*param.min + progressNormal*param.max))
+                qEdit.setText(param?.toString((1.0 - progressNormal)*param.min + progressNormal*param.max))
 
             }
             fun updateEditTextAndParam() {
 
                 // update EditText and param -- then render
-                val param = f.texture.params[textureParamButtons.selectedTabPosition]
-                param.progress = qBar.progress.toDouble()/qBar.max
-                param.setValueFromProgress()
+                val param = if (f.texture.params.isNotEmpty()) f.texture.params[textureParamButtons.selectedTabPosition] else null
+                param?.progress = qBar.progress.toDouble()/qBar.max
+                param?.setValueFromProgress()
                 qEdit.setText(param.toString())
 
                 fsv.r.renderToTex = true
@@ -180,7 +176,23 @@ class TextureFragment : Fragment() {
 
 
 
-        texturePreviewList.adapter = TextureAdapter(f.shape.compatTextures)
+        val previewListLinearManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        val previewListLinearAdapter = TextureAdapter(f.shape.compatTextures, R.layout.texture_preview_item_linear)
+        val previewListGridManager = GridLayoutManager(context, spanCount, GridLayoutManager.VERTICAL, false)
+        val previewListGridAdapter = TextureAdapter(f.shape.compatTextures, R.layout.texture_shape_preview_item_grid)
+        when (sc.textureListViewType) {
+            ListLayoutType.LINEAR -> {
+                texturePreviewList.adapter = previewListLinearAdapter
+                texturePreviewList.layoutManager = previewListLinearManager
+            }
+            ListLayoutType.GRID -> {
+                texturePreviewList.adapter = previewListGridAdapter
+                texturePreviewList.layoutManager = previewListGridManager
+            }
+        }
+
+
+
         texturePreviewList.addOnItemTouchListener(
                 RecyclerTouchListener(
                         v.context,
@@ -246,27 +258,21 @@ class TextureFragment : Fragment() {
 //        })
 
 
-        textureDoneButton.setOnClickListener {
-
-            // previewImage.setImageBitmap(f.texture.thumbnail)
-            // previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
-            texturePreviewName.text = resources.getString(f.texture.displayName)
-            textureLayout.removeView(texturePreviewListLayout)
-            textureContent.visibility = LinearLayout.VISIBLE
-            fsv.renderProfile = RenderProfile.MANUAL
-
-        }
-
 
 
         bailoutSignificandEdit.setOnEditorActionListener(
                 editListener(bailoutExponentEdit) { w: TextView ->
-                    val result1 = w.text.toString().formatToDouble()
-                    val result2 = bailoutExponentEdit.text.toString().formatToDouble()
-                    val result3 = "${w.text}e${bailoutExponentEdit.text}".formatToDouble()?.toFloat()
+                    val result1 = w.text.toString().formatToDouble(false)
+                    val result2 = bailoutExponentEdit.text.toString().formatToDouble(false)
+                    val result3 = "${w.text}e${bailoutExponentEdit.text}".formatToDouble(false)?.toFloat()
                     if (result1 != null && result2 != null && result3 != null) {
-                        f.bailoutRadius = result3
-                        fsv.r.renderToTex = true
+                        if (result3.isInfinite() || result3.isNaN()) {
+                            act.showMessage(resources.getString(R.string.msg_num_out_range))
+                        }
+                        else {
+                            f.bailoutRadius = result3
+                            fsv.r.renderToTex = true
+                        }
                     }
                     else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
@@ -277,12 +283,17 @@ class TextureFragment : Fragment() {
                 })
         bailoutExponentEdit.setOnEditorActionListener(
                 editListener(null) { w: TextView ->
-                    val result1 = bailoutSignificandEdit.text.toString().formatToDouble()
-                    val result2 = w.text.toString().formatToDouble()
-                    val result3 = "${bailoutSignificandEdit.text}e${w.text}".formatToDouble()?.toFloat()
+                    val result1 = bailoutSignificandEdit.text.toString().formatToDouble(false)
+                    val result2 = w.text.toString().formatToDouble(false)
+                    val result3 = "${bailoutSignificandEdit.text}e${w.text}".formatToDouble(false)?.toFloat()
                     if (result1 != null && result2 != null && result3 != null) {
-                        f.bailoutRadius = result3
-                        fsv.r.renderToTex = true
+                        if (result3.isInfinite() || result3.isNaN()) {
+                            act.showMessage(resources.getString(R.string.msg_num_out_range))
+                        }
+                        else {
+                            f.bailoutRadius = result3
+                            fsv.r.renderToTex = true
+                        }
                     }
                     else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
@@ -309,8 +320,74 @@ class TextureFragment : Fragment() {
 
 
 
-        textureLayout.removeView(texturePreviewListLayout)
-        texturePreviewListLayout.visibility = RecyclerView.VISIBLE
+        // CLICK LISTENERS
+        texturePreview.setOnClickListener {
+            handler.postDelayed({
+
+                with (texturePreviewList.adapter as TextureAdapter) {
+                    if (textureList != f.shape.compatTextures) {
+                        textureList = f.shape.compatTextures
+                        notifyDataSetChanged()
+                    }
+                }
+
+                texturePreviewListLayout.show()
+                textureContent.hide()
+                act.hideCategoryButtons()
+                textureNavBar.show()
+
+                fsv.renderProfile = RenderProfile.TEXTURE_THUMB
+                fsv.r.renderThumbnails = true
+                fsv.requestRender()
+
+            }, BUTTON_CLICK_DELAY_LONG)
+        }
+
+        textureListViewTypeButton.setOnClickListener {
+
+            sc.textureListViewType = ListLayoutType.values().run {
+                get((sc.textureListViewType.ordinal + 1) % size)
+            }
+
+            when (sc.textureListViewType) {
+                ListLayoutType.LINEAR -> {
+                    texturePreviewList.adapter = previewListLinearAdapter
+                    texturePreviewList.layoutManager = previewListLinearManager
+                }
+                ListLayoutType.GRID -> {
+                    texturePreviewList.adapter = previewListGridAdapter
+                    texturePreviewList.layoutManager = previewListGridManager
+                }
+            }
+
+            with (texturePreviewList.adapter as TextureAdapter) {
+                if (textureList != f.shape.compatTextures) {
+                    textureList = f.shape.compatTextures
+                    notifyDataSetChanged()
+                }
+            }
+
+
+        }
+        textureDoneButton.setOnClickListener {
+
+            texturePreviewName.text = resources.getString(f.texture.displayName)
+
+            texturePreviewListLayout.hide()
+            textureContent.show()
+            textureNavBar.hide()
+            act.showCategoryButtons()
+
+            fsv.renderProfile = RenderProfile.MANUAL
+
+        }
+
+
+
+
+
+        texturePreviewListLayout.hide()
+        textureNavBar.hide()
 
 
         val thumbRes = Resolution.THUMB.scaleRes(fsv.screenRes)

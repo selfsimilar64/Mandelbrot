@@ -1,217 +1,252 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingTop="1dp">
+    android:layout_height="@dimen/categoryLayoutHeightNoPadding"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/textureLayout"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/menu2"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:orientation="vertical">
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingTop="1dp">
 
         <LinearLayout
-            android:id="@+id/textureContent"
+            android:id="@+id/textureLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            tools:visibility="visible">
+            android:layout_height="wrap_content"
+            android:background="@color/menu2"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/texturePreview"
-                style="@style/FragmentItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/fragmentLayoutMargin"
-                android:layout_marginBottom="@dimen/fragmentLayoutMargin"
-                android:foreground="@drawable/button_selector"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="12dp">
-
-                <TextView
-                    android:id="@+id/texturePreviewName"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/edit"
-                    android:drawablePadding="10dp"
-                    android:text="@string/texture_name"
-                    android:textSize="16sp" />
-            </LinearLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/textureParamLayout"
-                style="@style/FragmentItem"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <com.google.android.material.tabs.TabLayout
-                    android:id="@+id/textureParamButtons"
-                    android:layout_width="0dp"
-                    android:layout_height="35dp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tabGravity="center"
-                    app:tabIndicatorFullWidth="false"
-                    app:tabMinWidth="80dp">
-
-                    <com.google.android.material.tabs.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="density" />
-
-                    <com.google.android.material.tabs.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/thickness" />
-
-                </com.google.android.material.tabs.TabLayout>
-
-                <SeekBar
-                    android:id="@+id/qBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:max="100"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/textureParamButtons" />
-
-                <EditText
-                    android:id="@+id/qEdit"
-                    style="@style/EditTextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="16dp"
-                    android:imeOptions="actionDone"
-                    app:layout_constraintStart_toEndOf="@id/textureParamButtons"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <LinearLayout
-                style="@style/FragmentItem"
+                android:id="@+id/texturePreviewListLayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp">
+                android:orientation="vertical"
+                android:visibility="visible">
 
-                <TextView
-                    android:id="@+id/bailoutLabel"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/bailout"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:cardBackgroundColor="@color/transparent"
+                    app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
-                <EditText
-                    android:id="@+id/bailoutSignificandEdit"
-                    style="@style/EditTextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionNext"
-                    android:selectAllOnFocus="true"
-                    app:layout_constraintEnd_toStartOf="@+id/bailoutDivider"
-                    app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/texturePreviewList"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/categoryPagerHeightNoPadding"
+                        android:background="@color/menu4"
+                        android:orientation="vertical"
+                        android:scrollbars="vertical"
+                        android:visibility="visible"
+                        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                        app:spanCount="3"
+                        tools:itemCount="6"
+                        tools:listitem="@layout/texture_shape_preview_item_grid">
 
-                <TextView
-                    android:id="@+id/bailoutDivider"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/e"
-                    app:layout_constraintEnd_toStartOf="@+id/bailoutExponentEdit"
-                    app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
-
-                <EditText
-                    android:id="@+id/bailoutExponentEdit"
-                    style="@style/EditTextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
+                    </androidx.recyclerview.widget.RecyclerView>
+                </androidx.cardview.widget.CardView>
 
             </LinearLayout>
 
             <LinearLayout
-                style="@style/FragmentItem"
+                android:id="@+id/textureContent"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                tools:visibility="visible">
 
-                <TextView
-                    android:id="@+id/textView"
-                    style="@style/TextDark"
-                    android:layout_width="120dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/texture_mode" />
-
-                <com.google.android.material.tabs.TabLayout
-                    android:id="@+id/textureModeTabs"
+                <androidx.cardview.widget.CardView
+                    style="@style/FragmentItem"
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
-                    app:tabBackground="@drawable/tab_color_selector"
-                    app:tabIndicatorColor="@color/transparent">
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/fragmentLayoutMargin"
+                    android:layout_marginBottom="@dimen/fragmentLayoutMargin"
+                    app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
-                    <com.google.android.material.tabs.TabItem
+                    <LinearLayout
+                        android:id="@+id/texturePreview"
+                        style="@style/ClickableFragmentItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/texturePreviewName"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawableEnd="@drawable/edit"
+                            android:drawablePadding="10dp"
+                            android:text="@string/texture_name"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/textureParamLayout"
+                    style="@style/FragmentItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <com.google.android.material.tabs.TabLayout
+                        android:id="@+id/textureParamButtons"
+                        android:layout_width="0dp"
+                        android:layout_height="35dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tabGravity="center"
+                        app:tabIndicatorFullWidth="false"
+                        app:tabMinWidth="80dp">
+
+                        <com.google.android.material.tabs.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="density" />
+
+                        <com.google.android.material.tabs.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/thickness" />
+
+                    </com.google.android.material.tabs.TabLayout>
+
+                    <SeekBar
+                        android:id="@+id/qBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:max="100"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/textureParamButtons" />
+
+                    <EditText
+                        android:id="@+id/qEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="16dp"
+                        android:imeOptions="actionDone"
+                        app:layout_constraintStart_toEndOf="@id/textureParamButtons"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <LinearLayout
+                    style="@style/FragmentItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/bailoutLabel"
+                        style="@style/TextDark"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/texture_mode_out" />
+                        android:layout_weight="1"
+                        android:text="@string/bailout"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-                    <com.google.android.material.tabs.TabItem
+                    <EditText
+                        android:id="@+id/bailoutSignificandEdit"
+                        style="@style/EditNumberDark"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/texture_mode_in" />
+                        android:imeOptions="actionNext"
+                        android:selectAllOnFocus="true"
+                        app:layout_constraintEnd_toStartOf="@+id/bailoutDivider"
+                        app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
 
-                    <com.google.android.material.tabs.TabItem
+                    <TextView
+                        android:id="@+id/bailoutDivider"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/texture_mode_both" />
-                </com.google.android.material.tabs.TabLayout>
+                        android:text="@string/e"
+                        app:layout_constraintEnd_toStartOf="@+id/bailoutExponentEdit"
+                        app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
+
+                    <EditText
+                        android:id="@+id/bailoutExponentEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/bailoutLabel" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/FragmentItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/textView"
+                        style="@style/TextDark"
+                        android:layout_width="120dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/texture_mode" />
+
+                    <com.google.android.material.tabs.TabLayout
+                        android:id="@+id/textureModeTabs"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        app:tabBackground="@drawable/tab_color_selector"
+                        app:tabIndicatorColor="@color/transparent">
+
+                        <com.google.android.material.tabs.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/texture_mode_out" />
+
+                        <com.google.android.material.tabs.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/texture_mode_in" />
+
+                        <com.google.android.material.tabs.TabItem
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/texture_mode_both" />
+                    </com.google.android.material.tabs.TabLayout>
+                </LinearLayout>
+
             </LinearLayout>
 
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/texturePreviewListLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:visibility="visible">
+    </ScrollView>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/texturePreviewList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/menu4"
-                android:orientation="horizontal"
-                android:scrollbars="horizontal"
-                android:visibility="visible"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/preview_item">
+    <LinearLayout
+        android:id="@+id/textureNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
 
-            </androidx.recyclerview.widget.RecyclerView>
+        <ImageButton
+            android:id="@+id/textureListViewTypeButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/list_view" />
 
-            <Button
-                android:id="@+id/textureDoneButton"
-                style="@style/FragmentItem"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/doneButtonHeight"
-                android:layout_gravity="end"
-                android:layout_marginStart="3dp"
-                android:layout_marginRight="3dp"
-                android:text="@string/done" />
-
-        </LinearLayout>
-
+        <ImageButton
+            android:id="@+id/textureDoneButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/done" />
     </LinearLayout>
 
-</ScrollView>
+</LinearLayout>
