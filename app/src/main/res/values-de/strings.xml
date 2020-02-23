@@ -84,7 +84,7 @@
     <string name="mandelbrot_cubic">Mandelbrot Kubisch</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartisch</string>
     <string name="mandelbrot_quintic">Mandelbrot Quintisch</string>
-    <string name="mandelbrot_anypow">Mandelbrot Alle Potenz</string>
+    <string name="mandelbrot_anypow">Mandelbrot (Potenz)</string>
     <string name="clover">Klee</string>
     <string name="mandelbox">Mandelbox</string>
     <string name="sine1">Sinus 1</string>
@@ -103,4 +103,8 @@
     <string name="display_params_hint">Fenster mit relevanten Parametern während Berührungsgesten anzeigen</string>
     <string name="fit_viewport_hint">Zeigt das gesamte gerenderte Bild an</string>
     <string name="render_background_hint">Rendern Sie ein größeres Bild mit niedriger Auflösung unter dem Hauptbild</string>
+    <string name="msg_num_out_range">Nummer außerhalb des Bereichs</string>
+    <string name="backwards">Rückwärts</string>
+    <string name="slow">Schleppend</string>
+    <string name="burning_ship_anypow">Brennendes Schiff (Potenz)</string>
 </resources>

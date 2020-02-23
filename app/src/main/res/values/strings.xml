@@ -118,9 +118,10 @@
     <string name="mandelbrot_cubic">Mandelbrot Cubic</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartic</string>
     <string name="mandelbrot_quintic">Mandelbrot Quintic</string>
-    <string name="mandelbrot_anypow">Mandelbrot Any Power</string>
+    <string name="mandelbrot_anypow">Mandelbrot (Power)</string>
     <string name="clover">Clover</string>
     <string name="burning_ship">Burning Ship</string>
+    <string name="burning_ship_anypow">Burning Ship Any Power</string>
     <string name="mandelbox">Mandelbox</string>
     <string name="kali" translatable="false">Kali</string>
     <string name="sine1">Sine 1</string>
@@ -129,6 +130,7 @@
     <string name="kleinian" translatable="false">Kleinian</string>
     <string name="nova1" translatable="false">Nova 1</string>
     <string name="nova2" translatable="false">Nova 2</string>
+    <string name="collatz" translatable="false">Collatz</string>
 
 
 
@@ -150,6 +152,8 @@
     <string name="groovy">Groovy</string>
     <string name="canyon">Canyon</string>
     <string name="anubis">Anubis</string>
+    <string name="backwards">Backwards</string>
+    <string name="slow">Slow</string>
 
 
 
@@ -191,6 +195,7 @@
     <string name="msg_save_failed">Image not saved: storage permission required</string>
     <string name="msg_save_wait">Please wait for the image to finish rendering</string>
     <string name="msg_save_enabled">Image saving enabled - click again to save</string>
+    <string name="msg_num_out_range">Number out of range</string>
 
 
 
@@ -807,6 +812,9 @@
         X = addDF(W2.xy, A);
         Y = addDF(W2.zw, B);
     </string>
+    <string name="mandelbrotcubic_katex" translatable="false">
+        $z_{n+1} = z_{n}^3 + %s$
+    </string>
 
     <!-- MANDELBROT QUARTIC -->
     <string name="mandelbrotquartic_loop_sf" translatable="false">
@@ -817,6 +825,9 @@
         vec4 W2 = cSqrDF(W1.xy, W1.zw);
         X = addDF(W2.xy, A);
         Y = addDF(W2.zw, B);
+    </string>
+    <string name="mandelbrotquartic_katex" translatable="false">
+        $z_{n+1} = z_{n}^4 + %s$
     </string>
 
     <!-- MANDELBROT QUINTIC -->
@@ -830,13 +841,16 @@
         X = addDF(W3.xy, A);
         Y = addDF(W3.zw, B);
     </string>
+    <string name="mandelbrotquintic_katex" translatable="false">
+        $z_{n+1} = z_{n}^5 + %s$
+    </string>
 
     <!-- MANDELBROT ANY POWER -->
     <string name="mandelbrotanypow_loop_sf" translatable="false">
         Z = cPow4(Z1, P1) + C;
     </string>
     <string name="mandelbrotanypow_katex" translatable="false">
-        $z_{n+1} = z_{n}^{P1} + %s$
+        $z_{n+1} = z_{n}^{P_1} + %s$
     </string>
 
     <!-- DUALPOW -->
@@ -848,7 +862,7 @@
         Z = cMultSF(C, cMultSF(alpha, cPow4(Z, P1)) + cMultSF(beta, cPow4(Z, -P1)));
     </string>
     <string name="dualpow_katex" translatable="false">
-        $z_{n+1} = %s \\cdot (z_{n}^{P1} + z_{n}^{-P1})$
+        $z_{n+1} = %s \\cdot (z_{n}^{P_1} + z_{n}^{-P_1})$
     </string>
 
     <!-- MANDELBOX -->
@@ -863,7 +877,7 @@
         Y = addDF(W3.zw, -B);
     </string>
     <string name="mandelbox_katex" translatable="false">
-        $z_{n+1} = \\footnotesize P1\\cdot\\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) - %s$
+        $z_{n+1} = \\footnotesize P_1\\cdot\\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) - %s$
     </string>
 
     <!-- KALI -->
@@ -951,14 +965,14 @@
         Y = W5.zw;
     </string>
     <string name="sine2_katex" translatable="false">
-        $z_{n+1} = \\sin(\\large\\frac{z_n^2 + P1}{%s}\\normalsize)$
+        $z_{n+1} = \\sin\\Big(\\Large\\frac{z_n^2 + P_1}{%s}\\normalsize\\Big)$
     </string>
 
     <string name="sine3_loop_sf" translatable="false">
         Z = sinSF(cDivSF(cPow3(Z1, P1.x), C));
     </string>
     <string name="sine3_katex" translatable="false">
-        $z_{n+1} = \\sin(\\frac{z_n^{\\operatorname{Re}(P1)}}{%s})$
+        $z_{n+1} = \\sin(\\frac{z_n^{\\operatorname{Re}(P_1)}}{%s})$
     </string>
 
     <!-- HORSESHOE CRAB -->
@@ -975,7 +989,7 @@
         Y = W.zw;
     </string>
     <string name="horseshoecrab_katex" translatable="false">
-        $f(z) = \\sin (\\frac{P1}{z} + \\frac{z}{%s})$
+        $z_{n+1} = \\sin\\Big(\\Large\\frac{P_1}{z_n} + \\frac{z_n}{%s}\\normalsize\\Big)$
     </string>
 
     <!-- PERSIAN RUG -->
@@ -1064,7 +1078,7 @@
         Y = addDF(addDF(Y1, -W2.zw), B);
     </string>
     <string name="nova1_katex" translatable="false">
-        $z_{n+1} = z_n -\\small P1\\cdot\\Large\\frac{z_n^3 - 1}{3z_n^2} \\normalsize + %s$
+        $z_{n+1} = z_n -\\small P_1\\cdot\\Large\\frac{z_n^3 - 1}{3z_n^2} \\normalsize + %s$
     </string>
 
     <string name="nova2_loop_sf" translatable="false">
@@ -1097,12 +1111,11 @@
 
 
     <!-- COLLATZ -->
-    <string name="collatz_init_sf" translatable="false">
-        vec2 w;
-    </string>
     <string name="collatz_loop_sf" translatable="false">
-        w = cSqrSF(sinSF(0.5*pi*Z1));
-        Z = 0.5*cMultSF(Z1, ONE - w) + cMultSF(0.5*(3.0*Z1 + ONE), w) + C;
+        Z = 0.25*(2.0*ONE + 7.0*Z1 - cMultSF((2.0*ONE + 5.0*Z1), cosSF(pi*Z1))) + C;
+    </string>
+    <string name="collatz_katex" translatable="false">
+        $z_{n+1} = \\frac{1}{4}(2 + 7z_n - (2 + 5z)\\cos(\\pi z_n))$
     </string>
 
 

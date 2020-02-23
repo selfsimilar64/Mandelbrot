@@ -84,7 +84,7 @@
     <string name="mandelbrot_cubic">Mandelbrot Cubique</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartique</string>
     <string name="mandelbrot_quintic">Mandelbrot Quintique</string>
-    <string name="mandelbrot_anypow">"Mandelbrot Toute Puissance "</string>
+    <string name="mandelbrot_anypow">Mandelbrot (Puissance )</string>
     <string name="clover">Trèfle</string>
     <string name="mandelbox">Mandelboîte</string>
     <string name="sine1">Sinus 1</string>
@@ -103,4 +103,8 @@
     <string name="display_params_hint">Afficher la fenêtre avec les paramètres pertinents lors des gestes tactiles</string>
     <string name="fit_viewport_hint">Afficher l\'intégralité de l\'image rendue</string>
     <string name="render_background_hint">Rendre une image basse résolution plus grande sous l\'image principale</string>
+    <string name="msg_num_out_range">Nombre hors plage</string>
+    <string name="backwards">En Arrière</string>
+    <string name="slow">Lent</string>
+    <string name="burning_ship_anypow">Navire en Feu (Puissance)</string>
 </resources>

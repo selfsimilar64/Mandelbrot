@@ -172,63 +172,72 @@
                 android:textAppearance="@style/TextDark"
                 android:textStyle="bold" />
 
-            <androidx.cardview.widget.CardView
+            <LinearLayout
+                android:id="@+id/categoryLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                app:cardBackgroundColor="@color/transparent"
-                app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
+                android:layout_height="@dimen/categoryLayoutHeight"
+                android:orientation="vertical">
 
-                <com.selfsimilartech.fractaleye.NoScrollViewPager
-                    android:id="@+id/categoryPager"
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/categoryPagerHeight" />
-            </androidx.cardview.widget.CardView>
+                    android:layout_height="0dp"
+                    android:layout_marginStart="@dimen/categoryPagerMarginHorizontal"
+                    android:layout_marginEnd="@dimen/categoryPagerMarginHorizontal"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/transparent"
+                    app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/categoryButtons"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/categoryTabsHeight"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                app:tabIndicatorColor="#0000">
+                    <com.selfsimilartech.fractaleye.NoScrollViewPager
+                        android:id="@+id/categoryPager"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </androidx.cardview.widget.CardView>
 
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/settingsButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/settings"
-                    android:icon="@drawable/settings" />
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/categoryButtons"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/categoryButtonsHeight"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:tabIndicatorColor="#0000">
 
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/textureButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/texture"
-                    android:icon="@drawable/texture" />
+                    <com.google.android.material.tabs.TabItem
+                        android:id="@+id/settingsButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/settings"
+                        android:icon="@drawable/settings" />
 
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/shapeButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/shape"
-                    android:icon="@drawable/shape" />
+                    <com.google.android.material.tabs.TabItem
+                        android:id="@+id/textureButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/texture"
+                        android:icon="@drawable/texture" />
 
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/colorButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/color"
-                    android:icon="@drawable/color" />
+                    <com.google.android.material.tabs.TabItem
+                        android:id="@+id/shapeButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/shape"
+                        android:icon="@drawable/shape" />
 
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/positionButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/position"
-                    android:icon="@drawable/position" />
-            </com.google.android.material.tabs.TabLayout>
+                    <com.google.android.material.tabs.TabItem
+                        android:id="@+id/colorButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/color"
+                        android:icon="@drawable/color" />
+
+                    <com.google.android.material.tabs.TabItem
+                        android:id="@+id/positionButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/position"
+                        android:icon="@drawable/position" />
+                </com.google.android.material.tabs.TabLayout>
+
+            </LinearLayout>
 
 
         </LinearLayout>
