@@ -15,8 +15,31 @@
     <color name="colorAccent">#fff</color>
     <color name="menu1">#1a1a1a</color>
     <color name="menu2">#000000</color>
-    <color name="menu3">#404040</color>
+    <color name="menu3">#4a4a4a</color>
     <color name="menu4">#202020</color>
+    <color name="menu5">#303030</color>
+
+
+    <color name="fractaleye1">#006CB0</color>
+    <color name="fractaleye2">#4640C7</color>
+    <color name="fractaleye3">#B030A2</color>
+    <color name="fractaleye4">#EC891D</color>
+    <color name="fractaleye5">#F2C100</color>
+
+
+    <color name="hueslider1">#FF0000</color>
+    <color name="hueslider2">#FF8000</color>
+    <color name="hueslider3">#FFFF00</color>
+    <color name="hueslider4">#80FF00</color>
+    <color name="hueslider5">#00FF00</color>
+    <color name="hueslider6">#00FF80</color>
+    <color name="hueslider7">#00FFFF</color>
+    <color name="hueslider8">#0080FF</color>
+    <color name="hueslider9">#0000FF</color>
+    <color name="hueslider10">#8000FF</color>
+    <color name="hueslider11">#FF00FF</color>
+    <color name="hueslider12">#FF0080</color>
+
 
 
      <!-- FRACTAL COLORS -->
@@ -171,6 +194,24 @@
     <color name="peacock10">#BDB671</color>
     <color name="peacock11">#F5EBC4</color>
     <color name="peacock12">#FFF7F2</color>
+
+    <color name="backwards1">@color/black</color>
+    <color name="backwards2">#142D92</color>
+    <color name="backwards3">#99B3C4</color>
+    <color name="backwards4">#FF6D74</color>
+    <color name="backwards5">#FF301B</color>
+    <color name="backwards6">#FFD822</color>
+    <color name="backwards7">@color/white</color>
+
+    <color name="slow1">#1A0800</color>
+    <color name="slow2">#450D00</color>
+    <color name="slow3">#772913</color>
+    <color name="slow4">#D77B52</color>
+    <color name="slow5">#F8C09D</color>
+    <color name="slow6">#F7D8BB</color>
+    <color name="slow7">#EBEBD5</color>
+    <color name="slow8">#A1BAB4</color>
+    <color name="slow9">#66A1A7</color>
 
 
 </resources>
