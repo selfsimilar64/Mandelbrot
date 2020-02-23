@@ -1,42 +1,54 @@
 package com.selfsimilartech.fractaleye
 
+import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.shape_preview_item_linear.view.*
 
 /**
  * Created by Belal on 6/19/2017.
  */
 
-class ShapeAdapter(val shapeList: List<Shape>) : RecyclerView.Adapter<ShapeAdapter.ShapeHolder>() {
+class ShapeAdapter(
+        val shapeList: List<Shape>,
+        val layoutId: Int
+) : RecyclerView.Adapter<ShapeAdapter.ShapeHolder>() {
 
-    //this method is returning the view for each item in the list
+    val isGridLayout = layoutId == R.layout.texture_shape_preview_item_grid
+
+
+    override fun getItemViewType(position: Int): Int {
+        return if (isGridLayout) -1 else position
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShapeHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.preview_item, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
         return ShapeHolder(v)
     }
 
-    //this method is binding the data on the list
     override fun onBindViewHolder(holder: ShapeHolder, position: Int) {
+        if (!isGridLayout && position % 2 == 1) {
+            holder.v.layout.background = ColorDrawable(holder.v.resources.getColor(R.color.menu5, null))
+        }
         holder.bindItems(shapeList[position])
     }
 
-    //this method is giving the size of the list
     override fun getItemCount(): Int {
         return shapeList.size
     }
 
-    //the class is hodling the list view
-    class ShapeHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class ShapeHolder(val v: View) : RecyclerView.ViewHolder(v) {
 
         fun bindItems(shape: Shape) {
-            val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
-            val previewText = itemView.findViewById<TextView>(R.id.previewText)
-            previewImage.setImageResource(shape.icon)
-            previewText.text = itemView.resources.getString(shape.name)
+
+            v.previewImage.setImageResource(shape.icon)
+            v.previewText.text = v.resources.getString(shape.name)
+            if (!isGridLayout) {
+                //v.shapeKatex.setDisplayText(v.resources.getString(shape.katex).format("c"))
+            }
+
         }
     }
 

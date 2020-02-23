@@ -6,19 +6,32 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import android.util.Log
+import kotlinx.android.synthetic.main.shape_preview_item_linear.view.*
 
 
-class TextureAdapter(val textureList: List<Texture>) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
+class TextureAdapter(
+        var textureList: List<Texture>,
+        val layoutId: Int
+) : RecyclerView.Adapter<TextureAdapter.TextureHolder>() {
+
+    val isGridLayout = layoutId == R.layout.texture_shape_preview_item_grid
+
+
+    override fun getItemViewType(position: Int): Int {
+        return if (isGridLayout) -1 else position
+    }
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextureHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.preview_item, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
         return TextureHolder(v)
     }
 
     //this method is binding the data on the list
     override fun onBindViewHolder(holder: TextureHolder, position: Int) {
+        if (!isGridLayout && position % 2 == 1) {
+            holder.v.layout.setBackgroundColor(holder.v.resources.getColor(R.color.menu5, null))
+        }
         holder.bindItems(textureList[position])
     }
 
@@ -28,17 +41,20 @@ class TextureAdapter(val textureList: List<Texture>) : RecyclerView.Adapter<Text
     }
 
     //the class is holding the list view
-    class TextureHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class TextureHolder(val v: View) : RecyclerView.ViewHolder(v) {
 
         fun bindItems(texture: Texture) {
 
             // Log.d("TEXTURE ADAPTER", "binding texture ${texture.name}")
 
-            val previewImage = itemView.findViewById<ImageView>(R.id.previewImage)
-            val previewText = itemView.findViewById<TextView>(R.id.previewText)
-            previewText.text = itemView.resources.getString(texture.displayName)
-            previewImage.setImageBitmap(texture.thumbnail)
-            previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
+            val previewText = v.findViewById<TextView>(R.id.previewText)
+            previewText.text = v.resources.getString(texture.displayName)
+
+            if (isGridLayout) {
+                val previewImage = v.findViewById<ImageView>(R.id.previewImage)
+                previewImage.setImageBitmap(texture.thumbnail)
+                previewImage.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
 
         }
 
