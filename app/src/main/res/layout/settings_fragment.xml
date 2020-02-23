@@ -88,6 +88,54 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:paddingStart="0dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="0dp"
+            android:paddingBottom="8dp">
+
+            <Button
+                android:id="@+id/renderButton"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:drawableTop="@drawable/render"
+                android:drawablePadding="10dp"
+                android:focusable="true"
+                android:paddingTop="15dp"
+                android:paddingBottom="10dp"
+                android:text="@string/reload" />
+
+            <View
+                android:id="@+id/divider4"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@color/menu3" />
+
+            <Button
+                android:id="@+id/saveToFileButton"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:drawableTop="@drawable/save"
+                android:drawablePadding="10dp"
+                android:focusable="true"
+                android:paddingTop="15dp"
+                android:paddingBottom="10dp"
+                android:text="@string/save" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:paddingTop="8dp"
             android:paddingBottom="8dp">
 
@@ -141,6 +189,24 @@
                     android:text="@string/precision_auto" />
             </com.google.android.material.tabs.TabLayout>
         </LinearLayout>
+
+        <!--
+        <Button
+            android:id="@+id/restartActivityButton"
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="restart activity"
+            tools:visibility="gone" />
+
+        <Button
+            android:id="@+id/sendNotificationButton"
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="send notification"
+            tools:visibility="gone" />
+            -->
 
         <LinearLayout
             style="@style/FragmentItem"
@@ -224,24 +290,6 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
-
-        <!--
-        <Button
-            android:id="@+id/restartActivityButton"
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="restart activity"
-            tools:visibility="gone" />
-
-        <Button
-            android:id="@+id/sendNotificationButton"
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="send notification"
-            tools:visibility="gone" />
-            -->
 
         <LinearLayout
             style="@style/FragmentItem"
@@ -359,46 +407,6 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/textView9" />
             </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp">
-
-            <Button
-                android:id="@+id/renderButton"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:drawableTop="@drawable/render"
-                android:drawablePadding="10dp"
-                android:focusable="true"
-                android:paddingTop="15dp"
-                android:paddingBottom="10dp"
-                android:text="@string/reload" />
-
-            <Button
-                android:id="@+id/saveToFileButton"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:drawableTop="@drawable/save"
-                android:drawablePadding="10dp"
-                android:focusable="true"
-                android:paddingTop="15dp"
-                android:paddingBottom="10dp"
-                android:text="@string/save" />
 
         </LinearLayout>
 

@@ -105,8 +105,13 @@ class PositionFragment : Fragment() {
                     val result2 = scaleExponentEdit.text.toString().formatToDouble(false)
                     val result3 = "${w.text}e${scaleExponentEdit.text}".formatToDouble(false)
                     if (result1 != null && result2 != null && result3 != null) {
-                        f.position.scale = result3
-                        fsv.r.renderToTex = true
+                        if (result3.isInfinite() || result3.isNaN()) {
+                            act.showMessage(resources.getString(R.string.msg_num_out_range))
+                        }
+                        else {
+                            f.position.scale = result3
+                            fsv.r.renderToTex = true
+                        }
                     }
                     else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
@@ -124,8 +129,13 @@ class PositionFragment : Fragment() {
                     val result2 = w.text.toString().formatToDouble(false)
                     val result3 = "${scaleSignificandEdit.text}e${w.text}".formatToDouble(false)
                     if (result1 != null && result2 != null && result3 != null) {
-                        f.position.scale = result3
-                        fsv.r.renderToTex = true
+                        if (result3.isInfinite() || result3.isNaN()) {
+                            act.showMessage(resources.getString(R.string.msg_num_out_range))
+                        }
+                        else {
+                            f.position.scale = result3
+                            fsv.r.renderToTex = true
+                        }
                     }
                     else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))

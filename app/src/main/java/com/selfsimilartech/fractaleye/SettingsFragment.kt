@@ -1,9 +1,6 @@
 package com.selfsimilartech.fractaleye
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -21,22 +18,22 @@ import kotlinx.android.synthetic.main.settings_fragment.*
 
 class SettingsFragment : Fragment() {
 
-    private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "fractal notify"
-            val descriptionText = "remind about fractals"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("Fractal Eye", name, importance).apply {
-                description = descriptionText
-            }
-            // Register the channel with the system
-            val notificationManager: NotificationManager =
-                    (activity as MainActivity).getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
+//    private fun createNotificationChannel() {
+//        // Create the NotificationChannel, but only on API 26+ because
+//        // the NotificationChannel class is new and not in the support library
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            val name = "fractal notify"
+//            val descriptionText = "remind about fractals"
+//            val importance = NotificationManager.IMPORTANCE_HIGH
+//            val channel = NotificationChannel("Fractal Eye", name, importance).apply {
+//                description = descriptionText
+//            }
+//            // Register the channel with the system
+//            val notificationManager: NotificationManager =
+//                    (activity as MainActivity).getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//            notificationManager.createNotificationChannel(channel)
+//        }
+//    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 

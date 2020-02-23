@@ -1,13 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="categoryPagerHeight">215dp</dimen>
+    <dimen name="categoryLayoutHeight">261dp</dimen>
+    <dimen name="categoryLayoutHeightNoPadding">260dp</dimen>
     <dimen name="categoryNameButtonHeight">40dp</dimen>
-    <dimen name="categoryTabsHeight">45dp</dimen>
+    <dimen name="categoryButtonsHeight">45dp</dimen>
+    <dimen name="categoryPagerHeight">216dp</dimen>
+    <dimen name="categoryPagerHeightNoPadding">215dp</dimen>
+
     <dimen name="previewHeight">145dp</dimen>
-    <dimen name="doneButtonHeight">35dp</dimen>
+    <dimen name="doneButtonSize">@dimen/navButtonSize</dimen>
     <dimen name="toastMargin">15dp</dimen>
     <dimen name="fragmentLayoutMargin">3dp</dimen>
     <dimen name="fragmentItemCornerRadius">11dp</dimen>
+    <dimen name="paletteGradientHeight">26dp</dimen>
+    <dimen name="customColorLayoutSizeWithPadding">39dp</dimen>
+    <dimen name="customColorLayoutSize">35dp</dimen>
+
+
+    <dimen name="previewImageCornerRadius">5dp</dimen>
+    <dimen name="previewGridPaddingHorizontal">5dp</dimen>
+    <dimen name="previewGridPaddingVertical">7dp</dimen>
+    <dimen name="textureShapePreviewSize">85dp</dimen>
+    <dimen name="colorPreviewSize">80dp</dimen>
+    <dimen name="colorPreviewGradientCornerRadius">10dp</dimen>
+
+    <dimen name="navButtonSize">@dimen/categoryButtonsHeight</dimen>
+    <dimen name="colorPreviewListMarginEnd">7dp</dimen>
+    <dimen name="categoryPagerMarginHorizontal">7dp</dimen>
+    <dimen name="listButtonMarginHorizontal">10dp</dimen>
+
+    <dimen name="satValueSelectorLayoutWidth">190dp</dimen>
+    <dimen name="satValueSelectorLayoutHeight">110dp</dimen>
+    <dimen name="satValueSelectorRadius">8dp</dimen>
+    <dimen name="satValueSelectorRadiusDiff">1dp</dimen>
+    <dimen name="hueSelectorLayoutWidth">25dp</dimen>
 
 </resources>

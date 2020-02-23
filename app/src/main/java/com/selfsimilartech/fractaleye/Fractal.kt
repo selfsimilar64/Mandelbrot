@@ -1,11 +1,6 @@
 package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
-import android.util.Log
-import org.apfloat.Apfloat
-import org.apfloat.ApfloatMath.sqrt
-import kotlin.math.cos
-import kotlin.math.sin
 
 @SuppressLint("SetTextI18n")
 class Fractal(
@@ -197,6 +192,20 @@ class Fractal(
         val kali = Fractal(shape = Shape.kali)
 
         val burningShip = Fractal(shape = Shape.burningShip)
+//        val bs1 = Fractal(
+//                shape = Shape.burningShip,
+//                // juliaMode = true,
+//                shapeParams = Shape.ParamList(
+//                        julia = Shape.Param(0.70271582, -1.04922401)
+//                ),
+//                maxIter = 8092,
+//                position = Position(
+//                        x = 0.0,
+//                        y = 0.3979338977,
+//                        scale = 7.4e-2
+//                )
+//
+//        )
 
 //        val bsp1 = Fractal(
 //                shape = Shape.burningshipAnyPow,

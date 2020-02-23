@@ -48,7 +48,7 @@
         <item name="android:layout_marginBottom">7dp</item>
     </style>
 
-    <style name="EditTextDark" parent="android:style/Widget.Material.TextView">
+    <style name="EditNumberDark" parent="android:style/Widget.Material.TextView">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">40dp</item>
         <item name="android:textColor">@color/colorDarkText</item>
@@ -56,6 +56,17 @@
         <item name="android:textSize">15sp</item>
         <item name="android:inputType">numberDecimal|numberSigned</item>
         <item name="android:digits">0123456789.,-</item>
+        <item name="android:selectAllOnFocus">true</item>
+        <item name="android:layout_marginTop">-4dp</item>
+        <item name="android:layout_marginBottom">-4dp</item>
+    </style>
+
+    <style name="EditTextDark" parent="android:style/Widget.Material.TextView">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:textColor">@color/colorDarkText</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:inputType">text</item>
         <item name="android:selectAllOnFocus">true</item>
         <item name="android:layout_marginTop">-4dp</item>
         <item name="android:layout_marginBottom">-4dp</item>
@@ -157,6 +168,29 @@
         <item name="android:paddingEnd">15dp</item>
         <item name="android:layout_marginTop">@dimen/fragmentLayoutMargin</item>
         <item name="android:layout_marginBottom">@dimen/fragmentLayoutMargin</item>
+    </style>
+
+    <style name="ClickableFragmentItem" parent="FragmentItem">
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+
+    <style name="MenuNavButton">
+        <item name="android:layout_width">@dimen/navButtonSize</item>
+        <item name="android:layout_height">@dimen/navButtonSize</item>
+        <item name="android:layout_marginStart">@dimen/listButtonMarginHorizontal</item>
+        <item name="android:layout_marginEnd">@dimen/listButtonMarginHorizontal</item>
+        <item name="android:background">@drawable/button_selector</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="CustomColorButton">
+        <item name="android:layout_width">@dimen/customColorLayoutSizeWithPadding</item>
+        <item name="android:layout_height">@dimen/customColorLayoutSizeWithPadding</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:background">#6aa</item>
     </style>
 
 </resources>

@@ -37,7 +37,7 @@
 
                 <EditText
                     android:id="@+id/xEdit"
-                    style="@style/EditTextDark"
+                    style="@style/EditNumberDark"
                     android:layout_width="wrap_content"
                     android:imeOptions="actionDone" />
             </LinearLayout>
@@ -59,7 +59,7 @@
 
                 <EditText
                     android:id="@+id/yEdit"
-                    style="@style/EditTextDark"
+                    style="@style/EditNumberDark"
                     android:layout_width="wrap_content"
                     android:imeOptions="actionDone" />
 
@@ -85,7 +85,7 @@
 
             <EditText
                 android:id="@+id/scaleSignificandEdit"
-                style="@style/EditTextDark"
+                style="@style/EditNumberDark"
                 android:layout_width="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:imeOptions="actionNext"
@@ -99,7 +99,7 @@
 
             <EditText
                 android:id="@+id/scaleExponentEdit"
-                style="@style/EditTextDark"
+                style="@style/EditNumberDark"
                 android:layout_width="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:imeOptions="actionDone" />
@@ -129,7 +129,7 @@
 
             <EditText
                 android:id="@+id/rotationEdit"
-                style="@style/EditTextDark"
+                style="@style/EditNumberDark"
                 android:layout_width="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:imeOptions="actionDone" />

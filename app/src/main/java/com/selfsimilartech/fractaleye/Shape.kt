@@ -144,6 +144,7 @@ class Shape (
         val mandelbrotCubic = Shape(
                 R.string.mandelbrot_cubic,
                 icon = R.drawable.mandelbrotcubic_icon,
+                katex = R.string.mandelbrotcubic_katex,
                 loopSF = R.string.mandelbrotcubic_loop_sf,
                 loopDF = R.string.mandelbrotcubic_loop_df,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
@@ -154,6 +155,7 @@ class Shape (
         val mandelbrotQuartic = Shape(
                 R.string.mandelbrot_quartic,
                 icon = R.drawable.mandelbrotquartic_icon,
+                katex = R.string.mandelbrotquartic_katex,
                 loopSF = R.string.mandelbrotquartic_loop_sf,
                 loopDF = R.string.mandelbrotquartic_loop_df,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
@@ -164,6 +166,7 @@ class Shape (
         val mandelbrotQuintic = Shape(
                 R.string.mandelbrot_quintic,
                 icon = R.drawable.mandelbrotquintic_icon,
+                katex = R.string.mandelbrotquintic_katex,
                 loopSF = R.string.mandelbrotquintic_loop_sf,
                 loopDF = R.string.mandelbrotquintic_loop_df,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
@@ -356,15 +359,15 @@ class Shape (
                 bailoutRadius = 1e3f
         )
         val burningshipAnyPow = Shape(
-                R.string.empty,
+                R.string.burning_ship_anypow,
                 loopSF = R.string.burningshipanypow_loop_sf,
                 bailoutRadius = 1e2f,
                 params = ParamList(listOf(Param(4.0, -1.0))),
                 proFeature = true
         )
         val collatz = Shape(
-                R.string.empty,
-                initSF = R.string.collatz_init_sf,
+                name = R.string.collatz,
+                katex = R.string.collatz_katex,
                 loopSF = R.string.collatz_loop_sf,
                 proFeature = true
         )
