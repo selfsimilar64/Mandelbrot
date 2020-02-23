@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.Handler
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.tabs.TabLayout
-import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -15,6 +14,8 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlin.math.log
 import kotlin.math.pow
 import kotlinx.android.synthetic.main.shape_fragment.*
@@ -49,6 +50,7 @@ class ShapeFragment : Fragment() {
         val act = activity as MainActivity
         val f = act.f
         val fsv = act.fsv
+        val sc = act.sc
         val shapeList = if (BuildConfig.PAID_VERSION) Shape.all else Shape.all.filter { shape -> !shape.proFeature }
 
         val handler = Handler()
@@ -113,7 +115,7 @@ class ShapeFragment : Fragment() {
                 shapeParamButtons.getTabAt(shapeParamButtons.tabCount - 1)?.select()
                 handler.postDelayed({
                     shapeLayoutScroll.smoothScrollTo(0, shapeParamLayout.y.toInt())
-                }, BUTTON_CLICK_DELAY)
+                }, BUTTON_CLICK_DELAY_LONG)
                 if (f.shape.numParamsInUse == 1) {
                     fsv.reaction = Reaction.SHAPE
                     act.showTouchIcon()
@@ -252,15 +254,6 @@ class ShapeFragment : Fragment() {
 
         shapePreviewImage.setImageResource(f.shape.icon)
         shapePreviewText.text = resources.getString(f.shape.name)
-        shapePreview.setOnClickListener {
-
-            handler.postDelayed({
-                shapeContent.visibility = LinearLayout.GONE
-                shapeLayout.addView(shapePreviewListLayout)
-                shapePreviewList.adapter?.notifyDataSetChanged()
-            }, BUTTON_CLICK_DELAY)
-
-        }
 
 
 
@@ -269,85 +262,89 @@ class ShapeFragment : Fragment() {
         juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
 
 
-        shapePreviewList.adapter = ShapeAdapter(shapeList)
-        shapePreviewList.addOnItemTouchListener(
-                RecyclerTouchListener(
-                        v.context,
-                        shapePreviewList,
-                        object : ClickListener {
+        // create and set preview list adapter/manager
+        val shapePreviewGridAdapter = ShapeAdapter(shapeList, R.layout.texture_shape_preview_item_grid)
+        val shapePreviewGridManager = GridLayoutManager(context, 3, GridLayoutManager.VERTICAL, false)
+        val shapePreviewLinearAdapter = ShapeAdapter(shapeList, R.layout.shape_preview_item_linear)
+        val shapePreviewLinearManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        when (sc.shapeListViewType) {
 
-                            override fun onClick(view: View, position: Int) {
-
-                                if (shapeList[position] != f.shape) {
-
-
-                                    // reset texture if not compatible with new shape
-                                    if (!shapeList[position].compatTextures.contains(f.texture)) {
-                                        f.texture = Texture.exponentialSmoothing
-                                        act.updateTexturePreviewName()
-                                    }
-
-                                    val prevScale = f.position.scale
-                                    f.shape = shapeList[position]
-
-
-                                    // update juliaModeSwitch
-                                    juliaLayout.visibility =
-                                            if (f.shape.juliaModeInit) LinearLayout.GONE
-                                            else LinearLayout.VISIBLE
-                                    if (f.shape.juliaMode != juliaModeSwitch.isChecked) {
-                                        juliaModeSwitch.setOnCheckedChangeListener { _, _ -> }
-                                        juliaModeSwitch.isChecked = f.shape.juliaMode
-                                        juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
-                                    }
-
-                                    if (f.shape.numParamsInUse == 0) fsv.reaction = Reaction.NONE
-                                    else {
-                                        fsv.reaction = Reaction.SHAPE
-                                        act.showTouchIcon()
-                                    }
-
-
-                                    // update parameter display
-                                    shapeParamLayout.visibility = if (f.shape.numParamsInUse == 0)
-                                        ConstraintLayout.GONE else ConstraintLayout.VISIBLE
-                                    shapeParamButtons.removeAllTabs()
-                                    for (i in 0 until f.shape.params.size) shapeParamButtons.addTab(
-                                            shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
-                                    )
-                                    if (f.shape.juliaMode) {
-                                        shapeParamButtons.addTab(
-                                            shapeParamButtons.newTab().setText(resources.getString(R.string.julia))
-                                        )
-                                    }
-
-                                    fsv.checkThresholdCross(prevScale)
-
-                                    fsv.r.renderShaderChanged = true
-                                    fsv.r.renderToTex = true
-                                    fsv.requestRender()
-
-                                    act.updatePositionEditTexts()
-
-                                }
-
-                            }
-
-                            override fun onLongClick(view: View, position: Int) {}
-
-                        }
-                )
-        )
-
-
-        shapeDoneButton.setOnClickListener {
-
-            shapePreviewImage.setImageResource(f.shape.icon)
-            shapePreviewText.text = resources.getString(f.shape.name)
-            shapeLayout.removeView(shapePreviewListLayout)
-            shapeContent.visibility = LinearLayout.VISIBLE
+            ListLayoutType.GRID -> {
+                shapePreviewList.adapter = shapePreviewGridAdapter
+                shapePreviewList.layoutManager = shapePreviewGridManager
+            }
+            ListLayoutType.LINEAR -> {
+                shapePreviewList.adapter = shapePreviewLinearAdapter
+                shapePreviewList.layoutManager = shapePreviewLinearManager
+            }
 
         }
+
+        shapePreviewList.addOnItemTouchListener(RecyclerTouchListener(
+                v.context,
+                shapePreviewList,
+                object : ClickListener {
+
+                    override fun onClick(view: View, position: Int) {
+
+                        if (shapeList[position] != f.shape) {
+
+
+                            // reset texture if not compatible with new shape
+                            if (!shapeList[position].compatTextures.contains(f.texture)) {
+                                f.texture = Texture.exponentialSmoothing
+                                act.updateTexturePreviewName()
+                            }
+
+                            val prevScale = f.position.scale
+                            f.shape = shapeList[position]
+
+
+                            // update juliaModeSwitch
+                            juliaLayout.visibility =
+                                    if (f.shape.juliaModeInit) LinearLayout.GONE
+                                    else LinearLayout.VISIBLE
+                            if (f.shape.juliaMode != juliaModeSwitch.isChecked) {
+                                juliaModeSwitch.setOnCheckedChangeListener { _, _ -> }
+                                juliaModeSwitch.isChecked = f.shape.juliaMode
+                                juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
+                            }
+
+                            if (f.shape.numParamsInUse == 0) fsv.reaction = Reaction.NONE
+                            else {
+                                fsv.reaction = Reaction.SHAPE
+                                act.showTouchIcon()
+                            }
+
+
+                            // update parameter display
+                            shapeParamLayout.visibility = if (f.shape.numParamsInUse == 0)
+                                ConstraintLayout.GONE else ConstraintLayout.VISIBLE
+                            shapeParamButtons.removeAllTabs()
+                            for (i in 0 until f.shape.params.size) shapeParamButtons.addTab(
+                                    shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
+                            )
+                            if (f.shape.juliaMode) {
+                                shapeParamButtons.addTab(
+                                    shapeParamButtons.newTab().setText(resources.getString(R.string.julia))
+                                )
+                            }
+
+                            fsv.checkThresholdCross(prevScale)
+
+                            fsv.r.renderShaderChanged = true
+                            fsv.r.renderToTex = true
+                            fsv.requestRender()
+
+                            act.updatePositionEditTexts()
+
+                        }
+
+                    }
+                    override fun onLongClick(view: View, position: Int) {}
+
+                }
+        ))
 
 
 
@@ -363,8 +360,66 @@ class ShapeFragment : Fragment() {
         if (f.shape.numParamsInUse == 0) shapeParamLayout.visibility = ConstraintLayout.GONE
 
 
-        shapePreviewList.visibility = RecyclerView.VISIBLE
-        shapeLayout.removeView(shapePreviewListLayout)
+
+
+
+
+
+        // CLICK LISTENERS
+        shapePreview.setOnClickListener {
+            handler.postDelayed({
+
+                shapeContent.hide()
+                shapePreviewListLayout.show()
+
+                act.hideCategoryButtons()
+                shapeNavButtons.show()
+
+                //shapePreviewList.adapter?.notifyDataSetChanged()
+
+
+            }, BUTTON_CLICK_DELAY_LONG)
+        }
+
+        shapeListViewTypeButton.setOnClickListener {
+
+            sc.shapeListViewType = ListLayoutType.values().run {
+                get((sc.shapeListViewType.ordinal + 1) % size)
+            }
+
+            when (sc.shapeListViewType) {
+
+                ListLayoutType.LINEAR -> {
+                    shapePreviewList.adapter = shapePreviewLinearAdapter
+                    shapePreviewList.layoutManager = shapePreviewLinearManager
+                }
+                ListLayoutType.GRID -> {
+                    shapePreviewList.adapter = shapePreviewGridAdapter
+                    shapePreviewList.layoutManager = shapePreviewGridManager
+                }
+
+            }
+
+        }
+        shapeDoneButton.setOnClickListener {
+            handler.postDelayed({
+
+                shapePreviewImage.setImageResource(f.shape.icon)
+                shapePreviewText.text = resources.getString(f.shape.name)
+
+                shapePreviewListLayout.hide()
+                shapeContent.show()
+                act.showCategoryButtons()
+                shapeNavButtons.hide()
+
+            }, BUTTON_CLICK_DELAY_SHORT)
+        }
+
+
+        shapePreviewListLayout.hide()
+        shapeNavButtons.hide()
+
+
 
 
         act.updateShapeEditTexts()
