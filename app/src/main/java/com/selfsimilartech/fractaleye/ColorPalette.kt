@@ -4,7 +4,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
+import java.lang.Math.random
 import kotlin.math.floor
 
 
@@ -14,23 +14,58 @@ fun FloatArray.mult(s: Float) : FloatArray {
 fun FloatArray.invert() : FloatArray {
     return FloatArray(this.size) {i: Int -> 1.0f - this[i]}
 }
+fun colorToRGB(c: Int) : FloatArray {
+    return floatArrayOf(
+            Color.red(c)   / 255f,
+            Color.green(c) / 255f,
+            Color.blue(c)  / 255f
+    )
+}
+fun randomColor() : Int {
+    return Color.HSVToColor(floatArrayOf(
+            360*random().toFloat(),
+            random().toFloat(),
+            random().toFloat()
+    ))
+}
+
+fun Int.toHSV() : FloatArray {
+    val hsv = floatArrayOf(0f, 0f, 0f)
+    Color.colorToHSV(this, hsv)
+    return hsv
+}
+fun Int.hue() : Float {
+    return toHSV()[0]
+}
+fun Int.sat() : Float {
+    return toHSV()[1]
+}
+fun Int.value() : Float {
+    return toHSV()[2]
+}
 
 class ColorPalette (
-        val name: Int,
-        val ids: List<Int> = listOf(),
-        oscillate: Boolean = true
+        val nameId: Int = -1,
+        var name: String = "",
+        private val ids: List<Int> = listOf(),
+        var colors: ArrayList<Int> = arrayListOf(),
+        oscillate: Boolean = true,
+        val isCustom: Boolean = false
 ) {
-
 
     companion object {
 
+        const val MAX_CUSTOM_PALETTE_COLORS = 6
+
         val yinyang = ColorPalette(
-                R.string.yinyang, listOf(
+                nameId = R.string.yinyang,
+                ids = listOf(
                 R.color.black,
                 R.color.white
         ))
         val peacock = ColorPalette(
-                R.string.peacock, listOf(
+                nameId = R.string.peacock,
+                ids = listOf(
                 R.color.peacock1,
                 R.color.peacock2,
                 R.color.peacock3,
@@ -45,7 +80,8 @@ class ColorPalette (
                 R.color.peacock12
         ))
         val p1 = ColorPalette(
-                R.string.empty, listOf(
+                nameId = R.string.empty,
+                ids = listOf(
                 R.color.white,
                 R.color.purple1,
                 R.color.black,
@@ -53,14 +89,16 @@ class ColorPalette (
                 R.color.white
         ))
         val p3 = ColorPalette(
-                R.string.empty, listOf(
+                nameId = R.string.empty,
+                ids = listOf(
                 R.color.q1,
                 R.color.q2,
                 R.color.white,
                 R.color.q3
         ))
         val vascular = ColorPalette(
-                R.string.vascular, listOf(
+                nameId = R.string.vascular,
+                ids = listOf(
                 R.color.black,
                 R.color.purple3,
                 R.color.deepred,
@@ -68,7 +106,8 @@ class ColorPalette (
                 R.color.darkblue2
         ))
         val flora = ColorPalette(
-                R.string.flora, listOf(
+                nameId = R.string.flora,
+                ids = listOf(
                 R.color.flora1,
                 R.color.flora2,
                 R.color.flora3,
@@ -77,7 +116,8 @@ class ColorPalette (
                 R.color.flora6
         ))
         val royal = ColorPalette(
-                R.string.royal, listOf(
+                nameId = R.string.royal,
+                ids = listOf(
                 R.color.yellowish1,
                 R.color.darkblue1,
                 R.color.softgreen2,
@@ -85,14 +125,16 @@ class ColorPalette (
                 R.color.maroon
         ))
         val groovy = ColorPalette(
-                R.string.groovy, listOf(
+                nameId = R.string.groovy,
+                ids = listOf(
                 R.color.black,
                 R.color.q4,
                 R.color.q5,
                 R.color.q6
         ))
         val canyon = ColorPalette(
-                R.string.canyon, listOf(
+                nameId = R.string.canyon,
+                ids = listOf(
                 R.color.deepred2,
                 R.color.q6,
                 R.color.q8,
@@ -100,7 +142,8 @@ class ColorPalette (
                 R.color.purple3
         ))
         val anubis = ColorPalette(
-                R.string.anubis, listOf(
+                nameId = R.string.anubis,
+                ids = listOf(
                 R.color.black,
                 R.color.purple2,
                 R.color.mint,
@@ -109,7 +152,8 @@ class ColorPalette (
                 R.color.tangerine
         ))
         val p9 = ColorPalette(
-                R.string.p9, listOf(
+                nameId = R.string.p9,
+                ids = listOf(
                 R.color.q12,
                 R.color.q13,
                 R.color.q14,
@@ -119,7 +163,8 @@ class ColorPalette (
                 R.color.q18
         ))
         val viridis = ColorPalette(
-                R.string.viridis, listOf(
+                nameId = R.string.viridis,
+                ids = listOf(
                 R.color.q19,
                 R.color.q20,
                 R.color.q21,
@@ -128,7 +173,8 @@ class ColorPalette (
                 R.color.q24
         ))
         val plasma = ColorPalette(
-                R.string.plasma, listOf(
+                nameId = R.string.plasma,
+                ids = listOf(
                 R.color.q25,
                 R.color.q26,
                 R.color.q27,
@@ -138,7 +184,8 @@ class ColorPalette (
                 R.color.q31
         ))
         val inferno = ColorPalette(
-                R.string.empty, listOf(
+                nameId = R.string.empty,
+                ids = listOf(
                 R.color.q32,
                 R.color.q33,
                 R.color.q34,
@@ -147,7 +194,8 @@ class ColorPalette (
                 R.color.q37
         ))
         val magma = ColorPalette(
-                R.string.magma, listOf(
+                nameId = R.string.magma,
+                ids = listOf(
                 R.color.q38,
                 R.color.q39,
                 R.color.q40,
@@ -156,7 +204,8 @@ class ColorPalette (
                 R.color.q43
         ))
         val night = ColorPalette(
-                R.string.night, listOf(
+                nameId = R.string.night,
+                ids = listOf(
                 R.color.night1,
                 R.color.night2,
                 R.color.night3,
@@ -166,7 +215,8 @@ class ColorPalette (
                 R.color.night7
         ))
         val cosmic = ColorPalette(
-                R.string.cosmic, listOf(
+                nameId = R.string.cosmic,
+                ids = listOf(
                 R.color.cosmic1,
                 R.color.cosmic2,
                 R.color.cosmic3,
@@ -179,14 +229,16 @@ class ColorPalette (
                 R.color.cosmic10
         ))
         val oldskool = ColorPalette(
-                R.string.oldskool, listOf(
+                nameId = R.string.oldskool,
+                ids = listOf(
                 R.color.oldskool2,
                 R.color.oldskool3,
                 R.color.oldskool4,
                 R.color.oldskool5
         ))
         val elephant = ColorPalette(
-                R.string.elephant, listOf(
+                nameId = R.string.elephant,
+                ids = listOf(
                 R.color.elephant1,
                 R.color.elephant2,
                 R.color.elephant3,
@@ -196,7 +248,8 @@ class ColorPalette (
                 R.color.elephant7
         ))
         val gold = ColorPalette(
-                R.string.gold, listOf(
+                nameId = R.string.gold,
+                ids = listOf(
                 R.color.gold1,
                 R.color.gold2,
                 R.color.gold3,
@@ -205,18 +258,46 @@ class ColorPalette (
                 R.color.gold6
         ))
         val clover = ColorPalette(
-                R.string.empty, listOf(
+                nameId = R.string.empty,
+                ids = listOf(
                 R.color.clover1,
                 R.color.clover2,
                 R.color.clover3,
                 R.color.clover4,
                 R.color.clover5
         ))
+        val backwards = ColorPalette(
+                nameId = R.string.backwards,
+                ids = listOf(
+                        R.color.backwards1,
+                        R.color.backwards2,
+                        R.color.backwards3,
+                        R.color.backwards4,
+                        R.color.backwards5,
+                        R.color.backwards6,
+                        R.color.backwards7
+                )
+        )
+        val slow = ColorPalette(
+                nameId = R.string.slow,
+                ids = listOf(
+                        R.color.slow1,
+                        R.color.slow2,
+                        R.color.slow3,
+                        R.color.slow4,
+                        R.color.slow5,
+                        R.color.slow6,
+                        R.color.slow7,
+                        R.color.slow8,
+                        R.color.slow9
+                )
+        )
         val all = arrayListOf(
                 yinyang,
                 night,
                 cosmic,
                 peacock,
+                backwards,
                 elephant,
                 oldskool,
                 gold,
@@ -229,61 +310,92 @@ class ColorPalette (
                 royal,
                 groovy,
                 canyon,
+                slow,
                 anubis
         )
 
-        fun getColors(res: Resources, ids: List<Int>) : IntArray {
-            // takes color resource ids as input and returns color ints
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
-            else IntArray(ids.size) { i: Int -> res.getColor(ids[i]) }
+
+        fun generateColors(n: Int) : ArrayList<Int> {
+            return ArrayList(List(n) { Color.HSVToColor(floatArrayOf(
+                    360*random().toFloat(),
+                    random().toFloat(),
+                    random().toFloat()
+            ))})
         }
-        fun intToFloatArray(c: Int) : FloatArray {
-            return floatArrayOf(Color.red(c)/255f, Color.green(c)/255f, Color.blue(c)/255f)
+        fun generateHighlightColors(n: Int) : ArrayList<Int> {
+            return ArrayList(List(n) { i -> Color.HSVToColor(floatArrayOf(
+                    360*random().toFloat(),
+                    (i+2).toFloat()/(n+5).toFloat(),
+                    i.toFloat()/n.toFloat()
+            ))})
         }
+
 
     }
 
 
-    var size = if (oscillate) 2*ids.size - 1 else ids.size + 1
+    val size : Int
+        get() = if (oscillate) 2*colors.size - 1 else colors.size + 1
+        // 2*ids.size - 1
+        // ids.size + 1
 
     val oscillateInit = oscillate
 
-    var oscillate = oscillate
-        set (value) {
-            field = value
-            size = if (oscillate) 2*ids.size - 1 else ids.size + 1
-        }
+    var oscillate = oscillateInit
 
     var thumbnail : Bitmap? = null
 
+    val gradientDrawable : GradientDrawable
+        get() = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors.toIntArray())
+    var flatPalette = floatArrayOf()
 
+
+
+
+    fun initialize(res: Resources, thumbRes: IntArray) {
+
+        when {
+            ids.isEmpty() && colors.isEmpty() -> {
+                throw Error("neither ids nor colors was passed to the constructor")
+            }
+            colors.isEmpty() -> {
+                colors = ArrayList(getColors(res, ids).toMutableList())
+            }
+        }
+
+        when {
+            nameId == -1 && name == "" -> {
+                throw Error("neither nameId nor name was passed to the constructor")
+            }
+            name == "" -> {
+                name = res.getString(nameId)
+            }
+        }
+
+        thumbnail = Bitmap.createBitmap(thumbRes[0], thumbRes[0], Bitmap.Config.ARGB_8888)
+
+        updateFlatPalette()
+
+    }
     fun reset() {
         oscillate = oscillateInit
     }
-    fun getFlatPalette(res: Resources) : FloatArray {
+    fun updateFlatPalette() {
 
-        val palette = intArrayToList(getColors(res,
-                if (oscillate) ids.minus(ids.last()).plus(ids.reversed())
-                else ids.plus(ids.first())
-        ))
+        val palette = intArrayToList(
+                if (oscillate) colors.minus(colors.last()).plus(colors.reversed())
+                else colors.plus(colors.first())
+        )
 
-        return FloatArray(palette.size * 3) { i: Int ->
+        flatPalette = FloatArray(palette.size * 3) { i: Int ->
             val a = floor(i / 3.0f).toInt()
             val b = i % 3
             palette[a][b]
         }
 
     }
-    private fun intArrayToList(C: IntArray) : List<FloatArray> {
-        return List(C.size) { i: Int -> intToFloatArray(C[i]) }
-    }
-    fun getGradientDrawable(res: Resources) : GradientDrawable {
-
-        return GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                getColors(res, ids)
-        )
-
+    private fun intArrayToList(C: List<Int>) : List<FloatArray> {
+        return List(C.size) { i: Int -> colorToRGB(C[i]) }
     }
 
     override fun equals(other: Any?): Boolean {
