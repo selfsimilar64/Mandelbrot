@@ -1,218 +1,444 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingTop="1dp">
+    android:layout_height="@dimen/categoryLayoutHeightNoPadding"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/colorLayout"
+    <ScrollView
+        android:id="@+id/colorScrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/menu2"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:orientation="vertical">
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingTop="1dp">
 
         <LinearLayout
-            android:id="@+id/colorPreviewListLayout"
+            android:id="@+id/colorLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="visible">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/colorPreviewList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/menu4"
-                android:orientation="horizontal"
-                android:scrollbars="horizontal"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/color_preview_item" />
-
-            <Button
-                android:id="@+id/colorDoneButton"
-                style="@style/FragmentItem"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/doneButtonHeight"
-                android:layout_gravity="end"
-                android:layout_marginStart="3dp"
-                android:layout_marginEnd="3dp"
-                android:text="@string/done" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/colorContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="visible">
+            android:background="@color/menu2"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/colorPreview"
-                style="@style/FragmentItem"
+                android:id="@+id/colorPreviewListLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:foreground="?attr/selectableItemBackground"
-                android:gravity="center"
                 android:orientation="vertical"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp">
-
-                <TextView
-                    android:id="@+id/colorPreviewName"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:drawableEnd="@drawable/edit"
-                    android:drawablePadding="10dp"
-                    android:paddingBottom="3dp"
-                    android:text="@string/palette_name" />
+                android:visibility="visible">
 
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/paletteCard"
                     android:layout_width="match_parent"
-                    android:layout_height="26dp"
+                    android:layout_height="match_parent"
                     app:cardBackgroundColor="@color/transparent"
-                    app:cardCornerRadius="15dp">
+                    app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/colorPreviewList"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/categoryPagerHeightNoPadding"
+                        android:background="@color/menu4"
+                        android:orientation="vertical"
+                        android:scrollbars="vertical"
+                        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                        app:spanCount="3"
+                        tools:itemCount="6"
+                        tools:listitem="@layout/color_preview_item_grid" />
                 </androidx.cardview.widget.CardView>
 
 
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/customPaletteLayout"
+                style="@style/FragmentItem"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <EditText
+                    android:id="@+id/customPaletteName"
+                    style="@style/EditTextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_gravity="center"
+                    android:imeOptions="actionDone"
+                    android:inputType="text|textCapSentences"
+                    android:text="@string/palette_name" />
+
 
                 <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:gravity="center_horizontal">
+
+                    <com.woxthebox.draglistview.DragListView
+                        android:id="@+id/customColorsDragList"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+
+                    </com.woxthebox.draglistview.DragListView>
+
+                    <ImageButton
+                        android:id="@+id/newCustomColorButton"
+                        android:layout_width="@dimen/customColorLayoutSizeWithPadding"
+                        android:layout_height="@dimen/customColorLayoutSizeWithPadding"
+                        android:background="@color/menu3"
+                        android:scaleType="fitXY"
+                        app:srcCompat="@drawable/add" />
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/satValueSelectorLayoutHeight"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="5dp"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/customColorComponent1"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="H:" />
+
+                        <TextView
+                            android:id="@+id/customColorComponent2"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="S:" />
+
+                        <TextView
+                            android:id="@+id/customColorComponent3"
+                            style="@style/TextDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="V:" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="35dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginEnd="5dp"
+                        android:gravity="center_vertical|end"
+                        android:orientation="vertical">
+
+                        <EditText
+                            android:id="@+id/customColorComponentEdit1"
+                            style="@style/EditNumberDark"
+                            android:layout_width="wrap_content"
+                            android:layout_marginTop="0dp"
+                            android:layout_marginBottom="0dp"
+                            android:layout_weight="1"
+                            android:imeOptions="actionDone">
+
+                        </EditText>
+
+                        <EditText
+                            android:id="@+id/customColorComponentEdit2"
+                            style="@style/EditNumberDark"
+                            android:layout_width="wrap_content"
+                            android:layout_marginTop="0dp"
+                            android:layout_marginBottom="0dp"
+                            android:layout_weight="1"
+                            android:imeOptions="actionDone">
+
+                        </EditText>
+
+                        <EditText
+                            android:id="@+id/customColorComponentEdit3"
+                            style="@style/EditNumberDark"
+                            android:layout_width="wrap_content"
+                            android:layout_marginTop="0dp"
+                            android:layout_marginBottom="0dp"
+                            android:layout_weight="1"
+                            android:imeOptions="actionDone">
+
+                        </EditText>
+
+                    </LinearLayout>
+
+                    <com.selfsimilartech.fractaleye.SatValueSelectorView
+                        android:id="@+id/satValueSelector"
+                        android:layout_width="@dimen/satValueSelectorLayoutWidth"
+                        android:layout_height="@dimen/satValueSelectorLayoutHeight"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginEnd="5dp" />
+
+                    <LinearLayout
+                        android:id="@+id/hueSelectorBackground"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:orientation="vertical">
+
+                        <com.selfsimilartech.fractaleye.VerticalSeekBar
+                            android:id="@+id/hueSelector"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/satValueSelectorLayoutHeight"
+                            android:paddingStart="0dp"
+                            android:paddingEnd="0dp"
+                            android:progressDrawable="@drawable/hue_slider_track"
+                            android:splitTrack="false"
+                            android:thumb="@drawable/hue_slider_thumb"
+                            android:thumbOffset="0dp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/colorContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <androidx.cardview.widget.CardView
                     style="@style/FragmentItem"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp">
+                    app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
                     <LinearLayout
+                        android:id="@+id/colorPreview"
+                        style="@style/ClickableFragmentItem"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <ImageView
-                            android:id="@+id/imageView2"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_gravity="center_vertical"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/x" />
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical">
 
                         <TextView
-                            android:id="@+id/textView17"
+                            android:id="@+id/colorPreviewName"
                             style="@style/TextDark"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:text="@string/offset"
-                            app:layout_constraintBottom_toBottomOf="@+id/imageView2"
-                            app:layout_constraintStart_toEndOf="@+id/imageView2"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <EditText
-                            android:id="@+id/phaseEdit"
-                            style="@style/EditTextDark"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:imeOptions="actionDone"
-                            android:selectAllOnFocus="true"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            android:layout_gravity="center"
+                            android:drawableEnd="@drawable/edit"
+                            android:drawablePadding="10dp"
+                            android:paddingBottom="3dp"
+                            android:text="@string/palette_name" />
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/colorPreviewGradient"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/paletteGradientHeight"
+                            app:cardBackgroundColor="@color/transparent"
+                            app:cardCornerRadius="15dp">
+
+                        </androidx.cardview.widget.CardView>
+
 
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <ImageView
-                            android:id="@+id/imageView"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_gravity="center_vertical"
-                            app:layout_constraintStart_toEndOf="@+id/textView18"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/frequency" />
-
-                        <TextView
-                            android:id="@+id/textView18"
-                            style="@style/TextDark"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:text="@string/frequency"
-                            app:layout_constraintBottom_toBottomOf="@+id/imageView"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <EditText
-                            android:id="@+id/frequencyEdit"
-                            style="@style/EditTextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:imeOptions="actionDone"
-                            android:selectAllOnFocus="true"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="@+id/textView18" />
-
-                    </LinearLayout>
-                </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
                 <LinearLayout
-                    style="@style/FragmentItem"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/textView2"
-                        style="@style/TextDark"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        style="@style/FragmentItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:id="@+id/imageView2"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_gravity="center_vertical"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:srcCompat="@drawable/x" />
+
+                            <TextView
+                                android:id="@+id/textView17"
+                                style="@style/TextDark"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_weight="1"
+                                android:text="@string/offset"
+                                app:layout_constraintBottom_toBottomOf="@+id/imageView2"
+                                app:layout_constraintStart_toEndOf="@+id/imageView2"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <EditText
+                                android:id="@+id/phaseEdit"
+                                style="@style/EditNumberDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:selectAllOnFocus="true"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:id="@+id/imageView"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_gravity="center_vertical"
+                                app:layout_constraintStart_toEndOf="@+id/textView18"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:srcCompat="@drawable/frequency" />
+
+                            <TextView
+                                android:id="@+id/textView18"
+                                style="@style/TextDark"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_weight="1"
+                                android:text="@string/frequency"
+                                app:layout_constraintBottom_toBottomOf="@+id/imageView"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <EditText
+                                android:id="@+id/frequencyEdit"
+                                style="@style/EditNumberDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:selectAllOnFocus="true"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="@+id/textView18" />
+
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/FragmentItem"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/solid_fill" />
+                        android:orientation="horizontal">
 
-                    <com.google.android.material.tabs.TabLayout
-                        android:id="@+id/solidFillColorTabs"
-                        android:layout_width="wrap_content"
-                        android:layout_height="42dp"
-                        android:layout_weight="1"
-                        app:tabBackground="@drawable/tab_color_selector"
-                        app:tabIndicatorColor="@color/transparent">
-
-                        <com.google.android.material.tabs.TabItem
+                        <TextView
+                            android:id="@+id/textView2"
+                            style="@style/TextDark"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/solid_fill_black" />
+                            android:layout_weight="1"
+                            android:text="@string/solid_fill" />
 
-                        <com.google.android.material.tabs.TabItem
+                        <com.google.android.material.tabs.TabLayout
+                            android:id="@+id/solidFillColorTabs"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/solid_fill_white" />
-                    </com.google.android.material.tabs.TabLayout>
+                            android:layout_height="42dp"
+                            android:layout_weight="1"
+                            app:tabBackground="@drawable/tab_color_selector"
+                            app:tabIndicatorColor="@color/transparent">
+
+                            <com.google.android.material.tabs.TabItem
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/solid_fill_black" />
+
+                            <com.google.android.material.tabs.TabItem
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/solid_fill_white" />
+                        </com.google.android.material.tabs.TabLayout>
+                    </LinearLayout>
                 </LinearLayout>
+
             </LinearLayout>
 
         </LinearLayout>
 
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/colorNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/categoryButtonsHeight"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/colorListViewTypeButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/list_view" />
+
+        <ImageButton
+            android:id="@+id/newCustomPaletteButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/add" />
+
+        <ImageButton
+            android:id="@+id/colorPreviewListDoneButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/done" />
+
+        <ImageButton
+            android:id="@+id/customPaletteRandomizeButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/randomize" />
+
+        <ImageButton
+            android:id="@+id/customPaletteCancelButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/cancel" />
+
+        <ImageButton
+            android:id="@+id/customPaletteDoneButton"
+            style="@style/MenuNavButton"
+            android:layout_width="@dimen/navButtonSize"
+            android:layout_height="@dimen/navButtonSize"
+            android:src="@drawable/done" />
+
     </LinearLayout>
 
-</ScrollView>
+</LinearLayout>
