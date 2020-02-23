@@ -939,13 +939,13 @@ class FractalSurfaceView(
 
                             f.palette = prevPalette
                             renderThumbnails = false
+                            handler.updateColorThumbnails()
 
                         }
 
                         renderFromTexture(background)
                         renderFromTexture(foreground)
 
-                        handler.updateColorThumbnails()
 
 
                     }
@@ -1398,9 +1398,8 @@ class FractalSurfaceView(
 
                 glUniform1fv(yOrientColorHandle, 1, floatArrayOf(yOrient), 0)
                 glUniform1i(numColorsHandle, f.palette.size)
-                glUniform3fv(paletteHandle, f.palette.size, f.palette.getFlatPalette(resources), 0)
-                glUniform3fv(solidFillColorHandle, 1, ColorPalette.intToFloatArray(
-                        ColorPalette.getColors(resources, listOf(f.solidFillColor))[0]), 0)
+                glUniform3fv(paletteHandle, f.palette.size, f.palette.flatPalette, 0)
+                glUniform3fv(solidFillColorHandle, 1, colorToRGB(getColors(resources, listOf(f.solidFillColor))[0]), 0)
                 glUniform1fv(frequencyHandle, 1, floatArrayOf(f.frequency), 0)
                 glUniform1fv(phaseHandle, 1, floatArrayOf(f.phase), 0)
                 glUniform1i(textureModeHandle, f.textureMode.ordinal)
@@ -1902,7 +1901,7 @@ class FractalSurfaceView(
                 else -> sc.precision
             }
 
-            act.findViewById<TextView>(R.id.precisionBitsText)?.text = "${sc.precision.bits}-bit"
+            handler.updatePrecisionBits()
 
             if (sc.precision != prevPrecision) r.renderShaderChanged = true
 
