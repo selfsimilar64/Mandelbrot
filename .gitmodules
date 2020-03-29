@@ -1,0 +1,6 @@
+[submodule "jni/gmp"]
+	path = jni/gmp
+	url = git://github.com/Rupan/gmp.git
+[submodule "app/src/main/jni/gmp"]
+	path = app/src/main/jni/gmp
+	url = git://github.com/Rupan/gmp.git
