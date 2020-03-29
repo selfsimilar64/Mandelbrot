@@ -70,7 +70,7 @@ class PositionFragment : Fragment() {
             }
 
             editText.clearFocus()
-            fsv.updateSystemUI()
+            act.updateSystemUI()
             true
 
         }}
@@ -144,7 +144,7 @@ class PositionFragment : Fragment() {
                     scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
                     w.text = "%d".format(scaleStrings[1].toInt())
 
-                    fsv.checkThresholdCross(prevScale)
+                    fsv.r.checkThresholdCross(prevScale)
 
                 })
         scaleLock.setOnClickListener {

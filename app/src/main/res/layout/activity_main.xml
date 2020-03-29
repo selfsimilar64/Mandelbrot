@@ -141,7 +141,9 @@
             android:layout_height="5dp"
             android:background="@color/halfTransparentBlack"
             android:progressBackgroundTint="@color/transparent"
-            app:layout_constraintBottom_toTopOf="@id/ui" />
+            app:layout_constraintBottom_toTopOf="@id/ui"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
 
         <LinearLayout

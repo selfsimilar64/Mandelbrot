@@ -72,7 +72,7 @@ class SettingsFragment : Fragment() {
         hideNavBarSwtich.setOnCheckedChangeListener { _, isChecked ->
 
             sc.hideNavBar = isChecked
-            fsv.updateSystemUI()
+            act.updateSystemUI()
 
         }
 
@@ -81,8 +81,8 @@ class SettingsFragment : Fragment() {
         resolutionBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val dimensions = Resolution.values()[progress].scaleRes(fsv.screenRes)
-                resolutionDimensionsText.text = "${dimensions[0]} x ${dimensions[1]}"
+                val dimensions = Resolution.values()[progress].scaleRes(fsv.r.screenRes)
+                resolutionDimensionsText.text = "${dimensions.x} x ${dimensions.y}"
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
@@ -127,8 +127,8 @@ class SettingsFragment : Fragment() {
 
             sc.renderBackground = isChecked
 
-            fsv.r.bgResolutionChanged = true
-            fsv.r.renderToTex = true
+            // fsv.r.bgResolutionChanged = true
+            fsv.r.renderToTex = isChecked
             fsv.requestRender()
 
         }
@@ -164,12 +164,12 @@ class SettingsFragment : Fragment() {
                                 WRITE_STORAGE_REQUEST_CODE)
                     }
                     else {
-                        fsv.renderProfile = RenderProfile.SAVE
+                        fsv.r.renderProfile = RenderProfile.SAVE
                         fsv.requestRender()
                     }
                 }
                 else {
-                    fsv.renderProfile = RenderProfile.SAVE
+                    fsv.r.renderProfile = RenderProfile.SAVE
                     fsv.requestRender()
                 }
             }
@@ -187,13 +187,13 @@ class SettingsFragment : Fragment() {
                 if (tab.position == 2) {
                     Log.d("SETTINGS FRAGMENT", "auto selected")
                     sc.autoPrecision = true
-                    fsv.checkThresholdCross(f.position.scale)
+                    fsv.r.checkThresholdCross(f.position.scale)
                 }
                 else {
-                    sc.precision = Precision.values()[tab.position]
+                    sc.gpuPrecision = GpuPrecision.values()[tab.position]
                     sc.autoPrecision = false
                 }
-                precisionBitsText.text = "${sc.precision.bits}-bit"
+                precisionBitsText.text = "${sc.gpuPrecision.bits}-bit"
                 fsv.r.renderShaderChanged = true
                 fsv.r.renderToTex = true
                 fsv.requestRender()
@@ -204,9 +204,9 @@ class SettingsFragment : Fragment() {
         })
         if (sc.autoPrecision) precisionTabs.getTabAt(2)?.select()
         else precisionTabs.getTabAt(
-                Precision.valueOf(
+                GpuPrecision.valueOf(
                         savedInstanceState?.getString("precision")
-                                ?: sc.precision.name
+                                ?: sc.gpuPrecision.name
                 ).ordinal
         )?.select()
 

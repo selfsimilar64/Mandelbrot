@@ -78,7 +78,7 @@ class TextureFragment : Fragment() {
             }
 
             editText.clearFocus()
-            fsv.updateSystemUI()
+            act.updateSystemUI()
             true
 
         }}
@@ -89,7 +89,7 @@ class TextureFragment : Fragment() {
 
 
 
-        val previewListWidth = fsv.screenRes[0] -
+        val previewListWidth = fsv.r.screenRes.x -
                 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) -
                 resources.getDimension(R.dimen.navButtonSize)
         val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) +
@@ -157,7 +157,7 @@ class TextureFragment : Fragment() {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
 
-                if (fsv.sc.continuousRender) updateEditTextAndParam()
+                if (sc.continuousRender) updateEditTextAndParam()
                 else updateEditTextOnly()
 
             }
@@ -336,7 +336,7 @@ class TextureFragment : Fragment() {
                 act.hideCategoryButtons()
                 textureNavBar.show()
 
-                fsv.renderProfile = RenderProfile.TEXTURE_THUMB
+                fsv.r.renderProfile = RenderProfile.TEXTURE_THUMB
                 fsv.r.renderThumbnails = true
                 fsv.requestRender()
 
@@ -378,7 +378,7 @@ class TextureFragment : Fragment() {
             textureNavBar.hide()
             act.showCategoryButtons()
 
-            fsv.renderProfile = RenderProfile.MANUAL
+            fsv.r.renderProfile = RenderProfile.MANUAL
 
         }
 
@@ -390,10 +390,10 @@ class TextureFragment : Fragment() {
         textureNavBar.hide()
 
 
-        val thumbRes = Resolution.THUMB.scaleRes(fsv.screenRes)
+        val thumbRes = Resolution.THUMB.scaleRes(fsv.r.screenRes)
         Texture.all.forEach {
             if (it.thumbnail == null) {
-                it.thumbnail = Bitmap.createBitmap(thumbRes[0], thumbRes[0], Bitmap.Config.ARGB_8888)
+                it.thumbnail = Bitmap.createBitmap(thumbRes.x, thumbRes.y, Bitmap.Config.ARGB_8888)
             }
         }
         act.updateTextureEditTexts()

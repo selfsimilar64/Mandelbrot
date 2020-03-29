@@ -91,7 +91,7 @@ class ColorFragment : Fragment() {
 
             fsv.requestRender()
             editText.clearFocus()
-            fsv.updateSystemUI()
+            act.updateSystemUI()
             true
 
         }}
@@ -139,7 +139,7 @@ class ColorFragment : Fragment() {
 
 
 
-        val colorPreviewListWidth = fsv.screenRes[0] -
+        val colorPreviewListWidth = fsv.r.screenRes.x -
                 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) -
                 resources.getDimension(R.dimen.colorPreviewListMarginEnd) -
                 resources.getDimension(R.dimen.navButtonSize)
@@ -339,7 +339,7 @@ class ColorFragment : Fragment() {
 
                 with (colorPreviewList.adapter as ColorPaletteAdapter) {
                     if (isGridLayout) {
-                        fsv.renderProfile = RenderProfile.COLOR_THUMB
+                        fsv.r.renderProfile = RenderProfile.COLOR_THUMB
                         fsv.r.renderThumbnails = true
                         fsv.r.renderToTex = true
                         fsv.requestRender()
@@ -360,7 +360,7 @@ class ColorFragment : Fragment() {
                 colorPreviewListLayout.hide()
                 colorContent.show()
 
-                fsv.renderProfile = RenderProfile.MANUAL
+                fsv.r.renderProfile = RenderProfile.MANUAL
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
@@ -370,12 +370,12 @@ class ColorFragment : Fragment() {
                 colorPreviewListLayout.hide()
                 customPaletteLayout.show()
                 loadNavButtons(customPaletteNavButtons)
-                fsv.renderProfile = RenderProfile.MANUAL
+                fsv.r.renderProfile = RenderProfile.MANUAL
 
                 customPalette = ColorPalette(
                         name = "Custom Palette 1",
                         colors = ColorPalette.generateHighlightColors(4)
-                ).apply { initialize(resources, Resolution.THUMB.scaleRes(fsv.screenRes)) }
+                ).apply { initialize(resources, Resolution.THUMB.scaleRes(fsv.r.screenRes)) }
 
                 prevSelectedPaletteIndex = ColorPalette.all.indexOf(f.palette)
                 ColorPalette.all.add(0, customPalette)
@@ -415,7 +415,7 @@ class ColorFragment : Fragment() {
                     colorPreviewList.layoutManager = colorPreviewListLinearManager
                     colorPreviewList.adapter = colorPreviewListLinearAdapter
 
-                    fsv.renderProfile = RenderProfile.MANUAL
+                    fsv.r.renderProfile = RenderProfile.MANUAL
 
                 }
                 ListLayoutType.GRID -> {
@@ -423,7 +423,7 @@ class ColorFragment : Fragment() {
                     colorPreviewList.layoutManager = colorPreviewListGridManager
                     colorPreviewList.adapter = colorPreviewListGridAdapter
 
-                    fsv.renderProfile = RenderProfile.COLOR_THUMB
+                    fsv.r.renderProfile = RenderProfile.COLOR_THUMB
                     fsv.r.renderThumbnails = true
                     fsv.r.renderToTex = true
                     fsv.requestRender()

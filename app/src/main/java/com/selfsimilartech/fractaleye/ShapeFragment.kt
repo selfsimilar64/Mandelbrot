@@ -77,7 +77,7 @@ class ShapeFragment : Fragment() {
 
             fsv.requestRender()
             editText.clearFocus()
-            fsv.updateSystemUI()
+            act.updateSystemUI()
             true
 
         }}
@@ -105,7 +105,7 @@ class ShapeFragment : Fragment() {
             val prevScale = f.position.scale
             f.shape.juliaMode = isChecked
             f.position = if (isChecked) f.shape.positions.julia else f.shape.positions.default
-            fsv.checkThresholdCross(prevScale)
+            fsv.r.checkThresholdCross(prevScale)
 
             if (f.shape.juliaMode) {
 
@@ -117,7 +117,7 @@ class ShapeFragment : Fragment() {
                     shapeLayoutScroll.smoothScrollTo(0, shapeParamLayout.y.toInt())
                 }, BUTTON_CLICK_DELAY_LONG)
                 if (f.shape.numParamsInUse == 1) {
-                    fsv.reaction = Reaction.SHAPE
+                    fsv.r.reaction = Reaction.SHAPE
                     act.showTouchIcon()
                 }
             }
@@ -126,7 +126,7 @@ class ShapeFragment : Fragment() {
                 shapeParamButtons.removeTabAt(shapeParamButtons.tabCount - 1)
                 if (f.shape.numParamsInUse == 0) shapeParamLayout.visibility = ConstraintLayout.GONE
                 // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("c"))
-                if (f.shape.numParamsInUse == 0) fsv.reaction = Reaction.NONE
+                if (f.shape.numParamsInUse == 0) fsv.r.reaction = Reaction.NONE
 
             }
 
@@ -310,9 +310,9 @@ class ShapeFragment : Fragment() {
                                 juliaModeSwitch.setOnCheckedChangeListener(juliaListener)
                             }
 
-                            if (f.shape.numParamsInUse == 0) fsv.reaction = Reaction.NONE
+                            if (f.shape.numParamsInUse == 0) fsv.r.reaction = Reaction.NONE
                             else {
-                                fsv.reaction = Reaction.SHAPE
+                                fsv.r.reaction = Reaction.SHAPE
                                 act.showTouchIcon()
                             }
 
@@ -330,7 +330,7 @@ class ShapeFragment : Fragment() {
                                 )
                             }
 
-                            fsv.checkThresholdCross(prevScale)
+                            fsv.r.checkThresholdCross(prevScale)
 
                             fsv.r.renderShaderChanged = true
                             fsv.r.renderToTex = true
