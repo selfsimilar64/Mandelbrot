@@ -220,7 +220,7 @@ class Texture (
                 initDF = R.string.exponential_smooth_init,
                 loopDF = R.string.exponential_smooth_loop_df,
                 finalDF = R.string.exponential_smooth_final,
-                bailoutRadius = 1e1f
+                bailoutRadius = 1e2f
         )
         val orbitTrapMinXY = Texture(
                 R.string.empty,

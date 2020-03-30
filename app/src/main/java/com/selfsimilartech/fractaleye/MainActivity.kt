@@ -16,6 +16,8 @@ import kotlin.math.*
 import android.view.MotionEvent
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Point
+import android.opengl.GLSurfaceView
 import com.google.android.material.tabs.TabLayout
 import androidx.viewpager.widget.ViewPager
 import android.util.AttributeSet
@@ -28,9 +30,9 @@ import kotlinx.android.synthetic.main.texture_fragment.*
 import kotlinx.android.synthetic.main.shape_fragment.*
 import kotlinx.android.synthetic.main.color_fragment.*
 import kotlinx.android.synthetic.main.position_fragment.*
+import org.apfloat.*
 
 
-const val SPLIT = 8193.0
 const val MAX_SHAPE_PARAMS = 3
 const val MAX_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
@@ -56,7 +58,6 @@ const val SHAPE_LIST_VIEW_TYPE = "shapeListViewType"
 const val TEXTURE_LIST_VIEW_TYPE = "textureListViewType"
 const val SHARED_PREFERENCES = "com.selfsimilartech.fractaleye.SETTINGS"
 
-const val USE_PERTURBATION = false
 
 //const val PLUS_UNICODE = '\u002B'
 //const val MINUS_UNICODE = '\u2212'
@@ -88,6 +89,18 @@ infix fun MutableList<Texture>.without(texture: Texture) : MutableList<Texture> 
 }
 fun View.setProFeature(value: Boolean) { tag = value }
 fun View.isProFeature() : Boolean { return (tag ?: false) as Boolean }
+infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
+    require(start.isFinite())
+    require(endInclusive.isFinite())
+    require(step > 0.0) { "Step must be positive, was: $step." }
+    val sequence = generateSequence(start) { previous ->
+        if (previous == Double.POSITIVE_INFINITY) return@generateSequence null
+        val next = previous + step
+        if (next > endInclusive) null else next
+    }
+    return sequence.asIterable()
+}
+fun now() = System.currentTimeMillis()
 
 
 fun View.show() { visibility = View.VISIBLE }
@@ -96,12 +109,12 @@ fun View.isVisible() : Boolean { return visibility == View.VISIBLE}
 fun View.isHidden() : Boolean { return visibility == View.GONE}
 
 
-//fun Apfloat.sqr() : Apfloat = this.multiply(this)
-//fun Apcomplex.sqr() : Apcomplex = this.multiply(this)
-//fun Apcomplex.cube() : Apcomplex = this.multiply(this).multiply(this)
-//fun Apcomplex.mod() : Apfloat = ApfloatMath.sqrt(this.real().sqr().add(this.imag().sqr()))
-//fun Apcomplex.modSqr() : Apfloat = this.real().sqr().add(this.imag().sqr())
-// const val AP_DIGITS = 48L
+fun Apfloat.sqr() : Apfloat = this.multiply(this)
+fun Apcomplex.sqr() : Apcomplex = this.multiply(this)
+fun Apcomplex.cube() : Apcomplex = this.multiply(this).multiply(this)
+fun Apcomplex.mod() : Apfloat = ApfloatMath.sqrt(this.real().sqr().add(this.imag().sqr()))
+fun Apcomplex.modSqr() : Apfloat = this.real().sqr().add(this.imag().sqr())
+const val AP_DIGITS = 64L
 
 
 
@@ -162,98 +175,23 @@ data class Complex(
 
 }
 
-data class DualDouble (
-        var hi : Double,
-        var lo : Double
-) {
 
-    override fun toString() : String {
-        return "{$hi + $lo}"
-    }
-
-    private fun quickTwoSum(a: Double, b: Double) : DualDouble {
-        val s = a + b
-        val e = b - (s - a)
-        return DualDouble(s, e)
-    }
-
-    private fun twoSum(a: Double, b: Double) : DualDouble {
-        val s = a + b
-        val v = s - a
-        val e = a - (s - v) + (b - v)
-        return DualDouble(s, e)
-    }
-
-    private fun split(a: Double): DualDouble {
-        val t = a * SPLIT
-        val aHi = t - (t - a)
-        val aLo = a - aHi
-        return DualDouble(aHi, aLo)
-    }
-
-    private fun twoProd(a: Double, b: Double) : DualDouble {
-        val p = a * b
-        val aS = split(a)
-        val bS = split(b)
-        val err = aS.hi * bS.hi - p + aS.hi * bS.lo + aS.lo * bS.hi + aS.lo * bS.lo
-        return DualDouble(p, err)
-    }
-
-    operator fun unaryMinus() : DualDouble {
-        return DualDouble(-hi, -lo)
-    }
-
-    operator fun plus(b: DualDouble) : DualDouble {
-        var s = twoSum(hi, b.hi)
-        val t = twoSum(lo, b.lo)
-        s.lo += t.hi
-        s = quickTwoSum(s.hi, s.lo)
-        s.lo += t.lo
-        s = quickTwoSum(s.hi, s.lo)
-        return s
-    }
-
-    operator fun minus(b: DualDouble) : DualDouble {
-        return plus(b.unaryMinus())
-    }
-
-    operator fun times(b: DualDouble) : DualDouble {
-        var p = twoProd(hi, b.hi)
-        p.lo += hi * b.lo
-        p.lo += lo * b.hi
-        p = quickTwoSum(p.hi, p.lo)
-        return p
-    }
-
-    operator fun div(b: DualDouble) : DualDouble {
-
-        val xn = 1.0 / b.hi
-        val yn = hi * xn
-        val diff = minus(b*DualDouble(yn, 0.0))
-        val prod = twoProd(xn, diff.hi)
-        return DualDouble(yn, 0.0) + prod
-
-    }
-
-}
-
-
-enum class Precision(val bits: Int, val threshold: Double) {
-    SINGLE(23, 5e-4), DUAL(46, 1e-12), QUAD(0, 1e-20)
+enum class GpuPrecision(val bits: Int, val threshold: Double) {
+    SINGLE(23, 5e-4), DUAL(46, 1e-12)
 }
 enum class Reaction(val numDisplayParams: Int) {
     NONE(0), SHAPE(3), COLOR(2), POSITION(4)
 }
 enum class Resolution(private val scale: Float, val square: Boolean = false) {
-    EIGHTH(1/8f), SIXTH(1/6f), FOURTH(1/4f), HALF(1/2f), FULL(1f), DOUBLE(2f), TEST(2.5f), THUMB(1/6f, true);
-    fun scaleRes(screenRes: IntArray) : IntArray {
-        return intArrayOf((screenRes[0]*scale).roundToInt(), (screenRes[1]*scale).roundToInt())
+    EIGHTH(1/8f), SIXTH(1/6f), FOURTH(1/4f), HALF(1/2f), FULL(1f), DOUBLE(2f), THUMB(1/6f, true);
+    fun scaleRes(screenRes: Point) : Point {
+        return Point((screenRes.x*scale).roundToInt(), (screenRes.y*scale).roundToInt())
     }
     companion object {
-        private const val NUM_VALUES_GT_SCREEN_DIMS = 2
+        private const val NUM_VALUES_GT_SCREEN_DIMS = 1
         val NUM_VALUES_PRO = values().size - 1
         val NUM_VALUES_FREE = values().size - NUM_VALUES_GT_SCREEN_DIMS - 1
-        val HIGHEST = if (BuildConfig.PAID_VERSION) TEST else FULL
+        val HIGHEST = if (BuildConfig.PAID_VERSION) DOUBLE else FULL
     }
 }
 enum class TextureMode { OUT, IN, BOTH }
@@ -265,8 +203,9 @@ class Position(
         y: Double = 0.0,
         scale: Double = 1.0,
         rotation: Double = 0.0,
-        //xap: Apfloat = Apfloat(0.0),
-        //yap: Apfloat = Apfloat(0.0),
+        xap: Apfloat = Apfloat("0", 32L),
+        yap: Apfloat = Apfloat("0", 32L),
+        var ap: Long = 32L,
         xLocked: Boolean = false,
         yLocked: Boolean = false,
         scaleLocked: Boolean = false,
@@ -305,10 +244,10 @@ class Position(
 
 
 
-//    val xapInit = xap
-//    val yapInit = yap
-//    var xap = xapInit
-//    var yap = yapInit
+    private val xapInit = xap
+    private val yapInit = yap
+    var xap = xapInit
+    var yap = yapInit
 
 
     fun clone() : Position {
@@ -321,12 +260,12 @@ class Position(
         y += dy
 
     }
-//    private fun translate_ap(dx: Apfloat, dy: Apfloat) {
-//
-//        xap = xap.add(dx)
-//        yap = yap.add(dy)
-//
-//    }
+    private fun translateAp(dx: Apfloat, dy: Apfloat) {
+
+        xap = xap.add(dx)
+        yap = yap.add(dy)
+
+    }
     fun translate(dx: Float, dy: Float) {  // dx, dy --> [0, 1]
 
         val tx = dx*scale
@@ -336,10 +275,8 @@ class Position(
         x -= tx*cosTheta - ty*sinTheta
         y += tx*sinTheta + ty*cosTheta
 
-//        if (USE_PERTURBATION) {
-//            xap = xap.subtract(Apfloat(tx*cosTheta - ty*sinTheta, AP_DIGITS))
-//            yap = yap.add(Apfloat(tx*sinTheta + ty*cosTheta, AP_DIGITS))
-//        }
+        xap = xap.subtract(Apfloat(tx*cosTheta - ty*sinTheta, ap))
+        yap = yap.add(Apfloat(tx*sinTheta + ty*cosTheta, ap))
 
     }
     fun scale(dScale: Float, prop: DoubleArray) {
@@ -365,16 +302,13 @@ class Position(
             x /= dScale
             y /= dScale
             translate(fx, fy)
-//            if (USE_PERTURBATION) {
-//
-//                val fxap = xap.add(Apfloat(qx * cosTheta - qy * sinTheta, AP_DIGITS))
-//                val fyap = yap.add(Apfloat(qx * sinTheta + qy * cosTheta, AP_DIGITS))
-//                translate_ap(fxap.negate(), fyap.negate())
-//                xap = xap.divide(Apfloat(dScale, AP_DIGITS))
-//                yap = yap.divide(Apfloat(dScale, AP_DIGITS))
-//                translate_ap(fxap, fyap)
-//
-//            }
+
+            val fxap = xap.add(Apfloat(qx * cosTheta - qy * sinTheta, ap))
+            val fyap = yap.add(Apfloat(qx * sinTheta + qy * cosTheta, ap))
+            translateAp(fxap.negate(), fyap.negate())
+            xap = xap.divide(Apfloat(dScale, ap))
+            yap = yap.divide(Apfloat(dScale, ap))
+            translateAp(fxap, fyap)
 
 
             scale /= dScale
@@ -415,6 +349,20 @@ class Position(
             translate(fx, fy)
 
 
+            qx = prop[0] * scale
+            qy = prop[1] * scale
+            val fxap = xap.add(Apfloat(qx*cosTheta - qy*sinTheta, ap))
+            val fyap = yap.add(Apfloat(qx*sinTheta + qy*cosTheta, ap))
+            translateAp(fxap.negate(), fyap.negate())
+            val qxap = xap
+            val qyap = yap
+            val sindThetaAp = Apfloat(sindTheta, ap)
+            val cosdThetaAp = Apfloat(cosdTheta, ap)
+            xap = qxap.multiply(cosdThetaAp).subtract(qyap.multiply(sindThetaAp))
+            yap = qxap.multiply(sindThetaAp).add(qyap.multiply(cosdThetaAp))
+            translateAp(fxap, fyap)
+
+
             rotation -= dTheta.toDouble()
 
             // set x and y locks to previous values
@@ -434,6 +382,14 @@ class Position(
         yLocked = yLockedInit
         scaleLocked = scaleLockedInit
         rotationLocked = rotationLockedInit
+    }
+    fun updatePrecision(newPrecision: Long) {
+
+        Log.e("MAIN ACTIVITY", "new position precision: $newPrecision")
+        ap = newPrecision
+        xap = Apfloat(xap.toString(), ap)
+        yap = Apfloat(yap.toString(), ap)
+
     }
 
 }
@@ -490,17 +446,6 @@ fun splitSD(a: Double) : FloatArray {
     return b
 
 }
-fun splitDD(a: DualDouble) : FloatArray {
-
-    val b = FloatArray(4)
-    b[0] = a.hi.toFloat()
-    b[1] = (a.hi - b[0].toDouble()).toFloat()
-    b[2] = a.lo.toFloat()
-    b[3] = (a.lo - b[2].toDouble()).toFloat()
-    return b
-
-}
-
 
 fun getColors(res: Resources, ids: List<Int>) : IntArray {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
@@ -614,9 +559,11 @@ class RecyclerTouchListener(
 class MainActivity : AppCompatActivity() {
 
 
-    var f : Fractal = Fractal.mandelbrot
+    var f : Fractal = Fractal.flake
     var sc : SettingsConfig = SettingsConfig()
     lateinit var fsv : FractalSurfaceView
+    var screenWidth = 0
+    var screenHeight = 0
 
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
@@ -678,8 +625,8 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onCategorySelected(act: MainActivity) {
                 val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
-                act.fsv.renderProfile = RenderProfile.MANUAL
-                act.fsv.reaction = Reaction.NONE
+                //act.fsv.renderProfile = RenderProfile.MANUAL
+                act.fsv.r.reaction = Reaction.NONE
                 act.hideTouchIcon()
                 if (act.categoryLayoutIsClosed()) categoryNameButton.performClick()
             }
@@ -694,7 +641,7 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onCategorySelected(act: MainActivity) {
                 act.hideTouchIcon()
-                act.fsv.reaction = Reaction.NONE
+                act.fsv.r.reaction = Reaction.NONE
                 if (act.categoryLayoutIsClosed()) act.categoryNameButton.performClick()
             }
             override fun onCategoryUnselected(act: MainActivity) {
@@ -707,14 +654,14 @@ class MainActivity : AppCompatActivity() {
                 if (act.shapeContent.isVisible() && act.f.shape.numParamsInUse == 0) act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
-                act.fsv.renderProfile = RenderProfile.MANUAL
+                //act.fsv.renderProfile = RenderProfile.MANUAL
                 if (act.f.shape.numParamsInUse != 0) {
-                    act.fsv.reaction = Reaction.SHAPE
+                    act.fsv.r.reaction = Reaction.SHAPE
                     act.showTouchIcon()
                 }
                 else {
                     val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
-                    act.fsv.reaction = Reaction.NONE
+                    act.fsv.r.reaction = Reaction.NONE
                     act.hideTouchIcon()
                     if (act.categoryLayoutIsClosed()) categoryNameButton.performClick()
                 }
@@ -744,7 +691,7 @@ class MainActivity : AppCompatActivity() {
 //                    act.fsv.r.renderThumbnails = true
 //                    act.fsv.requestRender()
 //                }
-                act.fsv.reaction = Reaction.COLOR
+                act.fsv.r.reaction = Reaction.COLOR
                 act.showTouchIcon()
             }
             override fun onCategoryUnselected(act: MainActivity) {}
@@ -753,8 +700,8 @@ class MainActivity : AppCompatActivity() {
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {}
             override fun onCategorySelected(act: MainActivity) {
-                act.fsv.renderProfile = RenderProfile.MANUAL
-                act.fsv.reaction = Reaction.valueOf(name)
+                //act.fsv.renderProfile = RenderProfile.MANUAL
+                act.fsv.r.reaction = Reaction.valueOf(name)
                 act.showTouchIcon()
             }
             override fun onCategoryUnselected(act: MainActivity) {
@@ -796,9 +743,9 @@ class MainActivity : AppCompatActivity() {
         //val navBarHeight = (NAV_BAR_HEIGHT * resources.displayMetrics.scaledDensity).toInt()
         val navBarHeight = getNavBarHeight()
 
-        val screenWidth = displayMetrics.widthPixels
-        val screenHeight = displayMetrics.heightPixels
-        val screenRes = intArrayOf(screenWidth, screenHeight)
+        screenWidth = displayMetrics.widthPixels
+        screenHeight = displayMetrics.heightPixels
+        val screenRes = Point(screenWidth, screenHeight)
         // Log.d("MAIN ACTIVITY", "status bar height : $statusBarHeight")
         Log.d("MAIN ACTIVITY", "screen resolution : ($screenWidth, $screenHeight)")
 
@@ -814,7 +761,8 @@ class MainActivity : AppCompatActivity() {
         ColorPalette.all.forEach { it.initialize(resources, Resolution.THUMB.scaleRes(screenRes)) }
 
 
-        fsv = FractalSurfaceView(f, sc, this, ActivityHandler(this), screenRes)
+        val r = FractalRenderer(f, sc, this, baseContext, ActivityHandler(this), screenRes)
+        fsv = FractalSurfaceView(baseContext, r)
         fsv.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight)
 
         val settingsFragment  = SettingsFragment()
@@ -851,7 +799,7 @@ class MainActivity : AppCompatActivity() {
 
         //categoryPager.layoutParams.height = 1
         categoryLayout.layoutParams.height = categoryButtonsHeight
-        fsv.updateSystemUI()
+        updateSystemUI()
 
         categoryNameButton.setOnClickListener {
 
@@ -894,13 +842,13 @@ class MainActivity : AppCompatActivity() {
                             (1f - a.animatedFraction)*uiHeightOpen    +  a.animatedFraction*uiHeightClosed
 
 
-                val scaleRatio = fsv.screenRes[1].toFloat()/animNewHeight
+                val scaleRatio = screenRes.y.toFloat()/animNewHeight
 
                 if (sc.fitToViewport) {
 
                     fsv.scaleX = 1f/scaleRatio
                     fsv.scaleY = 1f/scaleRatio
-                    fsv.y = -0.5f*(fsv.screenRes[1] - animNewHeight)
+                    fsv.y = -0.5f*(screenRes.x - animNewHeight)
 
                 }
                 else {
@@ -1010,6 +958,35 @@ class MainActivity : AppCompatActivity() {
         return hasNotch
 
     }
+    fun updateSystemUI() {
+
+        recalculateSurfaceViewLayout()
+        if (sc.hideNavBar) {
+            fsv.systemUiVisibility = (
+                    GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            // Set the content to appear under the system bars so that the
+                            // content doesn't resize when the system bars hide and show.
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            // Hide the nav bar and status bar
+                            or GLSurfaceView.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or GLSurfaceView.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
+        }
+        else {
+            window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                resources.getColor(R.color.menu2, null) else resources.getColor(R.color.menu2)
+            fsv.systemUiVisibility = (
+                    GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or GLSurfaceView.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
+        }
+
+    }
+
 
     fun showMessage(msg: String) {
         val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_LONG)
@@ -1026,19 +1003,19 @@ class MainActivity : AppCompatActivity() {
                 displayParamRow4
         )
 
-        if (sc.displayParams && fsv.reaction != Reaction.NONE) {
+        if (sc.displayParams && fsv.r.reaction != Reaction.NONE) {
 
             displayParams.visibility = LinearLayout.VISIBLE
             if (reactionChanged) displayParamRows.forEach { it.visibility = LinearLayout.GONE }
             if (reactionChanged || settingsChanged)
-                for (i in 0 until fsv.reaction.numDisplayParams)
+                for (i in 0 until fsv.r.reaction.numDisplayParams)
                 displayParamRows[i].visibility = LinearLayout.VISIBLE
 
             val density = resources.displayMetrics.density
             val w: Int
 
             // update text content
-            when (fsv.reaction) {
+            when (fsv.r.reaction) {
                 Reaction.NONE -> {
 
                     w = (60f * density).toInt()
@@ -1147,15 +1124,15 @@ class MainActivity : AppCompatActivity() {
 
             Log.d("MAIN ACTIVITY", "categoryPagerHeight: ${categoryPager.layoutParams.height}")
 
-            var newHeight = fsv.screenRes[1]
+            var newHeight = screenHeight
             newHeight -= if (categoryLayoutIsClosed()) uiHeightClosed else uiHeightOpen
             if (!sc.hideNavBar) newHeight -= navBarHeight
             if (deviceHasNotch()) newHeight -= getStatusBarHeight()
 
-            val scaleRatio = fsv.screenRes[1].toFloat()/newHeight
+            val scaleRatio = screenHeight.toFloat()/newHeight
             fsv.scaleX = 1f/scaleRatio
             fsv.scaleY = 1f/scaleRatio
-            fsv.y = -0.5f*(fsv.screenRes[1] - newHeight)
+            fsv.y = -0.5f*(screenHeight - newHeight)
 
         }
         else {
@@ -1228,7 +1205,7 @@ class MainActivity : AppCompatActivity() {
     }
     fun updatePrecisionBits() {
 
-        precisionBitsText?.text = "${sc.precision.bits}-bit"
+        precisionBitsText?.text = "${sc.gpuPrecision.bits}-bit"
 
     }
 
@@ -1276,7 +1253,7 @@ class MainActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         Log.d("MAIN ACTIVITY", "window focus changed")
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) fsv.updateSystemUI()
+        if (hasFocus) updateSystemUI()
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
