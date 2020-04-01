@@ -22,6 +22,7 @@ import org.apfloat.Apfloat
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.IndexOutOfBoundsException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -31,8 +32,10 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.*
 
+const val CPU_CHUNKS = 4
 const val MAX_REFERENCES = 20
 val MAX_REF_ITER = 2.0.pow(15).toInt()
+
 
 
 enum class RenderProfile { MANUAL, SAVE, COLOR_THUMB, TEXTURE_THUMB }
@@ -52,6 +55,8 @@ class NativeReferenceReturnData {
 
 fun FloatArray.get(i: Int, j: Int, k: Int, width: Int, depth: Int) = get(depth*(j*width + i) + k)
 fun FloatArray.set(i: Int, j: Int, k: Int, width: Int, depth: Int, value: Float) { set(depth*(j*width + i) + k, value) }
+//fun ShortArray.get(i: Int, j: Int, k: Int, width: Int, depth: Int) = get(depth*(j*width + i) + k)
+//fun ShortArray.set(i: Int, j: Int, k: Int, width: Int, depth: Int, value: Short) { set(depth*(j*width + i) + k, value) }
 
 
 class FractalRenderer(
@@ -780,7 +785,6 @@ class FractalRenderer(
         val maxPixelsPerChunk = when (sc.gpuPrecision) {
             GpuPrecision.SINGLE -> screenRes.x*screenRes.y/4
             GpuPrecision.DUAL -> screenRes.x*screenRes.y/8
-            else -> screenRes.x*screenRes.y
         }
         val numChunks = ceil((xPixels*yPixels) / maxPixelsPerChunk).toInt()
         val chunkInc = if (xLength >= yLength) xLength/numChunks else yLength/numChunks
@@ -1327,7 +1331,12 @@ class FractalRenderer(
         
     }
 
-    private fun findGlitchMostPixels(imArray: FloatArray, s: Int, res: Point) : ArrayList<Point> {
+    private fun findGlitchMostPixels(
+            //imArray: FloatArray,
+            texture: GLTexture,
+            s: Int,
+            res: Point
+    ) : ArrayList<Point> {
 
         val glitch = arrayListOf<Point>()
         var largestGlitch = glitch
@@ -1341,7 +1350,8 @@ class FractalRenderer(
         for (j in 0 until res.y step s) {
             for (i in 0 until res.x step s) {
 
-                if (imArray.get(i, j, 1, res.x, 2) == 3f) {  // glitched pixel found
+                //if (imArray.get(i, j, 1, res.x, 2) == 3f) {  // glitched pixel found
+                if (texture.get(i, j, 1) == 3f) {  // glitched pixel found
 
                     glitch.clear()
                     componentSize = 0
@@ -1350,8 +1360,10 @@ class FractalRenderer(
                     while (queue.isNotEmpty()) {
 
                         val p = queue.pop()
-                        if (imArray.get(p.x, p.y, 1, res.x, 2) == 3f) {
-                            imArray.set(p.x, p.y, 1, res.x, 2, 4f)  // mark pixel as found
+                        //if (imArray.get(p.x, p.y, 1, res.x, 2) == 3f) {
+                        if (texture.get(p.x, p.y, 1) == 3f) {
+                            //imArray.set(p.x, p.y, 1, res.x, 2, 4f)  // mark pixel as found
+                            texture.set(p.x, p.y, 1, 4f)  // mark pixel as found
                             glitch.add(p)
                             componentSize++
 
@@ -2394,28 +2406,15 @@ class FractalRenderer(
                 var samplesPerRow = 45
                 var nativeRefCalcTimeTotal = 0L
 
-                var numGlitchedPixels : Int
+                var numGlitchedPxls : Int
                 var pixelsInArray : ShortArray
 
 
+                val maxPixelsPerChunk = screenRes.x*screenRes.y/CPU_CHUNKS
 
-                    numGlitchedPixels = texture.res.x*texture.res.y
-                    pixelsInAllocation = Allocation.createTyped(rs, Type.createX(
-                            rs,
-                            Element.I16_2(rs),
-                            numGlitchedPixels
-                    ))
-                    pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(
-                            rs,
-                            Element.F32_2(rs),
-                            numGlitchedPixels
-                    ))
 
-                    pixelsInArray = ShortArray(numGlitchedPixels*2) { index ->
-                        if (index % 2 == 0) (index / 2 % texture.res.x).toShort()
-                        else floor((index / 2).toFloat() / texture.res.x).toShort()
-                    }
-                    pixelsInAllocation.copyFrom(pixelsInArray)
+                numGlitchedPxls = texture.res.x*texture.res.y
+
 
 
 
@@ -2423,8 +2422,16 @@ class FractalRenderer(
 
                 val deadPixels = arrayListOf<Point>()
 
-                var pixelsOutArray = FloatArray(numGlitchedPixels*2)
-                val imArray = FloatArray(numGlitchedPixels*2)
+                val glitchedPixels = ShortArray(texture.res.x*texture.res.y*2) { index ->
+                    val q = if (index % 2 == 0) (index / 2 % texture.res.x).toShort() else floor((index / 2.0) / texture.res.x).toShort()
+                    if (q >= 6240) {
+                        Log.e("RENDERER", "${(index / 2.0) / texture.res.x}")
+                    }
+                    q
+                }
+                var pixelsOutArray : FloatArray
+
+                //val imArray = FloatArray(numGlitchedPixels*2)
 
                 var z0 = Apcomplex(f.position.xap, f.position.yap)
                 val refPixel = Point(texture.res.x/2, texture.res.y/2)
@@ -2443,8 +2450,9 @@ class FractalRenderer(
 
                 val sinRotation = sin(f.position.rotation)
                 val cosRotation = cos(f.position.rotation)
-                val sp = 1e250
-                val sn = 1e-250
+                val bgScale = if (texture == background) 5.0 else 1.0
+                val sp = if (f.position.scale < 1e-100) 1e300 else 1.0
+                val sn = if (f.position.scale < 1e-100) 1e-300 else 1.0
 
                 Log.e("RENDERER", "x0: ${z0.real()}")
                 Log.e("RENDERER", "y0: ${z0.imag()}")
@@ -2454,10 +2462,10 @@ class FractalRenderer(
                 while (numReferencesUsed < MAX_REFERENCES) {
 
 
-                    //Log.e("RENDERER", "refPixels: $refPixels")
-                    //Log.e("RENDERER", "x0: ${z0.real()}")
-                    //Log.e("RENDERER", "y0: ${z0.imag()}")
 
+
+                    val d0xOffset = f.position.xap.subtract(z0.real()).toDouble()
+                    val d0yOffset = f.position.yap.subtract(z0.imag()).toDouble()
 
 
 
@@ -2502,124 +2510,135 @@ class FractalRenderer(
                             refData
                     )
                     nativeRefCalcTimeTotal += now() - nativeReferenceStartTime
-
-//                    val referenceStartTime = now()
-//                    skipIter[0] = -1
-//                    iterateReference(z0, skipIter, refIter, seriesCoefs)
-
-//                    Log.e("RENDERER", "skipIter: ${skipIter[0]}")
-//                    Log.e("RENDERER", "refIter: ${refIter[0]}")
-//                    Log.e("RENDERER", "alpha: ${seriesCoefs[0]}")
-//                    Log.e("RENDERER", "beta: ${seriesCoefs[1]}")
-//                    Log.e("RENDERER", "gamma: ${seriesCoefs[2]}")
-
-
                     refAllocation.copyFrom(refArrayNative)
 
-                    // Log.e("RENDERER", "reference calculation took ${(now() - referenceStartTime) / 1000f} sec")
-//                    refCalcTimeTotal += now() - referenceStartTime
-
-                    // shift series term exponents to allow for exponents outside normal range
-//                    val p = when {
-//                        f.position.scale > 1e-5 -> 0
-//                        f.position.scale < 1e-5 && f.position.scale > 1e-15 -> 10
-//                        f.position.scale < 1e-15 && f.position.scale > 1e-25 -> 20
-//                        f.position.scale < 1e-25 && f.position.scale > 1e-35 -> 25
-//                        else -> 30
-//                    }
-//                    Log.d("FSV", "p: $p")
-//                    val expShift = Apfloat("1E$p", sc.cpuPrecision).toFloat()
-//                    aBest = Apfloat("1E-$p",     sc.cpuPrecision).multiply(aBest)
-//                    bBest = Apfloat("1E-${2*p}", sc.cpuPrecision).multiply(bBest)
-//                    cBest = Apfloat("1E-${3*p}", sc.cpuPrecision).multiply(cBest)
 
 
+                    var numGlitchedPxlsRendered = 0
+                    for (k in 0 until ceil(numGlitchedPxls.toDouble()/maxPixelsPerChunk).toInt()) {
 
+                        val numGlitchedPxlsRemaining = numGlitchedPxls - numGlitchedPxlsRendered
+                        val numChunkPxls = if (numGlitchedPxlsRemaining >= maxPixelsPerChunk) maxPixelsPerChunk else numGlitchedPxlsRemaining
+                        Log.e("RENDERER", "numGlitchedPxlsRendered: $numGlitchedPxlsRendered")
+                        Log.e("RENDERER", "numGlitchedPxlsRemaining: $numGlitchedPxlsRemaining")
+                        Log.e("RENDERER", "numChunkPxls: $numChunkPxls")
 
+                        pixelsInAllocation.destroy()
+                        pixelsOutAllocation.destroy()
 
+                        pixelsInArray = glitchedPixels.sliceArray(2*numGlitchedPxlsRendered until 2*(numGlitchedPxlsRendered + numChunkPxls))
+                        pixelsInAllocation = Allocation.createTyped(rs, Type.createX(
+                                rs,
+                                Element.I16_2(rs),
+                                numChunkPxls
+                        ))
+                        pixelsInAllocation.copyFrom(pixelsInArray)
 
-
-
-
-
-
-                    // RENDERSCRIPT
-
-                    val bgScale = if (texture == background) 5.0 else 1.0
-                    val d0xOffset = f.position.xap.subtract(z0.real()).toDouble()
-                    val d0yOffset = f.position.yap.subtract(z0.imag()).toDouble()
-                    
-                    val renderScriptStartTime = System.currentTimeMillis()
-//                    rsPerturbationPixels(
-//                            texture.res,
-//                            glitchedPixelsSize,
-//                            d0xOffset,
-//                            d0yOffset,
-//                            refIter[0],
-//                            skipIter[0],
-//                            seriesCoefs,
-//                            bgScale
-//                    )
-                    rsPerturbationPixels(
-                            texture.res,
-                            numGlitchedPixels,
-                            d0xOffset,
-                            d0yOffset,
-                            sp, sn,
-                            refData,
-                            bgScale
-                    )
-                    pixelsOutAllocation.copyTo(pixelsOutArray)
-//                            perturbationScript.forEach_iterate(imageOutAllocation)
-//                            imageOutAllocation.copyTo(imArray)
-
-                    //Log.e("RENDERER", "renderscript took ${(System.currentTimeMillis() - renderScriptStartTime) / 1000f} sec")
-                    renderTimeTotal += now() - renderScriptStartTime
-                    numReferencesUsed++
+                        pixelsOutArray = FloatArray(numChunkPxls*2)
+                        pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(
+                                rs,
+                                Element.F32_2(rs),
+                                numChunkPxls
+                        ))
 
 
 
 
 
 
+                        // RENDERSCRIPT
+
+                        val renderScriptStartTime = System.currentTimeMillis()
+                        rsPerturbationPixels(
+                                texture.res,
+                                numChunkPxls,
+                                d0xOffset,
+                                d0yOffset,
+                                sp, sn,
+                                refData,
+                                bgScale
+                        )
+                        pixelsOutAllocation.copyTo(pixelsOutArray)
+                        renderTimeTotal += now() - renderScriptStartTime
 
 
-                    // RESIZE IN ALLOCATION
 
-                    pixelsInAllocation.destroy()
 
-                    val glitchedPixels = ShortArray(texture.res.x*texture.res.y*2)
-                    numGlitchedPixels = 0
-                    for (i in 1 until pixelsOutArray.size step 2) {
-                        val px = pixelsInArray[i - 1].toInt()
-                        val py = pixelsInArray[i].toInt()
-                        val qx : Float
-                        val qy : Float
-                        if (pixelsOutArray[i] == 3f) {  // pixel is still glitched
-                            qx = 1f
-                            if (px == refPixel.x && py == refPixel.y) {  // even reference pixel still glitched (wtf??)
-                                qy = 1f
-                                deadPixels.add(Point(refPixel))
+                        // MARK GLITCHED PIXELS
+
+                        //val glitchedPixels = ShortArray(numGlitchedPixels * 2)
+                        //numGlitchedPixels = 0
+                        for (i in 0 until numChunkPxls*2 - 1 step 2) {
+                            val px = pixelsInArray[i].toInt()
+                            val py = pixelsInArray[i + 1].toInt()
+                            val qx: Float
+                            val qy: Float
+                            if (pixelsOutArray[i + 1] == 3f) {  // pixel is still glitched
+                                qx = 1f
+                                if (px == refPixel.x && py == refPixel.y) {  // even reference pixel still glitched (wtf??)
+                                    qy = 1f
+                                    deadPixels.add(Point(refPixel))
+                                } else {
+                                    qy = 3f
+                                    //glitchedPixels[2 * numGlitchedPixels] = pixelsInArray[i - 1]
+                                    //glitchedPixels[2 * numGlitchedPixels + 1] = pixelsInArray[i]
+                                    //numGlitchedPixels++
+                                }
                             }
-                            else {
-                                qy = 3f
-                                glitchedPixels[2 * numGlitchedPixels] = pixelsInArray[i - 1]
-                                glitchedPixels[2 * numGlitchedPixels + 1] = pixelsInArray[i]
-                                numGlitchedPixels++
+                            else { // pixel no longer glitched -- update image
+                                qx = pixelsOutArray[i]
+                                qy = pixelsOutArray[i + 1]
                             }
+                            //imArray.set(px, py, 0, texture.res.x, 2, qx)
+                            //imArray.set(px, py, 1, texture.res.x, 2, qy)
+                            //Log.e("RENDERER", "p: ($px, $py)")
+                            try {
+                                texture.set(px, py, 0, qx)
+                            }
+                            catch (e: IndexOutOfBoundsException) {
+                                Log.e("RENDERER", "p: ($px, $py)")
+                            }
+                            texture.set(px, py, 1, qy)
                         }
-                        else { // pixel no longer glitched -- update image
-                            qx = pixelsOutArray[i - 1]
-                            qy = pixelsOutArray[i]
-                        }
-                        imArray.set(px, py, 0, texture.res.x, 2, qx)
-                        imArray.set(px, py, 1, texture.res.x, 2, qy)
+                        //if (numGlitchedPixels == 0) break
+                        //Log.e("RENDERER", "total number of glitched pixels: $glitchedPixelsSize")
+
+                        numGlitchedPxlsRendered += numChunkPxls
+
+
+
                     }
-                    if (numGlitchedPixels == 0) break
-                    //Log.e("RENDERER", "total number of glitched pixels: $glitchedPixelsSize")
 
-                    val progress = (100.0* (1.0 - numGlitchedPixels.toDouble() / (texture.res.x * texture.res.y)).pow(10.0)).toInt()
-                    val estRenderTime = 0.1f/progress.toFloat()*(now() - renderToTexStartTime)
+
+
+
+                    //val glitchedPixels = ShortArray(numGlitchedPixels * 2)
+                    numGlitchedPxls = 0
+                    for (i in 0 until numGlitchedPxlsRendered*2 step 2) {
+                        //val px = pixelsInArray[i - 1].toInt()
+                        //val py = pixelsInArray[i].toInt()
+                        val px = glitchedPixels[i].toInt()
+                        val py = glitchedPixels[i + 1].toInt()
+                        if (texture.get(px, py, 1) == 3f) { // pixel still glitched
+                            // set earliest available index to this pixel
+                            glitchedPixels[numGlitchedPxls*2] = glitchedPixels[i]
+                            glitchedPixels[numGlitchedPxls*2 + 1] = glitchedPixels[i + 1]
+                            numGlitchedPxls++
+                        }
+                    }
+                    Log.e("RENDERER", "numGlitchedPxls: $numGlitchedPxls")
+                    if (numGlitchedPxls == 0) break
+//                    Log.e("RENDER ROUTINE", "there are only $numGlitchedPxls glitched pixels -- clearing indices $numGlitchedPxls until $numGlitchedPxlsRendered")
+//                    for (i in numGlitchedPxls*2 until numGlitchedPxlsRendered*2 - 1) {
+//                        glitchedPixels[i] = 0.toShort()
+//                        glitchedPixels[i + 1] = 0.toShort()
+//                    }
+
+
+
+
+                    val progress = (100.0 * (1.0 - numGlitchedPxls.toDouble() / (texture.res.x * texture.res.y)).pow(10.0)).toInt()
+                    val estRenderTime = 0.1f / progress.toFloat() * (now() - renderToTexStartTime)
 
                     Log.d("RENDERER",
                             "[refIter: ${refData.refIter}], " +
@@ -2637,13 +2656,21 @@ class FractalRenderer(
                     //Log.e("RENDERER", "progress: $progress")
                     act.findViewById<ProgressBar>(R.id.progressBar).progress = progress
 
-                    pixelsInArray = glitchedPixels.sliceArray(0 until 2*numGlitchedPixels)
-                    pixelsInAllocation = Allocation.createTyped(rs, Type.createX(
-                            rs,
-                            Element.I16_2(rs),
-                            numGlitchedPixels
-                    ))
-                    pixelsInAllocation.copyFrom(pixelsInArray)
+
+
+
+
+
+                    // RESIZE IN ALLOCATION
+
+//                    pixelsInArray = glitchedPixels.sliceArray(0 until numGlitchedPixels*2)
+//                    pixelsInAllocation = Allocation.createTyped(rs, Type.createX(
+//                            rs,
+//                            Element.I16_2(rs),
+//                            numGlitchedPxls
+//                    ))
+//                    pixelsInAllocation.copyFrom(pixelsInArray)
+
 
 
 
@@ -2654,14 +2681,12 @@ class FractalRenderer(
 
                     // GLITCH DETECTION
 
-                    //val centerCalcStartTime = now()
                     val minGlitchSize = 100
                     var glitch = arrayListOf<Point>()
-                    //val center = Point(-1, -1)
                     while (samplesPerRow <= texture.res.x) {
 
-                        glitch = findGlitchMostPixels(imArray, texture.res.x / samplesPerRow, texture.res)
-                        //glitch = findGlitchMostPixelsContractingNet(imArray, texture.res.x / samplesPerRow, texture.res, center)
+                        //glitch = findGlitchMostPixels(imArray, texture.res.x / samplesPerRow, texture.res)
+                        glitch = findGlitchMostPixels(texture, texture.res.x / samplesPerRow, texture.res)
                         //Log.e("RENDERER", "largest glitch size (sample rate= $samplesPerRow): ${glitch.size}")
                         if (glitch.size > minGlitchSize || samplesPerRow == texture.res.x) break
                         samplesPerRow *= 2
@@ -2669,6 +2694,9 @@ class FractalRenderer(
                     }
                     largestGlitchSize = glitch.size
                     if (largestGlitchSize == 0) break
+
+
+
 
 
 
@@ -2684,22 +2712,9 @@ class FractalRenderer(
                         y = center.y
                     }
 
-                    //Log.e("RENDERER", "center calculation took ${(now() - centerCalcStartTime) / 1000f} sec")
                     centerCalcTimeTotal += now() - centerCalcStartTime
-                    //imArray.set(refPixel.x, refPixel.y, 1, texture.res.x, 2, 5f)
-
-
-
-                    //Log.e("RENDERER", "refPixel: (${refPixel.x}, ${refPixel.y})")
-//                    if (refPixels.contains(refPixel)) {  // dead pixel
-//                        imArray.set(refPixel.x, refPixel.y, 0, texture.res.x, 2, 1f)
-//                        imArray.set(refPixel.x, refPixel.y, 1, texture.res.x, 2, 1f)
-//                        deadPixels.add(Point(refPixel))
-//                    }
                     refPixels.add(Point(refPixel))
-
-
-
+                    //imArray.set(refPixel.x, refPixel.y, 1, texture.res.x, 2, 5f)
 
                     val x0DiffAux = bgScale*f.position.scale*(refPixel.x.toDouble()/(texture.res.x) - 0.5)
                     val y0DiffAux = bgScale*f.position.scale*(refPixel.y.toDouble()/(texture.res.y) - 0.5)*aspectRatio
@@ -2708,6 +2723,8 @@ class FractalRenderer(
                             f.position.xap.add(Apfloat((x0DiffAux*cosRotation - y0DiffAux*sinRotation).toString(), sc.cpuPrecision)),
                             f.position.yap.add(Apfloat((x0DiffAux*sinRotation + y0DiffAux*cosRotation).toString(), sc.cpuPrecision))
                     )
+
+                    numReferencesUsed++
 
 
 
@@ -2719,15 +2736,15 @@ class FractalRenderer(
 
                     // RESIZE OUT ALLOCATION
 
-                    if (numReferencesUsed != MAX_REFERENCES) {
-                        pixelsOutAllocation.destroy()
-                        pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(
-                                rs,
-                                Element.F32_2(rs),
-                                numGlitchedPixels
-                        ))
-                        pixelsOutArray = FloatArray(numGlitchedPixels * 2)
-                    }
+//                    if (numReferencesUsed != MAX_REFERENCES) {
+//                        pixelsOutAllocation.destroy()
+//                        pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(
+//                                rs,
+//                                Element.F32_2(rs),
+//                                numGlitchedPxls
+//                        ))
+//                        pixelsOutArray = FloatArray(numGlitchedPxls*2)
+//                    }
 
 
 
@@ -2741,18 +2758,22 @@ class FractalRenderer(
                 Log.e("RENDERER", "${deadPixels.size} dead pixels")
                 for (p in deadPixels) {
                     val neighborX = if (p.x + 1 == texture.res.x) p.x - 1 else p.x + 1
-                    imArray.set(p.x, p.y, 0, texture.res.x, 2,
-                            imArray.get(neighborX, p.y, 0, texture.res.x, 2))
-                    imArray.set(p.x, p.y, 1, texture.res.x, 2,
-                            imArray.get(neighborX, p.y, 1, texture.res.x, 2  ))
+//                    imArray.set(p.x, p.y, 0, texture.res.x, 2,
+//                            imArray.get(neighborX, p.y, 0, texture.res.x, 2))
+//                    imArray.set(p.x, p.y, 1, texture.res.x, 2,
+//                            imArray.get(neighborX, p.y, 1, texture.res.x, 2  ))
+                    texture.set(p.x, p.y, 0, texture.get(neighborX, p.y, 0))
+                    texture.set(p.x, p.y, 1, texture.get(neighborX, p.y, 1))
                 }
-                for (i in 1 until pixelsInArray.size step 2) {
-                    val p = Point(pixelsInArray[i - 1].toInt(), pixelsInArray[i].toInt())
+                for (i in 0 until numGlitchedPxls step 2) {
+                    val p = Point(glitchedPixels[i].toInt(), glitchedPixels[i + 1].toInt())
                     val neighborX = if (p.x + 1 == texture.res.x) p.x - 1 else p.x + 1
-                    imArray.set(p.x, p.y, 0, texture.res.x, 2,
-                            imArray.get(neighborX, p.y, 0, texture.res.x, 2))
-                    imArray.set(p.x, p.y, 1, texture.res.x, 2,
-                            imArray.get(neighborX, p.y, 1, texture.res.x, 2  ))
+//                    imArray.set(p.x, p.y, 0, texture.res.x, 2,
+//                            imArray.get(neighborX, p.y, 0, texture.res.x, 2))
+//                    imArray.set(p.x, p.y, 1, texture.res.x, 2,
+//                            imArray.get(neighborX, p.y, 1, texture.res.x, 2  ))
+                    texture.set(p.x, p.y, 0, texture.get(neighborX, p.y, 0))
+                    texture.set(p.x, p.y, 1, texture.get(neighborX, p.y, 1))
                 }
 
 
@@ -2767,7 +2788,8 @@ class FractalRenderer(
                         "[num references: $numReferencesUsed]"
                 )
 
-                texture.put(imArray)
+                //texture.put(imArray)
+                texture.update()
 
             }
 
@@ -2865,7 +2887,7 @@ class FractalRenderer(
 
 
 
-        glUniform1i(textureColorHandle, texture.index)    // use GL_TEXTURE0
+        glUniform1i(textureColorHandle, texture.index)
         glVertexAttribPointer(
                 viewCoordsColorHandle,      // index
                 3,                          // coordinates per vertex
