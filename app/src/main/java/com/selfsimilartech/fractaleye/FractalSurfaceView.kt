@@ -21,10 +21,6 @@ import android.widget.ProgressBar
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
 import java.util.*
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
@@ -36,8 +32,7 @@ import kotlinx.coroutines.*
 import android.renderscript.*
 import org.apfloat.*
 import java.math.MathContext
-
-
+import java.nio.*
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
@@ -67,6 +62,8 @@ class GLTexture (
 ) {
 
     val id : Int
+    private val numComponents : Int
+    private val bytesPerComponent : Int
     private val bytesPerTexel : Int
     private val type : Int
     private val format : Int
@@ -80,17 +77,31 @@ class GLTexture (
         id = b[0]
 
         // allocate texture memory
-        bytesPerTexel = when(internalFormat) {
-                           // # of components   # of bytes per component
-            GL_RGBA8 ->    4                 * 1
-            GL_RGBA16F ->  4                 * 2
-            GL_RGBA32F ->  4                 * 4
-            GL_RG16F ->    2                 * 2
-            GL_RG32F ->    2                 * 4
-//            GL_RGBA -> ByteBuffer.allocateDirect(res[0] * res[1] * 4).order(ByteOrder.nativeOrder())
+        numComponents = when(internalFormat) {
+            GL_RGBA8 ->    4
+            GL_RGBA16F ->  4
+            GL_RGBA32F ->  4
+            GL_RG16F ->    2
+            GL_RG32F ->    2
+            GL_RG16UI ->   2
             else -> 0
         }
-        Log.d("RENDER ROUTINE", "index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.x*res.y*bytesPerTexel}")
+        bytesPerComponent = when (internalFormat) {
+            GL_RGBA8 ->    1
+            GL_RGBA16F ->  2
+            GL_RGBA32F ->  4
+            GL_RG16F ->    2
+            GL_RG32F ->    4
+            GL_RG16UI ->   2
+            else -> 0
+        }
+        bytesPerTexel = numComponents*bytesPerComponent
+        val internalFormatStr = when(internalFormat) {
+            GL_RG16UI -> "GL_RG16UI"
+            GL_RG32F -> "GL_RG32F"
+            else -> "not what u wanted"
+        }
+        Log.d("RENDER ROUTINE", "res: (${res.x}, ${res.y}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.x*res.y*bytesPerTexel}")
 
         // bind and set texture parameters
         glActiveTexture(GL_TEXTURE0 + index)
@@ -104,15 +115,18 @@ class GLTexture (
             GL_RG16F -> GL_HALF_FLOAT
             GL_RGBA32F -> GL_FLOAT
             GL_RG32F -> GL_FLOAT
+            GL_RG16UI -> GL_UNSIGNED_SHORT
 //            GL_RGBA -> GL_UNSIGNED_BYTE
             else -> 0
         }
         format = when(internalFormat) {
             GL_RG16F, GL_RG32F -> GL_RG
+            GL_RG16UI -> GL_RG_INTEGER
             else -> GL_RGBA
         }
 
-        buffer = ByteBuffer.allocateDirect(res.x * res.y * bytesPerTexel).order(ByteOrder.nativeOrder()).asFloatBuffer()
+        buffer = ByteBuffer.allocateDirect(res.x*res.y*bytesPerTexel).order(ByteOrder.nativeOrder()).asFloatBuffer()
+        //Log.e("FSV", "buffer capacity: ${buffer.capacity()}")
         glTexImage2D(
                 GL_TEXTURE_2D,              // target
                 0,                          // mipmap level
@@ -127,9 +141,28 @@ class GLTexture (
     }
 
 
+    fun get(i: Int, j: Int, k: Int) : Float = buffer.get(numComponents*(j*res.x + i) + k)
+    fun set(i: Int, j: Int, k: Int, value: Float) {
+        buffer.put(numComponents*(j*res.x + i) + k, value)
+    }
     fun put(array: FloatArray) {
         buffer.position(0)
         buffer.put(array)
+        buffer.position(0)
+        glActiveTexture(GL_TEXTURE0 + index)
+        glBindTexture(GL_TEXTURE_2D, id)
+        glTexImage2D(
+                GL_TEXTURE_2D,              // target
+                0,                          // mipmap level
+                internalFormat,             // internal format
+                res.x, res.y,             // texture resolution
+                0,                          // border
+                format,                     // internalFormat
+                type,                       // type
+                buffer                      // memory pointer
+        )
+    }
+    fun update() {
         buffer.position(0)
         glActiveTexture(GL_TEXTURE0 + index)
         glBindTexture(GL_TEXTURE_2D, id)
@@ -159,8 +192,8 @@ class FractalSurfaceView(
 
     init {
 
-        // setEGLContextClientVersion(3)              // create OpenGL ES 3.0 act
-        setEGLContextFactory(ContextFactory())
+        setEGLContextClientVersion(3)              // create OpenGL ES 3.0 context
+        //setEGLContextFactory(ContextFactory())
         setRenderer(r)
         renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly
 
