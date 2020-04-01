@@ -64,34 +64,31 @@ Java_com_selfsimilartech_fractaleye_FractalRenderer_iterateReferenceNative(
     double dx[8]  { 0.0 }; double dy[8]  { 0.0 };
     double d0xSqr[8];   double d0ySqr[8];
     double d0xCube[8];  double d0yCube[8];
-    if (abs(d0x[0]) < 1e-100) {
-        // start scaling initial deltas and series coefficients to avoid infinities
-        // d0 remains unshifted, d0Sqr and d0Cube are shifted up
-        // a remains unshifted, b and c are shifted down
-        a1x *= sn;
-        for (int i = 0; i < 8; i++) {
-            d0x[i] *= sp;
-            d0y[i] *= sp;
-            d0xSqr[i] = (d0x[i]*sn)*d0x[i] - (d0y[i]*sn)*d0y[i];
-            d0ySqr[i] = 2.0*(d0x[i]*sn)*d0y[i];
-            d0xCube[i] = (d0x[i]*sn)*d0xSqr[i] - (d0y[i]*sn)*d0ySqr[i];
-            d0yCube[i] = (d0x[i]*sn)*d0ySqr[i] + (d0y[i]*sn)*d0xSqr[i];
-//            LOGD("d0x: %e", d0x[i])
-//            LOGD("d0y: %e", d0y[i])
-//            LOGD("d0xSqr: %e", d0xSqr[i])
-//            LOGD("d0ySqr: %e", d0ySqr[i])
-//            LOGD("d0xCube: %e", d0xCube[i])
-//            LOGD("d0yCube: %e", d0yCube[i])
-        }
+
+    // start scaling initial deltas and series coefficients to avoid infinities
+    // d0 remains unshifted, d0Sqr and d0Cube are shifted up
+    // a remains unshifted, b and c are shifted down
+    a1x *= sn;
+    for (int i = 0; i < 8; i++) {
+        d0x[i] *= sp;
+        d0y[i] *= sp;
+        d0xSqr[i] = (d0x[i]*sn)*d0x[i] - (d0y[i]*sn)*d0y[i];
+        d0ySqr[i] = 2.0*(d0x[i]*sn)*d0y[i];
+        d0xCube[i] = (d0x[i]*sn)*d0xSqr[i] - (d0y[i]*sn)*d0ySqr[i];
+        d0yCube[i] = (d0x[i]*sn)*d0ySqr[i] + (d0y[i]*sn)*d0xSqr[i];
+//        LOGD("d0x: %e", d0x[i])
+//        LOGD("d0y: %e", d0y[i])
+//        LOGD("d0xSqr: %e", d0xSqr[i])
+//        LOGD("d0ySqr: %e", d0ySqr[i])
+//        LOGD("d0xCube: %e", d0xCube[i])
+//        LOGD("d0yCube: %e", d0yCube[i])
     }
-    else {
-        for (int i = 0; i < 8; i++) {
-            d0xSqr[i] = d0x[i]*d0x[i] - d0y[i]*d0y[i];
-            d0ySqr[i] = 2.0*d0x[i]*d0y[i];
-            d0xCube[i] = d0x[i]*d0xSqr[i] - d0y[i]*d0ySqr[i];
-            d0yCube[i] = d0x[i]*d0ySqr[i] + d0y[i]*d0xSqr[i];
-        }
-    }
+//    for (int i = 0; i < 8; i++) {
+//        d0xSqr[i] = d0x[i]*d0x[i] - d0y[i]*d0y[i];
+//        d0ySqr[i] = 2.0*d0x[i]*d0y[i];
+//        d0xCube[i] = d0x[i]*d0xSqr[i] - d0y[i]*d0ySqr[i];
+//        d0yCube[i] = d0x[i]*d0ySqr[i] + d0y[i]*d0xSqr[i];
+//    }
     double dxa; double dya;
     double error1;
     double error2;
