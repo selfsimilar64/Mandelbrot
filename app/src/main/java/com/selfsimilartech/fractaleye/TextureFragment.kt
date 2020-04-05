@@ -393,7 +393,7 @@ class TextureFragment : Fragment() {
         val thumbRes = Resolution.THUMB.scaleRes(fsv.r.screenRes)
         Texture.all.forEach {
             if (it.thumbnail == null) {
-                it.thumbnail = Bitmap.createBitmap(thumbRes.x, thumbRes.y, Bitmap.Config.ARGB_8888)
+                it.thumbnail = Bitmap.createBitmap(thumbRes.x, thumbRes.x, Bitmap.Config.ARGB_8888)
             }
         }
         act.updateTextureEditTexts()

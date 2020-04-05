@@ -23,10 +23,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.IndexOutOfBoundsException
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.FloatBuffer
-import java.nio.IntBuffer
+import java.nio.*
 import java.util.*
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -1070,24 +1067,17 @@ class FractalRenderer(
 
     }
 
+
     private external fun iterateReferenceNative(
-            z0xIn: String,
-            z0yIn: String,
-            d0xIn: DoubleArray,
-            d0yIn: DoubleArray,
-            precision: Int,
-            maxIter: Int,
-            refSize: Int,
-            escapeRadius: Double,
-            sp: Double,
-            sn: Double,
+            z0xIn: String, z0yIn: String,
+            d0xIn: DoubleArray, d0yIn: DoubleArray,
+            precision: Int, maxIter: Int, refSize: Int, escapeRadius: Double,
+            sp: Double, sn: Double,
             returnData: NativeReferenceReturnData) : DoubleArray
 
     private fun iterateReference(
-            z0: Apcomplex,
-            skipIter: IntArray,
-            refIter: IntArray,
-            seriesCoefs: ArrayList<Apcomplex>) {
+            z0: Apcomplex, skipIter: IntArray, refIter: IntArray, seriesCoefs: ArrayList<Apcomplex>)
+    {
 
 
         var z1 = z0
@@ -1235,16 +1225,12 @@ class FractalRenderer(
         }
 
 
-
     }
 
     private fun rsPerturbationImage(
             width: Int, height: Int,
-            z0: Apcomplex,
-            refIter: Int,
-            skipIter: Int,
-            seriesCoefs: ArrayList<Apcomplex>,
-            bgScale: Double) {
+            z0: Apcomplex, refIter: Int, skipIter: Int, seriesCoefs: ArrayList<Apcomplex>, bgScale: Double)
+    {
 
         val d0xOffset = f.position.xap.subtract(z0.real()).toDouble()
         val d0yOffset = f.position.yap.subtract(z0.imag()).toDouble()
@@ -1280,17 +1266,12 @@ class FractalRenderer(
         //perturbationImageScript.forEach_iterate(imageOutAllocation)
 
     }
-    
+
     private fun rsPerturbationPixels(
-            res: Point,
-            glitchedPixelsSize: Int,
+            res: Point, glitchedPixelsSize: Int,
             d0xOffset: Double, d0yOffset: Double,
-            sp: Double, sn: Double,
-            refData: NativeReferenceReturnData,
-            // refIter: Int,
-            // skipIter: Int,
-            // seriesCoefs: ArrayList<Apcomplex>,
-            bgScale: Double) {
+            sp: Double, sn: Double, refData: NativeReferenceReturnData, bgScale: Double)
+    {
 
         val sinRotation = sin(f.position.rotation)
         val cosRotation = cos(f.position.rotation)
@@ -1332,11 +1313,8 @@ class FractalRenderer(
     }
 
     private fun findGlitchMostPixels(
-            //imArray: FloatArray,
-            texture: GLTexture,
-            s: Int,
-            res: Point
-    ) : ArrayList<Point> {
+            texture: GLTexture, s: Int, res: Point) : ArrayList<Point>
+    {
 
         val glitch = arrayListOf<Point>()
         var largestGlitch = glitch
@@ -1407,7 +1385,9 @@ class FractalRenderer(
 
     }
 
-    private fun findGlitchMostPixelsContractingNet(imArray: FloatArray, s: Int, res: Point, center: Point) : ArrayList<Point> {
+    private fun findGlitchMostPixelsContractingNet(
+            imArray: FloatArray, s: Int, res: Point, center: Point) : ArrayList<Point>
+    {
 
         val glitch = arrayListOf<Point>()
         var largestGlitch = glitch
@@ -1559,7 +1539,9 @@ class FractalRenderer(
 
     }
 
-    private fun findGlitchLargestBoundingBox(imArray: FloatArray, s: Int, res: Point) : ArrayList<Point> {
+    private fun findGlitchLargestBoundingBox(
+            imArray: FloatArray, s: Int, res: Point) : ArrayList<Point>
+    {
 
         val glitch = arrayListOf<Point>()
         var largestGlitch = glitch
@@ -2080,7 +2062,6 @@ class FractalRenderer(
     }
     private fun renderToTexture(texture: GLTexture) {
 
-        // val t = System.currentTimeMillis()
         act.findViewById<ProgressBar>(R.id.progressBar).progress = 0
         val renderToTexStartTime = now()
         var calcTimeTotal = 0L
@@ -2097,7 +2078,7 @@ class FractalRenderer(
                 glUniform2fv(juliaParamHandle, 1, f.shape.params.julia.toFloatArray(), 0)
                 for (i in mapParamHandles.indices) {
                     val pArray =
-                            if (i < f.shape.params.size) f.shape.params.at(i).toFloatArray()
+                            if (i < f.shape.params.size) f.shape.params.list[i].toFloatArray()
                             else floatArrayOf(0f, 0f)
                     // Log.d("RENDERER", "passing p${i+1} in as (${pArray[0]}, ${pArray[1]})")
                     glUniform2fv(mapParamHandles[i], 1, pArray, 0)
@@ -2796,9 +2777,7 @@ class FractalRenderer(
         }
 
         //Log.e("RENDERER", "misc operations took ${(now() - renderToTexStartTime - calcTimeTotal)/1000f} sec")
-        //Log.e("RENDERER", "renderToTexture took ${(now() - renderToTexStartTime)/1000f} sec")
-
-        // Log.d("RENDERER", "renderToTexture took ${System.currentTimeMillis() - t} ms")
+        Log.e("RENDERER", "renderToTexture took ${(now() - renderToTexStartTime)/1000f} sec")
 
     }
     private fun renderFromTexture(texture: GLTexture, external: Boolean = false) {
@@ -3171,8 +3150,11 @@ class FractalRenderer(
                             // Log.d("PARAMETER", "MOVE -- dx: $dx, dy: $dy")
                             when (e.pointerCount) {
                                 1 -> {
-                                    f.shape.params.active.u += f.sensitivity*dx/screenRes.x
-                                    f.shape.params.active.v -= f.sensitivity*dy/screenRes.y
+                                    val param = f.shape.params.active
+                                    param.u += f.sensitivity*dx/screenRes.x
+                                    if (param is Shape.ComplexParam) {
+                                        param.v -= f.sensitivity * dy / screenRes.y
+                                    }
                                     prevFocus[0] = focus[0]
                                     prevFocus[1] = focus[1]
                                     renderToTex = true

@@ -4,7 +4,7 @@ class SettingsConfig (
         var resolution               : Resolution      = Resolution.FULL,
         var gpuPrecision             : GpuPrecision    = GpuPrecision.SINGLE,
         var cpuPrecision             : Long            = 64L,
-        var hardwareProfile          : HardwareProfile = HardwareProfile.CPU,
+        var hardwareProfile          : HardwareProfile = HardwareProfile.GPU,
         var autoPrecision            : Boolean         = true,
         var continuousRender         : Boolean         = false,
         var displayParams            : Boolean         = false,
