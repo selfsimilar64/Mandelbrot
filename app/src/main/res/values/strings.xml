@@ -131,6 +131,7 @@
     <string name="nova1" translatable="false">Nova 1</string>
     <string name="nova2" translatable="false">Nova 2</string>
     <string name="collatz" translatable="false">Collatz</string>
+    <string name="mandelex" translatable="false">Mandelex</string>
 
 
 
@@ -154,6 +155,7 @@
     <string name="anubis">Anubis</string>
     <string name="backwards">Backwards</string>
     <string name="slow">Slow</string>
+    <string name="robot">Robot</string>
 
 
 
@@ -222,6 +224,7 @@
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
+        uniform vec2 P5;
         uniform float Q1;
         uniform float Q2;
         uniform vec2 xScale;
@@ -252,6 +255,7 @@
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
+        uniform vec2 P5;
         uniform float Q1;
         uniform float Q2;
         uniform vec2 xScale;
@@ -285,7 +289,6 @@
         int p = int(floor(n));
         float q = mod(n, 1.0);
         color = (1.0 - q)*palette[p] + q*palette[p + 1];
-
     </string>
     <string name="color_lighting" translatable="false">
         vec3 normRay = vec3(cos(s.x), sin(s.x), 1.0);
@@ -577,6 +580,61 @@
             return _m(_a.x, _a.x) + _m(_a.y, _a.y);
         }
 
+        float wrapb(float a, float w) {
+            float b = a;
+            if (a > w) { b = 2.0*w - a; }
+            else if (a &lt; -w) { b = -2.0*w - a; }
+            return b;
+        }
+
+        vec2 wrapBox(vec2 a, float h, float w) {
+            return vec2(wrapb(a.x, w), wrapb(a.y, h));
+        }
+
+        vec2 wrapCirc(vec2 p, float r) {
+            vec2 q = p;
+            float l = length(p);
+            vec2 u = p/l;
+            if (l > r) q = 2.0*r*u - p;
+            return q;
+        }
+
+        vec2 rotate(vec2 a, float phi) {
+            return vec2(a.x*cos(phi) - a.y*sin(phi), a.x*sin(phi) + a.y*cos(phi));
+        }
+
+        vec2 circInvert(vec2 p, float r) {
+            vec2 q = p;
+            float l = length(p);
+            if (l &lt; r) q = p*r*r/(l*l);
+            return q;
+        }
+
+
+        vec2 linearPull(vec2 p, float h, float w) {
+            vec2 q = p;
+            if (abs(q.x) > w &amp;&amp; abs(q.y) > h) {
+                h *= 2.0; w *= 2.0;
+                if (q.x &lt; 0.0) { q.x += w; }
+                else { q.x -= w; }
+                if (q.y &lt; 0.0) { q.y += h; }
+                else { q.y -= h; }
+            }
+            return q;
+        }
+
+        vec2 nonlinearPull(vec2 p, float h, float w) {
+            vec2 q = p;
+            if (abs(q.x) > w &amp;&amp; abs(q.y) > h) {
+                h *= 2.0; w *= 2.0;
+                if (q.x > 0.0) { q.x -= w*floor(q.x/w); }
+                else { q.x -= w*ceil(q.x/w); }
+                if (q.y > 0.0) { q.y -= h*floor(q.y/h); }
+                else { q.y -= h*ceil(q.y/h); }
+            }
+            return q;
+        }
+
     </string>
     <string name="arithmetic_df" translatable="false">
 
@@ -752,7 +810,7 @@
         vec2 Z, Z1, Z2 = vec2(0.0);
         float modZ = 0.0;
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + Q2 + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + P5.x + Q1 + Q2 + x0 + y0 + R;
     </string>
     <string name="general_init_df" translatable="false">
         vec4 colorParams = vec4(0.0);
@@ -766,7 +824,7 @@
         vec2 Y, Y1, Y2 = vec2(0.0);
         vec2 modZ = vec2(0.0);
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + Q2 + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + P5.x + Q1 + Q2 + x0 + y0 + R;
     </string>
     <string name="general_loop_sf" translatable="false">
         Z2 = Z1;
@@ -867,14 +925,15 @@
 
     <!-- MANDELBOX -->
     <string name="mandelbox_loop_sf" translatable="false">
-        Z = cMultSF(P1, ballFoldSF(boxFoldSF(Z1))) - C;
+        Z = cMultSF(P1, ballFoldSF(cMultSF(P2, boxFoldSF(Z1)))) - C;
     </string>
     <string name="mandelbox_loop_df" translatable="false">
         vec4 W1 = boxFoldDF(X1, Y1);
-        vec4 W2 = ballFoldDF(W1.xy, W1.zw);
-        vec4 W3 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), W2.xy, W2.zw);
-        X = addDF(W3.xy, -A);
-        Y = addDF(W3.zw, -B);
+        vec4 W2 = cMultDF(vec2(P2.x, 0.0), vec2(P2.y, 0.0), W1.xy, W1.zw);
+        vec4 W3 = ballFoldDF(W2.xy, W2.zw);
+        vec4 W4 = cMultDF(vec2(P1.x, 0.0), vec2(P1.y, 0.0), W3.xy, W3.zw);
+        X = addDF(W4.xy, -A);
+        Y = addDF(W4.zw, -B);
     </string>
     <string name="mandelbox_katex" translatable="false">
         $z_{n+1} = \\footnotesize P_1\\cdot\\textrm{ballFold}\\big(\\textrm{boxFold}(z_n)\\big) - %s$
@@ -1116,6 +1175,40 @@
     </string>
     <string name="collatz_katex" translatable="false">
         $z_{n+1} = \\frac{1}{4}(2 + 7z_n - (2 + 5z)\\cos(\\pi z_n))$
+    </string>
+
+
+    <!-- MANDALAY -->
+    <string name="mandalay_init_sf" translatable="false">
+        Z = C;
+    </string>
+    <string name="mandalay_loop_sf" translatable="false">
+        float fo = P1.x;
+        float g = P1.y;
+        Z.x = abs(Z.x); Z.y = abs(Z.y);
+        float t = max(0.0, Z.y - Z.x); Z.x += t; Z.y -= t;
+        Z.x -= fo; Z.x = abs(Z.x);
+        Z.x -= fo;
+        t = min(g, max(0.0, Z.x - Z.y)); Z.x -= t; Z.y += t;
+        Z.y -= fo; Z.y = -abs(Z.y); Z.y += fo;
+    </string>
+
+    <!-- MANDELEX -->
+    <string name="mandelex_init_sf" translatable="false">
+        float lin_a = P4.x;
+        float lin_b = P4.y;
+        float wrap = 0.5;
+        float angle = P1.x;
+        float radius = P2.x;
+        float scale = P3.x;
+        Z = C;
+    </string>
+    <string name="mandelex_loop_sf" translatable="false">
+        Z = linearPull(Z, lin_b, lin_b);
+        if (abs(C.x) &lt; lin_a &amp;&amp; abs(C.y) &lt; lin_a) {
+            Z = nonlinearPull(Z, lin_a, lin_a);
+        }
+        Z = linearPull(rotate(circInvert(wrapBox(Z, wrap, wrap), radius)*scale, angle/180.0*3.1415926) + C, lin_b, lin_b);
     </string>
 
 

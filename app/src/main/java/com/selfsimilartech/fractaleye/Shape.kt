@@ -1,8 +1,10 @@
 package com.selfsimilartech.fractaleye
 
+import android.util.Range
 import kotlin.math.sqrt
 
 class Shape (
+
         val name            : Int,
         val katex           : Int                   = R.string.empty,
         val icon            : Int                   = R.drawable.mandelbrot_icon,
@@ -23,52 +25,107 @@ class Shape (
         val power           : Float                 = 2f,
         val hasDynamicPower : Boolean               = false,
         val proFeature      : Boolean               = false
+
 ) {
 
 
     class ParamList(
-            private val main: List<Param> = listOf(),
-            val julia: Param = Param()
+            val list: List<Param> = listOf(),
+            val julia: ComplexParam = ComplexParam()
     ) {
 
-        val size = main.size
-        var active = julia
+        init {
+            list.forEachIndexed { i, param ->
+                if (param.name == "") param.name = "Param ${i + 1}"
+            }
+        }
 
-        fun at(index: Int) = main[index]
+        val size = list.size
+        var active : Param = julia
+
+        fun at(index: Int) = list[index]
         fun setFrom(newList: ParamList) {
 
             julia.setFrom(newList.julia)
-            main.forEachIndexed { i, p -> p.setFrom(newList.main[i]) }
+            list.forEachIndexed { i, p -> p.setFrom(newList.list[i]) }
 
         }
         fun reset() {
 
-            main.forEach { it.reset() }
+            list.forEach { it.reset() }
             julia.reset()
 
         }
 
     }
 
-    class Param (
+    open class Param (
+
+            u             : Double          = 0.0,
+            var uRange    : Range<Double>   = Range(0.0, 1.0),
+            uLocked        : Boolean         = false,
+            sensitivity   : Double          = 1.0,
+            var name      : String          = ""
+
+    ) {
+
+        val uInit = u
+        val uLockedInit = uLocked
+        val sensitivityInit = sensitivity
+
+        var uLocked = uLockedInit
+        open var u = u
+            set (value) { if (!uLocked) field = value }
+        var sensitivity = sensitivityInit
+
+        open fun reset() {
+            uLocked = false
+            u = uInit
+            uLocked = uLockedInit
+            sensitivity = sensitivityInit
+        }
+        open fun clone() : Param {
+
+            return Param(
+                    uInit,
+                    uRange,
+                    uLockedInit,
+                    sensitivityInit,
+                    name
+            )
+
+        }
+        open fun setFrom(newParam: Param) {
+
+            uLocked = newParam.uLockedInit
+            u = newParam.uInit
+            sensitivity = newParam.sensitivityInit
+
+        }
+        open fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), 0f)
+
+    }
+
+    class ComplexParam (
+
             u: Double = 0.0,
             v: Double = 0.0,
             uLocked: Boolean = false,
             vLocked: Boolean = false,
+            uRange: Range<Double> = Range(0.0, 1.0),
+            var vRange: Range<Double> = Range(0.0, 1.0),
             linked: Boolean = false,
-            sensitivity: Double = 1.0
-    ) {
+            sensitivity: Double = 1.0,
+            name: String = ""
 
-        private val uInit = u
+    ) : Param(u, uRange, uLocked, sensitivity, name) {
+
         private val vInit = v
-        private val uLockedInit = uLocked
         private val vLockedInit = vLocked
-        private val sensitivityInit = sensitivity
         private val linkedInit = linked
 
-        var uLocked = uLockedInit
         var vLocked = vLockedInit
-        var u = u
+        override var u = u
             set (value) {
                 if (!uLocked) {
                     field = value
@@ -81,14 +138,13 @@ class Shape (
                     field = if (linked) u else value
                 }
             }
-        var sensitivity = sensitivityInit
         var linked = linkedInit
             set (value) {
                 field = value
                 if (value) v = u
             }
 
-        fun reset() {
+        override fun reset() {
             uLocked = false
             vLocked = false
             u = uInit
@@ -98,34 +154,40 @@ class Shape (
             linked = linkedInit
             sensitivity = sensitivityInit
         }
-        fun clone() : Param {
+        override fun clone() : ComplexParam {
 
-            return Param(
+            return ComplexParam(
                     uInit,
                     vInit,
                     uLockedInit,
                     vLockedInit,
+                    uRange,
+                    vRange,
                     linkedInit,
-                    sensitivityInit
+                    sensitivityInit,
+                    name
             )
 
         }
-        fun setFrom(newParam: Param) {
+        override fun setFrom(newParam: Param) {
 
-            uLocked = newParam.uLockedInit
-            vLocked = newParam.vLockedInit
-            u = newParam.uInit
-            v = newParam.vInit
-            sensitivity = newParam.sensitivityInit
+            with (newParam as ComplexParam) {
+                u = newParam.uInit
+                v = newParam.vInit
+                uLocked = newParam.uLockedInit
+                vLocked = newParam.vLockedInit
+                uRange = newParam.uRange
+                vRange = newParam.vRange
+                sensitivity = newParam.sensitivityInit
+            }
 
         }
-        fun toFloatArray() : FloatArray {
-
-            return floatArrayOf(u.toFloat(), v.toFloat())
-
-        }
+        override fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), v.toFloat())
 
     }
+
+
+
 
     companion object {
 
@@ -181,7 +243,7 @@ class Shape (
                 loopSF = R.string.mandelbrotanypow_loop_sf,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
                 positions = PositionList(Position(x = -0.55, y = 0.5, scale = 5.0)),
-                params = ParamList(listOf(Param(16.0, 4.0))),
+                params = ParamList(listOf(ComplexParam(16.0, 4.0))),
                 hasDynamicPower = true
         )
         val clover = Shape(
@@ -192,7 +254,7 @@ class Shape (
                 loopSF = R.string.dualpow_loop_sf,
                 positions = PositionList(Position(scale = 2.0, rotation = 45.0.inRadians())),
                 z0 = Complex.ONE,
-                params = ParamList(listOf(Param(2.0, vLocked = true))),
+                params = ParamList(listOf(ComplexParam(2.0, vLocked = true))),
                 hasDynamicPower = true
         )
         val mandelbox = Shape(
@@ -202,7 +264,10 @@ class Shape (
                 loopSF = R.string.mandelbox_loop_sf,
                 loopDF = R.string.mandelbox_loop_df,
                 positions = PositionList(Position(scale = 6.5)),
-                params = ParamList(listOf(Param(-2.66421354, vLocked = true))),
+                params = ParamList(listOf(
+                        ComplexParam(-2.66421354, vLocked = true),
+                        ComplexParam(1.0, 0.0))
+                ),
                 bailoutRadius = 5f
         )
         val kali = Shape(
@@ -213,7 +278,7 @@ class Shape (
                 conditionalDF = R.string.escape_df,
                 juliaMode = true,
                 positions = PositionList(julia = Position(scale = 3.0)),
-                params = ParamList(julia = Param(-0.33170626, -0.18423799)),
+                params = ParamList(julia = ComplexParam(-0.33170626, -0.18423799)),
                 bailoutRadius = 4e0f
         )
         val kaliSquare = Shape(
@@ -249,8 +314,8 @@ class Shape (
                 loopSF = R.string.magnet_loop_sf,
                 positions = PositionList(Position(scale = 3.5)),
                 params = ParamList(listOf(
-                        Param(-1.0, vLocked = true),
-                        Param(-2.0, vLocked = true))),
+                        ComplexParam(-1.0, vLocked = true),
+                        ComplexParam(-2.0, vLocked = true))),
                 bailoutRadius = 4e0f
         )
         val sine1 = Shape(
@@ -267,7 +332,7 @@ class Shape (
                 icon = R.drawable.sine2_icon,
                 loopSF = R.string.sine2_loop_sf,
                 positions = PositionList(Position(scale = 3.5)),
-                params = ParamList(listOf(Param(-0.26282884))),
+                params = ParamList(listOf(ComplexParam(-0.26282884))),
                 z0 = Complex.ONE
         )
         val sine3 = Shape(
@@ -275,7 +340,7 @@ class Shape (
                 katex = R.string.sine3_katex,
                 loopSF = R.string.sine3_loop_sf,
                 positions = PositionList(Position(scale = 3.5)),
-                params = ParamList(listOf(Param(0.31960705187983646, vLocked = true))),
+                params = ParamList(listOf(ComplexParam(0.31960705187983646, vLocked = true))),
                 z0 = Complex.ONE,
                 bailoutRadius = 1e1f
         )
@@ -285,7 +350,7 @@ class Shape (
                 icon = R.drawable.horseshoecrab_icon,
                 loopSF = R.string.horseshoecrab_loop_sf,
                 positions = PositionList(Position(x = -0.25, scale = 6.0, rotation = 90.0.inRadians())),
-                params = ParamList(listOf(Param(sqrt(2.0)))),
+                params = ParamList(listOf(ComplexParam(sqrt(2.0)))),
                 z0 = Complex.ONE
         )
         val newton2 = Shape(
@@ -295,9 +360,9 @@ class Shape (
                 positions = PositionList(julia = Position(scale = 3.5)),
                 juliaMode = true,
                 params = ParamList(listOf(
-                        Param(1.0, 1.0),
-                        Param(-1.0, -1.0),
-                        Param(2.0, -0.5))
+                        ComplexParam(1.0, 1.0),
+                        ComplexParam(-1.0, -1.0),
+                        ComplexParam(2.0, -0.5))
                 )
         )
         val newton3 = Shape(
@@ -314,7 +379,7 @@ class Shape (
                 initSF = R.string.persianrug_init_sf,
                 loopSF = R.string.persianrug_loop_sf,
                 positions = PositionList(Position(scale = 1.5)),
-                params = ParamList(listOf(Param(0.642, 0.0))),
+                params = ParamList(listOf(ComplexParam(0.642, 0.0))),
                 bailoutRadius = 1e1f
         )
         val kleinian = Shape(
@@ -325,8 +390,8 @@ class Shape (
                 positions = PositionList(julia = Position(y = -0.5, scale = 1.5)),
                 juliaMode = true,
                 params = ParamList(
-                        listOf(Param(1.41421538, vLocked = true)),
-                        Param(0.0, -1.0)
+                        listOf(ComplexParam(1.41421538, vLocked = true)),
+                        ComplexParam(0.0, -1.0)
                 ),
                 bailoutRadius = 1e5f
         )
@@ -340,7 +405,7 @@ class Shape (
                 loopDF = R.string.nova1_loop_df,
                 positions = PositionList(Position(x = -0.3, scale = 1.75, rotation = 90.0.inRadians())),
                 z0 = Complex.ONE,
-                params = ParamList(listOf(Param(1.0, 0.0)))
+                params = ParamList(listOf(ComplexParam(1.0, 0.0)))
         )
         val nova2 = Shape(
                 R.string.nova2,
@@ -362,7 +427,7 @@ class Shape (
                 R.string.burning_ship_anypow,
                 loopSF = R.string.burningshipanypow_loop_sf,
                 bailoutRadius = 1e2f,
-                params = ParamList(listOf(Param(4.0, -1.0))),
+                params = ParamList(listOf(ComplexParam(4.0, -1.0))),
                 proFeature = true
         )
         val collatz = Shape(
@@ -371,7 +436,33 @@ class Shape (
                 loopSF = R.string.collatz_loop_sf,
                 proFeature = true
         )
+        val mandalay = Shape(
+                name = R.string.empty,
+                initSF = R.string.mandalay_init_sf,
+                loopSF = R.string.mandalay_loop_sf,
+                conditionalSF = R.string.converge_sf,
+                z0 = Complex(0.0, 0.0),
+                params = ParamList(
+                        listOf(ComplexParam(0.5, 0.9))
+                ),
+                proFeature = true
+        )
+        val mandelex = Shape(
+                name = R.string.mandelex,
+                initSF = R.string.mandelex_init_sf,
+                loopSF = R.string.mandelex_loop_sf,
+                positions = PositionList(Position(scale = 2e1)),
+                params = ParamList(listOf(
+                        Param(180.0, Range(0.0, 360.0), name = "angle"),
+                        Param(0.5,   Range(0.0, 1.0),   name = "radius"),
+                        Param(2.0,   Range(-3.0, 3.0),  name = "scale"),
+                        ComplexParam(2.0, 2.0, name = "linear")
+                )),
+                proFeature = true
+        )
         val all = arrayListOf(
+                mandelex,
+                //mandalay,
                 collatz,
                 mandelbrot,
                 mandelbrotCubic,
