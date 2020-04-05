@@ -3,6 +3,7 @@ package com.selfsimilartech.fractaleye
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Point
 import android.graphics.drawable.GradientDrawable
 import java.lang.Math.random
 import kotlin.math.floor
@@ -20,6 +21,11 @@ fun colorToRGB(c: Int) : FloatArray {
             Color.green(c) / 255f,
             Color.blue(c)  / 255f
     )
+}
+fun RGBToColor(r: Int, g: Int, b: Int) : Int {
+    val hsv = FloatArray(3)
+    Color.RGBToHSV(r, g, b, hsv)
+    return Color.HSVToColor(hsv)
 }
 fun randomColor() : Int {
     return Color.HSVToColor(floatArrayOf(
@@ -352,7 +358,7 @@ class ColorPalette (
 
 
 
-    fun initialize(res: Resources, thumbRes: IntArray) {
+    fun initialize(res: Resources, thumbRes: Point) {
 
         when {
             ids.isEmpty() && colors.isEmpty() -> {
@@ -372,7 +378,7 @@ class ColorPalette (
             }
         }
 
-        thumbnail = Bitmap.createBitmap(thumbRes[0], thumbRes[0], Bitmap.Config.ARGB_8888)
+        thumbnail = Bitmap.createBitmap(thumbRes.x, thumbRes.x, Bitmap.Config.ARGB_8888)
 
         updateFlatPalette()
 

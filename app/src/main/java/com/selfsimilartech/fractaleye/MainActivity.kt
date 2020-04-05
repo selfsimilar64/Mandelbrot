@@ -33,7 +33,7 @@ import kotlinx.android.synthetic.main.position_fragment.*
 import org.apfloat.*
 
 
-const val MAX_SHAPE_PARAMS = 3
+const val MAX_SHAPE_PARAMS = 5
 const val MAX_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
 const val ITER_MAX_POW = 12.0
@@ -185,7 +185,9 @@ enum class Reaction(val numDisplayParams: Int) {
 enum class Resolution(private val scale: Float, val square: Boolean = false) {
     EIGHTH(1/8f), SIXTH(1/6f), FOURTH(1/4f), HALF(1/2f), FULL(1f), DOUBLE(2f), THUMB(1/6f, true);
     fun scaleRes(screenRes: Point) : Point {
-        return Point((screenRes.x*scale).roundToInt(), (screenRes.y*scale).roundToInt())
+        return Point(
+                (screenRes.x*scale).roundToInt(),
+                (screenRes.y*scale).roundToInt())
     }
     companion object {
         private const val NUM_VALUES_GT_SCREEN_DIMS = 1
@@ -559,7 +561,7 @@ class RecyclerTouchListener(
 class MainActivity : AppCompatActivity() {
 
 
-    var f : Fractal = Fractal.flake
+    var f : Fractal = Fractal.mandelbrot
     var sc : SettingsConfig = SettingsConfig()
     lateinit var fsv : FractalSurfaceView
     var screenWidth = 0
@@ -722,6 +724,7 @@ class MainActivity : AppCompatActivity() {
         // restore SettingsConfig from SharedPreferences
         val sp = getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE)
         sc.resolution = Resolution.values()[sp.getInt(RESOLUTION, Resolution.FULL.ordinal)]
+        //sc.resolution = Resolution.FULL
         //sc.precision = Precision.values()[sp.getInt(PRECISION, Precision.SINGLE.ordinal)]
         //sc.autoPrecision = sp.getBoolean(AUTO_PRECISION, true)
         sc.continuousRender = sp.getBoolean(CONTINUOUS_RENDER, false)
@@ -1045,11 +1048,14 @@ class MainActivity : AppCompatActivity() {
                 }
                 Reaction.SHAPE -> {
 
+                    val param = f.shape.params.active
                     displayParamName1.text = "u"
-                    displayParamName2.text = "v"
+                    displayParam1.text = "%.8f".format((param.u))
+                    if (param is Shape.ComplexParam) {
+                        displayParamName2.text = "v"
+                        displayParam2.text = "%.8f".format((param.v))
+                    }
                     displayParamName3.text = resources.getString(R.string.sensitivity)
-                    displayParam1.text = "%.8f".format((f.shape.params.active.u))
-                    displayParam2.text = "%.8f".format((f.shape.params.active.v))
                     displayParam3.text = "%.6f".format(f.sensitivity)
                     w = (80f * density).toInt()
 
@@ -1153,8 +1159,11 @@ class MainActivity : AppCompatActivity() {
     fun updateShapeEditTexts() {
         // Log.d("FRACTAL", "updating shape param EditText $i")
 
-        uEdit?.setText("%.8f".format((f.shape.params.active.u)))
-        vEdit?.setText("%.8f".format((f.shape.params.active.v)))
+        val param = f.shape.params.active
+        uEdit?.setText("%.8f".format((param.u)))
+        if (param is Shape.ComplexParam) {
+            vEdit?.setText("%.8f".format((param.v)))
+        }
 
     }
     fun updateTextureEditTexts() {
