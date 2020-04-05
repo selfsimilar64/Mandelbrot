@@ -5,7 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/categoryLayoutHeightNoPadding"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <ScrollView
@@ -31,7 +31,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                tools:visibility="visible">
+                tools:visibility="gone">
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
@@ -151,6 +151,34 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/realParamLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/shapeParamButtons">
+
+                            <SeekBar
+                                android:id="@+id/realParamSeekBar"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toStartOf="@+id/uEdit2"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <EditText
+                                android:id="@+id/uEdit2"
+                                style="@style/EditNumberDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:imeOptions="actionDone"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
                         <Button
                             android:id="@+id/shapeResetButton"
                             android:layout_width="wrap_content"
@@ -164,11 +192,13 @@
                             android:id="@+id/shapeParamButtons"
                             android:layout_width="0dp"
                             android:layout_height="35dp"
+                            app:layout_constraintEnd_toStartOf="@+id/shapeResetButton"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
                             app:tabGravity="center"
                             app:tabIndicatorFullWidth="false"
-                            app:tabMinWidth="50dp">
+                            app:tabMinWidth="50dp"
+                            app:tabMode="scrollable">
 
                             <com.google.android.material.tabs.TabItem
                                 android:id="@+id/p1Button"
@@ -191,9 +221,11 @@
                         </com.google.android.material.tabs.TabLayout>
 
                         <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/complexParamLayout"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
+                            android:visibility="gone"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/shapeParamButtons">

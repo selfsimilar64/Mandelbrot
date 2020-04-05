@@ -83,9 +83,10 @@ class ShapeFragment : Fragment() {
         }}
         val lockListener = { j: Int -> View.OnClickListener {
             val lock = it as ToggleButton
-            when (j) {
-                0 -> f.shape.params.active.uLocked = lock.isChecked
-                1 -> f.shape.params.active.vLocked = lock.isChecked
+            val param = f.shape.params.active
+            if (j == 0) param.uLocked = lock.isChecked
+            else if (j == 1 && param is Shape.ComplexParam) {
+                param.vLocked = lock.isChecked
             }
         }}
         val linkListener = View.OnClickListener {
@@ -93,7 +94,8 @@ class ShapeFragment : Fragment() {
             link.foregroundTintList = ColorStateList.valueOf(resources.getColor(
                     if (link.isChecked) R.color.white else R.color.colorDarkSelected, null
             ))
-            f.shape.params.active.linked = link.isChecked
+            val param = f.shape.params.active
+            if (param is Shape.ComplexParam) param.linked = link.isChecked
             if (link.isChecked) {
                 act.updateShapeEditTexts()
                 fsv.r.renderToTex = true
@@ -145,6 +147,21 @@ class ShapeFragment : Fragment() {
 
 
         val shapeParamButtonValues = listOf(R.string.param1, R.string.param2, R.string.param3)
+        realParamSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val param = f.shape.params.active
+                param.u = (progress.toDouble()/100.0)*(param.uRange.upper - param.uRange.lower) + param.uRange.lower
+                uEdit2.setText("%.3f".format(param.u))
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+
+        })
 
         shapeParamButtons.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
@@ -155,14 +172,30 @@ class ShapeFragment : Fragment() {
                         else f.shape.params.at(tab.position)
 
                 val param = f.shape.params.active
-                uEdit.setText("%.8f".format(param.u))
-                vEdit.setText("%.8f".format(param.v))
-                uLock.isChecked = param.uLocked
-                vLock.isChecked = param.vLocked
-                linkParamButton.isChecked = param.linked
-                linkParamButton.foregroundTintList = ColorStateList.valueOf(resources.getColor(
-                        if (linkParamButton.isChecked) R.color.white else R.color.colorDarkSelected, null
-                ))
+                if (complexParamLayout.isHidden() && param is Shape.ComplexParam) {
+                    realParamLayout.hide()
+                    complexParamLayout.show()
+                }
+                else if (realParamLayout.isHidden() && param !is Shape.ComplexParam) {
+                    complexParamLayout.hide()
+                    realParamLayout.show()
+                }
+
+
+                if (param is Shape.ComplexParam) {
+                    uEdit.setText("%.8f".format(param.u))
+                    uLock.isChecked = param.uLocked
+                    vEdit.setText("%.8f".format(param.v))
+                    vLock.isChecked = param.vLocked
+                    linkParamButton.isChecked = param.linked
+                    linkParamButton.foregroundTintList = ColorStateList.valueOf(resources.getColor(
+                            if (linkParamButton.isChecked) R.color.white else R.color.colorDarkSelected, null
+                    ))
+                }
+                else {
+                    uEdit2.setText("%.3f".format(param.u))
+                    realParamSeekBar.progress = (100.0*(param.u - param.uRange.lower)/(param.uRange.upper - param.uRange.lower)).toInt()
+                }
 
                 act.showTouchIcon()
 
@@ -187,26 +220,46 @@ class ShapeFragment : Fragment() {
 
 
 
-        uEdit.setText("%.8f".format(f.shape.params.active.u))
-        vEdit.setText("%.8f".format(f.shape.params.active.v))
+        val activeParam = f.shape.params.active
+        uEdit.setText("%.8f".format(activeParam.u))
+        if (activeParam is Shape.ComplexParam) {
+            vEdit.setText("%.8f".format(activeParam.v))
+        }
         uEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             val result = "${w.text}".formatToDouble()
+            val param = f.shape.params.active
             if (result != null) {
-                f.shape.params.active.u = result
+                param.u = result
                 fsv.r.renderToTex = true
             }
             w.text = "%.8f".format((f.shape.params.active.u))
-            if (f.shape.params.active.linked) {
-                vEdit.setText("%.8f".format((f.shape.params.active.v)))
+            if (param is Shape.ComplexParam && param.linked) {
+                vEdit.setText("%.8f".format((param.v)))
             }
+        })
+        uEdit2.setOnEditorActionListener(editListener(null) { w: TextView ->
+            val result = "${w.text}".formatToDouble()
+            val param = f.shape.params.active
+            if (result != null) {
+                param.u = result
+                fsv.r.renderToTex = true
+            }
+            w.text = "%.3f".format((f.shape.params.active.u))
+            if (param is Shape.ComplexParam && param.linked) {
+                vEdit.setText("%.3f".format((param.v)))
+            }
+            realParamSeekBar.progress = (100.0*(param.u - param.uRange.lower)/(param.uRange.upper - param.uRange.lower)).toInt()
         })
         vEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             val result = "${w.text}".formatToDouble()
-            if (result != null) {
-                f.shape.params.active.v = result
-                fsv.r.renderToTex = true
+            val param = f.shape.params.active
+            if (param is Shape.ComplexParam) {
+                if (result != null) {
+                    param.v = result
+                    fsv.r.renderToTex = true
+                }
+                w.text = "%.8f".format((param.v))
             }
-            w.text = "%.8f".format((f.shape.params.active.v))
         })
         uLock.setOnClickListener(lockListener(0))
         vLock.setOnClickListener(lockListener(1))
@@ -298,6 +351,7 @@ class ShapeFragment : Fragment() {
 
                             val prevScale = f.position.scale
                             f.shape = shapeList[position]
+                            Log.d("SHAPE FRAGMENT", "shape is now ${resources.getString(f.shape.name)}")
 
 
                             // update juliaModeSwitch
@@ -316,19 +370,6 @@ class ShapeFragment : Fragment() {
                                 act.showTouchIcon()
                             }
 
-
-                            // update parameter display
-                            shapeParamLayout.visibility = if (f.shape.numParamsInUse == 0)
-                                ConstraintLayout.GONE else ConstraintLayout.VISIBLE
-                            shapeParamButtons.removeAllTabs()
-                            for (i in 0 until f.shape.params.size) shapeParamButtons.addTab(
-                                    shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
-                            )
-                            if (f.shape.juliaMode) {
-                                shapeParamButtons.addTab(
-                                    shapeParamButtons.newTab().setText(resources.getString(R.string.julia))
-                                )
-                            }
 
                             fsv.r.checkThresholdCross(prevScale)
 
@@ -349,8 +390,8 @@ class ShapeFragment : Fragment() {
 
 
         shapeParamButtons.removeAllTabs()
-        for (i in 0 until f.shape.params.size) shapeParamButtons.addTab(
-                shapeParamButtons.newTab().setText(shapeParamButtonValues[i])
+        for (param in f.shape.params.list) shapeParamButtons.addTab(
+                shapeParamButtons.newTab().setText(param.name)
         )
         if (f.shape.juliaMode) {
             shapeParamButtons.addTab(
@@ -411,6 +452,19 @@ class ShapeFragment : Fragment() {
                 shapeContent.show()
                 act.showCategoryButtons()
                 shapeNavButtons.hide()
+
+                // update parameter display
+                shapeParamLayout.visibility = if (f.shape.numParamsInUse == 0)
+                    ConstraintLayout.GONE else ConstraintLayout.VISIBLE
+                shapeParamButtons.removeAllTabs()
+                for (param in f.shape.params.list) shapeParamButtons.addTab(
+                        shapeParamButtons.newTab().setText(param.name)
+                )
+                if (f.shape.juliaMode) {
+                    shapeParamButtons.addTab(
+                            shapeParamButtons.newTab().setText(resources.getString(R.string.julia))
+                    )
+                }
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
