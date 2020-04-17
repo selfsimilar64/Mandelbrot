@@ -59,6 +59,7 @@ class ColorPalette (
         val isCustom: Boolean = false
 ) {
 
+
     companion object {
 
         const val MAX_CUSTOM_PALETTE_COLORS = 6
