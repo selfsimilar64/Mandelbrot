@@ -1,5 +1,6 @@
 package com.selfsimilartech.fractaleye
 
+import android.animation.LayoutTransition
 import android.animation.ValueAnimator
 import android.content.pm.PackageManager
 import android.os.*
@@ -29,11 +30,14 @@ import kotlinx.android.synthetic.main.settings_fragment.*
 import kotlinx.android.synthetic.main.texture_fragment.*
 import kotlinx.android.synthetic.main.shape_fragment.*
 import kotlinx.android.synthetic.main.color_fragment.*
-import kotlinx.android.synthetic.main.position_fragment.*
+import kotlinx.android.synthetic.main.position_fragment_old.scaleExponentEdit
+import kotlinx.android.synthetic.main.position_fragment_old.scaleSignificandEdit
+import kotlinx.android.synthetic.main.position_fragment_old.xEdit
+import kotlinx.android.synthetic.main.position_fragment_old.yEdit
 import org.apfloat.*
 
 
-const val MAX_SHAPE_PARAMS = 5
+const val MAX_SHAPE_PARAMS = 4
 const val MAX_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
 const val ITER_MAX_POW = 12.0
@@ -203,7 +207,7 @@ enum class ListLayoutType { GRID, LINEAR }
 class Position(
         x: Double = 0.0,
         y: Double = 0.0,
-        scale: Double = 1.0,
+        zoom: Double = 1.0,
         rotation: Double = 0.0,
         xap: Apfloat = Apfloat("0", 32L),
         yap: Apfloat = Apfloat("0", 32L),
@@ -216,7 +220,7 @@ class Position(
 
     private val xInit = x
     private val yInit = y
-    private val scaleInit = scale
+    private val zoomInit = zoom
     private val rotationInit = rotation
     private val xLockedInit = xLocked
     private val yLockedInit = yLocked
@@ -230,13 +234,17 @@ class Position(
     var y = yInit
         set(value) { if (!yLocked) { field = value } }
 
-    var scale = scaleInit
+    var zoom = zoomInit
         set(value) { if (!scaleLocked) { field = value } }
 
     var rotation = rotationInit
         set(value) { if (!rotationLocked) {
-            val tau = 2.0*Math.PI
-            field = if (value < 0) (tau + value) % tau else value % tau
+            field = when {
+                value <= Math.PI -> ((value - Math.PI).rem(2.0*Math.PI)) + Math.PI
+                value > Math.PI -> ((value + Math.PI).rem(2.0*Math.PI)) - Math.PI
+                else -> value
+            }
+
         }}
 
     var xLocked = xLockedInit
@@ -253,7 +261,7 @@ class Position(
 
 
     fun clone() : Position {
-        return Position(x, y, scale, rotation)
+        return Position(x, y, zoom, rotation)
     }
 
     private fun translate(dx: Double, dy: Double) {
@@ -270,8 +278,8 @@ class Position(
     }
     fun translate(dx: Float, dy: Float) {  // dx, dy --> [0, 1]
 
-        val tx = dx*scale
-        val ty = dy*scale
+        val tx = dx*zoom
+        val ty = dy*zoom
         val sinTheta = sin(-rotation)
         val cosTheta = cos(rotation)
         x -= tx*cosTheta - ty*sinTheta
@@ -281,7 +289,7 @@ class Position(
         yap = yap.add(Apfloat(tx*sinTheta + ty*cosTheta, ap))
 
     }
-    fun scale(dScale: Float, prop: DoubleArray) {
+    fun zoom(dZoom: Float, prop: DoubleArray) {
 
         if (!scaleLocked) {
 
@@ -292,8 +300,8 @@ class Position(
             yLocked = false
 
             // calculate scaling variables
-            val qx = prop[0] * scale
-            val qy = prop[1] * scale
+            val qx = prop[0] * zoom
+            val qy = prop[1] * zoom
             val sinTheta = sin(rotation)
             val cosTheta = cos(rotation)
             val fx = x + qx * cosTheta - qy * sinTheta
@@ -301,19 +309,19 @@ class Position(
 
             // scale
             translate(-fx, -fy)
-            x /= dScale
-            y /= dScale
+            x /= dZoom
+            y /= dZoom
             translate(fx, fy)
 
             val fxap = xap.add(Apfloat(qx * cosTheta - qy * sinTheta, ap))
             val fyap = yap.add(Apfloat(qx * sinTheta + qy * cosTheta, ap))
             translateAp(fxap.negate(), fyap.negate())
-            xap = xap.divide(Apfloat(dScale, ap))
-            yap = yap.divide(Apfloat(dScale, ap))
+            xap = xap.divide(Apfloat(dZoom, ap))
+            yap = yap.divide(Apfloat(dZoom, ap))
             translateAp(fxap, fyap)
 
 
-            scale /= dScale
+            zoom /= dZoom
 
             // set x and y locks to previous values
             xLocked = xLockedTemp
@@ -333,8 +341,8 @@ class Position(
             yLocked = false
 
             // calculate rotation variables
-            var qx = prop[0] * scale
-            var qy = prop[1] * scale
+            var qx = prop[0] * zoom
+            var qy = prop[1] * zoom
             val sinTheta = sin(rotation)
             val cosTheta = cos(rotation)
             val fx = x + qx * cosTheta - qy * sinTheta
@@ -351,8 +359,8 @@ class Position(
             translate(fx, fy)
 
 
-            qx = prop[0] * scale
-            qy = prop[1] * scale
+            qx = prop[0] * zoom
+            qy = prop[1] * zoom
             val fxap = xap.add(Apfloat(qx*cosTheta - qy*sinTheta, ap))
             val fyap = yap.add(Apfloat(qx*sinTheta + qy*cosTheta, ap))
             translateAp(fxap.negate(), fyap.negate())
@@ -378,7 +386,7 @@ class Position(
     fun reset() {
         x = xInit
         y = yInit
-        scale = scaleInit
+        zoom = zoomInit
         rotation = rotationInit
         xLocked = xLockedInit
         yLocked = yLockedInit
@@ -398,7 +406,7 @@ class Position(
 
 class PositionList(
         val default  : Position = Position(),
-        val julia    : Position = Position(scale = 3.5)
+        val julia    : Position = Position(zoom = 3.5)
 ) {
 
     fun clone() : PositionList {
@@ -566,6 +574,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var fsv : FractalSurfaceView
     var screenWidth = 0
     var screenHeight = 0
+    var navBarHeight = 0
+    var statusBarHeight = 0
+    var deviceHasNotch = false
 
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
@@ -628,23 +639,36 @@ class MainActivity : AppCompatActivity() {
             override fun onCategorySelected(act: MainActivity) {
                 val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
                 //act.fsv.renderProfile = RenderProfile.MANUAL
-                act.fsv.r.reaction = Reaction.NONE
-                act.hideTouchIcon()
-                if (act.categoryLayoutIsClosed()) categoryNameButton.performClick()
+                act.apply {
+                    fsv.r.reaction = Reaction.NONE
+                    hideTouchIcon()
+                    if (renderOptionsLayout.isVisible() || displayOptionsLayout.isVisible()) {
+                        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
+                    }
+                    else {
+                        if (uiIsClosed()) {
+                            uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+                        }
+                    }
+                }
             }
             override fun onCategoryUnselected(act: MainActivity) {
-
+                act.apply {
+                    if (uiIsOpen() && (renderOptionsLayout?.isVisible() == true || displayOptionsLayout?.isVisible() == true)) {
+                        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+                    }
+                }
             }
         },
         TEXTURE(R.string.texture, R.drawable.texture) {
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {
-                if (act.textureContent.isVisible()) act.categoryButtons.getTabAt(POSITION).select()
+                if (!act.texturePreviewListLayout.isVisible()) act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
                 act.hideTouchIcon()
                 act.fsv.r.reaction = Reaction.NONE
-                if (act.categoryLayoutIsClosed()) act.categoryNameButton.performClick()
+                if (act.uiIsClosed()) act.categoryNameButton.performClick()
             }
             override fun onCategoryUnselected(act: MainActivity) {
                 // onMenuClosed(act)
@@ -653,11 +677,11 @@ class MainActivity : AppCompatActivity() {
         SHAPE(R.string.shape, R.drawable.shape) {
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {
-                if (act.shapeContent.isVisible() && act.f.shape.numParamsInUse == 0) act.categoryButtons.getTabAt(POSITION).select()
+                if (act.fsv.r.reaction == Reaction.NONE) act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
                 //act.fsv.renderProfile = RenderProfile.MANUAL
-                if (act.f.shape.numParamsInUse != 0) {
+                if (act.complexParamLayout.isVisible() or act.realParamLayout.isVisible()) {
                     act.fsv.r.reaction = Reaction.SHAPE
                     act.showTouchIcon()
                 }
@@ -665,7 +689,7 @@ class MainActivity : AppCompatActivity() {
                     val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
                     act.fsv.r.reaction = Reaction.NONE
                     act.hideTouchIcon()
-                    if (act.categoryLayoutIsClosed()) categoryNameButton.performClick()
+                    if (act.uiIsClosed()) categoryNameButton.performClick()
                 }
             }
             override fun onCategoryUnselected(act: MainActivity) {
@@ -723,8 +747,8 @@ class MainActivity : AppCompatActivity() {
 
         // restore SettingsConfig from SharedPreferences
         val sp = getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE)
-        sc.resolution = Resolution.values()[sp.getInt(RESOLUTION, Resolution.FULL.ordinal)]
-        //sc.resolution = Resolution.FULL
+//        sc.resolution = Resolution.values()[sp.getInt(RESOLUTION, Resolution.FULL.ordinal)]
+        sc.resolution = Resolution.FULL
         //sc.precision = Precision.values()[sp.getInt(PRECISION, Precision.SINGLE.ordinal)]
         //sc.autoPrecision = sp.getBoolean(AUTO_PRECISION, true)
         sc.continuousRender = sp.getBoolean(CONTINUOUS_RENDER, false)
@@ -740,23 +764,22 @@ class MainActivity : AppCompatActivity() {
 
         val displayMetrics = baseContext.resources.displayMetrics
         windowManager.defaultDisplay.getRealMetrics(displayMetrics)
-        Log.d("MAIN ACTIVITY", "real metrics: ${displayMetrics.widthPixels}, ${displayMetrics.heightPixels}")
-        Log.d("MAIN ACTIVITY", "device has notch : ${deviceHasNotch()}")
-        val statusBarHeight = (STATUS_BAR_HEIGHT * resources.displayMetrics.scaledDensity).toInt()
+        //Log.d("MAIN ACTIVITY", "real metrics: ${displayMetrics.widthPixels}, ${displayMetrics.heightPixels}")
+        //Log.d("MAIN ACTIVITY", "device has notch : ${calcDeviceHasNotch()}")
+        //val statusBarHeight = (STATUS_BAR_HEIGHT * resources.displayMetrics.scaledDensity).toInt()
         //val navBarHeight = (NAV_BAR_HEIGHT * resources.displayMetrics.scaledDensity).toInt()
-        val navBarHeight = getNavBarHeight()
 
         screenWidth = displayMetrics.widthPixels
         screenHeight = displayMetrics.heightPixels
         val screenRes = Point(screenWidth, screenHeight)
         // Log.d("MAIN ACTIVITY", "status bar height : $statusBarHeight")
-        Log.d("MAIN ACTIVITY", "screen resolution : ($screenWidth, $screenHeight)")
+        //Log.d("MAIN ACTIVITY", "screen resolution : ($screenWidth, $screenHeight)")
 
 
-        val categoryLayoutHeight = resources.getDimension(R.dimen.categoryLayoutHeight).toInt()
+        val categoryLayoutHeight = resources.getDimension(R.dimen.uiLayoutHeight).toInt()
         val categoryPagerHeight = resources.getDimension(R.dimen.categoryPagerHeight).toInt()
         val categoryNameButtonHeight = resources.getDimension(R.dimen.categoryNameButtonHeight).toInt()
-        val categoryButtonsHeight = resources.getDimension(R.dimen.categoryButtonsHeight).toInt()
+        val categoryButtonsHeight = resources.getDimension(R.dimen.menuButtonsHeight).toInt()
         val uiHeightOpen = categoryLayoutHeight + categoryNameButtonHeight
         val uiHeightClosed = uiHeightOpen - categoryLayoutHeight
 
@@ -791,6 +814,18 @@ class MainActivity : AppCompatActivity() {
         fractalLayout.addView(fsv)
 
 
+        deviceHasNotch = calcDeviceHasNotch()
+        navBarHeight = calcNavBarHeight()
+        statusBarHeight = calcStatusBarHeight()
+        updateSurfaceViewLayout(resources.getDimension(R.dimen.uiLayoutHeightClosed))
+
+
+        val layoutList = listOf(fractalLayout, overlay, ui, uiInnerLayout, uiInnerCard, categoryPager)
+        layoutList.forEach {
+            it.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        }
+
+
         val displayParamRows = listOf<LinearLayout>(
                 displayParamRow1,
                 displayParamRow2,
@@ -800,75 +835,13 @@ class MainActivity : AppCompatActivity() {
         displayParamRows.forEach { it.visibility = LinearLayout.GONE }
         updateDisplayParams(reactionChanged = true, settingsChanged = true)
 
-        //categoryPager.layoutParams.height = 1
-        categoryLayout.layoutParams.height = categoryButtonsHeight
+        uiInnerLayout.layoutParams.height = categoryButtonsHeight
         updateSystemUI()
+
 
         categoryNameButton.setOnClickListener {
 
-            val hStart : Int
-            val hEnd : Int
-
-            if (categoryLayoutIsClosed()) {
-                hStart = categoryButtonsHeight
-                hEnd = categoryLayoutHeight
-                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.collapse, null), null)
-            }
-            else {
-                categoryButtons.getCurrentCategory().onCloseMenu(this)
-                hStart = categoryLayoutHeight
-                hEnd = categoryButtonsHeight
-                (it as Button).setCompoundDrawablesWithIntrinsicBounds(null, null, resources.getDrawable(R.drawable.expand, null), null)
-            }
-
-
-            var newHeight = screenHeight.toFloat()
-            if (!sc.hideNavBar) newHeight -= navBarHeight
-            if (deviceHasNotch()) newHeight -= getStatusBarHeight()
-
-
-            val anim = ValueAnimator.ofInt(hStart, hEnd)
-            anim.addUpdateListener { a ->
-
-                // update categoryPager height
-                val intermediateHeight = a?.animatedValue as Int
-                //categoryPager.layoutParams.height = intermediateHeight
-                //categoryPager.requestLayout()
-                categoryLayout.layoutParams.height = intermediateHeight
-                categoryLayout.requestLayout()
-
-                // update fsv layout
-                val animNewHeight = newHeight -
-                        if (hStart == categoryButtonsHeight)
-                            (1f - a.animatedFraction)*uiHeightClosed  +  a.animatedFraction*uiHeightOpen
-                        else
-                            (1f - a.animatedFraction)*uiHeightOpen    +  a.animatedFraction*uiHeightClosed
-
-
-                val scaleRatio = screenRes.y.toFloat()/animNewHeight
-
-                if (sc.fitToViewport) {
-
-                    fsv.scaleX = 1f/scaleRatio
-                    fsv.scaleY = 1f/scaleRatio
-                    fsv.y = -0.5f*(screenRes.x - animNewHeight)
-
-                }
-                else {
-                    var newY = -ui.height
-                    newY -= if (sc.hideNavBar) 0 else navBarHeight
-                    fsv.y = newY/2f
-                }
-
-                if (hEnd == categoryButtonsHeight && anim.animatedFraction == 1f) {  // closing animation ended
-
-                    categoryButtons.getCurrentCategory().onMenuClosed(this)
-
-                }
-
-            }
-            anim.duration = PAGER_ANIM_DURATION
-            anim.start()
+            uiSetHeight(if (uiIsOpen()) resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt() else resources.getDimension(R.dimen.uiLayoutHeight).toInt())
 
         }
 
@@ -885,10 +858,13 @@ class MainActivity : AppCompatActivity() {
 
         categoryButtons.setupWithViewPager(categoryPager)
         for (i in 0..4) {
-            categoryButtons.getTabAt(i)?.contentDescription = resources.getString(Category.values()[i].displayName).toUpperCase(Locale.getDefault())
             val transparentIcon = resources.getDrawable(Category.values()[i].icon, null)
             transparentIcon.alpha = 128
-            categoryButtons.getTabAt(i)?.icon = transparentIcon
+            categoryButtons.getTabAt(i)?.apply {
+                contentDescription = resources.getString(Category.values()[i].displayName).toUpperCase(Locale.getDefault())
+                //text = resources.getString(Category.values()[i].displayName)
+                icon = transparentIcon
+            }
         }
 
         categoryButtons.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -898,6 +874,7 @@ class MainActivity : AppCompatActivity() {
                 tab.icon?.alpha = 255
 
                 val category = Category.values()[tab.position]
+                Log.e("MAIN ACTIVITY", "category ${category.name}")
 
                 category.onCategorySelected(this@MainActivity)
 
@@ -925,18 +902,71 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun categoryLayoutIsOpen() : Boolean {
-        return categoryLayout.height == resources.getDimension(R.dimen.categoryLayoutHeight).toInt()
+    private fun uiIsOpen() : Boolean {
+        return !uiIsClosed()
     }
-    private fun categoryLayoutIsClosed() : Boolean {
-        return categoryLayout.height == resources.getDimension(R.dimen.categoryButtonsHeight).toInt()
+    private fun uiIsClosed() : Boolean {
+        return uiInnerLayout.layoutParams.height == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt()
     }
-    private fun getNavBarHeight() : Int {
+    fun uiSetHeight(newHeight: Int) {
+
+
+        if (newHeight != uiInnerLayout.layoutParams.height) {
+
+            uiInnerLayout.layoutParams.height = newHeight
+            uiInnerLayout.requestLayout()
+
+            categoryNameButton.setCompoundDrawablesWithIntrinsicBounds(
+                    null, null,
+                    if (newHeight == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt())
+                        resources.getDrawable(R.drawable.expand, null)
+                    else
+                        resources.getDrawable(R.drawable.collapse, null),
+                    null
+            )
+
+            val anim = ValueAnimator.ofFloat(0f, 1f)
+            anim.duration = uiInnerLayout.layoutTransition.getDuration(LayoutTransition.CHANGING) + 75L
+            anim.addUpdateListener {
+
+                updateSurfaceViewLayout(uiInnerLayout.height.toFloat())
+
+                if (anim.animatedFraction == 1f) {
+                    if (newHeight == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt()) {
+                        categoryButtons.getCurrentCategory().onMenuClosed(this)
+                    }
+                }
+
+            }
+            anim.start()
+
+        }
+
+    }
+    fun updateSurfaceViewLayout(height: Float? = null) {
+
+        var y = -(height ?: uiInnerLayout.height.toFloat())
+        y -= if (!sc.fitToViewport) categoryNameButton.height else 0
+        y -= if (!sc.hideNavBar) navBarHeight else 0
+        y -= if (deviceHasNotch) statusBarHeight else 0
+        y -= if (sc.fitToViewport) resources.getDimension(R.dimen.categoryNameButtonHeight).toInt() else 0
+        val scaleRatio = screenHeight.toFloat()/(screenHeight + y)
+
+        y /= 2f
+        fsv.y = y
+
+        fsv.scaleX = if (sc.fitToViewport) 1f/scaleRatio else 1f
+        fsv.scaleY = if (sc.fitToViewport) 1f/scaleRatio else 1f
+
+        fsv.requestLayout()
+
+    }
+    private fun calcNavBarHeight() : Int {
 
         val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
         val navBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
 
-        Log.d("MAIN ACTIVITY", "navBarHeight: $navBarHeight")
+        //Log.d("MAIN ACTIVITY", "navBarHeight: $navBarHeight")
         return navBarHeight
 
     }
@@ -945,25 +975,25 @@ class MainActivity : AppCompatActivity() {
         return (STATUS_BAR_HEIGHT * resources.displayMetrics.scaledDensity).toInt()
 
     }
-    private fun getStatusBarHeight() : Int {
+    private fun calcStatusBarHeight() : Int {
 
         val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
         val statusBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
 
-        Log.d("MAIN ACTIVITY", "statusBarHeight: $statusBarHeight")
+        //Log.d("MAIN ACTIVITY", "statusBarHeight: $statusBarHeight")
         return statusBarHeight
 
     }
-    private fun deviceHasNotch() : Boolean {
+    private fun calcDeviceHasNotch() : Boolean {
 
-        val hasNotch = getStatusBarHeight() > getDefaultStatusBarHeight()
-        Log.d("MAIN ACTIVITY", "device has notch: $hasNotch")
+        val hasNotch = calcStatusBarHeight() > getDefaultStatusBarHeight()
+        //Log.d("MAIN ACTIVITY", "device has notch: $hasNotch")
         return hasNotch
 
     }
     fun updateSystemUI() {
 
-        recalculateSurfaceViewLayout()
+        updateSurfaceViewLayout(uiInnerLayout.height.toFloat())
         if (sc.hideNavBar) {
             fsv.systemUiVisibility = (
                     GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -1032,7 +1062,7 @@ class MainActivity : AppCompatActivity() {
                     displayParamName4.text = resources.getString(R.string.rotation)
                     displayParam1.text = "%.17f".format(f.position.x)
                     displayParam2.text = "%.17f".format(f.position.y)
-                    displayParam3.text = "%e".format(f.position.scale)
+                    displayParam3.text = "%e".format(f.position.zoom)
                     displayParam4.text = "%.0f".format(f.position.rotation * 180.0 / Math.PI)
                     w = (60f * density).toInt()
 
@@ -1115,55 +1145,18 @@ class MainActivity : AppCompatActivity() {
         touchIcon.requestLayout()
 
     }
-    fun recalculateSurfaceViewLayout() {
-
-        // val navBarHeight = (NAV_BAR_HEIGHT * resources.displayMetrics.scaledDensity).toInt()
-        val navBarHeight = getNavBarHeight()
-
-
-        if (sc.fitToViewport) {
-
-            val categoryLayoutHeight = resources.getDimension(R.dimen.categoryLayoutHeight).toInt()
-            val categoryNameButtonHeight = resources.getDimension(R.dimen.categoryNameButtonHeight).toInt()
-            val uiHeightOpen = categoryLayoutHeight + categoryNameButtonHeight
-            val uiHeightClosed = uiHeightOpen - categoryLayoutHeight
-
-            Log.d("MAIN ACTIVITY", "categoryPagerHeight: ${categoryPager.layoutParams.height}")
-
-            var newHeight = screenHeight
-            newHeight -= if (categoryLayoutIsClosed()) uiHeightClosed else uiHeightOpen
-            if (!sc.hideNavBar) newHeight -= navBarHeight
-            if (deviceHasNotch()) newHeight -= getStatusBarHeight()
-
-            val scaleRatio = screenHeight.toFloat()/newHeight
-            fsv.scaleX = 1f/scaleRatio
-            fsv.scaleY = 1f/scaleRatio
-            fsv.y = -0.5f*(screenHeight - newHeight)
-
-        }
-        else {
-
-            fsv.scaleX = 1f
-            fsv.scaleY = 1f
-
-            var newY = -ui.height
-            if (!sc.hideNavBar) newY -= navBarHeight
-            fsv.y = newY/2f
-
-        }
-
-    }
     fun hideCategoryButtons() { categoryButtons.hide() }
     fun showCategoryButtons() { categoryButtons.show() }
+    fun toggleCategoryButtons() {
+        if (categoryButtons.isHidden()) showCategoryButtons()
+        else hideCategoryButtons()
+    }
 
     fun updateShapeEditTexts() {
         // Log.d("FRACTAL", "updating shape param EditText $i")
 
-        val param = f.shape.params.active
-        uEdit?.setText("%.8f".format((param.u)))
-        if (param is Shape.ComplexParam) {
-            vEdit?.setText("%.8f".format((param.v)))
-        }
+        (supportFragmentManager.fragments[2] as ShapeFragment).loadActiveParam()
+
 
     }
     fun updateTextureEditTexts() {
@@ -1178,6 +1171,11 @@ class MainActivity : AppCompatActivity() {
     fun updateColorEditTexts() {
 
         frequencyEdit?.setText("%.5f".format(f.frequency))
+        with (supportFragmentManager.fragments[1] as ColorFragment) {
+            updateFrequencyLayout()
+            updatePhaseLayout()
+        }
+
         phaseEdit?.setText("%.5f".format(f.phase))
 
     }
@@ -1186,11 +1184,13 @@ class MainActivity : AppCompatActivity() {
         xEdit?.setText("%.17f".format(f.position.x))
         yEdit?.setText("%.17f".format(f.position.y))
 
-        val scaleStrings = "%e".format(Locale.US, f.position.scale).split("e")
+        val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
         scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
         scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
 
-        rotationEdit?.setText("%d".format(f.position.rotation.inDegrees().roundToInt()))
+        with (supportFragmentManager.fragments[0] as PositionFragment) {
+            updateRotationLayout()
+        }
 
     }
     fun updateTexturePreviewName() {
@@ -1233,7 +1233,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
 
-        Log.d("MAIN ACTIVITY", "activity paused ...")
+        //Log.d("MAIN ACTIVITY", "activity paused ...")
 
         val sp = getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE)
         val edit = sp.edit()
@@ -1260,7 +1260,7 @@ class MainActivity : AppCompatActivity() {
         fsv.onResume()
     }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
-        Log.d("MAIN ACTIVITY", "window focus changed")
+        //Log.d("MAIN ACTIVITY", "window focus changed")
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) updateSystemUI()
     }
