@@ -12,6 +12,7 @@
 
 
     <!-- MAIN -->
+    <string name="category" translatable="false">category</string>
     <string name="settings">settings</string>
     <string name="texture">texture</string>
     <string name="shape">Shape</string>
@@ -23,7 +24,6 @@
     <string name="display_param3" translatable="false">param3</string>
     <string name="display_param4" translatable="false">param4</string>
     <string name="e" translatable="false">e</string>
-    <string name="done">done</string>
     <string name="welcome_message" translatable="false">Welcome to Fractal Eye!</string>
     <string name="tutorial_position1" tools:ignore="ExtraTranslation" translatable="false">To move around and explore the fractal, click the POSITION button.</string>
     <string name="tutorial_position2" translatable="false">Swipe in any direction to move</string>
@@ -33,6 +33,11 @@
     <string name="tutorial_color3" translatable="false">Pinch to make the colors change more or less frequently!</string>
     <string name="empty" translatable="false"> </string>
     <string name="reset">Reset</string>
+    <string name="new_str">new</string>
+    <string name="view">view</string>
+    <string name="done">done</string>
+    <string name="random">random</string>
+    <string name="cancel">cancel</string>
 
 
 
@@ -41,6 +46,9 @@
     <string name="resolution">Resolution</string>
     <string name="resolution_dims" translatable="false">width x height</string>
     <string name="precision">Precision</string>
+    <string name="hardware" translatable="false">hardware</string>
+    <string name="render">render</string>
+    <string name="display">display</string>
     <string name="precision_bits" translatable="false">32-bit</string>
     <string name="resolution_low">Low</string>
     <string name="resolution_high">High</string>
@@ -63,7 +71,9 @@
     <!-- TEXTURE FRAGMENT -->
     <string name="texture_name" translatable="false">Texture Name</string>
     <string name="texture_param_name" translatable="false">Texture Parameter Name</string>
-    <string name="bailout">Escape Radius</string>
+    <string name="escape_radius">Escape Radius</string>
+    <string name="radius">radius</string>
+    <string name="mode">mode</string>
     <string name="texture_mode">Texture Mode</string>
     <string name="texture_mode_out">out</string>
     <string name="texture_mode_in">in</string>
@@ -83,7 +93,7 @@
     <string name="param3">Param 3</string>
     <string name="param4">Param 4</string>
     <string name="sensitivity">sensitivity</string>
-    <string name="max_iter">Maximum Iterations</string>
+    <string name="max_iter">iterate</string>
     <string name="julia_mode">Julia Mode</string>
     <string name="max_iter_hint" translatable="false">Determines the maximum number of calculations per pixel.
         Increasing will make shape more defined but increase render time.</string>
@@ -97,7 +107,7 @@
     <string name="palette_name" translatable="false">Palette Name</string>
     <string name="frequency">Frequency</string>
     <string name="offset">Phase</string>
-    <string name="solid_fill">Solid Fill Color</string>
+    <string name="solid_fill">fill</string>
     <string name="solid_fill_white">white</string>
     <string name="solid_fill_black">black</string>
     <string name="phase_hint" translatable="false">Determines the color offset. Swipe left or right with one finger to change.</string>
@@ -106,10 +116,12 @@
 
 
     <!-- POSITION FRAGMENT -->
-    <string name="x">x</string>
-    <string name="y">y</string>
-    <string name="zoom">Zoom</string>
-    <string name="rotation">Rotation</string>
+    <string name="x" translatable="false">x</string>
+    <string name="y" translatable="false">y</string>
+    <string name="xy" translatable="false">xy</string>
+    <string name="zoom" translatable="false">zoom</string>
+    <string name="rotation">rotation</string>
+    <string name="rotate">rotate</string>
 
 
 
@@ -155,7 +167,6 @@
     <string name="anubis">Anubis</string>
     <string name="backwards">Backwards</string>
     <string name="slow">Slow</string>
-    <string name="robot">Robot</string>
 
 
 
@@ -224,7 +235,6 @@
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
-        uniform vec2 P5;
         uniform float Q1;
         uniform float Q2;
         uniform vec2 xScale;
@@ -255,7 +265,6 @@
         uniform vec2 P2;
         uniform vec2 P3;
         uniform vec2 P4;
-        uniform vec2 P5;
         uniform float Q1;
         uniform float Q2;
         uniform vec2 xScale;
@@ -810,7 +819,7 @@
         vec2 Z, Z1, Z2 = vec2(0.0);
         float modZ = 0.0;
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + P5.x + Q1 + Q2 + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + Q2 + x0 + y0 + R;
     </string>
     <string name="general_init_df" translatable="false">
         vec4 colorParams = vec4(0.0);
@@ -824,7 +833,7 @@
         vec2 Y, Y1, Y2 = vec2(0.0);
         vec2 modZ = vec2(0.0);
         float eps = 0.0;
-        float useUniforms = P1.x + P2.x + P3.x + P4.x + P5.x + Q1 + Q2 + x0 + y0 + R;
+        float useUniforms = P1.x + P2.x + P3.x + P4.x + Q1 + Q2 + x0 + y0 + R;
     </string>
     <string name="general_loop_sf" translatable="false">
         Z2 = Z1;
@@ -1195,8 +1204,8 @@
 
     <!-- MANDELEX -->
     <string name="mandelex_init_sf" translatable="false">
-        float lin_a = P4.x;
-        float lin_b = P4.y;
+        float lin_a = 2.0;
+        float lin_b = P4.x;
         float wrap = 0.5;
         float angle = P1.x;
         float radius = P2.x;

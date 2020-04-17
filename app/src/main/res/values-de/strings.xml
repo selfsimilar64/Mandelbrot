@@ -7,7 +7,7 @@
     <string name="dscript_shape_preview">Form Vorschaubild</string>
     <string name="frequency">Frequenz</string>
     <string name="julia_mode">Juliamodus</string>
-    <string name="max_iter">Maximale Iterationen</string>
+    <string name="max_iter">iterieren</string>
     <string name="msg_invalid_format">Ungültige Nummer Format</string>
     <string name="msg_save_failed">Bild nicht gespeichert: Speichererlaubnis erforderlich</string>
     <string name="msg_zoom_limit">Zoomgrenze erreicht</string>
@@ -26,12 +26,12 @@
     <string name="resolution">Auflösung</string>
     <string name="resolution_high">Hoher</string>
     <string name="resolution_low">Niedrige</string>
-    <string name="rotation">Drehung</string>
+    <string name="rotation">drehung</string>
     <string name="save">speichern</string>
     <string name="sensitivity">feinheit</string>
     <string name="settings">einstellungen</string>
     <string name="shape">Form</string>
-    <string name="solid_fill">Kompakte Füllfarbe</string>
+    <string name="solid_fill">füllen</string>
     <string name="solid_fill_black">schwarz</string>
     <string name="solid_fill_white">weiß</string>
     <string name="texture">textur</string>
@@ -42,10 +42,7 @@
     <string name="title_activity_settings">Einstellungen</string>
     <string name="u">u</string>
     <string name="v">v</string>
-    <string name="x">x</string>
-    <string name="y">y</string>
-    <string name="zoom">Zoom</string>
-    <string name="bailout">Fluchtradius</string>
+    <string name="escape_radius">Fluchtradius</string>
     <string name="msg_dual_in1">Umstellung auf zwei-Präzision…</string>
     <string name="msg_dual_in2">Die Bilderzeugung ist langsamer</string>
     <string name="msg_dual_out1">Umstellung auf einzelne-Präzision…</string>
@@ -98,7 +95,7 @@
     <string name="peacock">Pfau</string>
     <string name="hide_nav_bar">Navigationsleiste Ausblenden</string>
     <string name="palette">Palette</string>
-    <string name="reset">Reinitialisieren</string>
+    <string name="reset">Reset</string>
     <string name="continuous_render_hint">Rendern Sie das Bild bei Positionsänderungen</string>
     <string name="display_params_hint">Fenster mit relevanten Parametern während Berührungsgesten anzeigen</string>
     <string name="fit_viewport_hint">Zeigt das gesamte gerenderte Bild an</string>
@@ -107,4 +104,11 @@
     <string name="backwards">Rückwärts</string>
     <string name="slow">Schleppend</string>
     <string name="burning_ship_anypow">Brennendes Schiff (Potenz)</string>
+    <string name="view">ansicht</string>
+    <string name="radius">radius</string>
+    <string name="mode">modus</string>
+    <string name="new_str">neu</string>
+    <string name="render">render</string>
+    <string name="display">anzeige</string>
+    <string name="rotate">rotieren</string>
 </resources>

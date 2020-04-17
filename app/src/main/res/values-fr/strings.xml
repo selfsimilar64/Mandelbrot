@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="bailout">Rayon de Échappement</string>
+    <string name="escape_radius">Rayon de Échappement</string>
     <string name="color">couleur</string>
     <string name="continuous_render">Rendu Continue</string>
     <string name="display_params">Paramètres D\'affichage</string>
@@ -8,7 +8,7 @@
     <string name="dscript_shape_preview">image d\'aperçu de forme</string>
     <string name="frequency">Fréquence</string>
     <string name="julia_mode">Mode Julia</string>
-    <string name="max_iter">Itérations Maximums</string>
+    <string name="max_iter">itérer</string>
     <string name="msg_dual_in1">Passer à la double précision…</string>
     <string name="msg_dual_in2">La génération d\'images sera plus lente</string>
     <string name="msg_dual_out1">Passer à la seul précision…</string>
@@ -31,12 +31,12 @@
     <string name="resolution">Résolution</string>
     <string name="resolution_high">Haute</string>
     <string name="resolution_low">Basse</string>
-    <string name="rotation">Rotation</string>
+    <string name="rotation">rotation</string>
     <string name="save">enregistrer</string>
     <string name="sensitivity">sensibilité</string>
     <string name="settings">paramètres</string>
     <string name="shape">Forme</string>
-    <string name="solid_fill">Couleur de Remplissage</string>
+    <string name="solid_fill">remplir</string>
     <string name="solid_fill_black">noir</string>
     <string name="solid_fill_white">blanc</string>
     <string name="texture">texture</string>
@@ -47,9 +47,6 @@
     <string name="title_activity_settings">Paramètres</string>
     <string name="u">u</string>
     <string name="v">v</string>
-    <string name="x">x</string>
-    <string name="y">y</string>
-    <string name="zoom">Zoom</string>
     <string name="msg_save_successful">"Image enregistrée dans "</string>
     <string name="msg_save_wait">Veuillez attendre que l\'image termine le rendu</string>
     <string name="elephant">Éléphant</string>
@@ -98,7 +95,7 @@
     <string name="peacock">Paon</string>
     <string name="hide_nav_bar">Masquer Barre de Navigation</string>
     <string name="palette">Palette</string>
-    <string name="reset">Réinitialiser</string>
+    <string name="reset">Remettre</string>
     <string name="continuous_render_hint">Rendre l\'image lors des changements de position</string>
     <string name="display_params_hint">Afficher la fenêtre avec les paramètres pertinents lors des gestes tactiles</string>
     <string name="fit_viewport_hint">Afficher l\'intégralité de l\'image rendue</string>
@@ -107,4 +104,11 @@
     <string name="backwards">En Arrière</string>
     <string name="slow">Lent</string>
     <string name="burning_ship_anypow">Navire en Feu (Puissance)</string>
+    <string name="view">vue</string>
+    <string name="radius">rayon</string>
+    <string name="mode">mode</string>
+    <string name="new_str">nouveau</string>
+    <string name="render">rendu</string>
+    <string name="display">affichage</string>
+    <string name="rotate">tourner</string>
 </resources>

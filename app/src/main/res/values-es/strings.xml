@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="anubis">Anubis</string>
-    <string name="bailout">Radio de Escape</string>
+    <string name="escape_radius">Radio de Escape</string>
     <string name="canyon">Cañón</string>
     <string name="color">color</string>
     <string name="continuous_render">Renderizado Continuo</string>
@@ -11,7 +11,7 @@
     <string name="param3">Parám 3</string>
     <string name="param4">Parám 4</string>
     <string name="display_params">Mostra Parámetros</string>
-    <string name="done">listo</string>
+    <string name="done">acabado</string>
     <string name="dscript_shape_preview">imagen de forma de previsualización</string>
     <string name="elephant">Elefante</string>
     <string name="flora">Flora</string>
@@ -20,11 +20,8 @@
     <string name="groovy">Groovy</string>
     <string name="julia_mode">Modo Julia</string>
     <string name="magma">Magma</string>
-    <string name="max_iter">Iteraciónes Máximas</string>
-    <string name="zoom">Zoom</string>
+    <string name="max_iter">iterar</string>
     <string name="yinyang">Yin Yang</string>
-    <string name="x">x</string>
-    <string name="y">y</string>
     <string name="vascular">Vascular</string>
     <string name="viridis">Viridis</string>
     <string name="u">u</string>
@@ -37,13 +34,13 @@
     <string name="texture">textura</string>
     <string name="solid_fill_white">blanco</string>
     <string name="solid_fill_black">negro</string>
-    <string name="solid_fill">Color de Relleno Sólido</string>
+    <string name="solid_fill">llenar</string>
     <string name="shape">Forma</string>
     <string name="settings">ajustes</string>
     <string name="sensitivity">sensibilidad</string>
     <string name="save">guardar</string>
     <string name="royal">Real</string>
-    <string name="rotation">Rotación</string>
+    <string name="rotation">rotación</string>
     <string name="resolution">Resolución</string>
     <string name="resolution_low">Baja</string>
     <string name="resolution_high">Alta</string>
@@ -97,8 +94,8 @@
     <string name="msg_save_enabled">Guardado de imágenes habilitado: haga clic nuevamente para guardar</string>
     <string name="peacock">Pavo Real</string>
     <string name="hide_nav_bar">Ocultar Barra de Navegación</string>
-    <string name="palette">Paleta de Colores</string>
-    <string name="reset">Reinicializar</string>
+    <string name="palette">Paleta</string>
+    <string name="reset">Reinicio</string>
     <string name="continuous_render_hint">Renderizar la imagen durante los cambios de posición</string>
     <string name="display_params_hint">Mostrar ventana con parámetros relevantes durante los gestos táctiles</string>
     <string name="fit_viewport_hint">Mostrar toda la imagen renderizada</string>
@@ -107,4 +104,11 @@
     <string name="backwards">Hacia Atrás</string>
     <string name="slow">Lento</string>
     <string name="burning_ship_anypow">Barco en Llamas (Potencia)</string>
+    <string name="view">vista</string>
+    <string name="radius">radio</string>
+    <string name="mode">modo</string>
+    <string name="new_str">nuevo</string>
+    <string name="render">render</string>
+    <string name="display">exhibición</string>
+    <string name="rotate">rotar</string>
 </resources>
