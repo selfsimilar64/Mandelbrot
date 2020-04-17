@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="categoryLayoutHeight">261dp</dimen>
-    <dimen name="categoryLayoutHeightNoPadding">260dp</dimen>
-    <dimen name="categoryNameButtonHeight">40dp</dimen>
-    <dimen name="categoryButtonsHeight">45dp</dimen>
-    <dimen name="categoryPagerHeight">216dp</dimen>
-    <dimen name="categoryPagerHeightNoPadding">215dp</dimen>
+    <dimen name="uiLayoutHeight">175dp</dimen>
+    <dimen name="uiLayoutHeightTall">260dp</dimen>
+    <dimen name="uiLayoutHeightClosed">@dimen/menuButtonsHeight</dimen>
+    <dimen name="fragmentItemHeight">80dp</dimen>
+    <dimen name="categoryLayoutHeightTall">150dp</dimen>
+    <dimen name="categoryNameButtonHeight">35dp</dimen>
+    <dimen name="menuButtonsHeight">45dp</dimen>
+    <dimen name="categoryPagerHeight">130dp</dimen>
+
+    <dimen name="fragmentItemHeightTall">215dp</dimen>
 
     <dimen name="previewHeight">145dp</dimen>
     <dimen name="doneButtonSize">@dimen/navButtonSize</dimen>
@@ -25,7 +29,7 @@
     <dimen name="colorPreviewSize">80dp</dimen>
     <dimen name="colorPreviewGradientCornerRadius">10dp</dimen>
 
-    <dimen name="navButtonSize">@dimen/categoryButtonsHeight</dimen>
+    <dimen name="navButtonSize">@dimen/menuButtonsHeight</dimen>
     <dimen name="colorPreviewListMarginEnd">7dp</dimen>
     <dimen name="categoryPagerMarginHorizontal">7dp</dimen>
     <dimen name="listButtonMarginHorizontal">10dp</dimen>
