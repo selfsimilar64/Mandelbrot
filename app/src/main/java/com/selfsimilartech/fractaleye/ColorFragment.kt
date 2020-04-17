@@ -1,6 +1,7 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -11,10 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.SeekBar
-import android.widget.TextView
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,23 +23,19 @@ import kotlinx.android.synthetic.main.color_fragment.*
 import java.text.NumberFormat
 import java.text.ParseException
 import kotlin.math.floor
+import kotlin.math.log
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 
-class ColorFragment : Fragment() {
+class ColorFragment : MenuFragment() {
 
-    private val nf = NumberFormat.getInstance()
+    private lateinit var act : MainActivity
+    private lateinit var f : Fractal
+    private lateinit var fsv : FractalSurfaceView
+    private lateinit var sc : SettingsConfig
 
-    private fun String.formatToDouble() : Double? {
-        var d : Double? = null
-        try { d = nf.parse(this)?.toDouble() }
-        catch (e: ParseException) {
-            val act =activity as MainActivity
-            act.showMessage(resources.getString(R.string.msg_invalid_format))
-        }
-        return d
-    }
-    private fun loadNavButtons(buttons: List<ImageButton>) {
+    private fun loadNavButtons(buttons: List<Button>) {
 
         colorNavBar.removeAllViews()
         buttons.forEach { colorNavBar.addView(it) }
@@ -63,10 +57,10 @@ class ColorFragment : Fragment() {
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
-        val act = activity as MainActivity
-        val f = act.f
-        val fsv = act.fsv
-        val sc = act.sc
+        act = activity as MainActivity
+        f = act.f
+        fsv = act.fsv
+        sc = act.sc
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
@@ -323,19 +317,31 @@ class ColorFragment : Fragment() {
         })
 
 
+        val subMenuButtonListener = { layout: View, button: Button ->
+            View.OnClickListener {
+                showLayout(layout)
+                alphaButton(button)
+            }
+        }
 
 
-        // CLICK LISTENERS
-        colorPreview.setOnClickListener {
+        // LISTENERS
+        palettePreviewButton.setOnClickListener(subMenuButtonListener(palettePreviewLayout, palettePreviewButton))
+        palettePreviewLayout.setOnClickListener {
             handler.postDelayed({
 
                 act.hideCategoryButtons()
 
-                colorPreviewListLayout.show()
-                colorContent.hide()
+                colorSubMenuButtons.hide()
+                palettePreviewLayout.hide()
                 act.hideCategoryButtons()
+
+                colorPreviewListLayout.show()
                 colorNavBar.show()
+
                 loadNavButtons(previewListNavButtons)
+
+                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
 
                 with (colorPreviewList.adapter as ColorPaletteAdapter) {
                     if (isGridLayout) {
@@ -349,16 +355,51 @@ class ColorFragment : Fragment() {
             }, BUTTON_CLICK_DELAY_LONG)
         }
 
+        frequencyButton.setOnClickListener(subMenuButtonListener(frequencyLayout, frequencyButton))
+        frequencySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val newFreq = (progress.toFloat()/frequencySeekBar.max).pow(2f) * 75f
+                f.frequency = newFreq
+                frequencyEdit.setText("%.5f".format(newFreq))
+                fsv.requestRender()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+
+        })
+
+        phaseButton.setOnClickListener(subMenuButtonListener(phaseLayout, phaseButton))
+        phaseSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val newPhase = progress.toFloat()/phaseSeekBar.max
+                f.phase = newPhase
+                phaseEdit.setText("%.5f".format(newPhase))
+                fsv.requestRender()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+
+        })
+
+        solidFillButton.setOnClickListener(subMenuButtonListener(solidFillLayout, solidFillButton))
+
         colorPreviewListDoneButton.setOnClickListener {
             handler.postDelayed({
 
                 colorPreviewGradient.foreground = f.palette.gradientDrawable
                 colorPreviewName.text = f.palette.name
 
-                act.showCategoryButtons()
-                colorNavBar.hide()
+                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+
                 colorPreviewListLayout.hide()
-                colorContent.show()
+                palettePreviewLayout.show()
+                colorSubMenuButtons.show()
+                colorNavBar.hide()
+                act.showCategoryButtons()
 
                 fsv.r.renderProfile = RenderProfile.MANUAL
 
@@ -436,8 +477,11 @@ class ColorFragment : Fragment() {
         customPaletteDoneButton.setOnClickListener {
             handler.postDelayed({
 
+                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+
                 customPaletteLayout.hide()
-                colorContent.show()
+                palettePreviewLayout.show()
+                colorSubMenuButtons.show()
                 colorNavBar.hide()
                 act.showCategoryButtons()
 
@@ -453,8 +497,11 @@ class ColorFragment : Fragment() {
                 f.palette = ColorPalette.all[prevSelectedPaletteIndex]
                 fsv.requestRender()
 
+                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+
                 customPaletteLayout.hide()
-                colorContent.show()
+                palettePreviewLayout.show()
+                colorSubMenuButtons.show()
                 colorNavBar.hide()
                 act.showCategoryButtons()
 
@@ -493,13 +540,28 @@ class ColorFragment : Fragment() {
 
 
 
+        currentLayout = palettePreviewLayout
+        currentButton = palettePreviewButton
+        palettePreviewLayout.hide()
+        frequencyLayout.hide()
+        phaseLayout.hide()
+        solidFillLayout.hide()
         colorPreviewListLayout.hide()
         customPaletteLayout.hide()
         colorNavBar.hide()
 
+        palettePreviewButton.performClick()
+
         act.updateColorEditTexts()
         super.onViewCreated(v, savedInstanceState)
 
+    }
+
+    fun updateFrequencyLayout() {
+        frequencySeekBar.progress = ((f.frequency/75f).pow(0.5f)*frequencySeekBar.max).toInt()
+    }
+    fun updatePhaseLayout() {
+        phaseSeekBar.progress = (f.phase*phaseSeekBar.max).toInt()
     }
 
 }

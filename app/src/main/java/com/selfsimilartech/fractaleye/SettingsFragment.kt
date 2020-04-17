@@ -16,7 +16,7 @@ import android.widget.*
 import kotlinx.android.synthetic.main.settings_fragment.*
 
 
-class SettingsFragment : Fragment() {
+class SettingsFragment : MenuFragment() {
 
 //    private fun createNotificationChannel() {
 //        // Create the NotificationChannel, but only on API 26+ because
@@ -102,7 +102,10 @@ class SettingsFragment : Fragment() {
 
         })
         resolutionBar.max = if (BuildConfig.PAID_VERSION) Resolution.NUM_VALUES_PRO - 1 else Resolution.NUM_VALUES_FREE - 1
+        Log.e("SETTINGS", "resolution ordinal: ${sc.resolution.ordinal}")
         resolutionBar.progress = sc.resolution.ordinal
+        val dimensions = sc.resolution.scaleRes(fsv.r.screenRes)
+        resolutionDimensionsText.text = "${dimensions.x} x ${dimensions.y}"
 
 
         continuousRenderSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -138,7 +141,7 @@ class SettingsFragment : Fragment() {
         fitToViewportSwitch.setOnCheckedChangeListener { _, isChecked ->
 
             sc.fitToViewport = isChecked
-            act.recalculateSurfaceViewLayout()
+            act.updateSurfaceViewLayout()
 
         }
 
@@ -174,10 +177,10 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
-        renderButton.setOnClickListener {
-            fsv.r.renderToTex = true
-            fsv.requestRender()
-        }
+//        renderButton.setOnClickListener {
+//            fsv.r.renderToTex = true
+//            fsv.requestRender()
+//        }
 
 
 
@@ -187,7 +190,7 @@ class SettingsFragment : Fragment() {
                 if (tab.position == 2) {
                     Log.d("SETTINGS FRAGMENT", "auto selected")
                     sc.autoPrecision = true
-                    fsv.r.checkThresholdCross(f.position.scale)
+                    fsv.r.checkThresholdCross(f.position.zoom)
                 }
                 else {
                     sc.gpuPrecision = GpuPrecision.values()[tab.position]
@@ -209,6 +212,42 @@ class SettingsFragment : Fragment() {
                                 ?: sc.gpuPrecision.name
                 ).ordinal
         )?.select()
+
+
+
+        val subMenuButtonListener = { layout: View, button: Button ->
+            View.OnClickListener {
+                if (layout == renderOptionsLayout || layout == displayOptionsLayout) {
+                    act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
+                }
+                else if (currentLayout == renderOptionsLayout || currentLayout == displayOptionsLayout) {
+                    act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+                }
+                showLayout(layout)
+                alphaButton(button)
+            }
+        }
+
+
+
+        resolutionButton.setOnClickListener(subMenuButtonListener(resolutionLayout, resolutionButton))
+        hardwareButton.setOnClickListener(subMenuButtonListener(hardwareLayout, hardwareButton))
+        renderOptionsButton.setOnClickListener(subMenuButtonListener(renderOptionsLayout, renderOptionsButton))
+        displayOptionsButton.setOnClickListener(subMenuButtonListener(displayOptionsLayout, displayOptionsButton))
+
+
+
+        currentLayout = resolutionLayout
+        currentButton = resolutionButton
+        resolutionLayout.hide()
+        hardwareLayout.hide()
+        renderOptionsLayout.hide()
+        displayOptionsLayout.hide()
+
+
+        resolutionButton.performClick()
+
+
 
         super.onViewCreated(v, savedInstanceState)
 

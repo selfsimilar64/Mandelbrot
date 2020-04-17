@@ -2,8 +2,6 @@ package com.selfsimilartech.fractaleye
 
 import android.content.Context
 import android.graphics.Bitmap
-import java.text.NumberFormat
-import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.os.Handler
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -18,28 +16,17 @@ import android.widget.*
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.texture_fragment.*
-import java.text.ParseException
 import java.util.*
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
 
-class TextureFragment : Fragment() {
+class TextureFragment : MenuFragment() {
 
-    private val nf = NumberFormat.getInstance()
-
-    private fun String.formatToDouble(showMsg: Boolean = true) : Double? {
-        var d : Double? = null
-        try { d = nf.parse(this)?.toDouble() }
-        catch (e: ParseException) {
-            if (showMsg) {
-                val act = activity as MainActivity
-                act.showMessage(resources.getString(R.string.msg_invalid_format))
-            }
-        }
-        return d
-    }
-
+    private lateinit var act : MainActivity
+    private lateinit var f : Fractal
+    private lateinit var fsv : FractalSurfaceView
+    private lateinit var sc : SettingsConfig
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
@@ -49,10 +36,10 @@ class TextureFragment : Fragment() {
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
-        val act = activity as MainActivity
-        val f = act.f
-        val fsv = act.fsv
-        val sc = act.sc
+        act = activity as MainActivity
+        f = act.f
+        fsv = act.fsv
+        sc = act.sc
 
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -83,42 +70,42 @@ class TextureFragment : Fragment() {
 
         }}
 
-
         val handler = Handler()
         texturePreviewName.text = resources.getString(f.texture.displayName)
 
 
-
-        val previewListWidth = fsv.r.screenRes.x -
-                2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) -
-                resources.getDimension(R.dimen.navButtonSize)
-        val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) +
-                2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
-        Log.e("COLOR FRAGMENT", "texturePreviewListWidth: $previewListWidth")
-        Log.e("COLOR FRAGMENT", "texturePreviewGridWidth: $previewGridWidth")
+        val previewListWidth = fsv.r.screenRes.x - 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) - resources.getDimension(R.dimen.navButtonSize)
+        val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) + 2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
+        //Log.e("COLOR FRAGMENT", "texturePreviewListWidth: $previewListWidth")
+        //Log.e("COLOR FRAGMENT", "texturePreviewGridWidth: $previewGridWidth")
         val spanCount = floor(previewListWidth.toDouble() / previewGridWidth).toInt()
-        Log.e("COLOR FRAGMENT", "spanCount: ${previewListWidth.toDouble() / previewGridWidth}")
+        //Log.e("COLOR FRAGMENT", "spanCount: ${previewListWidth.toDouble() / previewGridWidth}")
 
 
+        val textureParamButtons = listOf(
+                textureParamButton1,
+                textureParamButton2
+        )
 
-        textureParamLayout.hide()
-        textureParamButtons.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabSelected(tab: TabLayout.Tab) {
 
-                val param = f.texture.params[tab.position]
-                Log.d("TEXTURE FRAGMENT", "${resources.getString(param.name)} -- value: $param, progress: ${param.progress}, interval: ${param.interval.toInt()}")
-                qBar.max = if (param.discrete) param.interval.toInt() else 100
-                Log.d("TEXTURE FRAGMENT", "qBar max: ${qBar.max}")
-                qBar.progress = (param.progress*qBar.max.toDouble()).roundToInt()
-                Log.d("TEXTURE FRAGMENT", "${param.progress}")
-
-            }
-        })
+//        textureParamLayout.hide()
+//        textureParamButtons.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
+//            override fun onTabReselected(tab: TabLayout.Tab) {}
+//            override fun onTabUnselected(tab: TabLayout.Tab) {}
+//            override fun onTabSelected(tab: TabLayout.Tab) {
+//
+//                val param = f.texture.params[tab.position]
+//                Log.d("TEXTURE FRAGMENT", "${resources.getString(param.name)} -- value: $param, progress: ${param.progress}, interval: ${param.interval.toInt()}")
+//                qBar.max = if (param.discrete) param.interval.toInt() else 100
+//                Log.d("TEXTURE FRAGMENT", "qBar max: ${qBar.max}")
+//                qBar.progress = (param.progress*qBar.max.toDouble()).roundToInt()
+//                Log.d("TEXTURE FRAGMENT", "${param.progress}")
+//
+//            }
+//        })
         qEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
 
-            val param = f.texture.params[textureParamButtons.selectedTabPosition]
+            val param = f.texture.activeParam
             val result = w.text.toString().formatToDouble()
             if (result != null) {
                 param.q = result
@@ -127,27 +114,27 @@ class TextureFragment : Fragment() {
             param.setProgressFromValue()
 
             w.text = param.toString()
-            qBar.progress = (param.progress*qBar.max.toDouble()).toInt()
+            qSeekBar.progress = (param.progress*qSeekBar.max.toDouble()).toInt()
             // Log.d("TEXTURE FRAGMENT", "param progress : ${param.progress}")
             // Log.d("TEXTURE FRAGMENT", "qBar max : ${qBar.max}")
 
         })
-        qBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        qSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             fun updateEditTextOnly() {
 
                 // update EditText but not param
-                val param = if (f.texture.params.isNotEmpty()) f.texture.params[textureParamButtons.selectedTabPosition] else null
-                val progressNormal = qBar.progress.toDouble()/qBar.max
-                qEdit.setText(param?.toString((1.0 - progressNormal)*param.min + progressNormal*param.max))
+                val param = f.texture.activeParam
+                val progressNormal = qSeekBar.progress.toDouble()/qSeekBar.max
+                qEdit.setText(param.toString((1.0 - progressNormal)*param.min + progressNormal*param.max))
 
             }
             fun updateEditTextAndParam() {
 
                 // update EditText and param -- then render
-                val param = if (f.texture.params.isNotEmpty()) f.texture.params[textureParamButtons.selectedTabPosition] else null
-                param?.progress = qBar.progress.toDouble()/qBar.max
-                param?.setValueFromProgress()
+                val param = f.texture.activeParam
+                param.progress = qSeekBar.progress.toDouble()/qSeekBar.max
+                param.setValueFromProgress()
                 qEdit.setText(param.toString())
 
                 fsv.r.renderToTex = true
@@ -170,7 +157,7 @@ class TextureFragment : Fragment() {
 
         })
         if (f.texture.numParamsInUse != 0) {
-            qBar.max = if (f.texture.params[0].discrete)
+            qSeekBar.max = if (f.texture.params[0].discrete)
                 f.texture.params[0].interval.toInt() else 100
         }
 
@@ -205,27 +192,20 @@ class TextureFragment : Fragment() {
 
                                     f.texture = f.shape.compatTextures[position]
 
-                                    if (f.texture.numParamsInUse != 0) {
+                                    textureParamButtons.forEach { it.hide() }
+                                    f.texture.params.forEachIndexed { index, param ->
 
-                                        textureParamLayout.visibility = ConstraintLayout.VISIBLE
-
-                                        textureParamButtons.removeAllTabs()
-                                        f.texture.params.forEach { param ->
-
-                                            if (BuildConfig.PAID_VERSION || !param.proFeature) {
-                                                textureParamButtons.addTab(textureParamButtons.newTab().setText(param.name))
+                                        if (BuildConfig.PAID_VERSION || !param.proFeature) {
+                                            textureParamButtons[index].apply {
+                                                show()
+                                                text = resources.getString(param.name)
                                             }
-
                                         }
 
-                                        textureParamButtons.getTabAt(0)?.select()
-
                                     }
-                                    else {
 
-                                        textureParamLayout.visibility = ConstraintLayout.GONE
-
-                                    }
+                                    val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
+                                    escapeRadiusSeekBar.progress = bailoutStrings[1].toInt()
 
                                     fsv.r.renderShaderChanged = true
                                     fsv.r.renderToTex = true
@@ -234,8 +214,6 @@ class TextureFragment : Fragment() {
                                     act.updateTextureEditTexts()
 
                                 }
-
-                                // Log.e("MAIN ACTIVITY", "clicked texture: ${f.texture.name}")
 
                             }
 
@@ -304,6 +282,47 @@ class TextureFragment : Fragment() {
                 })
 
 
+        val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
+        escapeRadiusSeekBar.progress = bailoutStrings[1].toInt()
+        escapeRadiusSeekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
+                val result1 = bailoutSignificandEdit.text.toString().formatToDouble(false)
+                val result2 = "${bailoutSignificandEdit.text}e$progress".formatToDouble(false)?.toFloat()
+                if (result1 != null && result2 != null) {
+                    if (result2.isInfinite() || result2.isNaN()) {
+                        act.showMessage(resources.getString(R.string.msg_num_out_range))
+                    }
+                    else {
+                        f.bailoutRadius = result2
+                        if (sc.continuousRender) {
+                            fsv.r.renderToTex = true
+                            fsv.requestRender()
+                        }
+                        //fsv.r.renderToTex = true
+                    }
+                }
+                else {
+                    act.showMessage(resources.getString(R.string.msg_invalid_format))
+                }
+                val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
+                //bailoutSignificandEdit.setText("%.5f".format(bailoutStrings[0].toFloat()))
+                bailoutExponentEdit.setText("%d".format(bailoutStrings[1].toInt()))
+
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
+            }
+
+        })
+
 
         textureModeTabs.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
             override fun onTabReselected(tab: TabLayout.Tab) {}
@@ -319,9 +338,22 @@ class TextureFragment : Fragment() {
 
 
 
+        val textureParamButtonList = listOf(
+                textureParamButton1,
+                textureParamButton2
+        )
+        textureParamButtonList.forEach { it.hide() }
+        f.texture.params.forEachIndexed { index, param ->
+            textureParamButtonList[index].apply {
+                show()
+                text = resources.getString(param.name)
+            }
+        }
+
+
 
         // CLICK LISTENERS
-        texturePreview.setOnClickListener {
+        texturePreviewLayout.setOnClickListener {
             handler.postDelayed({
 
                 with (texturePreviewList.adapter as TextureAdapter) {
@@ -331,10 +363,14 @@ class TextureFragment : Fragment() {
                     }
                 }
 
-                texturePreviewListLayout.show()
-                textureContent.hide()
+                textureSubMenuButtons.hide()
+                texturePreviewLayout.hide()
                 act.hideCategoryButtons()
+
                 textureNavBar.show()
+                texturePreviewListLayout.show()
+
+                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
 
                 fsv.r.renderProfile = RenderProfile.TEXTURE_THUMB
                 fsv.r.renderThumbnails = true
@@ -373,8 +409,11 @@ class TextureFragment : Fragment() {
 
             texturePreviewName.text = resources.getString(f.texture.displayName)
 
+            act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+
             texturePreviewListLayout.hide()
-            textureContent.show()
+            texturePreviewLayout.show()
+            textureSubMenuButtons.show()
             textureNavBar.hide()
             act.showCategoryButtons()
 
@@ -384,10 +423,43 @@ class TextureFragment : Fragment() {
 
 
 
+        val subMenuButtonListener = { layout: View, button: Button ->
+            View.OnClickListener {
+                showLayout(layout)
+                alphaButton(button)
+            }
+        }
+        val textureParamButtonListener = { button: Button, paramIndex: Int ->
+            View.OnClickListener {
+                fsv.r.reaction = Reaction.SHAPE
+                f.texture.activeParam = f.texture.params[paramIndex]
+                showLayout(textureParamLayout)
+                //shapeResetButton.show()
+                alphaButton(button)
+                loadActiveParam()
+            }
+        }
 
+        texturePreviewButton.setOnClickListener(subMenuButtonListener(texturePreviewLayout, texturePreviewButton))
+        textureModeButton.setOnClickListener(subMenuButtonListener(textureModeLayout, textureModeButton))
+        escapeRadiusButton.setOnClickListener(subMenuButtonListener(escapeRadiusLayout, escapeRadiusButton))
+        textureParamButtonList.forEachIndexed { index, button ->
+            button.setOnClickListener(textureParamButtonListener(button, index))
+        }
+
+
+        currentButton = texturePreviewButton
+        currentLayout = texturePreviewLayout
+        texturePreviewLayout.hide()
+        textureModeLayout.hide()
+        escapeRadiusLayout.hide()
+        textureParamLayout.hide()
 
         texturePreviewListLayout.hide()
         textureNavBar.hide()
+
+
+        texturePreviewButton.performClick()
 
 
         val thumbRes = Resolution.THUMB.scaleRes(fsv.r.screenRes)
@@ -398,6 +470,18 @@ class TextureFragment : Fragment() {
         }
         act.updateTextureEditTexts()
         super.onViewCreated(v, savedInstanceState)
+    
+    }
+    
+    fun loadActiveParam() {
+
+        val param = f.texture.activeParam
+        qEdit.setText(param.toString())
+        qSeekBar.max = if (param.discrete) param.interval.toInt() else 500
+        //Log.d("TEXTURE FRAGMENT", "qSeekBar max: ${qSeekBar.max}")
+        qSeekBar.progress = (param.progress*qSeekBar.max.toDouble()).roundToInt()
+        //Log.d("TEXTURE FRAGMENT", "${param.progress}")
+        
     }
 
 }
