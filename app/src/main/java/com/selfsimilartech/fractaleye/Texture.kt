@@ -61,6 +61,8 @@ class Texture (
 
     }
 
+    var activeParam = if (params.isNotEmpty()) params[0] else Param(R.string.empty)
+
     companion object {
 
         val empty = Texture(name = R.string.empty)

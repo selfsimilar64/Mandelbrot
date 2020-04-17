@@ -200,7 +200,7 @@ class Shape (
                 loopDF = R.string.mandelbrot_loop_df,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
                 positions = PositionList(
-                    default = Position(x = -0.75, scale = 3.5)
+                    default = Position(x = -0.75, zoom = 3.5)
                 )
         )
         val mandelbrotCubic = Shape(
@@ -210,7 +210,7 @@ class Shape (
                 loopSF = R.string.mandelbrotcubic_loop_sf,
                 loopDF = R.string.mandelbrotcubic_loop_df,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
-                positions = PositionList(Position(scale = 3.5)),
+                positions = PositionList(Position(zoom = 3.5)),
                 power = 3f,
                 proFeature = true
         )
@@ -221,7 +221,7 @@ class Shape (
                 loopSF = R.string.mandelbrotquartic_loop_sf,
                 loopDF = R.string.mandelbrotquartic_loop_df,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
-                positions = PositionList(Position(x = -0.175, scale = 3.5)),
+                positions = PositionList(Position(x = -0.175, zoom = 3.5)),
                 power = 4f,
                 proFeature = true
         )
@@ -232,7 +232,7 @@ class Shape (
                 loopSF = R.string.mandelbrotquintic_loop_sf,
                 loopDF = R.string.mandelbrotquintic_loop_df,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
-                positions = PositionList(Position(scale = 3.5)),
+                positions = PositionList(Position(zoom = 3.5)),
                 power = 5f,
                 proFeature = true
         )
@@ -242,7 +242,7 @@ class Shape (
                 icon = R.drawable.mandelbrotanypow_icon,
                 loopSF = R.string.mandelbrotanypow_loop_sf,
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
-                positions = PositionList(Position(x = -0.55, y = 0.5, scale = 5.0)),
+                positions = PositionList(Position(x = -0.55, y = 0.5, zoom = 5.0)),
                 params = ParamList(listOf(ComplexParam(16.0, 4.0))),
                 hasDynamicPower = true
         )
@@ -252,7 +252,7 @@ class Shape (
                 icon = R.drawable.clover_icon,
                 initSF = R.string.dualpow_init_sf,
                 loopSF = R.string.dualpow_loop_sf,
-                positions = PositionList(Position(scale = 2.0, rotation = 45.0.inRadians())),
+                positions = PositionList(Position(zoom = 2.0, rotation = 45.0.inRadians())),
                 z0 = Complex.ONE,
                 params = ParamList(listOf(ComplexParam(2.0, vLocked = true))),
                 hasDynamicPower = true
@@ -263,7 +263,7 @@ class Shape (
                 icon = R.drawable.mandelbox_icon,
                 loopSF = R.string.mandelbox_loop_sf,
                 loopDF = R.string.mandelbox_loop_df,
-                positions = PositionList(Position(scale = 6.5)),
+                positions = PositionList(Position(zoom = 6.5)),
                 params = ParamList(listOf(
                         ComplexParam(-2.66421354, vLocked = true),
                         ComplexParam(1.0, 0.0))
@@ -277,7 +277,7 @@ class Shape (
                 loopSF = R.string.kali_loop_sf,
                 conditionalDF = R.string.escape_df,
                 juliaMode = true,
-                positions = PositionList(julia = Position(scale = 3.0)),
+                positions = PositionList(julia = Position(zoom = 3.0)),
                 params = ParamList(julia = ComplexParam(-0.33170626, -0.18423799)),
                 bailoutRadius = 4e0f
         )
@@ -285,20 +285,20 @@ class Shape (
                 R.string.empty,
                 loopSF = R.string.kalisquare_loop_sf,
                 juliaMode = true,
-                positions = PositionList(julia = Position(scale = 4.0)),
+                positions = PositionList(julia = Position(zoom = 4.0)),
                 bailoutRadius = 4e0f
         )
         val mandelbar = Shape(
                 R.string.empty,
                 loopSF = R.string.mandelbar_loop_sf,
-                positions = PositionList(Position(scale = 3.0))
+                positions = PositionList(Position(zoom = 3.0))
         )
         val logistic = Shape(
                 R.string.empty,
                 katex = R.string.logistic_katex,
                 loopSF = R.string.logistic_loop_sf,
                 loopDF = R.string.logistic_loop_df,
-                positions = PositionList(Position(scale = 3.5)),
+                positions = PositionList(Position(zoom = 3.5)),
                 z0 = Complex(0.5, 0.0)
         )
         val burningShip = Shape(
@@ -312,7 +312,7 @@ class Shape (
         val magnet = Shape(
                 R.string.empty,
                 loopSF = R.string.magnet_loop_sf,
-                positions = PositionList(Position(scale = 3.5)),
+                positions = PositionList(Position(zoom = 3.5)),
                 params = ParamList(listOf(
                         ComplexParam(-1.0, vLocked = true),
                         ComplexParam(-2.0, vLocked = true))),
@@ -323,7 +323,7 @@ class Shape (
                 katex = R.string.sine1_katex,
                 icon = R.drawable.sine1_icon,
                 loopSF = R.string.sine1_loop_sf,
-                positions = PositionList(Position(scale = 6.0)),
+                positions = PositionList(Position(zoom = 6.0)),
                 bailoutRadius = 1e4f
         )
         val sine2 = Shape(
@@ -331,7 +331,7 @@ class Shape (
                 katex = R.string.sine2_katex,
                 icon = R.drawable.sine2_icon,
                 loopSF = R.string.sine2_loop_sf,
-                positions = PositionList(Position(scale = 3.5)),
+                positions = PositionList(Position(zoom = 3.5)),
                 params = ParamList(listOf(ComplexParam(-0.26282884))),
                 z0 = Complex.ONE
         )
@@ -339,7 +339,7 @@ class Shape (
                 R.string.empty,
                 katex = R.string.sine3_katex,
                 loopSF = R.string.sine3_loop_sf,
-                positions = PositionList(Position(scale = 3.5)),
+                positions = PositionList(Position(zoom = 3.5)),
                 params = ParamList(listOf(ComplexParam(0.31960705187983646, vLocked = true))),
                 z0 = Complex.ONE,
                 bailoutRadius = 1e1f
@@ -349,7 +349,7 @@ class Shape (
                 katex = R.string.horseshoecrab_katex,
                 icon = R.drawable.horseshoecrab_icon,
                 loopSF = R.string.horseshoecrab_loop_sf,
-                positions = PositionList(Position(x = -0.25, scale = 6.0, rotation = 90.0.inRadians())),
+                positions = PositionList(Position(x = -0.25, zoom = 6.0, rotation = 90.0.inRadians())),
                 params = ParamList(listOf(ComplexParam(sqrt(2.0)))),
                 z0 = Complex.ONE
         )
@@ -357,7 +357,7 @@ class Shape (
                 R.string.empty,
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.newton2_loop_sf,
-                positions = PositionList(julia = Position(scale = 3.5)),
+                positions = PositionList(julia = Position(zoom = 3.5)),
                 juliaMode = true,
                 params = ParamList(listOf(
                         ComplexParam(1.0, 1.0),
@@ -370,7 +370,7 @@ class Shape (
                 katex = R.string.newton3_katex,
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.newton3_loop_sf,
-                positions = PositionList(julia = Position(scale = 5.0)),
+                positions = PositionList(julia = Position(zoom = 5.0)),
                 juliaMode = true
         )
         val persianRug = Shape(
@@ -378,7 +378,7 @@ class Shape (
                 katex = R.string.persianrug_katex,
                 initSF = R.string.persianrug_init_sf,
                 loopSF = R.string.persianrug_loop_sf,
-                positions = PositionList(Position(scale = 1.5)),
+                positions = PositionList(Position(zoom = 1.5)),
                 params = ParamList(listOf(ComplexParam(0.642, 0.0))),
                 bailoutRadius = 1e1f
         )
@@ -387,7 +387,7 @@ class Shape (
                 icon = R.drawable.kleinian_icon,
                 initSF = R.string.kleinian_init_sf,
                 loopSF = R.string.kleinian_loop_sf,
-                positions = PositionList(julia = Position(y = -0.5, scale = 1.5)),
+                positions = PositionList(julia = Position(y = -0.5, zoom = 1.5)),
                 juliaMode = true,
                 params = ParamList(
                         listOf(ComplexParam(1.41421538, vLocked = true)),
@@ -403,7 +403,7 @@ class Shape (
                 loopSF = R.string.nova1_loop_sf,
                 conditionalDF = R.string.converge_df,
                 loopDF = R.string.nova1_loop_df,
-                positions = PositionList(Position(x = -0.3, scale = 1.75, rotation = 90.0.inRadians())),
+                positions = PositionList(Position(x = -0.3, zoom = 1.75, rotation = 90.0.inRadians())),
                 z0 = Complex.ONE,
                 params = ParamList(listOf(ComplexParam(1.0, 0.0)))
         )
@@ -414,7 +414,7 @@ class Shape (
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.nova2_loop_sf,
                 juliaMode = true,
-                positions = PositionList(julia = Position(x = -0.3, scale = 5.0))
+                positions = PositionList(julia = Position(x = -0.3, zoom = 5.0))
         )
         val fibonacciPowers = Shape(
                 R.string.empty,
@@ -451,12 +451,12 @@ class Shape (
                 name = R.string.mandelex,
                 initSF = R.string.mandelex_init_sf,
                 loopSF = R.string.mandelex_loop_sf,
-                positions = PositionList(Position(scale = 2e1)),
+                positions = PositionList(Position(zoom = 2e1)),
                 params = ParamList(listOf(
                         Param(180.0, Range(0.0, 360.0), name = "angle"),
                         Param(0.5,   Range(0.0, 1.0),   name = "radius"),
-                        Param(2.0,   Range(-3.0, 3.0),  name = "scale"),
-                        ComplexParam(2.0, 2.0, name = "linear")
+                        Param(2.0,   Range(0.0, 5.0),   name = "scale"),
+                        Param(2.0,   Range(0.0, 5.0),   name = "linear")
                 )),
                 proFeature = true
         )
