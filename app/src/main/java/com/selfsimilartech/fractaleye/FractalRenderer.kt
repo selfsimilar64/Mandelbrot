@@ -117,6 +117,10 @@ class FractalRenderer(
     private val aspectRatio = screenRes.y.toDouble() / screenRes.x
 
     var reaction = Reaction.POSITION
+        set(value) {
+            field = value
+            Log.e("RENDERER", "reaction: ${reaction.name}")
+        }
     var renderProfile = RenderProfile.MANUAL
 
     private val prevFocus = floatArrayOf(0f, 0f)
@@ -332,16 +336,18 @@ class FractalRenderer(
 
     // RENDERSCRIPT INITIALIZERS
 
-    private val rs = RenderScript.create(context)
-    private val perturbationPixelsScript = ScriptC_perturbationPixels(rs)
-    private val perturbationImageScript = ScriptC_perturbationImage(rs)
+//    private val rs = RenderScript.create(context)
+//    private val perturbationPixelsScript = ScriptC_perturbationPixels(rs)
+//    private val perturbationImageScript = ScriptC_perturbationImage(rs)
 
     // memory allocation for reference iteration values
-    private val refAllocation = Allocation.createTyped(rs, Type.createX(
-            rs,
-            Element.F64(rs),
-            2*MAX_REF_ITER
-    ))
+//    private val refAllocation = Allocation.createTyped(rs, Type.createX(
+//            rs,
+//            Element.F64(rs),
+//            2*MAX_REF_ITER
+//    ))
+
+
 //    private val imageOutAllocation = Allocation.createTyped(rs, Type.createXY(
 //            rs,
 //            Element.F32_2(rs),
@@ -349,9 +355,10 @@ class FractalRenderer(
 //            foreground.res.y
 //    ))
 
+
     //memory allocation for indices of pixels that need to be iterated
-    private var pixelsInAllocation  = Allocation.createTyped(rs, Type.createX(rs, Element.U8(rs), 1))
-    private var pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(rs, Element.U8(rs), 1))
+//    private var pixelsInAllocation  = Allocation.createTyped(rs, Type.createX(rs, Element.U8(rs), 1))
+//    private var pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(rs, Element.U8(rs), 1))
 
     private val rsMsgHandler = object : RenderScript.RSMessageHandler() {
         override fun run() {
@@ -391,7 +398,7 @@ class FractalRenderer(
 
         initialize()
         renderToTex = true
-        render()
+
 
         //val buttonScroll = act.findViewById<HorizontalScrollView>(R.id.buttonScroll)
         //buttonScroll.fullScroll(HorizontalScrollView.FOCUS_RIGHT)
@@ -426,7 +433,7 @@ class FractalRenderer(
         auxiliary = foreground2
 
 
-        rs.messageHandler = rsMsgHandler
+//        rs.messageHandler = rsMsgHandler
 
         val thumbRes = Resolution.THUMB.scaleRes(screenRes)
         Log.d("RENDERER", "thumbnail resolution: ${thumbRes.x} x ${thumbRes.y}")
@@ -458,7 +465,7 @@ class FractalRenderer(
         vRenderShader = loadShader(GL_VERTEX_SHADER, vRenderCode)
         vSampleShader = loadShader(GL_VERTEX_SHADER, vSampleCode)
 
-        checkThresholdCross(f.position.scale)
+        checkThresholdCross(f.position.zoom)
         updateRenderShader()
         fRenderShader = loadShader(GL_FRAGMENT_SHADER, renderShader)
         //fRenderShader = loadShader(GL_FRAGMENT_SHADER, perturbationCode)
@@ -556,20 +563,20 @@ class FractalRenderer(
         hasTranslated = true
 
     }
-    private fun scale(dScale: Float) {
+    fun zoom(dZoom: Float) {
 
         if (!f.position.scaleLocked) {
 
             quadCoords[0] -= quadFocus[0]
             quadCoords[1] -= quadFocus[1]
 
-            quadCoords[0] *= dScale
-            quadCoords[1] *= dScale
+            quadCoords[0] *= dZoom
+            quadCoords[1] *= dZoom
 
             quadCoords[0] += quadFocus[0]
             quadCoords[1] += quadFocus[1]
 
-            quadScale *= dScale
+            quadScale *= dZoom
             hasScaled = true
 
         }
@@ -585,7 +592,7 @@ class FractalRenderer(
         )
 
     }
-    private fun rotate(dTheta: Float) {
+    fun rotate(dTheta: Float) {
 
         if (!f.position.rotationLocked) {
 
@@ -629,10 +636,10 @@ class FractalRenderer(
 
             val prevPrecision = sc.gpuPrecision
             sc.gpuPrecision = when {
-                f.position.scale > GpuPrecision.SINGLE.threshold -> GpuPrecision.SINGLE
+                f.position.zoom > GpuPrecision.SINGLE.threshold -> GpuPrecision.SINGLE
 
                 f.shape.hasDualFloat
-                        && f.position.scale < GpuPrecision.SINGLE.threshold -> GpuPrecision.DUAL
+                        && f.position.zoom < GpuPrecision.SINGLE.threshold -> GpuPrecision.DUAL
 
                 else -> sc.gpuPrecision
             }
@@ -642,7 +649,7 @@ class FractalRenderer(
             val prevScaleExponent = -prevScaleStrings[1].toDouble()
             val prevScaleOrdinal = floor(prevScaleExponent/12.0).toLong()
             
-            val scaleStrings = "%e".format(Locale.US, f.position.scale).split("e")
+            val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
             val scaleExponent = -scaleStrings[1].toDouble()
             val scaleOrdinal = floor(scaleExponent/12.0).toLong()
 
@@ -658,9 +665,9 @@ class FractalRenderer(
         // display message
         if (sc.hardwareProfile == HardwareProfile.GPU) {
 
-            val singleThresholdCrossedIn = f.position.scale < GpuPrecision.SINGLE.threshold && prevScale > GpuPrecision.SINGLE.threshold
-            val singleThresholdCrossedOut = f.position.scale > GpuPrecision.SINGLE.threshold && prevScale < GpuPrecision.SINGLE.threshold
-            val dualThresholdCrossed = f.position.scale < GpuPrecision.DUAL.threshold && prevScale > GpuPrecision.DUAL.threshold
+            val singleThresholdCrossedIn = f.position.zoom < GpuPrecision.SINGLE.threshold && prevScale > GpuPrecision.SINGLE.threshold
+            val singleThresholdCrossedOut = f.position.zoom > GpuPrecision.SINGLE.threshold && prevScale < GpuPrecision.SINGLE.threshold
+            val dualThresholdCrossed = f.position.zoom < GpuPrecision.DUAL.threshold && prevScale > GpuPrecision.DUAL.threshold
 
             val msg = when {
                 (!f.shape.hasDualFloat && singleThresholdCrossedIn) || (f.shape.hasDualFloat && dualThresholdCrossed) -> resources.getString(R.string.msg_zoom_limit)
@@ -850,7 +857,7 @@ class FractalRenderer(
     }
     private fun onRenderShaderChanged() {
 
-        Log.d("RENDERER", "render shader changed")
+        Log.e("RENDERER", "render shader changed")
 
         updateRenderShader()
 
@@ -869,6 +876,8 @@ class FractalRenderer(
         getRenderUniformLocations()
 
         renderShaderChanged = false
+
+        Log.e("RENDERER", "render shader changing done")
 
     }
     private fun onForegroundResolutionChanged() {
@@ -1090,13 +1099,13 @@ class FractalRenderer(
         val errorThreshold = 1e-12
 
         val delta = Double2(
-                deltaMag * 0.5 * f.position.scale,
-                deltaMag * 0.5 * f.position.scale * aspectRatio
+                deltaMag * 0.5 * f.position.zoom,
+                deltaMag * 0.5 * f.position.zoom * aspectRatio
         )
         var d1x = 0.0
         var d1y = 0.0
-        val d0x = deltaMag * 0.5 * f.position.scale
-        val d0y = deltaMag * 0.5 * f.position.scale * aspectRatio
+        val d0x = deltaMag * 0.5 * f.position.zoom
+        val d0y = deltaMag * 0.5 * f.position.zoom * aspectRatio
         val d0xSqr = d0x*d0x - d0y*d0y
         val d0ySqr = 2.0*d0x*d0y
         val d0xCube = d0x*d0xSqr - d0y*d0ySqr
@@ -1237,31 +1246,31 @@ class FractalRenderer(
         val sinRotation = sin(f.position.rotation)
         val cosRotation = cos(f.position.rotation)
 
-        perturbationImageScript._ref = refAllocation
-
-        perturbationImageScript._width = width.toDouble()
-        perturbationImageScript._height = height.toDouble()
-        perturbationImageScript._aspectRatio = aspectRatio
-        perturbationImageScript._bgScale = bgScale
-
-        perturbationImageScript._d0xOffset = d0xOffset
-        perturbationImageScript._d0yOffset = d0yOffset
-
-        perturbationImageScript._refIter = refIter.toLong()
-        perturbationImageScript._skipIter = skipIter.toLong()
-        perturbationImageScript._maxIter = f.maxIter.toLong()
-        perturbationImageScript._escapeRadius = f.bailoutRadius
-
-        perturbationImageScript._scale = f.position.scale / 2.0
-        perturbationImageScript._sinRotation = sinRotation
-        perturbationImageScript._cosRotation = cosRotation
-
-        perturbationImageScript._alphax = seriesCoefs[0].real().toDouble()
-        perturbationImageScript._alphay = seriesCoefs[0].imag().toDouble()
-        perturbationImageScript._betax = seriesCoefs[1].real().toDouble()
-        perturbationImageScript._betay = seriesCoefs[1].imag().toDouble()
-        perturbationImageScript._gammax = seriesCoefs[2].real().toDouble()
-        perturbationImageScript._gammay = seriesCoefs[2].imag().toDouble()
+//        perturbationImageScript._ref = refAllocation
+//
+//        perturbationImageScript._width = width.toDouble()
+//        perturbationImageScript._height = height.toDouble()
+//        perturbationImageScript._aspectRatio = aspectRatio
+//        perturbationImageScript._bgScale = bgScale
+//
+//        perturbationImageScript._d0xOffset = d0xOffset
+//        perturbationImageScript._d0yOffset = d0yOffset
+//
+//        perturbationImageScript._refIter = refIter.toLong()
+//        perturbationImageScript._skipIter = skipIter.toLong()
+//        perturbationImageScript._maxIter = f.maxIter.toLong()
+//        perturbationImageScript._escapeRadius = f.bailoutRadius
+//
+//        perturbationImageScript._scale = f.position.zoom / 2.0
+//        perturbationImageScript._sinRotation = sinRotation
+//        perturbationImageScript._cosRotation = cosRotation
+//
+//        perturbationImageScript._alphax = seriesCoefs[0].real().toDouble()
+//        perturbationImageScript._alphay = seriesCoefs[0].imag().toDouble()
+//        perturbationImageScript._betax = seriesCoefs[1].real().toDouble()
+//        perturbationImageScript._betay = seriesCoefs[1].imag().toDouble()
+//        perturbationImageScript._gammax = seriesCoefs[2].real().toDouble()
+//        perturbationImageScript._gammay = seriesCoefs[2].imag().toDouble()
 
         //perturbationImageScript.forEach_iterate(imageOutAllocation)
 
@@ -1276,39 +1285,39 @@ class FractalRenderer(
         val sinRotation = sin(f.position.rotation)
         val cosRotation = cos(f.position.rotation)
 
-        perturbationPixelsScript._ref = refAllocation
-        perturbationPixelsScript._pixels = pixelsInAllocation
-
-        perturbationPixelsScript._width = res.x.toDouble()
-        perturbationPixelsScript._height = res.y.toDouble()
-        perturbationPixelsScript._pixelsSize = glitchedPixelsSize.toDouble()
-        perturbationPixelsScript._aspectRatio = aspectRatio
-        perturbationPixelsScript._bgScale = bgScale
-
-        perturbationPixelsScript._d0xOffset = d0xOffset
-        perturbationPixelsScript._d0yOffset = d0yOffset
-
-        perturbationPixelsScript._maxRefIter = MAX_REF_ITER.toLong()
-        perturbationPixelsScript._refIter = refData.refIter.toLong()
-        perturbationPixelsScript._skipIter = if (refData.skipIter == -1) 0L else refData.skipIter.toLong()
-        perturbationPixelsScript._maxIter = f.maxIter.toLong()
-        perturbationPixelsScript._escapeRadius = f.bailoutRadius
-
-        perturbationPixelsScript._scale = f.position.scale / 2.0
-        perturbationPixelsScript._sinRotation = sinRotation
-        perturbationPixelsScript._cosRotation = cosRotation
-
-        perturbationPixelsScript._alphax = refData.ax
-        perturbationPixelsScript._alphay = refData.ay
-        perturbationPixelsScript._betax  = refData.bx
-        perturbationPixelsScript._betay  = refData.by
-        perturbationPixelsScript._gammax = refData.cx
-        perturbationPixelsScript._gammay = refData.cy
-
-        perturbationPixelsScript._sp = sp
-        perturbationPixelsScript._sn = sn
-
-        perturbationPixelsScript.forEach_iterate(pixelsOutAllocation)
+//        perturbationPixelsScript._ref = refAllocation
+//        perturbationPixelsScript._pixels = pixelsInAllocation
+//
+//        perturbationPixelsScript._width = res.x.toDouble()
+//        perturbationPixelsScript._height = res.y.toDouble()
+//        perturbationPixelsScript._pixelsSize = glitchedPixelsSize.toDouble()
+//        perturbationPixelsScript._aspectRatio = aspectRatio
+//        perturbationPixelsScript._bgScale = bgScale
+//
+//        perturbationPixelsScript._d0xOffset = d0xOffset
+//        perturbationPixelsScript._d0yOffset = d0yOffset
+//
+//        perturbationPixelsScript._maxRefIter = MAX_REF_ITER.toLong()
+//        perturbationPixelsScript._refIter = refData.refIter.toLong()
+//        perturbationPixelsScript._skipIter = if (refData.skipIter == -1) 0L else refData.skipIter.toLong()
+//        perturbationPixelsScript._maxIter = f.maxIter.toLong()
+//        perturbationPixelsScript._escapeRadius = f.bailoutRadius
+//
+//        perturbationPixelsScript._scale = f.position.zoom / 2.0
+//        perturbationPixelsScript._sinRotation = sinRotation
+//        perturbationPixelsScript._cosRotation = cosRotation
+//
+//        perturbationPixelsScript._alphax = refData.ax
+//        perturbationPixelsScript._alphay = refData.ay
+//        perturbationPixelsScript._betax  = refData.bx
+//        perturbationPixelsScript._betay  = refData.by
+//        perturbationPixelsScript._gammax = refData.cx
+//        perturbationPixelsScript._gammay = refData.cy
+//
+//        perturbationPixelsScript._sp = sp
+//        perturbationPixelsScript._sn = sn
+//
+//        perturbationPixelsScript.forEach_iterate(pixelsOutAllocation)
         
     }
 
@@ -1948,7 +1957,7 @@ class FractalRenderer(
         if (fgResolutionChanged) onForegroundResolutionChanged()
         if (bgResolutionChanged) onBackgroundResolutionChanged()
 
-        // Log.d("RENDERER", "rendering with ${renderProfile.name} profile")
+        //Log.d("RENDERER", "rendering with ${renderProfile.name} profile")
 
         when (renderProfile) {
 
@@ -2094,8 +2103,8 @@ class FractalRenderer(
                 }
 
 
-                val xScaleSD = f.position.scale / 2.0
-                val yScaleSD = f.position.scale * aspectRatio / 2.0
+                val xScaleSD = f.position.zoom / 2.0
+                val yScaleSD = f.position.zoom * aspectRatio / 2.0
                 val xCoordSD = f.position.x
                 val yCoordSD = f.position.y
 
@@ -2412,8 +2421,6 @@ class FractalRenderer(
                 }
                 var pixelsOutArray : FloatArray
 
-                //val imArray = FloatArray(numGlitchedPixels*2)
-
                 var z0 = Apcomplex(f.position.xap, f.position.yap)
                 val refPixel = Point(texture.res.x/2, texture.res.y/2)
                 val refPixels = arrayListOf(Point(refPixel))
@@ -2421,19 +2428,11 @@ class FractalRenderer(
                 var largestGlitchSize : Int
                 var numReferencesUsed = 0
 
-                // val refIter = intArrayOf(0)
-                // val skipIter = intArrayOf(-1)
-//                val seriesCoefs = arrayListOf(
-//                        Apcomplex(Apfloat("1", sc.cpuPrecision), Apfloat("0", sc.cpuPrecision)),
-//                        Apcomplex(Apfloat("0", sc.cpuPrecision), Apfloat("0", sc.cpuPrecision)),
-//                        Apcomplex(Apfloat("0", sc.cpuPrecision), Apfloat("0", sc.cpuPrecision))
-//                )
-
                 val sinRotation = sin(f.position.rotation)
                 val cosRotation = cos(f.position.rotation)
                 val bgScale = if (texture == background) 5.0 else 1.0
-                val sp = if (f.position.scale < 1e-100) 1e300 else 1.0
-                val sn = if (f.position.scale < 1e-100) 1e-300 else 1.0
+                val sp = if (f.position.zoom < 1e-100) 1e300 else 1.0
+                val sn = if (f.position.zoom < 1e-100) 1e-300 else 1.0
 
                 Log.e("RENDERER", "x0: ${z0.real()}")
                 Log.e("RENDERER", "y0: ${z0.imag()}")
@@ -2453,9 +2452,8 @@ class FractalRenderer(
                     // REFERENCE CALCULATION
 
                     val nativeReferenceStartTime = now()
-                    //Log.e("RENDERER", "cpuPrecision: ${sc.cpuPrecision}")
-                    val xMag = 0.5*f.position.scale
-                    val yMag = 0.5*f.position.scale*aspectRatio
+                    val xMag = 0.5*f.position.zoom
+                    val yMag = 0.5*f.position.zoom*aspectRatio
                     val xBasis = xMag*cosRotation - yMag*sinRotation
                     val yBasis = xMag*sinRotation + yMag*cosRotation
                     val d0xIn = doubleArrayOf(
@@ -2491,7 +2489,7 @@ class FractalRenderer(
                             refData
                     )
                     nativeRefCalcTimeTotal += now() - nativeReferenceStartTime
-                    refAllocation.copyFrom(refArrayNative)
+//                    refAllocation.copyFrom(refArrayNative)
 
 
 
@@ -2504,23 +2502,23 @@ class FractalRenderer(
                         Log.e("RENDERER", "numGlitchedPxlsRemaining: $numGlitchedPxlsRemaining")
                         Log.e("RENDERER", "numChunkPxls: $numChunkPxls")
 
-                        pixelsInAllocation.destroy()
-                        pixelsOutAllocation.destroy()
-
-                        pixelsInArray = glitchedPixels.sliceArray(2*numGlitchedPxlsRendered until 2*(numGlitchedPxlsRendered + numChunkPxls))
-                        pixelsInAllocation = Allocation.createTyped(rs, Type.createX(
-                                rs,
-                                Element.I16_2(rs),
-                                numChunkPxls
-                        ))
-                        pixelsInAllocation.copyFrom(pixelsInArray)
-
-                        pixelsOutArray = FloatArray(numChunkPxls*2)
-                        pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(
-                                rs,
-                                Element.F32_2(rs),
-                                numChunkPxls
-                        ))
+//                        pixelsInAllocation.destroy()
+//                        pixelsOutAllocation.destroy()
+//
+//                        pixelsInArray = glitchedPixels.sliceArray(2*numGlitchedPxlsRendered until 2*(numGlitchedPxlsRendered + numChunkPxls))
+//                        pixelsInAllocation = Allocation.createTyped(rs, Type.createX(
+//                                rs,
+//                                Element.I16_2(rs),
+//                                numChunkPxls
+//                        ))
+//                        pixelsInAllocation.copyFrom(pixelsInArray)
+//
+//                        pixelsOutArray = FloatArray(numChunkPxls*2)
+//                        pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(
+//                                rs,
+//                                Element.F32_2(rs),
+//                                numChunkPxls
+//                        ))
 
 
 
@@ -2539,7 +2537,7 @@ class FractalRenderer(
                                 refData,
                                 bgScale
                         )
-                        pixelsOutAllocation.copyTo(pixelsOutArray)
+//                        pixelsOutAllocation.copyTo(pixelsOutArray)
                         renderTimeTotal += now() - renderScriptStartTime
 
 
@@ -2549,38 +2547,40 @@ class FractalRenderer(
 
                         //val glitchedPixels = ShortArray(numGlitchedPixels * 2)
                         //numGlitchedPixels = 0
-                        for (i in 0 until numChunkPxls*2 - 1 step 2) {
-                            val px = pixelsInArray[i].toInt()
-                            val py = pixelsInArray[i + 1].toInt()
-                            val qx: Float
-                            val qy: Float
-                            if (pixelsOutArray[i + 1] == 3f) {  // pixel is still glitched
-                                qx = 1f
-                                if (px == refPixel.x && py == refPixel.y) {  // even reference pixel still glitched (wtf??)
-                                    qy = 1f
-                                    deadPixels.add(Point(refPixel))
-                                } else {
-                                    qy = 3f
-                                    //glitchedPixels[2 * numGlitchedPixels] = pixelsInArray[i - 1]
-                                    //glitchedPixels[2 * numGlitchedPixels + 1] = pixelsInArray[i]
-                                    //numGlitchedPixels++
-                                }
-                            }
-                            else { // pixel no longer glitched -- update image
-                                qx = pixelsOutArray[i]
-                                qy = pixelsOutArray[i + 1]
-                            }
-                            //imArray.set(px, py, 0, texture.res.x, 2, qx)
-                            //imArray.set(px, py, 1, texture.res.x, 2, qy)
-                            //Log.e("RENDERER", "p: ($px, $py)")
-                            try {
-                                texture.set(px, py, 0, qx)
-                            }
-                            catch (e: IndexOutOfBoundsException) {
-                                Log.e("RENDERER", "p: ($px, $py)")
-                            }
-                            texture.set(px, py, 1, qy)
-                        }
+
+
+//                        for (i in 0 until numChunkPxls*2 - 1 step 2) {
+//                            val px = pixelsInArray[i].toInt()
+//                            val py = pixelsInArray[i + 1].toInt()
+//                            val qx: Float
+//                            val qy: Float
+//                            if (pixelsOutArray[i + 1] == 3f) {  // pixel is still glitched
+//                                qx = 1f
+//                                if (px == refPixel.x && py == refPixel.y) {  // even reference pixel still glitched (wtf??)
+//                                    qy = 1f
+//                                    deadPixels.add(Point(refPixel))
+//                                } else {
+//                                    qy = 3f
+//                                    //glitchedPixels[2 * numGlitchedPixels] = pixelsInArray[i - 1]
+//                                    //glitchedPixels[2 * numGlitchedPixels + 1] = pixelsInArray[i]
+//                                    //numGlitchedPixels++
+//                                }
+//                            }
+//                            else { // pixel no longer glitched -- update image
+//                                qx = pixelsOutArray[i]
+//                                qy = pixelsOutArray[i + 1]
+//                            }
+//                            //imArray.set(px, py, 0, texture.res.x, 2, qx)
+//                            //imArray.set(px, py, 1, texture.res.x, 2, qy)
+//                            //Log.e("RENDERER", "p: ($px, $py)")
+//                            try {
+//                                texture.set(px, py, 0, qx)
+//                            }
+//                            catch (e: IndexOutOfBoundsException) {
+//                                Log.e("RENDERER", "p: ($px, $py)")
+//                            }
+//                            texture.set(px, py, 1, qy)
+//                        }
                         //if (numGlitchedPixels == 0) break
                         //Log.e("RENDERER", "total number of glitched pixels: $glitchedPixelsSize")
 
@@ -2642,21 +2642,6 @@ class FractalRenderer(
 
 
 
-                    // RESIZE IN ALLOCATION
-
-//                    pixelsInArray = glitchedPixels.sliceArray(0 until numGlitchedPixels*2)
-//                    pixelsInAllocation = Allocation.createTyped(rs, Type.createX(
-//                            rs,
-//                            Element.I16_2(rs),
-//                            numGlitchedPxls
-//                    ))
-//                    pixelsInAllocation.copyFrom(pixelsInArray)
-
-
-
-
-
-
 
 
 
@@ -2697,8 +2682,8 @@ class FractalRenderer(
                     refPixels.add(Point(refPixel))
                     //imArray.set(refPixel.x, refPixel.y, 1, texture.res.x, 2, 5f)
 
-                    val x0DiffAux = bgScale*f.position.scale*(refPixel.x.toDouble()/(texture.res.x) - 0.5)
-                    val y0DiffAux = bgScale*f.position.scale*(refPixel.y.toDouble()/(texture.res.y) - 0.5)*aspectRatio
+                    val x0DiffAux = bgScale*f.position.zoom*(refPixel.x.toDouble()/(texture.res.x) - 0.5)
+                    val y0DiffAux = bgScale*f.position.zoom*(refPixel.y.toDouble()/(texture.res.y) - 0.5)*aspectRatio
 
                     z0 = Apcomplex(
                             f.position.xap.add(Apfloat((x0DiffAux*cosRotation - y0DiffAux*sinRotation).toString(), sc.cpuPrecision)),
@@ -2706,26 +2691,6 @@ class FractalRenderer(
                     )
 
                     numReferencesUsed++
-
-
-
-
-
-
-
-
-
-                    // RESIZE OUT ALLOCATION
-
-//                    if (numReferencesUsed != MAX_REFERENCES) {
-//                        pixelsOutAllocation.destroy()
-//                        pixelsOutAllocation = Allocation.createTyped(rs, Type.createX(
-//                                rs,
-//                                Element.F32_2(rs),
-//                                numGlitchedPxls
-//                        ))
-//                        pixelsOutArray = FloatArray(numGlitchedPxls*2)
-//                    }
 
 
 
@@ -2777,7 +2742,7 @@ class FractalRenderer(
         }
 
         //Log.e("RENDERER", "misc operations took ${(now() - renderToTexStartTime - calcTimeTotal)/1000f} sec")
-        Log.e("RENDERER", "renderToTexture took ${(now() - renderToTexStartTime)/1000f} sec")
+        //Log.e("RENDERER", "renderToTexture took ${(now() - renderToTexStartTime)/1000f} sec")
 
     }
     private fun renderFromTexture(texture: GLTexture, external: Boolean = false) {
@@ -2931,6 +2896,8 @@ class FractalRenderer(
 
     }
 
+
+
     fun onTouchEvent(e: MotionEvent?): Boolean {
 
         if (!isRendering) {
@@ -3002,14 +2969,14 @@ class FractalRenderer(
                                 val focalLen = e.focalLength()
                                 val dFocalLen = focalLen / prevFocalLen
 
-                                val prevScale = f.position.scale
-                                f.position.scale(dFocalLen, doubleArrayOf(
+                                val prevScale = f.position.zoom
+                                f.position.zoom(dFocalLen, doubleArrayOf(
                                         focus[0].toDouble() / screenRes.x.toDouble() - 0.5,
                                         -(focus[1].toDouble() / screenRes.x.toDouble() - 0.5*aspectRatio)))
                                 checkThresholdCross(prevScale)
 
                                 if (!sc.continuousRender) {
-                                    scale(dFocalLen)
+                                    zoom(dFocalLen)
                                 }
                                 prevFocalLen = focalLen
 
