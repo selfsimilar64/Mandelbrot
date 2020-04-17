@@ -185,13 +185,11 @@ class GLTexture (
 
 
 @SuppressLint("ViewConstructor")
-class FractalSurfaceView(
-        context: Context,
-        val r: FractalRenderer
-) : GLSurfaceView(context) {
+class FractalSurfaceView(context: Context, val r: FractalRenderer) : GLSurfaceView(context) {
 
     init {
 
+        preserveEGLContextOnPause = true
         setEGLContextClientVersion(3)              // create OpenGL ES 3.0 context
         //setEGLContextFactory(ContextFactory())
         setRenderer(r)
