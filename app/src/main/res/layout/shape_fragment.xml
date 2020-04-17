@@ -4,357 +4,234 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/shapeLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:background="@color/menu2"
     android:orientation="vertical">
 
-    <ScrollView
-        android:id="@+id/shapeLayoutScroll"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/maxIterLayout"
+        style="@style/FragmentItem"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingTop="1dp">
+        android:layout_height="@dimen/fragmentItemHeight">
+
+        <EditText
+            android:id="@+id/maxIterEdit"
+            style="@style/EditNumberDark"
+            android:imeOptions="actionDone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.selfsimilartech.fractaleye.SeekBar2
+            android:id="@+id/maxIterBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_weight="1"
+            android:max="500"
+            android:progress="0"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/maxIterEdit" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/realParamLayout"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight"
+        android:visibility="visible">
+
+        <com.selfsimilartech.fractaleye.SeekBar2
+            android:id="@+id/realParamSeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:max="500"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/uEdit2" />
+
+        <EditText
+            android:id="@+id/uEdit2"
+            style="@style/EditNumberDark"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:imeOptions="actionDone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/complexParamLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight"
+        android:visibility="visible">
 
         <LinearLayout
-            android:id="@+id/shapeLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:animateLayoutChanges="false"
-            android:background="@color/menu2"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:orientation="vertical">
+            android:id="@+id/linearLayout3"
+            android:layout_width="190dp"
+            android:layout_height="35dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
-                android:id="@+id/shapePreviewListLayout"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/uLabel"
+                style="@style/TextDark"
+                android:layout_width="10dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                tools:visibility="gone">
+                android:layout_marginEnd="48dp"
+                android:gravity="center_vertical"
+                android:text="@string/u" />
 
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
+            <EditText
+                android:id="@+id/uEdit"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:imeOptions="actionDone" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/shapePreviewList"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/categoryPagerHeightNoPadding"
-                        android:background="@color/menu4"
-                        android:orientation="vertical"
-                        android:scrollbars="vertical"
-                        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                        app:spanCount="3"
-                        tools:itemCount="6"
-                        tools:listitem="@layout/texture_shape_preview_item_grid">
-
-                    </androidx.recyclerview.widget.RecyclerView>
-                </androidx.cardview.widget.CardView>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/shapeContent"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                tools:visibility="visible">
-
-                <LinearLayout
-                    android:id="@+id/shapePreview"
-                    style="@style/FragmentItem"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="@drawable/button_selector"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp">
-
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginEnd="5dp"
-                        app:cardBackgroundColor="@color/transparent"
-                        app:cardCornerRadius="10dp"
-                        app:cardElevation="0dp">
-
-                        <ImageView
-                            android:id="@+id/shapePreviewImage"
-                            android:layout_width="50dp"
-                            android:layout_height="50dp"
-                            android:contentDescription="@string/dscript_shape_preview"
-                            android:tint="@color/menu4"
-                            android:tintMode="add"
-                            app:srcCompat="@drawable/mandelbrot_icon" />
-
-                    </androidx.cardview.widget.CardView>
-
-                    <TextView
-                        android:id="@+id/shapePreviewText"
-                        style="@style/TextDark"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:drawableEnd="@drawable/edit"
-                        android:drawablePadding="10dp"
-                        android:gravity="center"
-                        android:text="@string/shape_name"
-                        android:textAlignment="center"
-                        android:textSize="16sp" />
-
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/juliaLayout"
-                        style="@style/FragmentItem"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:paddingTop="8dp"
-                        android:paddingBottom="8dp">
-
-                        <TextView
-                            android:id="@+id/textView14"
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/julia_mode"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <Switch
-                            android:id="@+id/juliaModeSwitch"
-                            style="@style/SwitchDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="8dp"
-                            android:paddingBottom="5dp"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="@+id/textView14" />
-
-                    </LinearLayout>
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/shapeParamLayout"
-                        style="@style/FragmentItem"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/realParamLayout"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/shapeParamButtons">
-
-                            <SeekBar
-                                android:id="@+id/realParamSeekBar"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toStartOf="@+id/uEdit2"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-
-                            <EditText
-                                android:id="@+id/uEdit2"
-                                style="@style/EditNumberDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="40dp"
-                                android:imeOptions="actionDone"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-                        <Button
-                            android:id="@+id/shapeResetButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="35dp"
-                            android:background="?attr/selectableItemBackground"
-                            android:text="@string/reset"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <com.google.android.material.tabs.TabLayout
-                            android:id="@+id/shapeParamButtons"
-                            android:layout_width="0dp"
-                            android:layout_height="35dp"
-                            app:layout_constraintEnd_toStartOf="@+id/shapeResetButton"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:tabGravity="center"
-                            app:tabIndicatorFullWidth="false"
-                            app:tabMinWidth="50dp"
-                            app:tabMode="scrollable">
-
-                            <com.google.android.material.tabs.TabItem
-                                android:id="@+id/p1Button"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/param1" />
-
-                            <com.google.android.material.tabs.TabItem
-                                android:id="@+id/p2Button"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/param2" />
-
-                            <com.google.android.material.tabs.TabItem
-                                android:id="@+id/p3Button"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/param3" />
-
-                        </com.google.android.material.tabs.TabLayout>
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/complexParamLayout"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:visibility="gone"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@id/shapeParamButtons">
-
-                            <TextView
-                                android:id="@+id/uLabel"
-                                style="@style/TextDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="40dp"
-                                android:layout_marginStart="10dp"
-                                android:drawableStart="@drawable/x"
-                                android:drawablePadding="20dp"
-                                android:gravity="center_vertical"
-                                android:text="@string/u"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-
-                            <TextView
-                                android:id="@+id/vLabel"
-                                style="@style/TextDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="40dp"
-                                android:layout_marginStart="10dp"
-                                android:drawableStart="@drawable/y"
-                                android:drawablePadding="20dp"
-                                android:gravity="center_vertical"
-                                android:paddingTop="5dp"
-                                android:paddingBottom="5dp"
-                                android:text="@string/v"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toBottomOf="@id/uLabel" />
-
-                            <ToggleButton
-                                android:id="@+id/uLock"
-                                style="@style/LockDark"
-                                android:layout_width="30dp"
-                                android:layout_height="40dp"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-
-                            <ToggleButton
-                                android:id="@+id/vLock"
-                                style="@style/LockDark"
-                                android:layout_width="30dp"
-                                android:layout_height="40dp"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toBottomOf="@id/uLock" />
-
-                            <EditText
-                                android:id="@+id/uEdit"
-                                style="@style/EditNumberDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="40dp"
-                                android:imeOptions="actionDone"
-                                app:layout_constraintEnd_toStartOf="@id/uLock"
-                                app:layout_constraintTop_toTopOf="parent" />
-
-                            <EditText
-                                android:id="@+id/vEdit"
-                                style="@style/EditNumberDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="40dp"
-                                android:imeOptions="actionDone"
-                                app:layout_constraintEnd_toStartOf="@id/vLock"
-                                app:layout_constraintTop_toBottomOf="@id/uEdit" />
-
-                            <ToggleButton
-                                android:id="@+id/linkParamButton"
-                                android:layout_width="30dp"
-                                android:layout_height="30dp"
-                                android:background="@color/transparent"
-                                android:foreground="@drawable/link"
-                                android:foregroundTint="@color/colorDarkSelected"
-                                android:textOff=" "
-                                android:textOn=" "
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toStartOf="@+id/uEdit"
-                                app:layout_constraintStart_toEndOf="@+id/uLabel"
-                                app:layout_constraintTop_toTopOf="parent" />
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        style="@style/FragmentItem"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-
-                        <TextView
-                            android:id="@+id/maxIterLabel"
-                            style="@style/TextDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:layout_weight="1"
-                            android:text="@string/max_iter"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <EditText
-                            android:id="@+id/maxIterEdit"
-                            style="@style/EditNumberDark"
-                            android:layout_marginStart="16dp"
-                            android:imeOptions="actionDone"
-                            app:layout_constraintStart_toEndOf="@+id/maxIterLabel"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <SeekBar
-                            android:id="@+id/maxIterBar"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginBottom="8dp"
-                            android:layout_weight="1"
-                            android:progress="25"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/maxIterLabel" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                </LinearLayout>
-
-            </LinearLayout>
-
+            <ToggleButton
+                android:id="@+id/uLock"
+                style="@style/LockDark"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
-    </ScrollView>
+        <LinearLayout
+            android:id="@+id/linearLayout4"
+            android:layout_width="190dp"
+            android:layout_height="35dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/linearLayout3">
+
+            <TextView
+                android:id="@+id/vLabel"
+                style="@style/TextDark"
+                android:layout_width="10dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="48dp"
+                android:gravity="center_vertical"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="@string/v" />
+
+            <EditText
+                android:id="@+id/vEdit"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:imeOptions="actionDone" />
+
+            <ToggleButton
+                android:id="@+id/vLock"
+                style="@style/LockDark"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp" />
+        </LinearLayout>
+
+        <ToggleButton
+            android:id="@+id/linkParamButton"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="20dp"
+            android:background="@color/transparent"
+            android:foreground="@drawable/link"
+            android:foregroundTint="@color/colorDarkSelected"
+            android:textOff="@string/empty"
+            android:textOn="@string/empty"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/linearLayout3"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/shapePreviewLayout"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            app:cardBackgroundColor="@color/transparent"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="0dp">
+
+            <ImageView
+                android:id="@+id/shapePreviewImage"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:contentDescription="@string/dscript_shape_preview"
+                android:tint="@color/menu2"
+                android:tintMode="add"
+                app:srcCompat="@drawable/mandelbrot_icon" />
+
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/shapePreviewText"
+            style="@style/TextDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableEnd="@drawable/edit"
+            android:drawablePadding="10dp"
+            android:gravity="center"
+            android:text="@string/shape_name"
+            android:textAlignment="center"
+            android:textSize="16sp" />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/shapePreviewListLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeightTall"
+        android:orientation="vertical"
+        tools:visibility="visible">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/shapePreviewList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/menu4"
+                android:orientation="vertical"
+                android:scrollbars="vertical"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="3"
+                tools:itemCount="6"
+                tools:listitem="@layout/texture_shape_preview_item_grid">
+
+            </androidx.recyclerview.widget.RecyclerView>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/shapeNavButtons"
@@ -363,19 +240,117 @@
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <ImageButton
+        <Button
             android:id="@+id/shapeListViewTypeButton"
             style="@style/MenuNavButton"
-            android:layout_width="@dimen/navButtonSize"
             android:layout_height="@dimen/navButtonSize"
-            android:src="@drawable/list_view" />
+            android:drawableTop="@drawable/list_view"
+            android:text="@string/view" />
 
-        <ImageButton
+        <Button
             android:id="@+id/shapeDoneButton"
             style="@style/MenuNavButton"
-            android:layout_width="@dimen/navButtonSize"
             android:layout_height="@dimen/navButtonSize"
-            android:src="@drawable/done" />
+            android:drawableTop="@drawable/done"
+            android:text="@string/done" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/shapeSubMenuButtons"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/menuButtonsHeight"
+        android:animateLayoutChanges="true"
+        android:orientation="horizontal">
+
+        <HorizontalScrollView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/shapePreviewButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/shape_preview"
+                    android:text="@string/shape" />
+
+                <Button
+                    android:id="@+id/maxIterButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/iterate"
+                    android:text="@string/max_iter" />
+
+                <Button
+                    android:id="@+id/juliaParamButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/julia" />
+
+                <Button
+                    android:id="@+id/shapeParamButton1"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param1" />
+
+                <Button
+                    android:id="@+id/shapeParamButton2"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param2" />
+
+                <Button
+                    android:id="@+id/shapeParamButton3"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param3" />
+
+                <Button
+                    android:id="@+id/shapeParamButton4"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param4" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <View
+            android:id="@+id/divider6"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/menu3" />
+
+        <Button
+            android:id="@+id/shapeResetButton"
+            style="@style/MenuNavButton"
+            android:background="?attr/selectableItemBackground"
+            android:drawableTop="@drawable/reset"
+            android:text="@string/reset" />
+
+        <com.selfsimilartech.fractaleye.ToggleButton
+            android:id="@+id/juliaModeButton"
+            style="@style/MenuNavToggleButton"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:drawableTop="@drawable/julia"
+            android:text="@string/julia" />
 
     </LinearLayout>
 

@@ -1,302 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/settingsScroll"
+    android:id="@+id/settingsLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingTop="1dp">
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:background="@color/menu2"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/settingsLayout"
+    <ScrollView
+        android:id="@+id/displayOptionsLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:animateLayoutChanges="true"
-        android:background="@color/menu2"
-        android:orientation="vertical">
+        android:layout_height="165dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/fragmentLayoutMargin"
-            android:layout_marginBottom="@dimen/fragmentLayoutMargin"
-            android:background="@drawable/rounded_rect"
-            android:backgroundTint="@color/menu4"
             android:orientation="vertical"
-            android:padding="6dp">
-
-            <TextView
-                android:id="@+id/resolutionLabel"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/resolution"
-                android:textColor="@color/colorDarkText"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                style="@style/TextDescriptionDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="4dp"
-                android:text="@string/resolution_high"
-                app:layout_constraintBottom_toTopOf="@+id/resolutionBar"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <TextView
-                style="@style/TextDescriptionDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="4dp"
-                android:text="@string/resolution_low"
-                app:layout_constraintBottom_toTopOf="@id/resolutionBar"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <TextView
-                android:id="@+id/resolutionDimensionsText"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/resolution_dims"
-                android:textColor="#888"
-                android:textSize="12sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/resolutionLabel" />
-
-            <SeekBar
-                android:id="@+id/resolutionBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:max="5"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/resolutionDimensionsText" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <LinearLayout
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="0dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="0dp"
-            android:paddingBottom="8dp">
-
-            <Button
-                android:id="@+id/renderButton"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:drawableTop="@drawable/render"
-                android:drawablePadding="10dp"
-                android:focusable="true"
-                android:paddingTop="15dp"
-                android:paddingBottom="10dp"
-                android:text="@string/reload" />
-
-            <View
-                android:id="@+id/divider4"
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:background="@color/menu3" />
-
-            <Button
-                android:id="@+id/saveToFileButton"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:drawableTop="@drawable/save"
-                android:drawablePadding="10dp"
-                android:focusable="true"
-                android:paddingTop="15dp"
-                android:paddingBottom="10dp"
-                android:text="@string/save" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="vertical">
-
-                <TextView
-                    style="@style/TextDark"
-                    android:layout_width="90dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start|center_vertical"
-                    android:text="@string/precision"
-                    android:textColor="@color/colorDarkText" />
-
-                <TextView
-                    android:id="@+id/precisionBitsText"
-                    style="@style/TextDescriptionDark"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/precision_bits"
-                    android:textColor="#888" />
-            </LinearLayout>
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/precisionTabs"
-                android:layout_width="match_parent"
-                android:layout_height="42dp"
-                app:tabBackground="@drawable/tab_color_selector"
-                app:tabIndicatorColor="@android:color/transparent"
-                app:tabIndicatorFullWidth="true"
-                app:tabIndicatorGravity="bottom"
-                app:tabPaddingEnd="10dp"
-                app:tabPaddingStart="10dp">
-
-                <com.google.android.material.tabs.TabItem
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/precision_single" />
-
-                <com.google.android.material.tabs.TabItem
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/precision_dual" />
-
-                <com.google.android.material.tabs.TabItem
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/precision_auto" />
-            </com.google.android.material.tabs.TabLayout>
-        </LinearLayout>
-
-        <!--
-        <Button
-            android:id="@+id/restartActivityButton"
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="restart activity"
-            tools:visibility="gone" />
-
-        <Button
-            android:id="@+id/sendNotificationButton"
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="send notification"
-            tools:visibility="gone" />
-            -->
-
-        <LinearLayout
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:paddingStart="15dp"
             android:paddingTop="15dp"
-            android:paddingBottom="15dp">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:id="@+id/textView5"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/continuous_render"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <Switch
-                    android:id="@+id/continuousRenderSwitch"
-                    style="@style/SwitchDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/textView5" />
-
-                <TextView
-                    android:id="@+id/continuousRenderHint"
-                    style="@style/TextDescriptionDark"
-                    android:layout_height="wrap_content"
-                    android:text="@string/continuous_render_hint"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView5" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <View
-                android:id="@+id/divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="@color/menu3" />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:id="@+id/textView6"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/render_background"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <Switch
-                    android:id="@+id/renderBackgroundSwitch"
-                    style="@style/SwitchDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="false"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/textView6" />
-
-                <TextView
-                    android:id="@+id/renderBackgroundHint"
-                    style="@style/TextDescriptionDark"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:text="@string/render_background_hint"
-                    app:layout_constraintEnd_toStartOf="@+id/renderBackgroundSwitch"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView6" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            style="@style/FragmentItem"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:paddingTop="15dp"
+            android:paddingEnd="15dp"
             android:paddingBottom="15dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -409,6 +133,280 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
+    </ScrollView>
+
+    <ScrollView
+        android:id="@+id/renderOptionsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="165dp">
+
+        <LinearLayout
+            style="@style/FragmentItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="15dp"
+            android:paddingTop="15dp"
+            android:paddingEnd="15dp"
+            android:paddingBottom="15dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/textView5"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/continuous_render"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Switch
+                    android:id="@+id/continuousRenderSwitch"
+                    style="@style/SwitchDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/textView5" />
+
+                <TextView
+                    android:id="@+id/continuousRenderHint"
+                    style="@style/TextDescriptionDark"
+                    android:layout_height="wrap_content"
+                    android:text="@string/continuous_render_hint"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView5" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/menu3" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/textView6"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/render_background"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Switch
+                    android:id="@+id/renderBackgroundSwitch"
+                    style="@style/SwitchDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/textView6" />
+
+                <TextView
+                    android:id="@+id/renderBackgroundHint"
+                    style="@style/TextDescriptionDark"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:text="@string/render_background_hint"
+                    app:layout_constraintEnd_toStartOf="@+id/renderBackgroundSwitch"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView6" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/resolutionLayout"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:backgroundTint="@color/menu4"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/TextDescriptionDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:text="@string/resolution_high"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@+id/resolutionBar"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            style="@style/TextDescriptionDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="4dp"
+            android:text="@string/resolution_low"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@id/resolutionBar"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/resolutionDimensionsText"
+            style="@style/TextDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="@string/resolution_dims"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.selfsimilartech.fractaleye.SeekBar2
+            android:id="@+id/resolutionBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:max="5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/resolutionDimensionsText" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/hardwareLayout"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/precisionBitsText"
+            style="@style/TextDescriptionDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/precision_bits"
+            android:textColor="#888" />
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/precisionTabs"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            app:tabBackground="@drawable/tab_color_selector"
+            app:tabIndicatorColor="@android:color/transparent"
+            app:tabIndicatorFullWidth="true"
+            app:tabIndicatorGravity="bottom"
+            app:tabPaddingEnd="10dp"
+            app:tabPaddingStart="10dp">
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/precision_single" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/precision_dual" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/precision_auto" />
+        </com.google.android.material.tabs.TabLayout>
+    </LinearLayout>
+
+    <!--
+    <Button
+        android:id="@+id/restartActivityButton"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="restart activity"
+        tools:visibility="gone" />
+
+    <Button
+        android:id="@+id/sendNotificationButton"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="send notification"
+        tools:visibility="gone" />
+        -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/menuButtonsHeight"
+        android:orientation="horizontal">
+
+        <HorizontalScrollView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/resolutionButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/resolution"
+                    android:text="@string/resolution" />
+
+                <Button
+                    android:id="@+id/hardwareButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/hardware"
+                    android:text="@string/hardware" />
+
+                <Button
+                    android:id="@+id/renderOptionsButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/render" />
+
+                <Button
+                    android:id="@+id/displayOptionsButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/display" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <View
+            android:id="@+id/divider7"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/menu3" />
+
+        <Button
+            android:id="@+id/saveToFileButton"
+            style="@style/MenuNavButton"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/save"
+            android:text="@string/save" />
 
     </LinearLayout>
-</ScrollView>
+
+</LinearLayout>
