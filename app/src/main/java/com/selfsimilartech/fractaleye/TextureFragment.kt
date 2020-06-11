@@ -1,10 +1,10 @@
 package com.selfsimilartech.fractaleye
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
-import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.tabs.TabLayout
 import android.util.Log
 import android.view.ViewGroup
@@ -40,6 +40,9 @@ class TextureFragment : MenuFragment() {
         f = act.f
         fsv = act.fsv
         sc = act.sc
+
+        textureLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        texturePreviewListLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -207,6 +210,8 @@ class TextureFragment : MenuFragment() {
                                     val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
                                     escapeRadiusSeekBar.progress = bailoutStrings[1].toInt()
 
+                                    fsv.r.calcNewTextureSpan = true
+
                                     fsv.r.renderShaderChanged = true
                                     fsv.r.renderToTex = true
                                     fsv.requestRender()
@@ -296,7 +301,8 @@ class TextureFragment : MenuFragment() {
                     }
                     else {
                         f.bailoutRadius = result2
-                        if (sc.continuousRender) {
+                        if (fsv.r.renderProfile == RenderProfile.MANUAL && sc.continuousRender) {
+                            Log.e("TEXTURE", "escape radius seekbar subroutine")
                             fsv.r.renderToTex = true
                             fsv.requestRender()
                         }
@@ -338,13 +344,9 @@ class TextureFragment : MenuFragment() {
 
 
 
-        val textureParamButtonList = listOf(
-                textureParamButton1,
-                textureParamButton2
-        )
-        textureParamButtonList.forEach { it.hide() }
+        textureParamButtons.forEach { it.hide() }
         f.texture.params.forEachIndexed { index, param ->
-            textureParamButtonList[index].apply {
+            textureParamButtons[index].apply {
                 show()
                 text = resources.getString(param.name)
             }
@@ -372,9 +374,13 @@ class TextureFragment : MenuFragment() {
 
                 act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
 
-                fsv.r.renderProfile = RenderProfile.TEXTURE_THUMB
-                fsv.r.renderThumbnails = true
-                fsv.requestRender()
+                with (texturePreviewList.adapter as TextureAdapter) { if (isGridLayout) {
+                    if (!fsv.r.textureThumbsRendered) {
+                        fsv.r.renderProfile = RenderProfile.TEXTURE_THUMB
+                        fsv.r.renderThumbnails = true
+                        fsv.requestRender()
+                    }
+                }}
 
             }, BUTTON_CLICK_DELAY_LONG)
         }
@@ -409,13 +415,14 @@ class TextureFragment : MenuFragment() {
 
             texturePreviewName.text = resources.getString(f.texture.displayName)
 
-            act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+            act.showCategoryButtons()
+            if (!act.uiIsClosed()) act.uiSetOpen()
+            else MainActivity.Category.TEXTURE.onMenuClosed(act)
 
             texturePreviewListLayout.hide()
             texturePreviewLayout.show()
             textureSubMenuButtons.show()
             textureNavBar.hide()
-            act.showCategoryButtons()
 
             fsv.r.renderProfile = RenderProfile.MANUAL
 
@@ -440,10 +447,22 @@ class TextureFragment : MenuFragment() {
             }
         }
 
-        texturePreviewButton.setOnClickListener(subMenuButtonListener(texturePreviewLayout, texturePreviewButton))
+        //texturePreviewButton.setOnClickListener(subMenuButtonListener(texturePreviewLayout, texturePreviewButton))
+        texturePreviewButton.setOnClickListener {
+            showLayout(texturePreviewLayout)
+            alphaButton(texturePreviewButton)
+            texturePreviewName.alpha = if (sc.hardwareProfile == HardwareProfile.CPU) {
+                Log.e("TEXTURE", "alpha 0.3")
+                0.3f
+            }
+            else {
+                Log.e("TEXTURE", "alpha 1.0")
+                1f
+            }
+        }
         textureModeButton.setOnClickListener(subMenuButtonListener(textureModeLayout, textureModeButton))
         escapeRadiusButton.setOnClickListener(subMenuButtonListener(escapeRadiusLayout, escapeRadiusButton))
-        textureParamButtonList.forEachIndexed { index, button ->
+        textureParamButtons.forEachIndexed { index, button ->
             button.setOnClickListener(textureParamButtonListener(button, index))
         }
 

@@ -160,6 +160,7 @@ class PositionFragment : MenuFragment() {
             f.position.reset()
             fsv.r.checkThresholdCross(prevZoom)
             act.updatePositionEditTexts()
+            fsv.r.calcNewTextureSpan = true
             fsv.r.renderToTex = true
             fsv.requestRender()
 
