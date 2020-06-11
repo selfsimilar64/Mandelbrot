@@ -2,45 +2,50 @@ package com.selfsimilartech.fractaleye
 
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
+import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.content.res.Resources
+import android.graphics.Point
+import android.opengl.GLSurfaceView
 import android.os.*
+import android.util.AttributeSet
+import android.util.Log
+import android.view.*
+import android.view.animation.AlphaAnimation
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.recyclerview.widget.RecyclerView
-import android.view.*
-import android.view.animation.AlphaAnimation
-import android.widget.*
-import java.util.*
-import kotlin.math.*
-import android.view.MotionEvent
-import android.content.Context
-import android.content.res.Resources
-import android.graphics.Point
-import android.opengl.GLSurfaceView
-import com.google.android.material.tabs.TabLayout
+import androidx.room.Room
 import androidx.viewpager.widget.ViewPager
-import android.util.AttributeSet
-import android.util.Log
-import android.view.GestureDetector
-import java.lang.ref.WeakReference
+import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.settings_fragment.*
-import kotlinx.android.synthetic.main.texture_fragment.*
-import kotlinx.android.synthetic.main.shape_fragment.*
 import kotlinx.android.synthetic.main.color_fragment.*
-import kotlinx.android.synthetic.main.position_fragment_old.scaleExponentEdit
-import kotlinx.android.synthetic.main.position_fragment_old.scaleSignificandEdit
-import kotlinx.android.synthetic.main.position_fragment_old.xEdit
-import kotlinx.android.synthetic.main.position_fragment_old.yEdit
-import org.apfloat.*
+import kotlinx.android.synthetic.main.position_fragment_old.*
+import kotlinx.android.synthetic.main.settings_fragment.*
+import kotlinx.android.synthetic.main.shape_fragment.*
+import kotlinx.android.synthetic.main.texture_fragment.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.apfloat.Apcomplex
+import org.apfloat.Apfloat
+import org.apfloat.ApfloatMath
+import java.io.UnsupportedEncodingException
+import java.lang.ref.WeakReference
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
+import java.util.*
+import kotlin.experimental.and
+import kotlin.math.*
 
 
 const val MAX_SHAPE_PARAMS = 4
 const val MAX_TEXTURE_PARAMS = 2
 const val WRITE_STORAGE_REQUEST_CODE = 0
-const val ITER_MAX_POW = 12.0
+const val ITER_MAX_POW = 16.0
 const val ITER_MIN_POW = 5.0
 const val BUTTON_CLICK_DELAY_LONG = 300L
 const val BUTTON_CLICK_DELAY_SHORT = 100L
@@ -60,6 +65,11 @@ const val HIDE_NAV_BAR = "hideNavBar"
 const val COLOR_LIST_VIEW_TYPE = "colorListViewType"
 const val SHAPE_LIST_VIEW_TYPE = "shapeListViewType"
 const val TEXTURE_LIST_VIEW_TYPE = "textureListViewType"
+const val AUTOFIT_COLOR_RANGE = "autofitColorRange"
+const val HARDWARE_PROFILE = "hardwareProfile"
+const val GPU_PRECISION = "gpuPrecision"
+const val CPU_PRECISION = "cpuPrecision"
+const val PALETTE = "palette"
 const val SHARED_PREFERENCES = "com.selfsimilartech.fractaleye.SETTINGS"
 
 
@@ -183,21 +193,27 @@ data class Complex(
 enum class GpuPrecision(val bits: Int, val threshold: Double) {
     SINGLE(23, 5e-4), DUAL(46, 1e-12)
 }
+enum class CpuPrecision(val threshold: Double) {
+    DOUBLE(1e-12), PERTURB(1e-200)
+}
 enum class Reaction(val numDisplayParams: Int) {
     NONE(0), SHAPE(3), COLOR(2), POSITION(4)
 }
 enum class Resolution(private val scale: Float, val square: Boolean = false) {
-    EIGHTH(1/8f), SIXTH(1/6f), FOURTH(1/4f), HALF(1/2f), FULL(1f), DOUBLE(2f), THUMB(1/6f, true);
+    SXTNTH(1/16f), EIGHTH(1/8f), FOURTH(1/4f), HALF(1/2f), R34(3/4f), FULL(1f),
+    THREEHALVES(1.5f), DOUBLE(2f), FIVEHALVES(2.5f),
+    // TRIPLE(3f), SEVENHALVES(3.5f), QUAD(4f),   // RG16F largeheap only
+    THUMB(1/6f, true);
     fun scaleRes(screenRes: Point) : Point {
         return Point(
                 (screenRes.x*scale).roundToInt(),
                 (screenRes.y*scale).roundToInt())
     }
     companion object {
-        private const val NUM_VALUES_GT_SCREEN_DIMS = 1
+        private const val NUM_VALUES_GT_SCREEN_DIMS = 3
         val NUM_VALUES_PRO = values().size - 1
         val NUM_VALUES_FREE = values().size - NUM_VALUES_GT_SCREEN_DIMS - 1
-        val HIGHEST = if (BuildConfig.PAID_VERSION) DOUBLE else FULL
+        val HIGHEST = if (BuildConfig.PAID_VERSION) FIVEHALVES else FULL
     }
 }
 enum class TextureMode { OUT, IN, BOTH }
@@ -209,8 +225,8 @@ class Position(
         y: Double = 0.0,
         zoom: Double = 1.0,
         rotation: Double = 0.0,
-        xap: Apfloat = Apfloat("0", 32L),
-        yap: Apfloat = Apfloat("0", 32L),
+        xap: Apfloat = Apfloat(x.toString(), 32L),
+        yap: Apfloat = Apfloat(y.toString(), 32L),
         var ap: Long = 32L,
         xLocked: Boolean = false,
         yLocked: Boolean = false,
@@ -395,7 +411,7 @@ class Position(
     }
     fun updatePrecision(newPrecision: Long) {
 
-        Log.e("MAIN ACTIVITY", "new position precision: $newPrecision")
+        //Log.e("MAIN ACTIVITY", "new position precision: $newPrecision")
         ap = newPrecision
         xap = Apfloat(xap.toString(), ap)
         yap = Apfloat(yap.toString(), ap)
@@ -569,14 +585,22 @@ class RecyclerTouchListener(
 class MainActivity : AppCompatActivity() {
 
 
+//    private val hexArray = "0123456789abcdef".toCharArray()
+//    private lateinit var mTcpClient : TcpClient
+//    private lateinit var ftpclient : MyFTPClient
+//    private val handlerUi = Handler()
+
+
+    lateinit var db : AppDatabase
     var f : Fractal = Fractal.mandelbrot
     var sc : SettingsConfig = SettingsConfig()
     lateinit var fsv : FractalSurfaceView
-    var screenWidth = 0
-    var screenHeight = 0
-    var navBarHeight = 0
-    var statusBarHeight = 0
-    var deviceHasNotch = false
+    private var screenWidth = 0
+    private var screenHeight = 0
+    private var navBarHeight = 0
+    private var statusBarHeight = 0
+    private var deviceHasNotch = false
+    private var texturesDisabled = false
 
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
@@ -585,7 +609,7 @@ class MainActivity : AppCompatActivity() {
         private val MSG_UPDATE_COLOR_THUMBNAILS = 0
         private val MSG_UPDATE_TEXTURE_THUMBNAILS = 1
         private val MSG_IMAGE_SAVED = 2
-        private val MSG_UPDATE_PRECISION_BITS = 3
+        private val MSG_ERROR = 3
 
         
 
@@ -602,8 +626,8 @@ class MainActivity : AppCompatActivity() {
         fun showImageSavedMessage(dir: String) {
             sendMessage(obtainMessage(MSG_IMAGE_SAVED, dir))
         }
-        fun updatePrecisionBits() {
-            sendMessage(obtainMessage(MSG_UPDATE_PRECISION_BITS))
+        fun showErrorMessage() {
+            sendMessage(obtainMessage(MSG_ERROR))
         }
 
         // runs on UI thread
@@ -622,7 +646,9 @@ class MainActivity : AppCompatActivity() {
                 MSG_IMAGE_SAVED -> activity?.showMessage(
                         "${activity.resources.getString(R.string.msg_save_successful)} ${msg.obj}"
                 )
-                MSG_UPDATE_PRECISION_BITS -> activity?.updatePrecisionBits()
+                MSG_ERROR -> activity?.showMessage(
+                        activity.resources.getString(R.string.msg_error)
+                )
                 else -> throw RuntimeException("unknown msg $what")
             }
         }
@@ -632,24 +658,21 @@ class MainActivity : AppCompatActivity() {
     enum class Category(val displayName: Int, val icon: Int) {
 
         SETTINGS(R.string.settings, R.drawable.settings) {
+            override fun onOpenMenu(act: MainActivity) {
+                onCategorySelected(act)
+            }
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {
                 act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
-                val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
+                //val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
                 //act.fsv.renderProfile = RenderProfile.MANUAL
                 act.apply {
                     fsv.r.reaction = Reaction.NONE
                     hideTouchIcon()
-                    if (renderOptionsLayout.isVisible() || displayOptionsLayout.isVisible()) {
-                        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
-                    }
-                    else {
-                        if (uiIsClosed()) {
-                            uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
-                        }
-                    }
+                    if (renderOptionsLayout.isVisible() || displayOptionsLayout.isVisible()) uiSetOpenTall()
+                    else if (uiIsClosed()) uiSetOpen()
                 }
             }
             override fun onCategoryUnselected(act: MainActivity) {
@@ -661,23 +684,39 @@ class MainActivity : AppCompatActivity() {
             }
         },
         TEXTURE(R.string.texture, R.drawable.texture) {
+            override fun onOpenMenu(act: MainActivity) {
+                act.apply {
+                    if (texturePreviewListLayout.isVisible()) uiSetOpenTall()
+                    else uiSetOpen()
+                }
+            }
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {
                 if (!act.texturePreviewListLayout.isVisible()) act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
-                act.hideTouchIcon()
-                act.fsv.r.reaction = Reaction.NONE
-                if (act.uiIsClosed()) act.categoryNameButton.performClick()
+                if (!act.texturesDisabled) {
+                    act.hideTouchIcon()
+                    act.fsv.r.reaction = Reaction.NONE
+                    if (act.uiIsClosed()) act.categoryNameButton.performClick()
+                }
             }
             override fun onCategoryUnselected(act: MainActivity) {
                 // onMenuClosed(act)
             }
         },
         SHAPE(R.string.shape, R.drawable.shape) {
+            override fun onOpenMenu(act: MainActivity) {
+                act.apply {
+                    if (shapePreviewListLayout.isVisible()) uiSetOpenTall()
+                    else uiSetOpen()
+                }
+            }
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {
-                if (act.fsv.r.reaction == Reaction.NONE) act.categoryButtons.getTabAt(POSITION).select()
+                act.apply {
+                    if (fsv.r.reaction == Reaction.NONE && !shapePreviewListLayout.isVisible()) categoryButtons.getTabAt(POSITION).select()
+                }
             }
             override fun onCategorySelected(act: MainActivity) {
                 //act.fsv.renderProfile = RenderProfile.MANUAL
@@ -697,6 +736,12 @@ class MainActivity : AppCompatActivity() {
             }
         },
         COLOR(R.string.color, R.drawable.color) {
+            override fun onOpenMenu(act: MainActivity) {
+                act.apply {
+                    if (colorPreviewListLayout.isVisible()) uiSetOpenTall()
+                    else uiSetOpen()
+                }
+            }
             override fun onCloseMenu(act: MainActivity) {
                 with (act) {
 //                    when {
@@ -723,6 +768,11 @@ class MainActivity : AppCompatActivity() {
             override fun onCategoryUnselected(act: MainActivity) {}
         },
         POSITION(R.string.position, R.drawable.position) {
+            override fun onOpenMenu(act: MainActivity) {
+                act.apply {
+                    uiSetOpen()
+                }
+            }
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {}
             override fun onCategorySelected(act: MainActivity) {
@@ -735,6 +785,7 @@ class MainActivity : AppCompatActivity() {
             }
         };
 
+        abstract fun onOpenMenu(act: MainActivity)
         abstract fun onCloseMenu(act: MainActivity)
         abstract fun onMenuClosed(act: MainActivity)
         abstract fun onCategorySelected(act: MainActivity)
@@ -743,12 +794,20 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        db = Room.databaseBuilder(
+                applicationContext,
+                AppDatabase::class.java, "palettes"
+        ).fallbackToDestructiveMigration().build()
 
         // restore SettingsConfig from SharedPreferences
         val sp = getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE)
-//        sc.resolution = Resolution.values()[sp.getInt(RESOLUTION, Resolution.FULL.ordinal)]
-        sc.resolution = Resolution.FULL
+
+        val savedResolution = sp.getInt(RESOLUTION, Resolution.FULL.ordinal)
+        sc.resolution = Resolution.values()[min(savedResolution, Resolution.FULL.ordinal)]
+        //sc.resolution = Resolution.FOURTH
         //sc.precision = Precision.values()[sp.getInt(PRECISION, Precision.SINGLE.ordinal)]
         //sc.autoPrecision = sp.getBoolean(AUTO_PRECISION, true)
         sc.continuousRender = sp.getBoolean(CONTINUOUS_RENDER, false)
@@ -759,8 +818,8 @@ class MainActivity : AppCompatActivity() {
         sc.colorListViewType = ListLayoutType.values()[sp.getInt(COLOR_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
         sc.shapeListViewType = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
         sc.textureListViewType = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
+        sc.autofitColorRange = sp.getBoolean(AUTOFIT_COLOR_RANGE, true)
         //sc.showHints = sp.getBoolean(SHOW_HINTS, true)
-
 
         val displayMetrics = baseContext.resources.displayMetrics
         windowManager.defaultDisplay.getRealMetrics(displayMetrics)
@@ -784,7 +843,9 @@ class MainActivity : AppCompatActivity() {
         val uiHeightClosed = uiHeightOpen - categoryLayoutHeight
 
 
-        ColorPalette.all.forEach { it.initialize(resources, Resolution.THUMB.scaleRes(screenRes)) }
+        ColorPalette.all.forEach {
+            it.initialize(resources, Resolution.THUMB.scaleRes(screenRes))
+        }
 
 
         val r = FractalRenderer(f, sc, this, baseContext, ActivityHandler(this), screenRes)
@@ -799,6 +860,94 @@ class MainActivity : AppCompatActivity() {
 
 
         super.onCreate(savedInstanceState)
+
+
+//        mTcpClient = TcpClient(this@MainActivity, TcpClient.OnMessageReceived { message ->
+//            Log.d("message", "messageReceived: $message")
+//            when {
+//                message.contains("Hallo") -> {
+//                    sendRenderscriptMessage("dev", "28712990mjk")
+//                }
+//                message.contains("Succesful") -> {
+//                    /*
+//                         * the next code is needed in the following situation
+//                         * the remember user option is selected but the user has not yet logged in via the login button
+//                         * or during a previous session.
+//                         * If we receive the Succesful message from the server,we can deduce that the send username en password
+//                         * were correct and therefore can be stored to the shared preferences file
+//                         */
+////                        if (settings.getBoolean("rememberUser", false)) {
+////                            if (username !== "" && passwd !== "") {
+////                                val editor: Editor = settings.edit()
+////                                editor.putString("userName", username)
+////                                editor.putString("passwd", passwd)
+////                                editor.commit()
+////                            }
+////                        }
+//                    Log.d("MAIN", "Build Succesful")
+//                    mTcpClient.sendMessage("give bc\n")
+//                    Log.d("MAIN", "give bc")
+//                }
+//                message.contains("UPLOADED") -> {
+//
+//                    //Connect to ftp server and fetch the file.
+//                        GlobalScope.launch {
+//
+//                            var status = false
+////                            Log.i("MainAct", "FtpThread")
+////                            // Replace your UID & PW here
+////                            Log.i("ftp", "ftp connect with $username $passwd")
+////                            if (settings.getBoolean("UseDefault", true)) {
+////                                MainActivity.IP_ADDR = MainActivity.DEFAULT_IP_ADDR
+////                            } else {
+////                                MainActivity.IP_ADDR = settings.getString("ServerIP", MainActivity.DEFAULT_IP_ADDR)
+////                            }
+//                            status = ftpclient.ftpConnect(resources.getString(R.string.defaultIP), "dev", "28712990mjk", 21)
+//                            if (status) {
+//                                Log.d("FTP", "Connection Success")
+//                                status = ftpclient.ftpDownload("/bc64/template.bc", filesDir.path + "/template.bc")  // may need to change with Android 10 file access
+//                                if (status) {
+//                                    Log.e("MAIN", "download success!")
+//                                }
+//                                else {
+//                                    Log.e("MAIN", "download failed :(")
+//                                }
+//                            } else {
+//                                Log.e("FTP", "Connection failed")
+//                                //createToast("Connection with TCP server failed!", false);
+//                            }
+//
+//                        }
+//
+//                }
+//                message.contains("login ok") -> {
+//                    Log.d("MAIN", "login_ok")
+//                }
+//                message.contains("login error") -> {
+//                    Log.d("MAIN", "login_nok")
+//                }
+//                message.contains("acount error") -> {
+//                    Log.d("MAIN", "account_error")
+//                }
+//                message.contains("acount created") -> {
+//                    Log.d("MAIN", "acount_created")
+//                }
+//                else -> {
+////                        if (settings.getBoolean("rememberUser", false)) {
+////                            if (username !== "" && passwd !== "") {
+////                                val editor: Editor = settings.edit()
+////                                editor.putString("userName", username)
+////                                editor.putString("passwd", passwd)
+////                                editor.commit()
+////                            }
+////                        }
+//                    Log.d("MAIN", "Error message: $message")
+//                }
+//            }
+//        })
+//        ftpclient = MyFTPClient()
+
+
 
 //        orientation = baseContext.resources.configuration.orientation
 //        Log.d("MAIN ACTIVITY", "orientation: $orientation")
@@ -820,7 +969,15 @@ class MainActivity : AppCompatActivity() {
         updateSurfaceViewLayout(resources.getDimension(R.dimen.uiLayoutHeightClosed))
 
 
-        val layoutList = listOf(fractalLayout, overlay, ui, uiInnerLayout, uiInnerCard, categoryPager)
+        val layoutList = listOf(
+                fractalLayout,
+                overlay,
+                ui,
+                uiInnerLayout,
+                uiInnerCard,
+                categoryPager
+                //textureLayout
+        )
         layoutList.forEach {
             it.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
         }
@@ -841,7 +998,7 @@ class MainActivity : AppCompatActivity() {
 
         categoryNameButton.setOnClickListener {
 
-            uiSetHeight(if (uiIsOpen()) resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt() else resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+            if (!uiIsClosed()) uiSetClosed() else categoryButtons.getCurrentCategory().onOpenMenu(this)
 
         }
 
@@ -871,15 +1028,19 @@ class MainActivity : AppCompatActivity() {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
 
-                tab.icon?.alpha = 255
-
                 val category = Category.values()[tab.position]
-                Log.e("MAIN ACTIVITY", "category ${category.name}")
+                //Log.d("MAIN ACTIVITY", "category ${category.name}")
 
-                category.onCategorySelected(this@MainActivity)
+                if (!(category == Category.TEXTURE && texturesDisabled)) {
+                    tab.icon?.alpha = 255
 
-                categoryNameButton.text = resources.getString(category.displayName)
-                updateDisplayParams(reactionChanged = true)
+
+                    category.onCategorySelected(this@MainActivity)
+
+                    categoryNameButton.text = resources.getString(category.displayName)
+                    updateDisplayParams(reactionChanged = true)
+
+                }
 
             }
             override fun onTabUnselected(tab: TabLayout.Tab) {
@@ -896,16 +1057,48 @@ class MainActivity : AppCompatActivity() {
         categoryButtons.getTabAt(Category.POSITION).select()
 
 
+        // load custom color palettes
+        GlobalScope.launch {
+            if (BuildConfig.PAID_VERSION) {
+                db.colorPaletteDao().apply {
+                    //getAll().forEach { delete(it) }
+                    getAll().forEach {
+                        Log.d("COLOR", "custom palette size: ${it.size}")
+                        ColorPalette.all.add(0, ColorPalette(
+                                name = it.name,
+                                colors = ArrayList(arrayListOf(it.c1, it.c2, it.c3, it.c4, it.c5, it.c6, it.c7, it.c8).slice(0 until it.size)),
+                                customId = it.id
+                        ))
+                        ColorPalette.all[0].initialize(resources, Resolution.THUMB.scaleRes(screenRes))
+                    }
+                }
+            }
+            f.palette = ColorPalette.all[sp.getInt(PALETTE, ColorPalette.all.indexOf(ColorPalette.night))]
+        }
+
+
         overlay.bringToFront()
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
 
     }
 
-    private fun uiIsOpen() : Boolean {
+
+
+
+    private fun uiSetClosed() {
+        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt())
+    }
+    fun uiSetOpen() {
+        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+    }
+    fun uiSetOpenTall() {
+        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
+    }
+    fun uiIsOpen() : Boolean {
         return !uiIsClosed()
     }
-    private fun uiIsClosed() : Boolean {
+    fun uiIsClosed() : Boolean {
         return uiInnerLayout.layoutParams.height == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt()
     }
     fun uiSetHeight(newHeight: Int) {
@@ -1026,6 +1219,17 @@ class MainActivity : AppCompatActivity() {
         val toastHeight = ui.height + resources.getDimension(R.dimen.toastMargin).toInt()
         toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
         toast.show()
+    }
+    fun disableTextures() {
+        texturePreviewName.alpha = 0.3f
+        texturePreviewLayout.isClickable = false
+        texturePreviewLayout.isFocusable = false
+    }
+    fun enableTextures() {
+        texturePreviewName.alpha = 1f
+        texturePreviewLayout.isClickable = true
+        texturePreviewLayout.isFocusable = true
+        texturePreviewButton.performClick()
     }
     fun updateDisplayParams(reactionChanged: Boolean = false, settingsChanged: Boolean = false) {
 
@@ -1212,11 +1416,6 @@ class MainActivity : AppCompatActivity() {
         hints.forEach { it.visibility = if (sc.showHints) TextView.VISIBLE else TextView.GONE }
 
     }
-    fun updatePrecisionBits() {
-
-        precisionBitsText?.text = "${sc.gpuPrecision.bits}-bit"
-
-    }
 
     fun updateColorThumbnails() {
 
@@ -1231,6 +1430,9 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    override fun onBackPressed() {
+        //super.onBackPressed()
+    }
     override fun onPause() {
 
         //Log.d("MAIN ACTIVITY", "activity paused ...")
@@ -1249,6 +1451,8 @@ class MainActivity : AppCompatActivity() {
         edit.putInt(COLOR_LIST_VIEW_TYPE, sc.colorListViewType.ordinal)
         edit.putInt(SHAPE_LIST_VIEW_TYPE, sc.shapeListViewType.ordinal)
         edit.putInt(TEXTURE_LIST_VIEW_TYPE, sc.textureListViewType.ordinal)
+        edit.putBoolean(AUTOFIT_COLOR_RANGE, sc.autofitColorRange)
+        edit.putInt(PALETTE, ColorPalette.all.indexOf(f.palette))
         edit.apply()
 
         super.onPause()
@@ -1278,6 +1482,190 @@ class MainActivity : AppCompatActivity() {
             else -> {}
         }
     }
+
+
+
+
+
+    //    /*! \brief Message for the server used for the runtime compilation of RenderScript
+//	 *
+//	 * This function will be called when the user clicks on the submitbutton with the RenderScript Radiobutton selected.<br>
+//	 * The message, beginning with the STARTPACKAGE tag, will contain the username and the hashed password. This is send
+//	 * over TCP to the server, followed by the code from the code field in the app, which is send line per line. The end
+//	 * of the message is indicated with the ENDPACKAGE tag.
+//	 *
+//	 * @param username name of the user
+//	 * @param passwd the password of the user
+//	 */
+//    private fun sendRenderscriptMessage(username: String, passwd: String) {
+//
+//        if (mTcpClient.isConnected) {
+//
+//            Log.d("MAIN", "Processing. Please wait...")
+//            val message = """
+//#pragma version(1)
+//#pragma rs java_package_name(com.selfsimilartech.fractaleye)
+//#pragma rs_fp_full
+//
+//double width;
+//double height;
+//double aspectRatio;
+//double bgScale;
+//
+//uint32_t maxIter;
+//float escapeRadius;
+//
+//double scale;
+//double xCoord;
+//double yCoord;
+//double sinRotation;
+//double cosRotation;
+//
+//
+//
+//float2 RS_KERNEL iterate(uint32_t x, uint32_t y) {
+//
+//    // send update progress message at regular intervals
+//    if (x == 0 && y % (int)(height/50) == 0) { rsSendToClient(0); }
+//
+//    float2 color;
+//
+//    // [-1.0, 1.0]
+//    double u = 2.0*(x/width) - 1.0;
+//    double v = 2.0*(y/height) - 1.0;
+//
+//    double aAux = u*scale;
+//    double bAux = v*scale*aspectRatio;
+//    double a = aAux*cosRotation - bAux*sinRotation + xCoord;
+//    double b = aAux*sinRotation + bAux*cosRotation + yCoord;
+//    complex c = a + b*I;
+//
+//
+//
+//
+//    //complex z = 0.0 + 0.0*I;
+//    //complex z1 = 0.0 + 0.0*I;
+//    double zModSqr = 0.0;
+//
+//
+//    for (int n = 0; n <= maxIter; n++) {
+//
+//
+//        // ${'$'} SHAPE LOOP ${'$'}
+//        //z = z*z + c;
+//
+//        //zModSqr = z.x*z.x + z.y*z.y;
+//
+//        if (zModSqr > escapeRadius*escapeRadius) {
+//            color = (float2) { (float)n / (float)maxIter, 0.f };
+//            break;
+//        }
+//        else if (n == maxIter) {
+//            color = (float2) { 1.f, 1.f };
+//        }
+//
+//
+//        z1 = z;
+//
+//    }
+//
+//
+//    return color;
+//
+//
+//}
+//
+//                """
+//
+//            val lines = message.split("\\r?\\n").toTypedArray()
+//            val strHash: String = createHash(passwd)
+//            Log.i("send after conversion", strHash)
+//            mTcpClient.sendMessage("STARTPACKAGE $username $passwd 24\n")
+//            for (i in lines.indices) {
+//                mTcpClient.sendMessage(lines[i])
+//                Log.d("MAIN", lines[i])
+//            }
+//
+//            //separator so that the code and the ENDPACKAGE message cannot be linked
+//            mTcpClient.sendMessage("\n")
+//
+//            //wait some time
+//            handlerUi.postDelayed({
+//                GlobalScope.launch {
+//
+//                    mTcpClient.sendMessage("ENDPACKAGE\n")
+//                    Log.i("ENDPACKAGE", "ENDPACKAGE")
+//
+//                }
+//
+//            }, 1000)
+//
+//        } else Log.e("MAIN", "Not connected")
+//
+//    }
+//
+//    /*! \brief Creates a MD5 hash of the password
+//	 *
+//	 * Converts the password to a MD5 hash, used for security reasons. Because the Hash consists of hex values
+//	 * who need to be send over TCP, it's necessary to convert the byte array to a String. The resulting string
+//	 * will be two times as long because each byte in hex is represented as two characters e.g. 01, 0A etc.
+//	 * @param passwd The password used to create the hash value
+//	 * @return strHash The resulting hash as a hex presented string
+//	 */
+//    private fun createHash(passwd: String): String { //create hash
+//        var bytesOfMessage: ByteArray? = null
+//        try {
+//            bytesOfMessage = passwd.toByteArray(charset("UTF-8"))
+//        } catch (e: UnsupportedEncodingException) {
+//            e.printStackTrace()
+//        }
+//        var md: MessageDigest? = null
+//        try {
+//            md = MessageDigest.getInstance("MD5")
+//        } catch (e: NoSuchAlgorithmException) {
+//            e.printStackTrace()
+//        }
+//        val hash = md!!.digest(bytesOfMessage!!)
+//        return byteArrayToHex(hash)
+//    }
+//
+//    /* \brief Converts bytes to their hex value
+//	 *
+//	 * @param a is the array of bytes to be converted
+//	 * @return Returns the String form of the bytes
+//	 */
+//    private fun byteArrayToHex(a: ByteArray): String {
+//        val sb = StringBuilder()
+//        for (b in a) sb.append(String.format("%02x", b and 0xff.toByte()))
+//        return sb.toString()
+//    }
+//
+//    /* \brief Converts byte to its hex value
+//	 *
+//	 * @param bytes are the bytes to be converted
+//	 * @return Returns the String form of the byte
+//	 */
+//    private fun bytesToHex(bytes: ByteArray): String {
+//        val hexChars = CharArray(bytes.size * 2)
+//        for (j in bytes.indices) {
+//            val v = (bytes[j] and 0xFF.toByte()).toUByte()
+//            Log.e("MAIN", "v: $v")
+//            hexChars[j * 2] = hexArray[v.toInt() ushr 4]
+//            hexChars[j * 2 + 1] = hexArray[(v and 0x0F.toUByte()).toInt()]
+//        }
+//        return String(hexChars)
+//    }
+//
+//    fun connectToServer() {
+//
+//        GlobalScope.launch {
+//            Log.e("MAIN", "doing in background...")
+//            mTcpClient.run()
+//        }
+//
+//    }
+
+
 
 
 }
