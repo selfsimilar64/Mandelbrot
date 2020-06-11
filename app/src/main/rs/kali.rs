@@ -44,26 +44,27 @@ float2 RS_KERNEL iterate(uint32_t x, uint32_t y) {
     double b = aAux*sinRotation + bAux*cosRotation + yCoord;
     complex c = { a, b };
 
-    complex z = (complex) { 0.0, 0.0 };
+    complex z = { 0.0, 0.0 };
     complex z1 = { 0.0, 0.0 };
     if (juliaMode) {
         z1 = c;
         c = j;
     }
     double zModSqr = 0.0;
-    //float smoothSum = 0.0;
+    float smoothSum = 0.0;
 
     for (int n = 0; n <= maxIter; n++) {
 
+
         // $ SHAPE LOOP $
-        z = cadd(csqr(z1), c);
+        z = cadd(kali(z1), c);
 
         zModSqr = cabs2(z);
-        //smoothSum += expSeries(-(float)zModSqr);
+        smoothSum += exp(-sqrt((float)zModSqr));
 
         if (zModSqr > escapeRadius*escapeRadius) {
-            color = (float2) { (float)n / (float)maxIter, 0.f };
-            //color = (float2) { log(log(smoothSum + 1.f) + 1.f), 0.f };
+            //color = (float2) { (float)n / (float)maxIter, 0.f };
+            color = (float2) { log(log(smoothSum + 1.f) + 1.f), 0.f };
             break;
         }
         else if (n == maxIter) {

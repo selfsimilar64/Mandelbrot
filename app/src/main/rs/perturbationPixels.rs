@@ -102,8 +102,8 @@ float2 RS_KERNEL iterate(uint32_t x) {
 
         if (wModSqr > escapeRadius*escapeRadius) {
             float smooth = (float)i - log(0.25f*log((float)(wModSqr)))/log(2.f);
-            //color = (uchar4){ (uchar)((255.f*((float)(i) - smooth)/(float)(maxIter))), 0, 0, 255 };
-            color = (float2) { log10((float)i/(float)maxIter*(10.f - 1.f) + 1.f), 0.f };
+            //color = (float2) { log10((float)i/(float)maxIter*(10.f - 1.f) + 1.f), 0.f };
+            color = (float2) { (float)i/(float)maxIter, 0.f };
             break;
         }
         else if (wModSqr/(zx*zx + zy*zy) < 1e-6) {
