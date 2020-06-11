@@ -1,37 +1,15 @@
 package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.Point
-import android.net.Uri
-import android.opengl.GLES20
 import android.opengl.GLES30.*
 import android.opengl.GLSurfaceView
-import android.os.*
-import android.provider.MediaStore
-import androidx.constraintlayout.widget.ConstraintLayout
-import android.util.Log
 import android.view.MotionEvent
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.widget.ProgressBar
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.util.*
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
 import javax.microedition.khronos.egl.EGLDisplay
-import javax.microedition.khronos.opengles.GL10
-import kotlin.math.*
-import kotlinx.coroutines.*
-import android.renderscript.*
-import org.apfloat.*
-import java.math.MathContext
 import java.nio.*
 
 
@@ -65,9 +43,10 @@ class GLTexture (
     private val numComponents : Int
     private val bytesPerComponent : Int
     private val bytesPerTexel : Int
-    private val type : Int
-    private val format : Int
-    val buffer: FloatBuffer
+    val type : Int
+    val format : Int
+    val byteBuffer : ByteBuffer
+    val floatBuffer : FloatBuffer
 
     init {
 
@@ -101,7 +80,7 @@ class GLTexture (
             GL_RG32F -> "GL_RG32F"
             else -> "not what u wanted"
         }
-        Log.d("RENDER ROUTINE", "res: (${res.x}, ${res.y}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.x*res.y*bytesPerTexel}")
+        //Log.d("RENDER ROUTINE", "res: (${res.x}, ${res.y}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.x*res.y*bytesPerTexel}")
 
         // bind and set texture parameters
         glActiveTexture(GL_TEXTURE0 + index)
@@ -125,45 +104,37 @@ class GLTexture (
             else -> GL_RGBA
         }
 
-        buffer = ByteBuffer.allocateDirect(res.x*res.y*bytesPerTexel).order(ByteOrder.nativeOrder()).asFloatBuffer()
+        byteBuffer = ByteBuffer.allocateDirect(res.x*res.y*bytesPerTexel).order(ByteOrder.nativeOrder())
+        floatBuffer = byteBuffer.asFloatBuffer()
         //Log.e("FSV", "buffer capacity: ${buffer.capacity()}")
         glTexImage2D(
                 GL_TEXTURE_2D,              // target
                 0,                          // mipmap level
                 internalFormat,             // internal format
-                res.x, res.y,             // texture resolution
+                res.x, res.y,               // texture resolution
                 0,                          // border
                 format,                     // internalFormat
                 type,                       // type
-                buffer                      // memory pointer
+                floatBuffer                 // memory pointer
         )
 
     }
 
 
-    fun get(i: Int, j: Int, k: Int) : Float = buffer.get(numComponents*(j*res.x + i) + k)
+    fun get(i: Int, j: Int, k: Int) : Float = floatBuffer.get(numComponents*(j*res.x + i) + k)
     fun set(i: Int, j: Int, k: Int, value: Float) {
-        buffer.put(numComponents*(j*res.x + i) + k, value)
+        floatBuffer.put(numComponents*(j*res.x + i) + k, value)
     }
     fun put(array: FloatArray) {
-        buffer.position(0)
-        buffer.put(array)
-        buffer.position(0)
-        glActiveTexture(GL_TEXTURE0 + index)
-        glBindTexture(GL_TEXTURE_2D, id)
-        glTexImage2D(
-                GL_TEXTURE_2D,              // target
-                0,                          // mipmap level
-                internalFormat,             // internal format
-                res.x, res.y,             // texture resolution
-                0,                          // border
-                format,                     // internalFormat
-                type,                       // type
-                buffer                      // memory pointer
-        )
+        floatBuffer.put(array, 0, array.size)
+    }
+    fun set(array: FloatArray) {
+        floatBuffer.position(0)
+        floatBuffer.put(array)
+        update()
     }
     fun update() {
-        buffer.position(0)
+        floatBuffer.position(0)
         glActiveTexture(GL_TEXTURE0 + index)
         glBindTexture(GL_TEXTURE_2D, id)
         glTexImage2D(
@@ -174,7 +145,7 @@ class GLTexture (
                 0,                          // border
                 format,                     // internalFormat
                 type,                       // type
-                buffer                      // memory pointer
+                floatBuffer                      // memory pointer
         )
     }
     fun delete() {
