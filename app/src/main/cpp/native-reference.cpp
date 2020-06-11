@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <stdio.h>
+#include <complex.h>
 #include <android/log.h>
 #include <gmpxx.h>
 
@@ -19,12 +20,12 @@ Java_com_selfsimilartech_fractaleye_FractalRenderer_iterateReferenceNative(
         jstring z0yIn,
         jdoubleArray d0xIn,
         jdoubleArray d0yIn,
-        jint precision,
-        jint maxIter,
-        jint maxRefIter,
-        jdouble escapeRadius,
-        jdouble sp,
-        jdouble sn,
+        int precision,
+        int maxIter,
+        int maxRefIter,
+        double escapeRadius,
+        double sp,
+        double sn,
         jobject data) {
 
 
@@ -33,7 +34,7 @@ Java_com_selfsimilartech_fractaleye_FractalRenderer_iterateReferenceNative(
     // main variables
     int refIter = 0;
     jdoubleArray refJavaArray = env->NewDoubleArray(2*maxRefIter);
-    double refArray[2*maxRefIter];
+    double *refArray = new double[2*maxRefIter];
     const char *z0xPtr = env->GetStringUTFChars(z0xIn, 0);
     const char *z0yPtr = env->GetStringUTFChars(z0yIn, 0);
     mpf_class z0x(z0xPtr); mpf_class z0y(z0yPtr);
