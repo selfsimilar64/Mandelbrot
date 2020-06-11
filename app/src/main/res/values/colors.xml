@@ -213,6 +213,96 @@
     <color name="slow8">#A1BAB4</color>
     <color name="slow9">#66A1A7</color>
 
+    <color name="alpha1">#294379</color>
+    <color name="alpha2">#597FD0</color>
+    <color name="alpha3">#BBBEFF</color>
+    <color name="alpha4">@color/white</color>
+    <color name="alpha5">#FFC2E2</color>
+    <color name="alpha6">#FF7F9F</color>
+    <color name="alpha7">#8D3148</color>
+
+    <color name="peach1">#0F0A21</color>
+    <color name="peach2">#1F0A37</color>
+    <color name="peach3">#6A224F</color>
+    <color name="peach4">#FF7C7C</color>
+    <color name="peach5">#FFD082</color>
+
+    <color name="jazz1">#03C1C7</color>
+    <color name="jazz2">#75D8DF</color>
+    <color name="jazz3">#CFF1EF</color>
+    <color name="jazz4">@color/white</color>
+    <color name="jazz5">#FBCFFC</color>
+    <color name="jazz6">#7E3BA3</color>
+
+    <color name="chroma1">#280E22</color>
+    <color name="chroma2">#32275F</color>
+    <color name="chroma3">#7A0C62</color>
+    <color name="chroma4">#C2036A</color>
+    <color name="chroma5">#DF7C76</color>
+    <color name="chroma6">#F2B57F</color>
+    <color name="chroma7">#FFEB7E</color>
+    <color name="chroma8">#DEF6B8</color>
+    <color name="chroma9">#BEFBD9</color>
+    <color name="chroma10">#C2DEEC</color>
+    <color name="chroma11">#B9AEE8</color>
+    <color name="chroma12">#C07DCA</color>
+
+    <color name="island1">#C08250</color>
+    <color name="island2">#FFDA90</color>
+    <color name="island3">#F8EEB3</color>
+    <color name="island4">#CCF0E1</color>
+    <color name="island5">#74CFB8</color>
+    <color name="island6">#208C81</color>
+    <color name="island7">#0E505A</color>
+
+    <color name="bioluminescent1">@color/black</color>
+    <color name="bioluminescent2">#00142C</color>
+    <color name="bioluminescent3">#003B41</color>
+    <color name="bioluminescent4">#007C64</color>
+    <color name="bioluminescent5">#43B77A</color>
+    <color name="bioluminescent6">#A9FCA4</color>
+    <color name="bioluminescent7">#D4FFD1</color>
+
+    <color name="kingfisher1">#0D58BA</color>
+    <color name="kingfisher2">#6CEEF8</color>
+    <color name="kingfisher3">#6E3A9E</color>
+    <color name="kingfisher4">#FBA7FF</color>
+    <color name="kingfisher5">#A41338</color>
+    <color name="kingfisher6">#FFAE32</color>
+    <color name="kingfisher7">#FDFC90</color>
+    <color name="kingfisher8">#FFFFDA</color>
+
+    <color name="polygon1">#EB5A3D</color>
+    <color name="polygon2">#F3F259</color>
+    <color name="polygon3">#459C3B</color>
+    <color name="polygon4">#0064BE</color>
+
+    <color name="rose1">#9FD14C</color>
+    <color name="rose2">#1B853D</color>
+    <color name="rose3">#001A27</color>
+    <color name="rose4">#7E004A</color>
+    <color name="rose5">#D39370</color>
+    <color name="rose6">#FFF097</color>
+
+    <color name="fossil1">#00031C</color>
+    <color name="fossil2">#131933</color>
+    <color name="fossil3">#6A655F</color>
+    <color name="fossil4">#EED9A4</color>
+    <color name="fossil5">#F7E9CE</color>
+    <color name="fossil6">@color/white</color>
+
+    <color name="atlas3">#E1E4F6</color>
+    <color name="atlas4">#9DC0C0</color>
+    <color name="atlas5">#466D6D</color>
+    <color name="atlas6">#223948</color>
+    <color name="atlas7">#0B1628</color>
+    <color name="atlas8">#181C27</color>
+    <color name="atlas9">#7A524A</color>
+    <color name="atlas10">#AF8459</color>
+    <color name="atlas11">#F8E4C3</color>
+    <color name="atlas12">#F9FBD3</color>
+
+
     <color name="pink4ashley">#DF8D94</color>
 
 
