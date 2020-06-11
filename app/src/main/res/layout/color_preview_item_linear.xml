@@ -32,7 +32,9 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
         app:cardCornerRadius="13dp"
-        app:cardElevation="5dp" />
+        app:cardElevation="5dp" >
+
+    </androidx.cardview.widget.CardView>
 
 
 </LinearLayout>

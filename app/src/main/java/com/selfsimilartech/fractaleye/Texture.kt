@@ -231,6 +231,8 @@ class Texture (
                 finalSF = R.string.orbittrapminxy_final_radius,
                 bailoutRadius = 1e2f
         )
+
+
         val arbitrary = mutableListOf(
                 escape,
                 exponentialSmoothing,
@@ -241,7 +243,6 @@ class Texture (
         )
 
         val all = mutableListOf(
-                stripeMedianBins,
                 escape,
                 escapeSmooth,
                 exponentialSmoothing,

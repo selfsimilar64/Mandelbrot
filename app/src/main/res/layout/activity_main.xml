@@ -199,7 +199,7 @@
                     <com.selfsimilartech.fractaleye.NoScrollViewPager
                         android:id="@+id/categoryPager"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:animateLayoutChanges="true" />
                 </androidx.cardview.widget.CardView>
 
