@@ -56,7 +56,7 @@ class ColorPalette (
         private val ids: List<Int> = listOf(),
         var colors: ArrayList<Int> = arrayListOf(),
         oscillate: Boolean = true,
-        val isCustom: Boolean = false
+        var customId: Int = -1
 ) {
 
 
@@ -131,13 +131,14 @@ class ColorPalette (
                 R.color.purple3,
                 R.color.maroon
         ))
-        val groovy = ColorPalette(
-                nameId = R.string.groovy,
+        val peach = ColorPalette(
+                nameId = R.string.peach,
                 ids = listOf(
-                R.color.black,
-                R.color.q4,
-                R.color.q5,
-                R.color.q6
+                R.color.peach1,
+                R.color.peach2,
+                R.color.peach3,
+                R.color.peach4,
+                R.color.peach5
         ))
         val canyon = ColorPalette(
                 nameId = R.string.canyon,
@@ -299,12 +300,147 @@ class ColorPalette (
                         R.color.slow9
                 )
         )
+        val alpha = ColorPalette(
+                nameId = R.string.alpha,
+                ids = listOf(
+                        R.color.alpha1,
+                        R.color.alpha2,
+                        R.color.alpha3,
+                        R.color.alpha4,
+                        R.color.alpha5,
+                        R.color.alpha6,
+                        R.color.alpha7
+                )
+        )
+        val jazz = ColorPalette(
+                nameId = R.string.jazz,
+                ids = listOf(
+                        R.color.jazz1,
+                        R.color.jazz2,
+                        R.color.jazz3,
+                        R.color.jazz4,
+                        R.color.jazz5,
+                        R.color.jazz6
+                )
+        )
+        val chroma = ColorPalette(
+                nameId = R.string.chroma,
+                ids = listOf(
+                        R.color.chroma1,
+                        R.color.chroma2,
+                        R.color.chroma3,
+                        R.color.chroma4,
+                        R.color.chroma5,
+                        R.color.chroma6,
+                        R.color.chroma7,
+                        R.color.chroma8,
+                        R.color.chroma9,
+                        R.color.chroma10,
+                        R.color.chroma11,
+                        R.color.chroma12
+                )
+        )
+        val island = ColorPalette(
+                nameId = R.string.island,
+                ids = listOf(
+                        R.color.island1,
+                        R.color.island2,
+                        R.color.island3,
+                        R.color.island4,
+                        R.color.island5,
+                        R.color.island6,
+                        R.color.island7
+                )
+        )
+        val bioluminescent = ColorPalette(
+                nameId = R.string.bioluminescent,
+                ids = listOf(
+                        R.color.bioluminescent1,
+                        R.color.bioluminescent2,
+                        R.color.bioluminescent3,
+                        R.color.bioluminescent4,
+                        R.color.bioluminescent5,
+                        R.color.bioluminescent6,
+                        R.color.bioluminescent7
+                )
+        )
+        val kingfisher = ColorPalette(
+                nameId = R.string.kingfisher,
+                ids = listOf(
+                        R.color.kingfisher1,
+                        R.color.kingfisher2,
+                        R.color.kingfisher3,
+                        R.color.kingfisher4,
+                        R.color.kingfisher5,
+                        R.color.kingfisher6,
+                        R.color.kingfisher7,
+                        R.color.kingfisher8
+                )
+        )
+        val polygon = ColorPalette(
+                nameId = R.string.polygon,
+                ids = listOf(
+                        R.color.polygon1,
+                        R.color.polygon2,
+                        R.color.polygon3,
+                        R.color.polygon4
+                )
+        )
+        val rose = ColorPalette(
+                nameId = R.string.rose,
+                ids = listOf(
+                        R.color.rose1,
+                        R.color.rose2,
+                        R.color.rose3,
+                        R.color.rose4,
+                        R.color.rose5,
+                        R.color.rose6
+                )
+        )
+        val fossil = ColorPalette(
+                nameId = R.string.fossil,
+                ids = listOf(
+                        R.color.fossil1,
+                        R.color.fossil2,
+                        R.color.fossil3,
+                        R.color.fossil4,
+                        R.color.fossil5,
+                        R.color.fossil6
+                )
+        )
+        val atlas = ColorPalette(
+                nameId = R.string.atlas,
+                ids = listOf(
+                        R.color.atlas3,
+                        R.color.atlas4,
+                        R.color.atlas5,
+                        R.color.atlas6,
+                        R.color.atlas7,
+                        R.color.atlas8,
+                        R.color.atlas9,
+                        R.color.atlas10,
+                        R.color.atlas11,
+                        R.color.atlas12
+                )
+        )
+
         val all = arrayListOf(
                 yinyang,
                 night,
+                chroma,
+                island,
+                rose,
+                kingfisher,
+                bioluminescent,
+                atlas,
+                fossil,
                 cosmic,
                 peacock,
                 backwards,
+                alpha,
+                peach,
+                jazz,
+                polygon,
                 elephant,
                 oldskool,
                 gold,
@@ -315,7 +451,6 @@ class ColorPalette (
                 vascular,
                 flora,
                 royal,
-                groovy,
                 canyon,
                 slow,
                 anubis
@@ -340,6 +475,9 @@ class ColorPalette (
 
     }
 
+
+    val isCustom : Boolean
+        get() = customId != -1
 
     val size : Int
         get() = if (oscillate) 2*colors.size - 1 else colors.size + 1
