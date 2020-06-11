@@ -3,8 +3,10 @@ package com.selfsimilartech.fractaleye
 class SettingsConfig (
         var resolution               : Resolution      = Resolution.FULL,
         var gpuPrecision             : GpuPrecision    = GpuPrecision.SINGLE,
-        var cpuPrecision             : Long            = 64L,
+        var cpuPrecision             : CpuPrecision    = CpuPrecision.DOUBLE,
+        var perturbPrecision         : Long            = 64L,
         var hardwareProfile          : HardwareProfile = HardwareProfile.GPU,
+        var deepZoomHardwareProfile  : HardwareProfile = HardwareProfile.GPU,
         var autoPrecision            : Boolean         = true,
         var continuousRender         : Boolean         = false,
         var displayParams            : Boolean         = false,
@@ -16,5 +18,6 @@ class SettingsConfig (
         var showHints                : Boolean         = true,
         var colorListViewType        : ListLayoutType  = ListLayoutType.GRID,
         var shapeListViewType        : ListLayoutType  = ListLayoutType.GRID,
-        var textureListViewType      : ListLayoutType  = ListLayoutType.GRID
+        var textureListViewType      : ListLayoutType  = ListLayoutType.GRID,
+        var autofitColorRange        : Boolean         = false
 )
