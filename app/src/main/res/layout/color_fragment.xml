@@ -91,7 +91,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:max="500"
+            android:max="1000"
             android:progress="50"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -294,7 +294,9 @@
     <LinearLayout
         android:id="@+id/colorPreviewListLayout"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeightTall"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:animateLayoutChanges="true"
         android:orientation="vertical"
         android:visibility="visible">
 
@@ -307,7 +309,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/colorPreviewList"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="@dimen/fragmentItemHeightTall"
                 android:background="@color/menu4"
                 android:orientation="vertical"
                 android:scrollbars="vertical"
@@ -375,6 +377,14 @@
             android:drawableTop="@drawable/done"
             android:text="@string/done" />
 
+        <Button
+            android:id="@+id/customPaletteDeleteButton"
+            style="@style/MenuNavButton"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/delete"
+            android:text="@string/delete" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -389,6 +399,7 @@
             style="@style/MenuNavToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:drawableTop="@drawable/palette"
             android:text="@string/palette" />
 
@@ -397,6 +408,7 @@
             style="@style/MenuNavToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:drawableTop="@drawable/frequency2"
             android:text="@string/frequency" />
 
@@ -405,6 +417,7 @@
             style="@style/MenuNavToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:drawableTop="@drawable/phase"
             android:text="@string/offset" />
 
@@ -413,8 +426,24 @@
             style="@style/MenuNavToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:drawableTop="@drawable/ic_fill"
             android:text="@string/solid_fill" />
+
+        <View
+            android:id="@+id/divider8"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/menu3" />
+
+        <com.selfsimilartech.fractaleye.ToggleButton
+            android:id="@+id/colorAutofitButton"
+            style="@style/MenuNavToggleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/autofit"
+            android:text="@string/autofit" />
     </LinearLayout>
 
 </LinearLayout>

@@ -1,7 +1,7 @@
 package com.selfsimilartech.fractaleye
 
+import android.animation.LayoutTransition
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -13,17 +13,15 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.tabs.TabLayout
 import com.woxthebox.draglistview.DragListView
 import com.woxthebox.draglistview.DragListView.DragListListener
 import kotlinx.android.synthetic.main.color_fragment.*
-import java.text.NumberFormat
-import java.text.ParseException
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlin.math.floor
-import kotlin.math.log
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -62,6 +60,10 @@ class ColorFragment : MenuFragment() {
         fsv = act.fsv
         sc = act.sc
 
+
+        colorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        colorPreviewListLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
             when (actionId) {
@@ -99,8 +101,14 @@ class ColorFragment : MenuFragment() {
                 newCustomPaletteButton.apply { setProFeature(true) },
                 colorPreviewListDoneButton
         ).filter { BuildConfig.PAID_VERSION || !it.isProFeature() }
+        val previewListNavButtonsCustom = listOf(
+                colorListViewTypeButton,
+                customPaletteDeleteButton,
+                newCustomPaletteButton,
+                colorPreviewListDoneButton
+        )
 
-        Log.e("COLOR FRAGMENT", "${previewListNavButtons.size}")
+        //Log.e("COLOR FRAGMENT", "${previewListNavButtons.size}")
         val customPaletteNavButtons = listOf(
                 customPaletteRandomizeButton,
                 customPaletteCancelButton,
@@ -121,8 +129,15 @@ class ColorFragment : MenuFragment() {
             if (result != null) {
                 f.phase = result
             }
-            w.text = "%.5f".format(f.phase)
+            w.text = "%.3f".format(f.phase)
         })
+//        densityEdit.setOnEditorActionListener(editListener(null) {w: TextView ->
+//            val result = w.text.toString().formatToDouble()?.toFloat()
+//            if (result != null) {
+//                f.density = result
+//            }
+//            w.text = "%.3f".format(f.density)
+//        })
         customPaletteName.setOnEditorActionListener(editListener(null) { w: TextView ->
 
             customPalette.name = w.text.toString()
@@ -139,10 +154,10 @@ class ColorFragment : MenuFragment() {
                 resources.getDimension(R.dimen.navButtonSize)
         val colorPreviewGridWidth = resources.getDimension(R.dimen.colorPreviewSize) +
                 2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
-        Log.e("COLOR FRAGMENT", "colorPreviewListWidth: $colorPreviewListWidth")
-        Log.e("COLOR FRAGMENT", "colorPreviewGridWidth: $colorPreviewGridWidth")
+        //Log.e("COLOR FRAGMENT", "colorPreviewListWidth: $colorPreviewListWidth")
+        //Log.e("COLOR FRAGMENT", "colorPreviewGridWidth: $colorPreviewGridWidth")
         val spanCount = floor(colorPreviewListWidth.toDouble() / colorPreviewGridWidth).toInt()
-        Log.e("COLOR FRAGMENT", "spanCount: ${colorPreviewListWidth.toDouble() / colorPreviewGridWidth}")
+        //Log.e("COLOR FRAGMENT", "spanCount: ${colorPreviewListWidth.toDouble() / colorPreviewGridWidth}")
 
         val colorPreviewListLinearManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         val colorPreviewListLinearAdapter = ColorPaletteAdapter(ColorPalette.all, R.layout.color_preview_item_linear)
@@ -170,9 +185,27 @@ class ColorFragment : MenuFragment() {
                         object : ClickListener {
 
                             override fun onClick(view: View, position: Int) {
-                                if (ColorPalette.all[position] != f.palette) {
-                                    f.palette = ColorPalette.all[position]
+                                val newPalette : ColorPalette = try {
+                                    ColorPalette.all[position]
+                                } catch (e: ArrayIndexOutOfBoundsException) {
+                                    Log.e("COLOR", "array index out of bounds -- list size: ${ColorPalette.all.size}, index: $position")
+                                    act.showMessage(resources.getString(R.string.msg_error))
+                                    f.palette
+                                }
+                                if (newPalette != f.palette) {
+
+                                    if (BuildConfig.PAID_VERSION) {
+                                        if (newPalette.isCustom != f.palette.isCustom) {
+                                            loadNavButtons(if (f.palette.isCustom)
+                                                previewListNavButtons else
+                                                previewListNavButtonsCustom
+                                            )
+                                        }
+                                    }
+
+                                    f.palette = newPalette
                                     fsv.requestRender()
+
                                 }
                             }
 
@@ -341,16 +374,14 @@ class ColorFragment : MenuFragment() {
 
                 loadNavButtons(previewListNavButtons)
 
-                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
+                act.uiSetOpenTall()
 
-                with (colorPreviewList.adapter as ColorPaletteAdapter) {
-                    if (isGridLayout) {
-                        fsv.r.renderProfile = RenderProfile.COLOR_THUMB
-                        fsv.r.renderThumbnails = true
-                        fsv.r.renderToTex = true
-                        fsv.requestRender()
-                    }
-                }
+                with (colorPreviewList.adapter as ColorPaletteAdapter) { if (isGridLayout) {
+                    fsv.r.renderProfile = RenderProfile.COLOR_THUMB
+                    fsv.r.renderThumbnails = true
+                    if (!fsv.r.colorThumbsRendered) fsv.r.renderToTex = true
+                    fsv.requestRender()
+                }}
 
             }, BUTTON_CLICK_DELAY_LONG)
         }
@@ -358,7 +389,7 @@ class ColorFragment : MenuFragment() {
         frequencyButton.setOnClickListener(subMenuButtonListener(frequencyLayout, frequencyButton))
         frequencySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val newFreq = (progress.toFloat()/frequencySeekBar.max).pow(2f) * 75f
+                val newFreq = (progress.toFloat()/frequencySeekBar.max).pow(2f) * 100f
                 f.frequency = newFreq
                 frequencyEdit.setText("%.5f".format(newFreq))
                 fsv.requestRender()
@@ -385,6 +416,34 @@ class ColorFragment : MenuFragment() {
 
         })
 
+//        densityButton.setOnClickListener(subMenuButtonListener(densityLayout, densityButton))
+//        densitySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+//            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+//                val newDensity = progress.toFloat()/densitySeekBar.max*10f + 1f
+//                f.density = newDensity
+//                densityEdit.setText("%.3f".format(newDensity))
+//                fsv.requestRender()
+//            }
+//            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+//            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+//        })
+
+        colorAutofitButton.setOnClickListener {
+            sc.autofitColorRange = colorAutofitButton.isChecked
+            fsv.r.resetTextureMinMax = true
+            fsv.r.calcNewTextureSpan = true
+            if (colorAutofitButton.isChecked) {
+                f.frequency = 1f
+                fsv.r.renderToTex = true
+            }
+            else {
+                f.frequency /= (fsv.r.textureMaxs.average() - fsv.r.textureMins.average()).toFloat()
+            }
+            updateFrequencyLayout()
+            fsv.requestRender()
+        }
+        colorAutofitButton.isChecked = sc.autofitColorRange
+
         solidFillButton.setOnClickListener(subMenuButtonListener(solidFillLayout, solidFillButton))
 
         colorPreviewListDoneButton.setOnClickListener {
@@ -393,7 +452,7 @@ class ColorFragment : MenuFragment() {
                 colorPreviewGradient.foreground = f.palette.gradientDrawable
                 colorPreviewName.text = f.palette.name
 
-                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+                if (!act.uiIsClosed()) act.uiSetOpen() else MainActivity.Category.COLOR.onMenuClosed(act)
 
                 colorPreviewListLayout.hide()
                 palettePreviewLayout.show()
@@ -473,8 +532,51 @@ class ColorFragment : MenuFragment() {
             }
 
         }
+        customPaletteDeleteButton.setOnClickListener {
+
+            val deleteId = f.palette.customId
+
+            GlobalScope.launch {
+                act.db.colorPaletteDao().apply {
+                    delete(findById(deleteId))
+                }
+            }
+
+            val index = ColorPalette.all.indexOf(f.palette)
+            ColorPalette.all.remove(f.palette)
+            f.palette = ColorPalette.all[index]
+            fsv.requestRender()
+            colorPreviewList.adapter?.apply { notifyItemRemoved(index) }
+
+        }
 
         customPaletteDoneButton.setOnClickListener {
+
+            GlobalScope.launch {
+
+                val colors = MutableList(8) { 0 }
+                customPalette.colors.forEachIndexed { i: Int, c: Int ->
+                    colors[i] = c
+                }
+                Log.e("COLOR", "custom palette size: ${customPalette.size}")
+
+                act.db.colorPaletteDao().apply {
+                    customPalette.customId = insert(ColorPaletteEntity(
+                            name = customPalette.name,
+                            size = customPalette.colors.size,
+                            c1 = colors[0],
+                            c2 = colors[1],
+                            c3 = colors[2],
+                            c4 = colors[3],
+                            c5 = colors[4],
+                            c6 = colors[5],
+                            c7 = colors[6],
+                            c8 = colors[7]
+                    )).toInt()
+                }
+
+            }
+
             handler.postDelayed({
 
                 act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
@@ -497,7 +599,7 @@ class ColorFragment : MenuFragment() {
                 f.palette = ColorPalette.all[prevSelectedPaletteIndex]
                 fsv.requestRender()
 
-                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+                act.uiSetOpen()
 
                 customPaletteLayout.hide()
                 palettePreviewLayout.show()
@@ -545,6 +647,7 @@ class ColorFragment : MenuFragment() {
         palettePreviewLayout.hide()
         frequencyLayout.hide()
         phaseLayout.hide()
+        //densityLayout.hide()
         solidFillLayout.hide()
         colorPreviewListLayout.hide()
         customPaletteLayout.hide()
@@ -558,7 +661,7 @@ class ColorFragment : MenuFragment() {
     }
 
     fun updateFrequencyLayout() {
-        frequencySeekBar.progress = ((f.frequency/75f).pow(0.5f)*frequencySeekBar.max).toInt()
+        frequencySeekBar.progress = ((f.frequency/100f).pow(0.5f)*frequencySeekBar.max).toInt()
     }
     fun updatePhaseLayout() {
         phaseSeekBar.progress = (f.phase*phaseSeekBar.max).toInt()
