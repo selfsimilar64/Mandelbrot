@@ -4,16 +4,17 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import com.google.android.material.tabs.TabLayout
-import androidx.core.app.ActivityCompat
-import androidx.fragment.app.Fragment
-import androidx.core.content.ContextCompat
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.SeekBar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.settings_fragment.*
+import java.util.*
 
 
 class SettingsFragment : MenuFragment() {
@@ -47,6 +48,13 @@ class SettingsFragment : MenuFragment() {
         val f = act.f
         val fsv = act.fsv
         val sc = act.sc
+
+
+        networkButton.setOnClickListener {
+
+            //act.connectToServer()
+
+        }
 
 
 //        restartActivityButton.setOnClickListener {
@@ -92,6 +100,7 @@ class SettingsFragment : MenuFragment() {
                 if (sc.resolution != newRes) {
 
                     sc.resolution = newRes
+                    if (fsv.r.isRendering) fsv.r.interruptRender = true
                     fsv.r.fgResolutionChanged = true
                     fsv.r.renderToTex = true
                     fsv.requestRender()
@@ -102,7 +111,7 @@ class SettingsFragment : MenuFragment() {
 
         })
         resolutionBar.max = if (BuildConfig.PAID_VERSION) Resolution.NUM_VALUES_PRO - 1 else Resolution.NUM_VALUES_FREE - 1
-        Log.e("SETTINGS", "resolution ordinal: ${sc.resolution.ordinal}")
+        //Log.e("SETTINGS", "resolution ordinal: ${sc.resolution.ordinal}")
         resolutionBar.progress = sc.resolution.ordinal
         val dimensions = sc.resolution.scaleRes(fsv.r.screenRes)
         resolutionDimensionsText.text = "${dimensions.x} x ${dimensions.y}"
@@ -110,6 +119,13 @@ class SettingsFragment : MenuFragment() {
 
         continuousRenderSwitch.setOnCheckedChangeListener { _, isChecked ->
             sc.continuousRender = isChecked
+            fsv.r.onContinuousRenderChanged()
+            if (sc.continuousRender && sc.renderBackground) {
+                renderBackgroundSwitch.isChecked = false
+                fsv.r.renderBackgroundChanged = true
+            }
+            renderBackgroundSwitch.isClickable = !sc.continuousRender
+            renderBackgroundLayout.alpha = if (sc.continuousRender) 0.3f else 1f
         }
         continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
@@ -130,7 +146,7 @@ class SettingsFragment : MenuFragment() {
 
             sc.renderBackground = isChecked
 
-            // fsv.r.bgResolutionChanged = true
+            fsv.r.renderBackgroundChanged = true
             fsv.r.renderToTex = isChecked
             fsv.requestRender()
 
@@ -184,36 +200,6 @@ class SettingsFragment : MenuFragment() {
 
 
 
-        precisionTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-
-                if (tab.position == 2) {
-                    Log.d("SETTINGS FRAGMENT", "auto selected")
-                    sc.autoPrecision = true
-                    fsv.r.checkThresholdCross(f.position.zoom)
-                }
-                else {
-                    sc.gpuPrecision = GpuPrecision.values()[tab.position]
-                    sc.autoPrecision = false
-                }
-                precisionBitsText.text = "${sc.gpuPrecision.bits}-bit"
-                fsv.r.renderShaderChanged = true
-                fsv.r.renderToTex = true
-                fsv.requestRender()
-
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab) {}
-            override fun onTabReselected(tab: TabLayout.Tab) {}
-        })
-        if (sc.autoPrecision) precisionTabs.getTabAt(2)?.select()
-        else precisionTabs.getTabAt(
-                GpuPrecision.valueOf(
-                        savedInstanceState?.getString("precision")
-                                ?: sc.gpuPrecision.name
-                ).ordinal
-        )?.select()
-
-
 
         val subMenuButtonListener = { layout: View, button: Button ->
             View.OnClickListener {
@@ -231,7 +217,6 @@ class SettingsFragment : MenuFragment() {
 
 
         resolutionButton.setOnClickListener(subMenuButtonListener(resolutionLayout, resolutionButton))
-        hardwareButton.setOnClickListener(subMenuButtonListener(hardwareLayout, hardwareButton))
         renderOptionsButton.setOnClickListener(subMenuButtonListener(renderOptionsLayout, renderOptionsButton))
         displayOptionsButton.setOnClickListener(subMenuButtonListener(displayOptionsLayout, displayOptionsButton))
 
@@ -240,7 +225,6 @@ class SettingsFragment : MenuFragment() {
         currentLayout = resolutionLayout
         currentButton = resolutionButton
         resolutionLayout.hide()
-        hardwareLayout.hide()
         renderOptionsLayout.hide()
         displayOptionsLayout.hide()
 

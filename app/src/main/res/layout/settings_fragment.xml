@@ -2,6 +2,7 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/settingsLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -12,7 +13,7 @@
     <ScrollView
         android:id="@+id/displayOptionsLayout"
         android:layout_width="match_parent"
-        android:layout_height="165dp">
+        android:layout_height="215dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -138,7 +139,7 @@
     <ScrollView
         android:id="@+id/renderOptionsLayout"
         android:layout_width="match_parent"
-        android:layout_height="165dp">
+        android:layout_height="215dp">
 
         <LinearLayout
             style="@style/FragmentItem"
@@ -149,6 +150,13 @@
             android:paddingTop="15dp"
             android:paddingEnd="15dp"
             android:paddingBottom="15dp">
+
+            <Button
+                android:id="@+id/networkButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="network"
+                android:visibility="gone" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -190,6 +198,7 @@
                 android:background="@color/menu3" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/renderBackgroundLayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
@@ -281,51 +290,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <LinearLayout
-        android:id="@+id/hardwareLayout"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent"
-        android:orientation="vertical"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
-
-        <TextView
-            android:id="@+id/precisionBitsText"
-            style="@style/TextDescriptionDark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="@string/precision_bits"
-            android:textColor="#888" />
-
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/precisionTabs"
-            android:layout_width="match_parent"
-            android:layout_height="42dp"
-            app:tabBackground="@drawable/tab_color_selector"
-            app:tabIndicatorColor="@android:color/transparent"
-            app:tabIndicatorFullWidth="true"
-            app:tabIndicatorGravity="bottom"
-            app:tabPaddingEnd="10dp"
-            app:tabPaddingStart="10dp">
-
-            <com.google.android.material.tabs.TabItem
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/precision_single" />
-
-            <com.google.android.material.tabs.TabItem
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/precision_dual" />
-
-            <com.google.android.material.tabs.TabItem
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/precision_auto" />
-        </com.google.android.material.tabs.TabLayout>
-    </LinearLayout>
-
     <!--
     <Button
         android:id="@+id/restartActivityButton"
@@ -366,14 +330,6 @@
                     android:layout_height="wrap_content"
                     android:drawableTop="@drawable/resolution"
                     android:text="@string/resolution" />
-
-                <Button
-                    android:id="@+id/hardwareButton"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_width="70dp"
-                    android:layout_height="wrap_content"
-                    android:drawableTop="@drawable/hardware"
-                    android:text="@string/hardware" />
 
                 <Button
                     android:id="@+id/renderOptionsButton"
