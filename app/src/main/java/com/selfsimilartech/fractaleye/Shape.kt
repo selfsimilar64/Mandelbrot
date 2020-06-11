@@ -1,30 +1,39 @@
 package com.selfsimilartech.fractaleye
 
+import android.renderscript.Double2
 import android.util.Range
+import kotlin.math.exp
 import kotlin.math.sqrt
+
+
 
 class Shape (
 
-        val name            : Int,
-        val katex           : Int                   = R.string.empty,
-        val icon            : Int                   = R.drawable.mandelbrot_icon,
-        val conditionalSF   : Int                   = R.string.escape_sf,
-        val initSF          : Int                   = R.string.empty,
-        val loopSF          : Int,
-        val finalSF         : Int                   = R.string.empty,
-        val conditionalDF   : Int                   = R.string.escape_df,
-        val initDF          : Int                   = R.string.empty,
-        val loopDF          : Int                   = R.string.empty,
-        val finalDF         : Int                   = R.string.empty,
-        compatTextures      : MutableList<Texture>  = Texture.arbitrary,
-        val positions       : PositionList          = PositionList(),
-        val params          : ParamList             = ParamList(),
-        juliaMode           : Boolean               = false,
-        val z0              : Complex               = Complex.ZERO,   // seed?
-        val bailoutRadius   : Float?                = null,
-        val power           : Float                 = 2f,
-        val hasDynamicPower : Boolean               = false,
-        val proFeature      : Boolean               = false
+        val name             : Int,
+        val katex            : Int                   = R.string.empty,
+        val icon             : Int                   = R.drawable.mandelbrot_icon,
+        val conditionalSF    : Int                   = R.string.escape_sf,
+        val initSF           : Int                   = R.string.empty,
+        val loopSF           : Int,
+        val finalSF          : Int                   = R.string.empty,
+        val conditionalDF    : Int                   = R.string.escape_df,
+        val initDF           : Int                   = R.string.empty,
+        val loopDF           : Int                   = R.string.empty,
+        val finalDF          : Int                   = R.string.empty,
+        compatTextures       : MutableList<Texture>  = Texture.arbitrary,
+        val positions        : PositionList          = PositionList(),
+        val params           : ParamList             = ParamList(),
+        juliaMode            : Boolean               = false,
+        val juliaSeed        : Boolean               = false,
+        val seed             : Complex               = Complex.ZERO,
+        var maxIter          : Int                   = 256,
+        val bailoutRadius    : Float?                = null,
+        val power            : Float                 = 2f,
+        val hasDynamicPower  : Boolean               = false,
+        val isProFeature     : Boolean               = false,
+        val isTranscendental : Boolean               = false,
+        val hasPerturbation  : Boolean               = false,
+        var iterateNative    : ( d: ScriptField_IterateData) -> FloatArray = { _ -> floatArrayOf() }
 
 ) {
 
@@ -103,6 +112,7 @@ class Shape (
 
         }
         open fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), 0f)
+        open fun toDouble2() : Double2 = Double2(u, 0.0)
 
     }
 
@@ -183,6 +193,7 @@ class Shape (
 
         }
         override fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), v.toFloat())
+        override fun toDouble2(): Double2 = Double2(u, v)
 
     }
 
@@ -201,7 +212,9 @@ class Shape (
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
                 positions = PositionList(
                     default = Position(x = -0.75, zoom = 3.5)
-                )
+                ),
+                maxIter = 512,
+                hasPerturbation = true
         )
         val mandelbrotCubic = Shape(
                 R.string.mandelbrot_cubic,
@@ -212,7 +225,8 @@ class Shape (
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
                 positions = PositionList(Position(zoom = 3.5)),
                 power = 3f,
-                proFeature = true
+                maxIter = 512,
+                isProFeature = true
         )
         val mandelbrotQuartic = Shape(
                 R.string.mandelbrot_quartic,
@@ -223,7 +237,8 @@ class Shape (
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
                 positions = PositionList(Position(x = -0.175, zoom = 3.5)),
                 power = 4f,
-                proFeature = true
+                maxIter = 512,
+                isProFeature = true
         )
         val mandelbrotQuintic = Shape(
                 R.string.mandelbrot_quintic,
@@ -234,9 +249,10 @@ class Shape (
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
                 positions = PositionList(Position(zoom = 3.5)),
                 power = 5f,
-                proFeature = true
+                maxIter = 512,
+                isProFeature = true
         )
-        val mandelbrotAnyPow = Shape(
+        val mandelbrotPow = Shape(
                 R.string.mandelbrot_anypow,
                 katex = R.string.mandelbrotanypow_katex,
                 icon = R.drawable.mandelbrotanypow_icon,
@@ -244,7 +260,8 @@ class Shape (
                 compatTextures = Texture.all without Texture.triangleIneqAvgFloat,
                 positions = PositionList(Position(x = -0.55, y = 0.5, zoom = 5.0)),
                 params = ParamList(listOf(ComplexParam(16.0, 4.0))),
-                hasDynamicPower = true
+                hasDynamicPower = true,
+                isTranscendental = true
         )
         val clover = Shape(
                 R.string.clover,
@@ -253,9 +270,10 @@ class Shape (
                 initSF = R.string.dualpow_init_sf,
                 loopSF = R.string.dualpow_loop_sf,
                 positions = PositionList(Position(zoom = 2.0, rotation = 45.0.inRadians())),
-                z0 = Complex.ONE,
+                seed = Complex.ONE,
                 params = ParamList(listOf(ComplexParam(2.0, vLocked = true))),
-                hasDynamicPower = true
+                hasDynamicPower = true,
+                isTranscendental = true
         )
         val mandelbox = Shape(
                 R.string.mandelbox,
@@ -266,8 +284,7 @@ class Shape (
                 positions = PositionList(Position(zoom = 6.5)),
                 params = ParamList(listOf(
                         ComplexParam(-2.66421354, vLocked = true),
-                        ComplexParam(1.0, 0.0))
-                ),
+                        ComplexParam(1.0, 0.0))),
                 bailoutRadius = 5f
         )
         val kali = Shape(
@@ -275,7 +292,7 @@ class Shape (
                 katex = R.string.kali_katex,
                 icon = R.drawable.kali_icon,
                 loopSF = R.string.kali_loop_sf,
-                conditionalDF = R.string.escape_df,
+                loopDF = R.string.kali_loop_df,
                 juliaMode = true,
                 positions = PositionList(julia = Position(zoom = 3.0)),
                 params = ParamList(julia = ComplexParam(-0.33170626, -0.18423799)),
@@ -299,7 +316,7 @@ class Shape (
                 loopSF = R.string.logistic_loop_sf,
                 loopDF = R.string.logistic_loop_df,
                 positions = PositionList(Position(zoom = 3.5)),
-                z0 = Complex(0.5, 0.0)
+                seed = Complex(0.5, 0.0)
         )
         val burningShip = Shape(
                 R.string.burning_ship,
@@ -318,13 +335,15 @@ class Shape (
                         ComplexParam(-2.0, vLocked = true))),
                 bailoutRadius = 4e0f
         )
-        val sine1 = Shape(
+        val sine = Shape(
                 R.string.sine1,
                 katex = R.string.sine1_katex,
                 icon = R.drawable.sine1_icon,
                 loopSF = R.string.sine1_loop_sf,
                 positions = PositionList(Position(zoom = 6.0)),
-                bailoutRadius = 1e4f
+                bailoutRadius = 1e4f,
+                power = exp(1f),
+                isTranscendental = true
         )
         val sine2 = Shape(
                 R.string.sine2,
@@ -333,7 +352,8 @@ class Shape (
                 loopSF = R.string.sine2_loop_sf,
                 positions = PositionList(Position(zoom = 3.5)),
                 params = ParamList(listOf(ComplexParam(-0.26282884))),
-                z0 = Complex.ONE
+                seed = Complex.ONE,
+                isTranscendental = true
         )
         val sine3 = Shape(
                 R.string.empty,
@@ -341,8 +361,9 @@ class Shape (
                 loopSF = R.string.sine3_loop_sf,
                 positions = PositionList(Position(zoom = 3.5)),
                 params = ParamList(listOf(ComplexParam(0.31960705187983646, vLocked = true))),
-                z0 = Complex.ONE,
-                bailoutRadius = 1e1f
+                seed = Complex.ONE,
+                bailoutRadius = 1e1f,
+                isTranscendental = true
         )
         val horseshoeCrab = Shape(
                 R.string.horseshoe_crab,
@@ -351,7 +372,8 @@ class Shape (
                 loopSF = R.string.horseshoecrab_loop_sf,
                 positions = PositionList(Position(x = -0.25, zoom = 6.0, rotation = 90.0.inRadians())),
                 params = ParamList(listOf(ComplexParam(sqrt(2.0)))),
-                z0 = Complex.ONE
+                seed = Complex.ONE,
+                isTranscendental = true
         )
         val newton2 = Shape(
                 R.string.empty,
@@ -380,20 +402,24 @@ class Shape (
                 loopSF = R.string.persianrug_loop_sf,
                 positions = PositionList(Position(zoom = 1.5)),
                 params = ParamList(listOf(ComplexParam(0.642, 0.0))),
-                bailoutRadius = 1e1f
+                bailoutRadius = 1e1f,
+                isTranscendental = true
         )
         val kleinian = Shape(
                 R.string.kleinian,
                 icon = R.drawable.kleinian_icon,
                 initSF = R.string.kleinian_init_sf,
                 loopSF = R.string.kleinian_loop_sf,
+                conditionalSF = R.string.kleinian_escape_sf,
                 positions = PositionList(julia = Position(y = -0.5, zoom = 1.5)),
                 juliaMode = true,
                 params = ParamList(
                         listOf(ComplexParam(1.41421538, vLocked = true)),
                         ComplexParam(0.0, -1.0)
                 ),
-                bailoutRadius = 1e5f
+                maxIter = 32,
+                bailoutRadius = 1e5f,
+                isTranscendental = true
         )
         val nova1 = Shape(
                 R.string.nova1,
@@ -404,7 +430,7 @@ class Shape (
                 conditionalDF = R.string.converge_df,
                 loopDF = R.string.nova1_loop_df,
                 positions = PositionList(Position(x = -0.3, zoom = 1.75, rotation = 90.0.inRadians())),
-                z0 = Complex.ONE,
+                seed = Complex.ONE,
                 params = ParamList(listOf(ComplexParam(1.0, 0.0)))
         )
         val nova2 = Shape(
@@ -414,43 +440,49 @@ class Shape (
                 conditionalSF = R.string.converge_sf,
                 loopSF = R.string.nova2_loop_sf,
                 juliaMode = true,
-                positions = PositionList(julia = Position(x = -0.3, zoom = 5.0))
+                positions = PositionList(julia = Position(x = -0.3, zoom = 5.0)),
+                isTranscendental = true
         )
         val fibonacciPowers = Shape(
                 R.string.empty,
                 initSF = R.string.fibonacci_init_sf,
                 loopSF = R.string.fibonacci_loop_sf,
                 juliaMode = true,
-                bailoutRadius = 1e3f
+                bailoutRadius = 1e3f,
+                isTranscendental = true
         )
-        val burningshipAnyPow = Shape(
+        val burningshipPow = Shape(
                 R.string.burning_ship_anypow,
                 loopSF = R.string.burningshipanypow_loop_sf,
                 bailoutRadius = 1e2f,
-                params = ParamList(listOf(ComplexParam(4.0, -1.0))),
-                proFeature = true
+                params = ParamList(listOf(ComplexParam(18.0, 27.0))),
+                positions = PositionList(
+                        Position(zoom = 3e1, rotation = 90.0.inRadians()),
+                        Position(zoom = 3e1, rotation = 90.0.inRadians())
+                ),
+                isProFeature = true,
+                isTranscendental = true
         )
         val collatz = Shape(
                 name = R.string.collatz,
+                icon = R.drawable.collatz_icon,
                 katex = R.string.collatz_katex,
                 loopSF = R.string.collatz_loop_sf,
-                proFeature = true
-        )
-        val mandalay = Shape(
-                name = R.string.empty,
-                initSF = R.string.mandalay_init_sf,
-                loopSF = R.string.mandalay_loop_sf,
-                conditionalSF = R.string.converge_sf,
-                z0 = Complex(0.0, 0.0),
-                params = ParamList(
-                        listOf(ComplexParam(0.5, 0.9))
+                positions = PositionList(
+                        Position(zoom = 1.5, rotation = (-90.0).inRadians()),
+                        Position(rotation = (-90.0).inRadians())
                 ),
-                proFeature = true
+                isProFeature = true,
+                isTranscendental = true
         )
         val mandelex = Shape(
                 name = R.string.mandelex,
+                icon = R.drawable.mandelex_icon,
                 initSF = R.string.mandelex_init_sf,
                 loopSF = R.string.mandelex_loop_sf,
+                initDF = R.string.mandelex_init_df,
+                loopDF = R.string.mandelex_loop_df,
+                juliaSeed = true,
                 positions = PositionList(Position(zoom = 2e1)),
                 params = ParamList(listOf(
                         Param(180.0, Range(0.0, 360.0), name = "angle"),
@@ -458,22 +490,36 @@ class Shape (
                         Param(2.0,   Range(0.0, 5.0),   name = "scale"),
                         Param(2.0,   Range(0.0, 5.0),   name = "linear")
                 )),
-                proFeature = true
+                isProFeature = true
+        )
+        val new1 = Shape(
+                name = R.string.empty,
+                loopSF = R.string.new1_loop_sf,
+                isProFeature = true
+        )
+        val new2 = Shape(
+                name = R.string.empty,
+                loopSF = R.string.new2_loop_sf,
+                positions = PositionList(Position(zoom = 6.0)),
+                power = 150f,
+                compatTextures = Texture.all,
+                isProFeature = true
         )
         val all = arrayListOf(
-                mandelex,
-                //mandalay,
-                collatz,
                 mandelbrot,
                 mandelbrotCubic,
                 mandelbrotQuartic,
-                mandelbrotAnyPow,
+                mandelbrotQuintic,
+                mandelbrotPow,
+                new1,
+                new2,
+                mandelex,
+                collatz,
                 clover,
                 burningShip,
-                burningshipAnyPow,
                 mandelbox,
                 kali,
-                sine1,
+                sine,
                 sine2,
                 horseshoeCrab,
                 kleinian,
@@ -541,8 +587,11 @@ class Shape (
                 positions.clone(),
                 params,
                 juliaMode,
-                z0,
-                bailoutRadius)
+                juliaSeed,
+                seed,
+                maxIter,
+                bailoutRadius
+        )
     }
     fun reset() {
 
