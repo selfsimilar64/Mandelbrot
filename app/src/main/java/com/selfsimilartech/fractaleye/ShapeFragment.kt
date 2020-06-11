@@ -1,8 +1,8 @@
 package com.selfsimilartech.fractaleye
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.content.res.ColorStateList
-import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -15,12 +15,9 @@ import android.widget.*
 import android.widget.ToggleButton
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.math.log
 import kotlin.math.pow
 import kotlinx.android.synthetic.main.shape_fragment.*
-import java.text.NumberFormat
-import java.text.ParseException
 
 
 class ShapeFragment : MenuFragment() {
@@ -44,7 +41,11 @@ class ShapeFragment : MenuFragment() {
         f = act.f
         fsv = act.fsv
         sc = act.sc
-        val shapeList = if (BuildConfig.PAID_VERSION) Shape.all else Shape.all.filter { shape -> !shape.proFeature }
+
+        shapeLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        shapePreviewListLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+
+        val shapeList = if (BuildConfig.PAID_VERSION) Shape.all else Shape.all.filter { shape -> !shape.isProFeature }
 
         val handler = Handler()
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -97,7 +98,7 @@ class ShapeFragment : MenuFragment() {
         }
         val juliaListener = View.OnClickListener {
 
-            juliaModeButton.alpha = if (juliaModeButton.isChecked) 1f else 0.5f
+            //juliaModeButton.alpha = if (juliaModeButton.isChecked) 1f else 0.5f
 
             val prevScale = f.position.zoom
             f.shape.juliaMode = juliaModeButton.isChecked
@@ -286,26 +287,27 @@ class ShapeFragment : MenuFragment() {
             override fun onStopTrackingTouch(seekBar: SeekBar) {
 
                 val p = seekBar.progress.toDouble() / maxIterBar.max
-                f.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt()
-                maxIterEdit.setText("%d".format(f.maxIter))
+                f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
+                maxIterEdit.setText("%d".format(f.shape.maxIter))
 
-                Log.d("FRACTAL EDIT FRAGMENT", "maxIter: ${f.maxIter}")
-                // f.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(12) - 1)*p).toInt()
+                Log.d("FRACTAL EDIT FRAGMENT", "maxIter: ${f.shape.maxIter}")
+                // f.shape.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(12) - 1)*p).toInt()
                 fsv.r.renderToTex = true
                 fsv.requestRender()
 
             }
 
         })
-        maxIterBar.progress = ((log(f.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
-        maxIterEdit.setText("%d".format(f.maxIter))
+        maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
+        maxIterEdit.setText("%d".format(f.shape.maxIter))
         maxIterEdit.setOnEditorActionListener(editListener(null) {
             val result = "${it.text}".formatToDouble()?.toInt()
             if (result != null) {
-                f.maxIter = result
+                f.shape.maxIter = result
                 fsv.r.renderToTex = true
             }
-            maxIterEdit.setText("%d".format(f.maxIter))
+            maxIterEdit.setText("%d".format(f.shape.maxIter))
+            maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
         })
 
 
@@ -399,6 +401,7 @@ class ShapeFragment : MenuFragment() {
 
         val subMenuButtonListener = { layout: View, button: Button ->
             View.OnClickListener {
+                act.hideTouchIcon()
                 showLayout(layout)
                 alphaButton(button)
                 shapeResetButton.hide()
@@ -406,6 +409,7 @@ class ShapeFragment : MenuFragment() {
         }
         val shapeParamButtonListener = { button: Button, paramIndex: Int ->
             View.OnClickListener {
+                act.showTouchIcon()
                 fsv.r.reaction = Reaction.SHAPE
                 f.shape.params.active = f.shape.params.list[paramIndex]
                 showLayout(if (f.shape.params.list[paramIndex] is Shape.ComplexParam) complexParamLayout else realParamLayout)
@@ -419,6 +423,7 @@ class ShapeFragment : MenuFragment() {
         // CLICK LISTENERS
         shapePreviewButton.setOnClickListener {
 
+            act.hideTouchIcon()
             showLayout(shapePreviewLayout)
             alphaButton(shapePreviewButton)
             shapeResetButton.hide()
@@ -466,7 +471,7 @@ class ShapeFragment : MenuFragment() {
         shapeDoneButton.setOnClickListener {
             handler.postDelayed({
 
-                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+                if (!act.uiIsClosed()) act.uiSetOpen() else MainActivity.Category.SHAPE.onMenuClosed(act)
 
 
                 shapePreviewImage.setImageResource(f.shape.icon)
@@ -497,11 +502,15 @@ class ShapeFragment : MenuFragment() {
                     if (isChecked) juliaParamButton.show() else juliaParamButton.hide()
                 }
 
+                maxIterEdit.setText("%d".format(f.shape.maxIter))
+                maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
+
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
 
         juliaParamButton.setOnClickListener {
+            act.showTouchIcon()
             showLayout(complexParamLayout)
             alphaButton(juliaParamButton)
             shapeResetButton.show()
