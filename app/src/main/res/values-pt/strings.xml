@@ -76,7 +76,7 @@
     <string name="normal2">Mapa de Normais 2</string>
     <string name="orbit_trap_miny">Armadilha da Órbita</string>
     <string name="overlay_avg">Média de Sobreposição</string>
-    <string name="density">Densidade de Listras</string>
+    <string name="density">Densidade</string>
     <string name="sharpness">Nitidez</string>
     <string name="mandelbrot_cubic">Mandelbrot Cúbico</string>
     <string name="mandelbrot_quartic">Mandelbrot  Quártico</string>
@@ -136,4 +136,5 @@
     <string name="less_detail">Menos detalhes</string>
     <string name="fossil">Fóssil</string>
     <string name="atlas">Atlas</string>
+    <string name="changelog">Mudanças</string>
 </resources>

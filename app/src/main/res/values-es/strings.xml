@@ -76,13 +76,13 @@
     <string name="normal2">Mapa de Normales 2</string>
     <string name="orbit_trap_miny">Trampa de Órbita</string>
     <string name="overlay_avg">Promedio de Superposición</string>
-    <string name="density">Densidad de Rayas</string>
+    <string name="density">Densidad</string>
     <string name="sharpness">Nitidez</string>
     <string name="mandelbrot_cubic">Mandelbrot  Cúbico</string>
     <string name="mandelbrot_quartic">Mandelbrot  Cuartico</string>
     <string name="mandelbrot_quintic">Mandelbrot  Quintica</string>
     <string name="mandelbrot_anypow">Mandelbrot (Potencia)</string>
-    <string name="clover">"Trébol "</string>
+    <string name="clover">"Trébol"</string>
     <string name="mandelbox">Mandelcaja</string>
     <string name="sine1">Seno 1</string>
     <string name="sine2">Seno 2</string>
@@ -136,4 +136,5 @@
     <string name="less_detail">Menos detalles</string>
     <string name="fossil">Fósil</string>
     <string name="atlas">Atlas</string>
+    <string name="changelog">Cambios</string>
 </resources>

@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.settings_fragment.*
 import java.util.*
+import kotlin.math.exp
 
 
 class SettingsFragment : MenuFragment() {
@@ -50,11 +51,9 @@ class SettingsFragment : MenuFragment() {
         val sc = act.sc
 
 
-        networkButton.setOnClickListener {
-
-            //act.connectToServer()
-
-        }
+//        networkButton.setOnClickListener {
+//            act.connectToServer()
+//        }
 
 
 //        restartActivityButton.setOnClickListener {
@@ -197,6 +196,9 @@ class SettingsFragment : MenuFragment() {
 //            fsv.r.renderToTex = true
 //            fsv.requestRender()
 //        }
+
+
+        showChangelogButton.setOnClickListener { act.showChangelog() }
 
 
 

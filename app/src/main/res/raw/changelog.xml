@@ -1,0 +1,15 @@
+<changelog>
+
+    <!-- simple example - no version name => will be generated based on verionCode: 100 => v1.00 -->
+    <release versionCode="16" versionName="v1.3.2" date="2020-06-15">
+        <new type="summary">Color palettes Chroma, Island, Rose, Kingfisher, Bioluminescent, Atlas, Fossil, Alpha, Peach, Jazz, and Polygon added</new>
+        <new type="summary">Interrupt image render process by changing position/resolution</new>
+        <new type="summary">Toggle COLOR -> AUTO to automatically fit colors based on position</new>
+        <new type="summary">Deeper zoom (without textures, up to 1e-12) available on transcendental shapes i.e. Mandelbrot (Power), Clover, Sine 1, Sine 2, Horseshoe Crab, and Kleinian</new>
+        <new type="summary">More resolution options</new>
+        <info>Larger menu height when changing texture/shape/palette</info>
+        <info>Enabling ~Continuous Render~ disables ~Render Background~</info>
+        <info>Hints added for SHAPE -> ITERATE</info>
+    </release>
+
+</changelog>

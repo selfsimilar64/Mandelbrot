@@ -1,0 +1,15 @@
+<changelog>
+
+    <!-- simple example - no version name => will be generated based on verionCode: 100 => v1.00 -->
+    <release versionCode="16" versionName="v1.3.2" date="2020-06-15">
+        <new type="summary">Farbpaletten Chroma, Insel, Rose, Eisvogel, Biolumineszenz, Atlas, Fossil, Alpha, Pfirsich, Jazz und Polygon hinzugefügt</new>
+        <new type="summary">Unterbrechen Sie den Bildwiedergabeprozess, indem Sie Position / Auflösung ändern</new>
+        <new type="summary">Schalten Sie FARBE -> AUTO um, um Farben basierend auf der Position automatisch anzupassen</new>
+        <new type="summary">Tieferer Zoom (ohne Texturen, bis zu 1e-12) für transzendentale Formen, d. H. Mandelbrot (Kraft), Klee, Sinus 1, Sinus 2, Pfeilschwanzkrebs und Kleinian</new>
+        <new type="summary">Weitere Auflösungsoptionen</new>
+        <info>Größere Menühöhe beim Ändern von Textur / Form / Palette</info>
+        <info>Durch Aktivieren von ~Kontinuierliches Rendern~ wird der ~Hintergrund Rendern~ deaktiviert</info>
+        <info>Hinweise für FORM -> ITERIEREN hinzugefügt</info>
+    </release>
+
+</changelog>

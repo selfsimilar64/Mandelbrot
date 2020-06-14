@@ -75,6 +75,8 @@
     <string name="render_background_hint">Render a larger low-resolution image underneath the main image</string>
     <string name="display_params_hint">Show window with relevant parameters during touch gestures</string>
     <string name="fit_viewport_hint">Show the entire rendered image</string>
+    <string name="changelog">Changes</string>
+
 
 
     <!-- TEXTURE FRAGMENT -->
@@ -282,7 +284,7 @@
         out vec4 fragmentColor;
     </string>
     <string name="header_df" translatable="false">#version 300 es\n
-        #define SPLIT 8097.\n
+        #define SPLIT 8193.0\n
         #define pi 3.141592654\n
         #define Sn 1e-8\n
         #define Sp 1e8\n

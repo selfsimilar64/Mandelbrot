@@ -1,0 +1,15 @@
+<changelog>
+
+    <!-- simple example - no version name => will be generated based on verionCode: 100 => v1.00 -->
+    <release versionCode="16" versionName="v1.3.2" date="2020-06-15">
+        - Paletas de cores: Croma, Ilha, Rosa, Martim-pescador, Bioluminescente, Atlas, Fóssil, Alfa, Pêssego, Jazz e Polígono adicionados
+        - Interromper o processo de renderização de imagem alterando a posição/resolução
+        - Alterne COR -> AUTO para ajustar automaticamente as cores com base na posição
+        - Zoom mais profundo (sem texturas, até 1e-12) disponível em formas transcendentais, como Mandelbrot (Potência), Trevo, Seno 1, Seno 2, Límulo e Kleinian
+        - Mais opções de resolução
+        <info>Maior altura do menu ao alterar textura/forma/paleta</info>
+        <info>Ativar ~Renderizado Contínuo~ desativa ~Renderizar Fundo~</info>
+        <info>Dicas adicionadas para FORMA -> ITERAR</info>
+    </release>
+
+</changelog>

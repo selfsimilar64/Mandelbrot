@@ -151,13 +151,6 @@
             android:paddingEnd="15dp"
             android:paddingBottom="15dp">
 
-            <Button
-                android:id="@+id/networkButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="network"
-                android:visibility="gone" />
-
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -346,6 +339,15 @@
                     android:layout_height="wrap_content"
                     android:drawableTop="@drawable/parameter"
                     android:text="@string/display" />
+
+                <Button
+                    android:id="@+id/showChangelogButton"
+                    style="@style/MenuNavButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/changelog"
+                    android:text="@string/changelog" />
+
             </LinearLayout>
         </HorizontalScrollView>
 

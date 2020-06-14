@@ -76,7 +76,7 @@
     <string name="normal2">Normale Zuordnung 2</string>
     <string name="orbit_trap_miny">Orbitfalle</string>
     <string name="overlay_avg">Überlagerungsdurchschnitt</string>
-    <string name="density">Streifendichte</string>
+    <string name="density">Dichte</string>
     <string name="sharpness">Schärfe</string>
     <string name="mandelbrot_cubic">Mandelbrot Kubisch</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartisch</string>
@@ -136,4 +136,5 @@
     <string name="less_detail">Weniger Details</string>
     <string name="fossil">Fossil</string>
     <string name="atlas">Atlas</string>
+    <string name="changelog">Änderungen</string>
 </resources>

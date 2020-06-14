@@ -76,7 +76,7 @@
     <string name="normal1">Affectation Normale 1</string>
     <string name="normal2">Affectation Normale 2</string>
     <string name="orbit_trap_miny">Piège d\'Orbite</string>
-    <string name="density">Densité de Rayures</string>
+    <string name="density">Densité</string>
     <string name="sharpness">Tranchant</string>
     <string name="mandelbrot_cubic">Mandelbrot Cubique</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartique</string>
@@ -136,4 +136,5 @@
     <string name="less_detail">Moins de détails</string>
     <string name="fossil">Fossile</string>
     <string name="atlas">Atlas</string>
+    <string name="changelog">Histoire</string>
 </resources>

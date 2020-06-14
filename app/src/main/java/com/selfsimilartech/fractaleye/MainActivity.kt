@@ -4,11 +4,13 @@ import android.animation.LayoutTransition
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Point
 import android.opengl.GLSurfaceView
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -22,6 +24,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
+import com.michaelflisar.changelog.ChangelogBuilder
+import com.michaelflisar.changelog.classes.ImportanceChangelogSorter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.color_fragment.*
 import kotlinx.android.synthetic.main.position_fragment_old.*
@@ -33,12 +37,8 @@ import kotlinx.coroutines.launch
 import org.apfloat.Apcomplex
 import org.apfloat.Apfloat
 import org.apfloat.ApfloatMath
-import java.io.UnsupportedEncodingException
 import java.lang.ref.WeakReference
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import java.util.*
-import kotlin.experimental.and
 import kotlin.math.*
 
 
@@ -70,6 +70,7 @@ const val HARDWARE_PROFILE = "hardwareProfile"
 const val GPU_PRECISION = "gpuPrecision"
 const val CPU_PRECISION = "cpuPrecision"
 const val PALETTE = "palette"
+const val VERSION_NAME_TAG = "versionName"
 const val SHARED_PREFERENCES = "com.selfsimilartech.fractaleye.SETTINGS"
 
 
@@ -602,6 +603,12 @@ class MainActivity : AppCompatActivity() {
     private var deviceHasNotch = false
     private var texturesDisabled = false
 
+    private lateinit var settingsFragment : Fragment
+    private lateinit var textureFragment : Fragment
+    private lateinit var shapeFragment : Fragment
+    private lateinit var colorFragment : Fragment
+    private lateinit var positionFragment : Fragment
+
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
     class ActivityHandler(activity: MainActivity) : Handler() {
@@ -852,11 +859,11 @@ class MainActivity : AppCompatActivity() {
         fsv = FractalSurfaceView(baseContext, r)
         fsv.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight)
 
-        val settingsFragment  = SettingsFragment()
-        val textureFragment   = TextureFragment()
-        val shapeFragment     = ShapeFragment()
-        val colorFragment     = ColorFragment()
-        val positionFragment  = PositionFragment()
+        settingsFragment  = SettingsFragment()
+        textureFragment   = TextureFragment()
+        shapeFragment     = ShapeFragment()
+        colorFragment     = ColorFragment()
+        positionFragment  = PositionFragment()
 
 
         super.onCreate(savedInstanceState)
@@ -1080,6 +1087,8 @@ class MainActivity : AppCompatActivity() {
         overlay.bringToFront()
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+
+        if (sp.getString(VERSION_NAME_TAG, "") != BuildConfig.VERSION_NAME) showChangelog()
 
     }
 
@@ -1359,7 +1368,7 @@ class MainActivity : AppCompatActivity() {
     fun updateShapeEditTexts() {
         // Log.d("FRACTAL", "updating shape param EditText $i")
 
-        (supportFragmentManager.fragments[2] as ShapeFragment).loadActiveParam()
+        (shapeFragment as ShapeFragment).loadActiveParam()
 
 
     }
@@ -1375,7 +1384,7 @@ class MainActivity : AppCompatActivity() {
     fun updateColorEditTexts() {
 
         frequencyEdit?.setText("%.5f".format(f.frequency))
-        with (supportFragmentManager.fragments[1] as ColorFragment) {
+        with (colorFragment as ColorFragment) {
             updateFrequencyLayout()
             updatePhaseLayout()
         }
@@ -1392,7 +1401,7 @@ class MainActivity : AppCompatActivity() {
         scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
         scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
 
-        with (supportFragmentManager.fragments[0] as PositionFragment) {
+        with (positionFragment as PositionFragment) {
             updateRotationLayout()
         }
 
@@ -1453,6 +1462,7 @@ class MainActivity : AppCompatActivity() {
         edit.putInt(TEXTURE_LIST_VIEW_TYPE, sc.textureListViewType.ordinal)
         edit.putBoolean(AUTOFIT_COLOR_RANGE, sc.autofitColorRange)
         edit.putInt(PALETTE, ColorPalette.all.indexOf(f.palette))
+        edit.putString(VERSION_NAME_TAG, BuildConfig.VERSION_NAME)
         edit.apply()
 
         super.onPause()
@@ -1482,8 +1492,37 @@ class MainActivity : AppCompatActivity() {
             else -> {}
         }
     }
+    fun showChangelog() {
 
+        val showAsDialog = true
+        val bulletList = true
+        val showVersion11OrHigherOnly = false
+        val rowsShouldInheritFilterTextFromReleaseTag = false
+        val managed = false
+        val useCustomRenderer = false
+        val useSorter = false
+        val rateButton = false
+        val showSummmary = false
 
+        // Changelog
+        val builder: ChangelogBuilder = ChangelogBuilder() // Everything is optional!
+                .withUseBulletList(bulletList) // default: false
+                .withManagedShowOnStart(managed) // default: false
+                .withMinVersionToShow(if (showVersion11OrHigherOnly) 110 else -1) // default: -1, will show all version
+                .withSorter(if (useSorter) ImportanceChangelogSorter() else null) // default: null, will show the logs in the same order as they are in the xml file
+                .withRateButton(rateButton) // default: false
+                .withSummary(showSummmary, true) // default: false
+
+        // finally, show the dialog or the activity
+        builder.buildAndShowDialog(this, false)
+
+    }
+
+    fun onRateButtonClicked(): Boolean {
+        Toast.makeText(this, "Rate button was clicked", Toast.LENGTH_LONG).show()
+        // button click handled
+        return true
+    }
 
 
 
