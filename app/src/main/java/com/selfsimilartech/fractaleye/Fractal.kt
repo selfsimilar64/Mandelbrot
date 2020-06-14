@@ -19,8 +19,8 @@ class Fractal(
 
         // color config
         var palette:         ColorPalette       = ColorPalette.night,
-        var frequency:       Float              = 1f,
-        phase:               Float              = 0f,
+        var frequency:       Float              = 0.5f,
+        phase:               Float              = 0.5f,
         var density:         Float              = 0.999f,
         var solidFillColor:  Int                = R.color.white,
 

@@ -302,7 +302,7 @@ class TextureFragment : MenuFragment() {
                     else {
                         f.bailoutRadius = result2
                         if (fsv.r.renderProfile == RenderProfile.MANUAL && sc.continuousRender) {
-                            Log.e("TEXTURE", "escape radius seekbar subroutine")
+                            //Log.e("TEXTURE", "escape radius seekbar subroutine")
                             fsv.r.renderToTex = true
                             fsv.requestRender()
                         }
@@ -451,14 +451,7 @@ class TextureFragment : MenuFragment() {
         texturePreviewButton.setOnClickListener {
             showLayout(texturePreviewLayout)
             alphaButton(texturePreviewButton)
-            texturePreviewName.alpha = if (sc.hardwareProfile == HardwareProfile.CPU) {
-                Log.e("TEXTURE", "alpha 0.3")
-                0.3f
-            }
-            else {
-                Log.e("TEXTURE", "alpha 1.0")
-                1f
-            }
+            texturePreviewName.alpha = if (sc.hardwareProfile == HardwareProfile.CPU) 0.3f else 1f
         }
         textureModeButton.setOnClickListener(subMenuButtonListener(textureModeLayout, textureModeButton))
         escapeRadiusButton.setOnClickListener(subMenuButtonListener(escapeRadiusLayout, escapeRadiusButton))

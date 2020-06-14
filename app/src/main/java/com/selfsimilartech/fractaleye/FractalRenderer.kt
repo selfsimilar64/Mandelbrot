@@ -13,7 +13,10 @@ import android.os.Environment
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.MediaStore
-import android.renderscript.*
+import android.renderscript.Allocation
+import android.renderscript.Element
+import android.renderscript.RenderScript
+import android.renderscript.Type
 import android.util.Log
 import android.view.MotionEvent
 import android.view.animation.AlphaAnimation
@@ -26,6 +29,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Math.pow
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -412,7 +416,7 @@ class FractalRenderer(
         override fun run() {
             when (mID) {
                 0 -> if (!sc.continuousRender) act.findViewById<ProgressBar>(R.id.progressBar).progress += 2
-                1 -> Log.e("RENDERER", "renderscript interrupted!")
+                1 -> Log.d("RENDERER", "renderscript interrupted!")
             }
         }
     }
@@ -443,6 +447,7 @@ class FractalRenderer(
         glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT, a, b)
         Log.d("FSV", "floating point exponent range: ${a[0]}, ${a[1]}")
         Log.d("FSV", "floating point precision: ${b[0]}")
+        //handler.showImageSavedMessage("${a[0]}, ${a[1]}, ${b[0]}")
         floatPrecisionBits = b[0]
 
         // get texture specs
@@ -549,10 +554,12 @@ class FractalRenderer(
         checkThresholdCross(f.position.zoom)
         updateRenderShader()
         fRenderShader = loadShader(GL_FRAGMENT_SHADER, renderShader)
-        //fRenderShader = loadShader(GL_FRAGMENT_SHADER, perturbationCode)
+        //fRenderShader = loadShader(GL_FRAGMENT_SHADER, perturbationCode)j
+        //fRenderShader = loadShader(GL_FRAGMENT_SHADER, precisionCode)
 
         fSampleShader = loadShader(GL_FRAGMENT_SHADER, fSampleCode)
         fColorShader  = loadShader(GL_FRAGMENT_SHADER, colorShader)
+        //fColorShader  = loadShader(GL_FRAGMENT_SHADER, fSampleCode)
 
 
         glClearColor(0f, 0f, 0f, 1f)
@@ -1099,7 +1106,7 @@ class FractalRenderer(
                 }
 
                 if (interruptRender) {
-                    Log.e("RENDERER", "render interrupted!!")
+                    Log.d("RENDERER", "render interrupted!!")
                     interruptRender = false
                 }
                 if (sc.renderBackground) renderFromTexture(background)
@@ -1573,9 +1580,9 @@ class FractalRenderer(
                                 }
                             }
                         }
-                        Log.d("RENDERER", "min: $textureMin")
-                        Log.d("RENDERER", "max: $textureMax")
-                        Log.e("RENDERER", "minmax calc took ${(now() - t)/1000f} sec")
+                        Log.d("RENDERER", "min-max: ($textureMin, $textureMax)")
+                        //handler.showImageSavedMessage("$textureMin, $textureMax")
+                        //Log.e("RENDERER", "minmax calc took ${(now() - t)/1000f} sec")
 
                         if (calcNewTextureSpan) {
                             for (i in 0 until texSpanHistSize) {
@@ -2020,7 +2027,6 @@ class FractalRenderer(
                     }
                 }
 
-
                 if (!interruptRender) {
 
                     // change auxilliary texture
@@ -2057,13 +2063,11 @@ class FractalRenderer(
                                 }
                             }
                         }
-                        Log.d("RENDERER", "min: $textureMin")
-                        Log.d("RENDERER", "max: $textureMax")
-                        Log.e("RENDERER", "minmax calc took ${(now() - t)/1000f} sec")
+                        Log.d("RENDERER", "min-max: ($textureMin, $textureMax)")
+                        //Log.e("RENDERER", "minmax calc took ${(now() - t)/1000f} sec")
 
                     }
                 }
-
 
             }
 
@@ -2404,11 +2408,12 @@ class FractalRenderer(
             if (!dir.exists()) {
                 Log.d("RENDERER", "Directory does not exist -- creating...")
                 when {
-                    dir.mkdir() -> Log.d("MAIN ACTIVITY", "Directory created")
+                    dir.mkdir() -> Log.d("RENDERER", "Directory created")
                     dir.mkdirs() -> Log.d("RENDERER", "Directories created")
                     else -> {
                         Log.e("RENDERER", "Directory could not be created")
                         handler.showErrorMessage()
+                        return
                     }
                 }
             }
