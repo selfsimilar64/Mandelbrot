@@ -4,7 +4,8 @@ precision highp float;
 out vec4 fragmentColor;
 
 void main() {
-    float y = ( gl_FragCoord.y / 1080.0 ) * 26.0;     // [0, 26]
+
+    float y = ( gl_FragCoord.y / 1560.0 ) * 26.0;     // [0, 26]
     float x = 1.0 - ( gl_FragCoord.x / 720.0 );      // [0, 1]
 
     float p = pow( 2.0, floor(y) );
@@ -16,4 +17,5 @@ void main() {
 
     fragmentColor.x = b;
     fragmentColor.y = c;
+
 }
