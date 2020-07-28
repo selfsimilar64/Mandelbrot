@@ -349,7 +349,9 @@ class ColorPalette (
                         R.color.island4,
                         R.color.island5,
                         R.color.island6,
-                        R.color.island7
+                        R.color.island7,
+                        R.color.island8,
+                        R.color.island9
                 )
         )
         val bioluminescent = ColorPalette(
@@ -360,8 +362,7 @@ class ColorPalette (
                         R.color.bioluminescent3,
                         R.color.bioluminescent4,
                         R.color.bioluminescent5,
-                        R.color.bioluminescent6,
-                        R.color.bioluminescent7
+                        R.color.bioluminescent6
                 )
         )
         val kingfisher = ColorPalette(
@@ -423,14 +424,86 @@ class ColorPalette (
                         R.color.atlas12
                 )
         )
+        val time = ColorPalette(
+                nameId = R.string.time,
+                ids = listOf(
+                        R.color.time1,
+                        R.color.time2,
+                        R.color.time3,
+                        R.color.time4,
+                        R.color.time5,
+                        R.color.time6,
+                        R.color.time7,
+                        R.color.time8,
+                        R.color.time9,
+                        R.color.time10,
+                        R.color.time11,
+                        R.color.time12
+                )
+        )
+        val overgrown = ColorPalette(
+                nameId = R.string.overgrown,
+                ids = listOf(
+                        R.color.overgrown1,
+                        R.color.overgrown2,
+                        R.color.overgrown3,
+                        R.color.overgrown4,
+                        R.color.overgrown5,
+                        R.color.overgrown6,
+                        R.color.overgrown7
+                )
+        )
+        val starling = ColorPalette(
+                nameId = R.string.starling,
+                ids = listOf(
+                        R.color.starling1,
+                        R.color.starling2,
+                        R.color.starling3,
+                        R.color.starling4,
+                        R.color.starling5,
+                        R.color.starling6,
+                        R.color.starling7,
+                        R.color.starling8,
+                        R.color.starling9
+                )
+        )
+        val pagoda = ColorPalette(
+                nameId = R.string.pagoda,
+                ids = listOf(
+                        R.color.pagoda1,
+                        R.color.pagoda2,
+                        R.color.pagoda3,
+                        R.color.pagoda4,
+                        R.color.pagoda5
+                )
+        )
+        val melted = ColorPalette(
+                name = "MELTED",
+                ids = listOf(
+                        R.color.melted1,
+                        R.color.melted2,
+                        R.color.melted3,
+                        R.color.melted4,
+                        R.color.melted5,
+                        R.color.melted6,
+                        R.color.melted7,
+                        R.color.melted8,
+                        R.color.melted9
+                )
+        )
 
         val all = arrayListOf(
                 yinyang,
                 night,
-                chroma,
+                time,
+                overgrown,
+                starling,
+                pagoda,
                 island,
+                chroma,
                 rose,
                 kingfisher,
+                melted,
                 bioluminescent,
                 atlas,
                 fossil,

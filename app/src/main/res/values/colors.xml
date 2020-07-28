@@ -18,6 +18,7 @@
     <color name="menu3">#4a4a4a</color>
     <color name="menu4">#202020</color>
     <color name="menu5">#303030</color>
+    <color name="shapeKeyColor">@color/black</color>
 
 
     <color name="fractaleye1">#006CB0</color>
@@ -247,21 +248,22 @@
     <color name="chroma11">#B9AEE8</color>
     <color name="chroma12">#C07DCA</color>
 
-    <color name="island1">#C08250</color>
-    <color name="island2">#FFDA90</color>
-    <color name="island3">#F8EEB3</color>
-    <color name="island4">#CCF0E1</color>
-    <color name="island5">#74CFB8</color>
-    <color name="island6">#208C81</color>
-    <color name="island7">#0E505A</color>
+    <color name="island1">#54351C</color>
+    <color name="island2">#C08250</color>
+    <color name="island3">#FFDA90</color>
+    <color name="island4">#F8EEB3</color>
+    <color name="island5">#CCF0E1</color>
+    <color name="island6">#74CFB8</color>
+    <color name="island7">#208C81</color>
+    <color name="island8">#0E505A</color>
+    <color name="island9">#042227</color>
 
     <color name="bioluminescent1">@color/black</color>
     <color name="bioluminescent2">#00142C</color>
     <color name="bioluminescent3">#003B41</color>
-    <color name="bioluminescent4">#007C64</color>
-    <color name="bioluminescent5">#43B77A</color>
-    <color name="bioluminescent6">#A9FCA4</color>
-    <color name="bioluminescent7">#D4FFD1</color>
+    <color name="bioluminescent4">#43B77A</color>
+    <color name="bioluminescent5">#A9FCA4</color>
+    <color name="bioluminescent6">#D4FFD1</color>
 
     <color name="kingfisher1">#0D58BA</color>
     <color name="kingfisher2">#6CEEF8</color>
@@ -292,15 +294,62 @@
     <color name="fossil6">@color/white</color>
 
     <color name="atlas3">#E1E4F6</color>
-    <color name="atlas4">#9DC0C0</color>
-    <color name="atlas5">#466D6D</color>
-    <color name="atlas6">#223948</color>
-    <color name="atlas7">#0B1628</color>
-    <color name="atlas8">#181C27</color>
-    <color name="atlas9">#7A524A</color>
-    <color name="atlas10">#AF8459</color>
-    <color name="atlas11">#F8E4C3</color>
+    <color name="atlas4">#73BFBF</color>
+    <color name="atlas5">#316E6E</color>
+    <color name="atlas6">#123247</color>
+    <color name="atlas7">#050D1A</color>
+    <color name="atlas8">#0F1B26</color>
+    <color name="atlas9">#7A382B</color>
+    <color name="atlas10">#B0773E</color>
+    <color name="atlas11">#F7D6A1</color>
     <color name="atlas12">#F9FBD3</color>
+
+    <color name="time1">#FFFFFF</color>
+    <color name="time2">#B7DCFF</color>
+    <color name="time3">#4C9CD9</color>
+    <color name="time4">#026EB7</color>
+    <color name="time5">#004480</color>
+    <color name="time6">#002346</color>
+    <color name="time7">#000F1F</color>
+    <color name="time8">@color/black</color>
+    <color name="time9">#B15021</color>
+    <color name="time10">#FFB82A</color>
+    <color name="time11">#FFEB40</color>
+    <color name="time12">#FFFFFE</color>
+    
+    <color name="overgrown1">@color/black</color>
+    <color name="overgrown2">#00222B</color>
+    <color name="overgrown3">#005D64</color>
+    <color name="overgrown4">#3F755D</color>
+    <color name="overgrown5">#ABC351</color>
+    <color name="overgrown6">#F2EB9A</color>
+    <color name="overgrown7">@color/white</color>
+
+    <color name="starling1">#E3A4D8</color>
+    <color name="starling2">#AA6095</color>
+    <color name="starling3">#5D114F</color>
+    <color name="starling4">#1A011C</color>
+    <color name="starling5">#431553</color>
+    <color name="starling6">#573D84</color>
+    <color name="starling7">#8090C9</color>
+    <color name="starling8">#92BCD4</color>
+    <color name="starling9">@color/white</color>
+
+    <color name="pagoda1">@color/black</color>
+    <color name="pagoda2">#C00800</color>
+    <color name="pagoda3">#F29F5D</color>
+    <color name="pagoda4">#EFDE8D</color>
+    <color name="pagoda5">#FCF4CF</color>
+
+    <color name="melted1">#161A23</color>
+    <color name="melted2">#546869</color>
+    <color name="melted3">#AEB5B8</color>
+    <color name="melted4">@color/white</color>
+    <color name="melted5">#F5F0AB</color>
+    <color name="melted6">#FCEE6B</color>
+    <color name="melted7">#EAA519</color>
+    <color name="melted8">#DD5E01</color>
+    <color name="melted9">#B03800</color>
 
 
     <color name="pink4ashley">#DF8D94</color>
