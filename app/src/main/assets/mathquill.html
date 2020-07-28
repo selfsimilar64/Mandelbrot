@@ -1,0 +1,18 @@
+<html>
+    <body style="background-color:black">
+        <p><span id="math-field"></span></p>
+
+        <link rel="stylesheet" href="file:///android_asset/mathquill.css"/>
+        <script src="file:///android_asset/jquery.js"></script>
+        <script src="file:///android_asset/mathquill.js"></script>
+        <script>
+        var mathFieldSpan = document.getElementById('math-field');
+
+        var MQ = MathQuill.getInterface(2);
+        var mathField = MQ.MathField(mathFieldSpan, {
+          spaceBehavesLikeTab: true
+        });
+
+        </script>
+    </body>
+</html>
