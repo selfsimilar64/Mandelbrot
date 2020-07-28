@@ -224,14 +224,15 @@ class ColorFragment : MenuFragment() {
                 f.solidFillColor = when (tab.position) {
                     0 -> R.color.black
                     1 -> R.color.white
-                    else -> R.color.cyan
+                    else -> R.color.black
                 }
 
                 fsv.requestRender()
 
             }
         })
-        solidFillColorTabs.getTabAt(1)?.select()
+        if (f.solidFillColor == R.color.white) solidFillColorTabs.getTabAt(1)?.select()
+        else solidFillColorTabs.getTabAt(0)?.select()
 
 
 
@@ -661,10 +662,10 @@ class ColorFragment : MenuFragment() {
     }
 
     fun updateFrequencyLayout() {
-        frequencySeekBar.progress = ((f.frequency/100f).pow(0.5f)*frequencySeekBar.max).toInt()
+        frequencySeekBar?.progress = ((f.frequency/100f).pow(0.5f)*frequencySeekBar.max).toInt()
     }
     fun updatePhaseLayout() {
-        phaseSeekBar.progress = (f.phase*phaseSeekBar.max).toInt()
+        phaseSeekBar?.progress = (f.phase*phaseSeekBar.max).toInt()
     }
 
 }

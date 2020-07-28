@@ -2,6 +2,8 @@ package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
 import org.apfloat.Apfloat
+import java.util.Collections.min
+import kotlin.math.min
 import kotlin.math.pow
 
 @SuppressLint("SetTextI18n")
@@ -14,20 +16,20 @@ class Fractal(
         var position:        Position           = if (shape.juliaMode) shape.positions.julia else shape.positions.default,
 
         // texture config
-        texture:             Texture            = Texture.exponentialSmoothing,
+        texture:             Texture            = if (shape.isConvergent) Texture.converge else Texture.escapeSmooth,
         var textureMode:     TextureMode        = TextureMode.OUT,
 
         // color config
         var palette:         ColorPalette       = ColorPalette.night,
-        var frequency:       Float              = 0.5f,
-        phase:               Float              = 0.5f,
+        var frequency:       Float              = 1f,
+        phase:               Float              = 0.65f,
         var density:         Float              = 0.999f,
         var solidFillColor:  Int                = R.color.white,
 
 
         //var maxIter:         Int                = 1024,
         var sensitivity:     Double             = 2.0,
-        var bailoutRadius:   Float              = shape.bailoutRadius ?: texture.bailoutRadius ?: 1e2f
+        var bailoutRadius:   Float              = min(shape.bailoutRadius, texture.bailoutRadius)
 
 ) {
 
@@ -154,22 +156,22 @@ class Fractal(
 //                ),
 //                texture = Texture.overlayAvg
 //        )
-//        val verbose = Fractal(
-//                shape = Shape.mandelbrot,
-//                position = Position(
-//                        x = 0.39019590054025366,
-//                        y = -0.26701156160039610,
-//                        xap = Apfloat(0.39019590054025366, AP_DIGITS),
-//                        yap = Apfloat(-0.26701156160039610, AP_DIGITS),
-//                        zoom = 9.59743e-8,
-//                        rotation = 146.0.inRadians()
-//                ),
-//                texture = Texture.escape,
-//                palette = ColorPalette.night,
-//                frequency = 1.40904f,
-//                phase = 0.99570f
-//                //maxIter = 2.0.pow(10.25).toInt()
-//        )
+        val verbose = Fractal(
+                shape = Shape.mandelbrot,
+                position = Position(
+                        x = 0.39019590054025366,
+                        y = -0.26701156160039610,
+                        xap = Apfloat(0.39019590054025366, AP_DIGITS),
+                        yap = Apfloat(-0.26701156160039610, AP_DIGITS),
+                        zoom = 9.59743e-8,
+                        rotation = 146.0.inRadians()
+                ),
+                texture = Texture.testAvg,
+                palette = ColorPalette.night,
+                frequency = 1.40904f,
+                phase = 0.99570f
+                //maxIter = 2.0.pow(10.25).toInt()
+        )
 //        val supernova = Fractal(
 //                shape = Shape.mandelbrot,
 //                juliaMode = true,
@@ -229,6 +231,18 @@ class Fractal(
 //                phase = 0.936f
 //        )
 
+        val m5 = Fractal(
+                shape = Shape.mandelbrot,
+                position = Position(
+                        x = -1.2552680888938188,
+                        y = -0.06143179556901288,
+                        zoom = 2.44931e-3,
+                        rotation = (-39.9).inRadians()
+                ),
+                texture = Texture.testAvg,
+                palette = ColorPalette.starling
+        )
+
         val mandelbrotCubic = Fractal(shape = Shape.mandelbrotCubic)
         val mandelbrotQuartic = Fractal(shape = Shape.mandelbrotQuartic)
 
@@ -267,6 +281,17 @@ class Fractal(
 //                palette = ColorPalette.peacock,
 //                frequency = 0.67508f,
 //                phase = 0.97322f
+//        )
+//
+//        val c2 = Fractal(
+//                shape = Shape.clover,
+//                position = Position(
+//                        x = -0.0000159590504726,
+//                        y = -0.00411803970982979,
+//                        zoom = 2.9053e-6,
+//                        rotation = (-119.6).inRadians()
+//                ),
+//                texture = Texture.escape
 //        )
 
         val mandelbox = Fractal(shape = Shape.mandelbox)
@@ -402,6 +427,18 @@ class Fractal(
 //                texture = Texture.stripeAvg,
 //                palette = ColorPalette.atlas
 //        )
+//
+//        val s1_3 = Fractal(
+//                shape = Shape.sine.also { it.maxIter = 2150 },
+//                position = Position(
+//                        x = -2.6298003508693286,
+//                        y = -0.52708000273624520,
+//                        zoom = 8.9284e-11,
+//                        rotation = 24.6.inRadians()
+//                ),
+//                texture = Texture.escapeSmooth,
+//                palette = ColorPalette.starling
+//        )
 
         val sine2 = Fractal(shape = Shape.sine2)
 //        val s2_1 = Fractal(
@@ -485,7 +522,7 @@ class Fractal(
                 field = value
 
                 position = if (shape.juliaMode) shape.positions.julia else shape.positions.default
-                bailoutRadius = shape.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
+                bailoutRadius = min(shape.bailoutRadius, texture.bailoutRadius)
 
             }
         }
@@ -497,7 +534,7 @@ class Fractal(
                 // Log.d("FRACTAL", "setting texture from $field to $value")
                 field = value
 
-                bailoutRadius = shape.bailoutRadius ?: texture.bailoutRadius ?: bailoutRadius
+                bailoutRadius = min(shape.bailoutRadius, texture.bailoutRadius)
 
             }
         }

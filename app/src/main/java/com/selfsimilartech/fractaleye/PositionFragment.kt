@@ -68,6 +68,7 @@ class PositionFragment : MenuFragment() {
             val result = w.text.toString().formatToDouble()
             if (result != null) {
                 f.position.x = result
+                if (fsv.r.isRendering) fsv.r.interruptRender = true
                 fsv.r.renderToTex = true
             }
             w.text = "%.17f".format(f.position.x)
@@ -77,6 +78,7 @@ class PositionFragment : MenuFragment() {
             val result = w.text.toString().formatToDouble()
             if (result != null) {
                 f.position.y = result
+                if (fsv.r.isRendering) fsv.r.interruptRender = true
                 fsv.r.renderToTex = true
             }
             w.text = "%.17f".format(f.position.y)
@@ -100,6 +102,7 @@ class PositionFragment : MenuFragment() {
                         else {
                             f.position.zoom = result3
                             fsv.r.renderToTex = true
+                            if (fsv.r.isRendering) fsv.r.interruptRender = true
                         }
                     }
                     else {
@@ -123,6 +126,7 @@ class PositionFragment : MenuFragment() {
                         }
                         else {
                             f.position.zoom = result3
+                            if (fsv.r.isRendering) fsv.r.interruptRender = true
                             fsv.r.renderToTex = true
                         }
                     }
@@ -146,6 +150,7 @@ class PositionFragment : MenuFragment() {
                     if (result != null) {
                         f.position.rotation = result
                         fsv.r.renderToTex = true
+                        if (fsv.r.isRendering) fsv.r.interruptRender = true
                     }
                     w.text = "%.1f".format(f.position.rotation.inDegrees())
                 })
@@ -162,6 +167,7 @@ class PositionFragment : MenuFragment() {
             act.updatePositionEditTexts()
             fsv.r.calcNewTextureSpan = true
             fsv.r.renderToTex = true
+            if (fsv.r.isRendering) fsv.r.interruptRender = true
             fsv.requestRender()
 
         }
@@ -177,15 +183,16 @@ class PositionFragment : MenuFragment() {
         zoomButton.setOnClickListener(      subMenuButtonListener(zoomLayout,       zoomButton      ))
         zoomSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
+            var prevZoom = 1.0
             var previousZoomFactor = 1f
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
 
                 val zoomFactor = 10f.pow(progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
                 fsv.r.zoom(zoomFactor/previousZoomFactor)
-                val previousZoom = f.position.zoom
+                if (sc.continuousRender) prevZoom = f.position.zoom
                 f.position.zoom(zoomFactor/previousZoomFactor, doubleArrayOf(0.0, 0.0))
-                fsv.r.checkThresholdCross(previousZoom)
+                if (sc.continuousRender) fsv.r.checkThresholdCross(prevZoom)
                 previousZoomFactor = zoomFactor
 
                 val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
@@ -193,6 +200,7 @@ class PositionFragment : MenuFragment() {
                 scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
 
                 if (sc.continuousRender) fsv.r.renderToTex = true
+                if (fsv.r.isRendering && zoomSeekBar.progress != zoomSeekBar.max/2) fsv.r.interruptRender = true
                 fsv.requestRender()
 
             }
@@ -200,9 +208,11 @@ class PositionFragment : MenuFragment() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 //previousZoom = f.position.scale.toFloat()
                 previousZoomFactor = 1f
+                prevZoom = f.position.zoom
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (!sc.continuousRender) fsv.r.checkThresholdCross(prevZoom)
                 fsv.r.renderToTex = true
                 fsv.requestRender()
                 previousZoomFactor = 1f
@@ -218,6 +228,7 @@ class PositionFragment : MenuFragment() {
                 fsv.r.rotate((f.position.rotation - newTheta).toFloat())
                 f.position.rotation = newTheta
                 if (sc.continuousRender) fsv.r.renderToTex = true
+                if (fsv.r.isRendering) fsv.r.interruptRender = true
                 fsv.requestRender()
             }
 
@@ -245,12 +256,14 @@ class PositionFragment : MenuFragment() {
     }
 
     fun updateRotationLayout() {
-        val act = activity as MainActivity
-        val f = act.f
-        rotationEdit.setText("%.1f".format(f.position.rotation.inDegrees()))
-        rotationSeekBar.setOnSeekBarChangeListener(null)
-        rotationSeekBar.progress = (rotationSeekBar.max*(f.position.rotation.inDegrees()/360.0 + 0.5)).toInt()
-        rotationSeekBar.setOnSeekBarChangeListener(rotationSeekBarListener)
+        val act = activity as? MainActivity
+        if (act != null) {
+            val f = act.f
+            rotationEdit.setText("%.1f".format(f.position.rotation.inDegrees()))
+            rotationSeekBar.setOnSeekBarChangeListener(null)
+            rotationSeekBar.progress = (rotationSeekBar.max * (f.position.rotation.inDegrees() / 360.0 + 0.5)).toInt()
+            rotationSeekBar.setOnSeekBarChangeListener(rotationSeekBarListener)
+        }
     }
 
 }

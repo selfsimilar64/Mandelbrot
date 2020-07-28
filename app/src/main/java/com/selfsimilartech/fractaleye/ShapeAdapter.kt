@@ -44,7 +44,7 @@ class ShapeAdapter(
         fun bindItems(shape: Shape) {
 
             v.previewImage.setImageResource(shape.icon)
-            v.previewText.text = v.resources.getString(shape.name)
+            v.previewText.text = shape.name
             if (!isGridLayout) {
                 //v.shapeKatex.setDisplayText(v.resources.getString(shape.katex).format("c"))
             }
