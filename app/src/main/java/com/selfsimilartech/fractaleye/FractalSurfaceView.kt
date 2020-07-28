@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Point
 import android.opengl.GLES30.*
 import android.opengl.GLSurfaceView
+import android.util.Log
 import android.view.MotionEvent
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
@@ -63,6 +64,8 @@ class GLTexture (
             GL_RG16F ->    2
             GL_RG32F ->    2
             GL_RG16UI ->   2
+            GL_RG32UI ->   2
+            GL_RG32I ->    2
             else -> 0
         }
         bytesPerComponent = when (internalFormat) {
@@ -72,21 +75,27 @@ class GLTexture (
             GL_RG16F ->    2
             GL_RG32F ->    4
             GL_RG16UI ->   2
+            GL_RG32UI ->   4
+            GL_RG32I ->    4
             else -> 0
         }
         bytesPerTexel = numComponents*bytesPerComponent
         val internalFormatStr = when(internalFormat) {
             GL_RG16UI -> "GL_RG16UI"
+            GL_RG32UI -> "GL_RG32UI"
+            GL_RG32I -> "GL_RG32I"
             GL_RG32F -> "GL_RG32F"
             else -> "not what u wanted"
         }
-        //Log.d("RENDER ROUTINE", "res: (${res.x}, ${res.y}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.x*res.y*bytesPerTexel}")
+        Log.d("RENDERER", "id: $id, res: (${res.x}, ${res.y}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.x*res.y*bytesPerTexel}")
 
         // bind and set texture parameters
         glActiveTexture(GL_TEXTURE0 + index)
         glBindTexture(GL_TEXTURE_2D, id)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolation)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolation)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
         type = when(internalFormat) {
             GL_RGBA8 -> GL_UNSIGNED_BYTE
@@ -95,12 +104,14 @@ class GLTexture (
             GL_RGBA32F -> GL_FLOAT
             GL_RG32F -> GL_FLOAT
             GL_RG16UI -> GL_UNSIGNED_SHORT
+            GL_RG32UI -> GL_UNSIGNED_INT
+            GL_RG32I -> GL_INT
 //            GL_RGBA -> GL_UNSIGNED_BYTE
             else -> 0
         }
         format = when(internalFormat) {
             GL_RG16F, GL_RG32F -> GL_RG
-            GL_RG16UI -> GL_RG_INTEGER
+            GL_RG16UI, GL_RG32UI, GL_RG32I -> GL_RG_INTEGER
             else -> GL_RGBA
         }
 
@@ -117,6 +128,7 @@ class GLTexture (
                 type,                       // type
                 floatBuffer                 // memory pointer
         )
+
 
     }
 
@@ -138,14 +150,14 @@ class GLTexture (
         glActiveTexture(GL_TEXTURE0 + index)
         glBindTexture(GL_TEXTURE_2D, id)
         glTexImage2D(
-                GL_TEXTURE_2D,              // target
-                0,                          // mipmap level
-                internalFormat,             // internal format
-                res.x, res.y,             // texture resolution
-                0,                          // border
-                format,                     // internalFormat
-                type,                       // type
-                floatBuffer                      // memory pointer
+                GL_TEXTURE_2D,      // target
+                0,                  // mipmap level
+                internalFormat,     // internal format
+                res.x, res.y,       // texture resolution
+                0,                  // border
+                format,             // internalFormat
+                type,               // type
+                floatBuffer         // memory pointer
         )
     }
     fun delete() {
@@ -165,6 +177,7 @@ class FractalSurfaceView(context: Context, val r: FractalRenderer) : GLSurfaceVi
         //setEGLContextFactory(ContextFactory())
         setRenderer(r)
         renderMode = RENDERMODE_WHEN_DIRTY          // only render on init and explicitly
+        Log.d("FSV", "OpenGL ES context: ${context}")
 
     }
 
