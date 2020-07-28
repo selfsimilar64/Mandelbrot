@@ -11,6 +11,14 @@
         <item name="colorSurface">@color/colorPrimaryDark</item>
     </style>
 
+    <!-- The launcher theme. It sets the main window background to the launch_screen drawable -->
+    <style name="AppTheme.Launcher">
+    <item name="android:windowBackground">@drawable/launch_screen</item>
+    <!-- Optional, on Android 5+ you can modify the colorPrimaryDark color to match the windowBackground color for further branding-->
+    <!-- <item name="colorPrimaryDark">@android:color/white</item> -->
+    </style>
+
+
     <style name="ProgressBar" parent="Widget.AppCompat.ProgressBar.Horizontal">
         <item name="color">@color/white</item>
         <item name="background">@color/black</item>
@@ -200,6 +208,15 @@
     <style name="TabText">
         <item name="android:textSize">10sp</item>
         <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="KeyboardButton">
+        <item name="android:layout_width">35dp</item>
+        <item name="android:layout_height">35dp</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:background">@drawable/shape_key</item>
+        <item name="android:scaleType">centerInside</item>
     </style>
 
 </resources>
