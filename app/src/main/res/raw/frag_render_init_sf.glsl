@@ -1,0 +1,14 @@
+vec2 colorParams = vec2(0.0);
+vec2 c = cmult(vec2(xScale.x, yScale.x)*viewPos.xy, vec2(cosRotate, sinRotate)) + vec2(xCoord.x, yCoord.x);
+vec2 z = vec2(x0, y0);
+vec2 z1, z2, z3, z4 = vec2(0.0);
+float modsqrz = 0.0;
+float eps = 0.0;
+float sum, sum1 = 0.0;
+float modc = cmod(c);
+vec2 alpha = vec2(0.0);
+vec2 beta = vec2(0.0);
+float minx = R;
+float il = 1.0/log(power);
+float llr = log(log(R)/power);
+float useUniforms = p1.x + p2.x + p3.x + p4.x + q1 + q2 + x0 + y0 + R;
