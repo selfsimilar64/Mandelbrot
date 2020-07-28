@@ -6,18 +6,21 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
-import android.view.ViewGroup
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.ToggleButton
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.android.synthetic.main.shape_fragment.*
+import java.util.*
 import kotlin.math.log
 import kotlin.math.pow
-import kotlinx.android.synthetic.main.shape_fragment.*
+
 
 
 class ShapeFragment : MenuFragment() {
@@ -26,6 +29,14 @@ class ShapeFragment : MenuFragment() {
     private lateinit var f : Fractal
     private lateinit var fsv : FractalSurfaceView
     private lateinit var sc : SettingsConfig
+
+
+    private fun loadNavButtons(buttons: List<Button>) {
+
+        shapeNavButtons.removeAllViews()
+        buttons.forEach { shapeNavButtons.addView(it) }
+
+    }
 
 
     // Inflate the view for the fragment based on layout XML
@@ -42,10 +53,23 @@ class ShapeFragment : MenuFragment() {
         fsv = act.fsv
         sc = act.sc
 
+        var customShape = Shape(name = "q", latex = "$$")
+        var prevSelectedShapeIndex : Int
+
         shapeLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
         shapePreviewListLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
         val shapeList = if (BuildConfig.PAID_VERSION) Shape.all else Shape.all.filter { shape -> !shape.isProFeature }
+        val previewListNavButtons = listOf(
+                shapeListViewTypeButton,
+                newCustomShapeButton.apply { setProFeature(true) },
+                shapeDoneButton,
+                customShapeEditButton.apply { setProFeature(true) }
+        ).filter { BuildConfig.PAID_VERSION || !it.isProFeature() }
+        val customShapeNavButtons = listOf(
+                customShapeCancelButton,
+                customShapeDoneButton
+        )
 
         val handler = Handler()
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
@@ -91,7 +115,7 @@ class ShapeFragment : MenuFragment() {
             val param = f.shape.params.active
             if (param is Shape.ComplexParam) param.linked = link.isChecked
             if (link.isChecked) {
-                act.updateShapeEditTexts()
+                loadActiveParam()
                 fsv.r.renderToTex = true
                 fsv.requestRender()
             }
@@ -138,12 +162,12 @@ class ShapeFragment : MenuFragment() {
 
             }
 
-            Log.d("SHAPE FRAGMENT", "numParamsInUse: ${f.shape.numParamsInUse}")
+            //Log.d("SHAPE FRAGMENT", "numParamsInUse: ${f.shape.numParamsInUse}")
 
 
-            Log.e("SHAPE FRAGMENT", "julia mode: ${f.shape.juliaMode}")
+            //Log.e("SHAPE FRAGMENT", "julia mode: ${f.shape.juliaMode}")
 
-            act.updateShapeEditTexts()
+            loadActiveParam()
             act.updatePositionEditTexts()
             act.updateDisplayParams(reactionChanged = true)
 
@@ -152,8 +176,34 @@ class ShapeFragment : MenuFragment() {
             fsv.requestRender()
 
         }
+        val keyListener = { expr: Expr -> View.OnClickListener {
 
-        val shapeParamButtonValues = listOf(R.string.param1, R.string.param2, R.string.param3)
+            //customShape.katex = customShape.katex.replace(cursor, expr.katex)
+            Log.e("SHAPE", "expr: ${expr.katex}")
+            shapeMathQuill.enterExpr(expr)
+            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+
+        }}
+
+
+
+        if (BuildConfig.PAID_VERSION) {
+            shapeMathQuill.settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                useWideViewPort = true
+                builtInZoomControls = true
+                displayZoomControls = false
+                setSupportZoom(true)
+                defaultTextEncodingName = "utf-8"
+            }
+            val mathQuillHtml = readHtml("mathquill.html")
+            shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", mathQuillHtml, "text/html", "UTF-8", null)
+        }
+
+
+
+
         realParamSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -170,56 +220,10 @@ class ShapeFragment : MenuFragment() {
 
         })
 
-//        shapeParamButtons.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-//
-//            override fun onTabSelected(tab: TabLayout.Tab) {
-//
-//                f.shape.params.active =
-//                        if (tab.text.toString() == resources.getString(R.string.julia)) f.shape.params.julia
-//                        else f.shape.params.at(tab.position)
-//
-//                val param = f.shape.params.active
-//                if (complexParamLayout.isHidden() && param is Shape.ComplexParam) {
-//                    realParamLayout.hide()
-//                    complexParamLayout.show()
-//                }
-//                else if (realParamLayout.isHidden() && param !is Shape.ComplexParam) {
-//                    complexParamLayout.hide()
-//                    realParamLayout.show()
-//                }
-//
-//
-//                if (param is Shape.ComplexParam) {
-//                    uEdit.setText("%.8f".format(param.u))
-//                    uLock.isChecked = param.uLocked
-//                    vEdit.setText("%.8f".format(param.v))
-//                    vLock.isChecked = param.vLocked
-//                    linkParamButton.isChecked = param.linked
-//                    linkParamButton.foregroundTintList = ColorStateList.valueOf(resources.getColor(
-//                            if (linkParamButton.isChecked) R.color.white else R.color.colorDarkSelected, null
-//                    ))
-//                }
-//                else {
-//                    uEdit2.setText("%.3f".format(param.u))
-//                    realParamSeekBar.progress = (100.0*(param.u - param.uRange.lower)/(param.uRange.upper - param.uRange.lower)).toInt()
-//                }
-//
-//                act.showTouchIcon()
-//
-//            }
-//
-//            override fun onTabUnselected(tab: TabLayout.Tab) {
-//
-//            }
-//
-//            override fun onTabReselected(tab: TabLayout.Tab) { onTabSelected(tab) }
-//
-//        })
         shapeResetButton.setOnClickListener {
 
             f.shape.params.active.reset()
             loadActiveParam()
-            act.updateShapeEditTexts()
             fsv.r.renderToTex = true
             fsv.requestRender()
 
@@ -313,11 +317,10 @@ class ShapeFragment : MenuFragment() {
 
 
         shapePreviewImage.setImageResource(f.shape.icon)
-        shapePreviewText.text = resources.getString(f.shape.name)
+        shapePreviewText.text = f.shape.name
 
 
 
-//        if (f.shape.juliaMode) juliaLayout.visibility = LinearLayout.GONE
         if (f.shape.juliaMode) juliaModeButton.isChecked = true
         juliaModeButton.setOnClickListener(juliaListener)
 
@@ -349,7 +352,6 @@ class ShapeFragment : MenuFragment() {
 
                         if (shapeList[position] != f.shape) {
 
-
                             // reset texture if not compatible with new shape
                             if (!shapeList[position].compatTextures.contains(f.texture)) {
                                 f.texture = Texture.exponentialSmoothing
@@ -358,7 +360,9 @@ class ShapeFragment : MenuFragment() {
 
                             val prevScale = f.position.zoom
                             f.shape = shapeList[position]
-                            Log.d("SHAPE FRAGMENT", "shape is now ${resources.getString(f.shape.name)}")
+                            Log.d("SHAPE FRAGMENT", "shape is now ${f.shape.name}")
+
+                            if (f.shape.isCustom) customShapeEditButton.show() else customShapeEditButton.hide()
 
                             if (f.shape.juliaModeInit) juliaModeButton.hide() else juliaModeButton.show()
 
@@ -368,6 +372,7 @@ class ShapeFragment : MenuFragment() {
                             fsv.r.renderToTex = true
                             fsv.requestRender()
 
+                            act.updateTextureEditTexts()
                             act.updatePositionEditTexts()
 
                         }
@@ -394,7 +399,6 @@ class ShapeFragment : MenuFragment() {
             }
         }
         if (f.shape.juliaMode) juliaParamButton.show() else juliaParamButton.hide()
-        //if (f.shape.numParamsInUse == 0) shapeParamLayout.visibility = ConstraintLayout.GONE
 
 
 
@@ -440,6 +444,8 @@ class ShapeFragment : MenuFragment() {
                 shapeNavButtons.show()
                 shapePreviewListLayout.show()
 
+                loadNavButtons(previewListNavButtons)
+
                 act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
 
 
@@ -471,11 +477,13 @@ class ShapeFragment : MenuFragment() {
         shapeDoneButton.setOnClickListener {
             handler.postDelayed({
 
+                if (fsv.r.isRendering) fsv.r.pauseRender = true
+
                 if (!act.uiIsClosed()) act.uiSetOpen() else MainActivity.Category.SHAPE.onMenuClosed(act)
 
 
                 shapePreviewImage.setImageResource(f.shape.icon)
-                shapePreviewText.text = resources.getString(f.shape.name)
+                shapePreviewText.text = f.shape.name
 
                 shapePreviewListLayout.hide()
                 shapePreviewLayout.show()
@@ -496,9 +504,9 @@ class ShapeFragment : MenuFragment() {
                 // update juliaModeButton
                 juliaModeButton.apply {
                     isChecked = f.shape.juliaMode
-                    Log.e("SHAPE", "juliaModeButton isChecked: $isChecked")
+                    //Log.e("SHAPE", "juliaModeButton isChecked: $isChecked")
                     alpha = if (isChecked) 1f else 0.5f
-                    Log.e("SHAPE", "juliaModeButton alpha: $alpha")
+                    //Log.e("SHAPE", "juliaModeButton alpha: $alpha")
                     if (isChecked) juliaParamButton.show() else juliaParamButton.hide()
                 }
 
@@ -508,6 +516,107 @@ class ShapeFragment : MenuFragment() {
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
+
+        newCustomShapeButton.setOnClickListener {
+            handler.postDelayed({
+
+                shapePreviewListLayout.hide()
+                customShapeLayout.show()
+                loadNavButtons(customShapeNavButtons)
+                fsv.r.renderProfile = RenderProfile.MANUAL
+
+                val postfix = infixToPostfix(parseEquation("z*z*z + c")!!)
+                customShape = Shape(
+                        name = "Custom Shape 1",
+                        latex = "$$",
+                        customId = 0,
+                        customLoopSF = postfixToGlsl(postfix, GpuPrecision.SINGLE)!!,
+                        customLoopDF = postfixToGlsl(postfix, GpuPrecision.DUAL)!!,
+                        positions = PositionList(Position(zoom = 5e0)),
+                        hasDualFloat = true
+                )
+
+
+                prevSelectedShapeIndex = shapeList.indexOf(f.shape)
+                Shape.all.add(0, customShape)
+                f.shape = Shape.all[0]
+
+                fsv.r.renderShaderChanged = true
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
+            }, BUTTON_CLICK_DELAY_SHORT)
+        }
+        customShapeEditButton.setOnClickListener {
+            handler.postDelayed({
+
+                shapePreviewListLayout.hide()
+                customShapeLayout.show()
+                loadNavButtons(customShapeNavButtons)
+                fsv.r.renderProfile = RenderProfile.MANUAL
+
+                customShape = f.shape
+                shapeMathQuill.setLatex(customShape.latex)
+
+            }, BUTTON_CLICK_DELAY_SHORT)
+        }
+        customShapeCancelButton.setOnClickListener {
+            
+            
+            
+        }
+        customShapeDoneButton.setOnClickListener {
+            handler.postDelayed({
+
+                shapeMathQuill.getLatex { customShape.latex = it }
+
+                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+
+                customShapeLayout.hide()
+                shapePreviewLayout.show()
+                shapeSubMenuButtons.show()
+                shapeNavButtons.hide()
+                act.showCategoryButtons()
+
+                shapePreviewList.adapter?.notifyDataSetChanged()
+
+            }, BUTTON_CLICK_DELAY_SHORT)
+        }
+
+        zKey.setOnClickListener(keyListener(Expr.z))
+        cKey.setOnClickListener(keyListener(Expr.c))
+        plusKey.setOnClickListener(keyListener(Expr.add))
+        minusKey.setOnClickListener(keyListener(Expr.sub))
+        timesKey.setOnClickListener(keyListener(Expr.mult))
+        divKey.setOnClickListener(keyListener(Expr.div))
+        powKey.setOnClickListener(keyListener(Expr.pow))
+        sqrKey.setOnClickListener(keyListener(Expr.sqr))
+        inverseKey.setOnClickListener(keyListener(Expr.inv))
+        sqrtKey.setOnClickListener(keyListener(Expr.sqrt))
+        modulusKey.setOnClickListener(keyListener(Expr.mod))
+        conjKey.setOnClickListener(keyListener(Expr.conj))
+        argKey.setOnClickListener(keyListener(Expr.arg))
+
+        zeroKey.setOnClickListener(keyListener(Expr.zero))
+        oneKey.setOnClickListener(keyListener(Expr.one))
+        twoKey.setOnClickListener(keyListener(Expr.two))
+        threeKey.setOnClickListener(keyListener(Expr.three))
+        fourKey.setOnClickListener(keyListener(Expr.four))
+        fiveKey.setOnClickListener(keyListener(Expr.five))
+        sixKey.setOnClickListener(keyListener(Expr.six))
+        sevenKey.setOnClickListener(keyListener(Expr.seven))
+        eightKey.setOnClickListener(keyListener(Expr.eight))
+        nineKey.setOnClickListener(keyListener(Expr.nine))
+        decimalKey.setOnClickListener(keyListener(Expr.decimal))
+        iKey.setOnClickListener(keyListener(Expr.i))
+
+        prevKey.setOnClickListener { shapeMathQuill.enterKeystroke("Left") }
+        nextKey.setOnClickListener { shapeMathQuill.enterKeystroke("Right") }
+        deleteKey.setOnClickListener {
+            shapeMathQuill.enterKeystroke("Backspace")
+            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+        }
+        parensKey.setOnClickListener(keyListener(Expr.parens))
 
         juliaParamButton.setOnClickListener {
             act.showTouchIcon()
@@ -532,6 +641,7 @@ class ShapeFragment : MenuFragment() {
         shapeResetButton.hide()
 
         shapePreviewListLayout.hide()
+        customShapeLayout.hide()
         shapeNavButtons.hide()
 
 
@@ -542,10 +652,11 @@ class ShapeFragment : MenuFragment() {
 
 
 
-        act.updateShapeEditTexts()
+        //act.updateShapeEditTexts()
         super.onViewCreated(v, savedInstanceState)
 
     }
+
 
     fun loadActiveParam() {
         val param = f.shape.params.active
@@ -563,6 +674,201 @@ class ShapeFragment : MenuFragment() {
             uEdit2.setText("%.3f".format(param.u))
             realParamSeekBar.progress = (realParamSeekBar.max*(param.u - param.uRange.lower)/(param.uRange.upper - param.uRange.lower)).toInt()
         }
+    }
+
+
+    private fun setCustomLoop(str: String, shape: Shape) {
+        val parsed = parseEquation(str)
+        if (parsed == null) eqnErrorIndicator.show()
+        else {
+            val postfix = infixToPostfix(parsed)
+            Log.e("SHAPE", "postfix: ${postfix.joinToString(" ")}")
+            val sf = postfixToGlsl(postfix, GpuPrecision.SINGLE)
+            val df = postfixToGlsl(postfix, GpuPrecision.DUAL)
+            if (sf == null || df == null) {
+                eqnErrorIndicator.show()
+            } else {
+                Log.e("SHAPE", "customLoopSF: $sf")
+                Log.e("SHAPE", "customLoopDF: $df")
+                eqnErrorIndicator.invisible()
+                shape.customLoopSF = sf
+                shape.customLoopDF = df
+                fsv.r.renderShaderChanged = true
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+            }
+        }
+    }
+
+    private fun parseEquation(input: String) : ArrayList<Expr>? {
+
+        val out = arrayListOf<Expr>()
+        var str = input
+
+
+        str = str.replace("\\\\", "\\")     // replace all \\ with \
+                .replace("\\left", "")      // remove all \left
+                .replace("\\right", "")     // remove all \right
+
+        Log.e("SHAPE", "str: $str")
+
+        // replace all \\frac{}{} with {}/{}
+        while (true) {
+            val start = str.indexOf("\\frac")
+            //Log.e("SHAPE", "str: $str")
+            //Log.e("SHAPE", "start: $start")
+            if (start != -1) {
+                var left = 0
+                var right = 0
+                var middleFound = false
+                for (i in start + 7 until str.length) {
+                    //Log.e("SHAPE", "str[i]: ${str[i]}, left: $left, right: $right")
+                    when (str[i]) {
+                        '}' -> {
+                            if (left == right) {
+                                //Log.e("SHAPE", "right bracket at $i")
+                                str = str.replaceRange(i, i+2, "}/{")
+                                str = str.removeRange(start, start + 5)
+                                middleFound = true
+                                //Log.e("SHAPE", "str: $str")
+                            }
+                            else right += 1
+                        }
+                        '{' -> left += 1
+                    }
+                    if (middleFound) break
+                }
+            }
+            else break
+        }
+
+        // replace all \\cdot with *
+        while (true) {
+            val start = str.indexOf("\\cdot")
+            if (start != -1) {
+                str = str.replaceRange(start, start + 5, "*")
+            } else break
+        }
+
+        str.replace(" ", "")
+                .replace("^", " ^ ")
+                .replace("*", " * ")
+                .replace("/", " / ")
+                .replace("+", " + ")
+                .replace("-", " - ")
+                .replace("(", " ( ")
+                .replace(")", " ) ")
+                .replace("{", " ( ")
+                .replace("}", " ) ")
+                .replace("  ", " ")
+                .trim()
+                .split(" ")
+                .forEach {
+                    val expr = Expr.valueOf(it)
+                    if (expr != null) out.add(expr)
+                    else return null
+                }
+
+        out.forEachIndexed { i, expr ->
+            if (expr == Expr.sub && (i == 0 || out[i - 1] in listOf(Expr.mult, Expr.div, Expr.leftParen))) {
+                out[i] = Expr.neg
+            }
+        }
+
+        Log.e("SHAPE", "parsed equation: ${out.joinToString(" ")}")
+        // Log.e("SHAPE", "out size: ${out.size}")
+        return out
+
+    }
+
+    private fun infixToPostfix(exprs: ArrayList<Expr>) : ArrayList<Expr> {
+
+        // val expr = input.reversed()
+        // z*(2.0*z - 1.0) + (c - 1.0)^2.0
+        exprs.reverse()
+        exprs.forEachIndexed { i, expr ->
+            exprs[i] = when (expr) {
+                Expr.leftParen -> Expr.rightParen
+                Expr.rightParen -> Expr.leftParen
+                else -> expr
+            }
+        }
+        exprs.add(Expr.rightParen)
+        val stack = Stack<Expr>().apply { push(Expr.leftParen) }
+        val out = arrayListOf<Expr>()
+
+        while (stack.isNotEmpty()) {
+
+            //Log.e("SHAPE", "expr: " + exprs.joinToString(separator = ""))
+            //Log.e("SHAPE", "stack: " + stack.joinToString(separator = " "))
+            //Log.e("SHAPE", "out: " + out.joinToString(separator = " "))
+
+            when (val element = exprs.removeAt(0)) {
+                is Operator -> {
+                    while (stack.peek() != Expr.leftParen && (stack.peek() as Operator).order <= element.order) {
+                        out.add(stack.pop())
+                    }
+                    stack.add(element)
+                }
+                Expr.leftParen -> stack.push(element)
+                Expr.rightParen -> {
+                    while (stack.peek() != Expr.leftParen) out.add(stack.pop())
+                    stack.pop()
+                }
+                else -> out.add(element)  // operand
+            }
+        }
+
+        // Log.e("SHAPE", "out: " + out.joinToString(separator = " "))
+        return out
+
+    }
+
+    private fun postfixToGlsl(input: ArrayList<Expr>, precision: GpuPrecision) : String? {
+
+        val exprs = ArrayList(input)
+        val stack = Stack<Expr>()
+
+        while (exprs.isNotEmpty()) {
+
+            //Log.e("SHAPE", "stack: ${stack.joinToString()}")
+
+            when (val expr = exprs.removeAt(0)) {
+                is Operator -> {
+                    val args = arrayListOf<Expr>()
+                    for (i in 0 until expr.numArgs) {
+                        if (stack.isEmpty()) return null
+                        args.add(stack.pop())
+                    }
+                    stack.push(expr.of(args, precision == GpuPrecision.DUAL))
+                }
+                else -> stack.push(expr)
+            }
+
+        }
+
+        return when (stack.size) {
+            0 -> null
+            1 -> stack.pop().str
+            else -> null
+        }
+
+    }
+
+    private fun readHtml(file: String) : String {
+
+        var str = ""
+        val br = act.resources.assets.open(file).bufferedReader()
+        var line: String?
+
+        while (br.readLine().also { line = it } != null) str += line + "\n"
+        br.close()
+
+        //Log.d("RENDERER", str)
+        //Log.e("RENDERER", "color shader length: ${str.length}")
+
+        return str
+
     }
 
 }
