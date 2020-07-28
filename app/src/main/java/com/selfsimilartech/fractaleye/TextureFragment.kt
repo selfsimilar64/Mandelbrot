@@ -193,6 +193,8 @@ class TextureFragment : MenuFragment() {
 
                                 if (f.shape.compatTextures[position] != f.texture) {
 
+                                    if (fsv.r.isRendering) fsv.r.interruptRender = true
+
                                     f.texture = f.shape.compatTextures[position]
 
                                     textureParamButtons.forEach { it.hide() }
@@ -207,8 +209,8 @@ class TextureFragment : MenuFragment() {
 
                                     }
 
-                                    val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
-                                    escapeRadiusSeekBar.progress = bailoutStrings[1].toInt()
+                                    //val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
+                                    //escapeRadiusSeekBar.progress = bailoutStrings[1].toInt()
 
                                     fsv.r.calcNewTextureSpan = true
 
@@ -261,7 +263,7 @@ class TextureFragment : MenuFragment() {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
                     val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
-                    w.text = "%.5f".format(bailoutStrings[0].toFloat())
+                    w.text = "%.2f".format(bailoutStrings[0].toFloat())
                     bailoutExponentEdit.setText("%d".format(bailoutStrings[1].toInt()))
                 })
         bailoutExponentEdit.setOnEditorActionListener(
@@ -282,14 +284,56 @@ class TextureFragment : MenuFragment() {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
                     val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
-                    bailoutSignificandEdit.setText("%.5f".format(bailoutStrings[0].toFloat()))
+                    bailoutSignificandEdit.setText("%.2f".format(bailoutStrings[0].toFloat()))
                     w.text = "%d".format(bailoutStrings[1].toInt())
                 })
 
 
         val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
-        escapeRadiusSeekBar.progress = bailoutStrings[1].toInt()
-        escapeRadiusSeekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        bailoutSignificandBar.progress = (bailoutSignificandBar.max*(bailoutStrings[0].toDouble() - 1.0)/8.99).toInt()
+        bailoutExponentBar.progress = bailoutStrings[1].toInt()
+
+        bailoutSignificandBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
+                val sig = progress.toDouble()/bailoutSignificandBar.max*8.99 + 1.0
+                val result1 = bailoutExponentEdit.text.toString().formatToDouble(false)
+                val result2 = "${sig}e${bailoutExponentEdit.text}".formatToDouble(false)?.toFloat()
+                if (result1 != null && result2 != null) {
+                    if (result2.isInfinite() || result2.isNaN()) {
+                        act.showMessage(resources.getString(R.string.msg_num_out_range))
+                    }
+                    else {
+                        f.bailoutRadius = result2
+                        if (fsv.r.renderProfile == RenderProfile.MANUAL && sc.continuousRender) {
+                            //Log.e("TEXTURE", "escape radius seekbar subroutine")
+                            fsv.r.renderToTex = true
+                            fsv.requestRender()
+                        }
+                        //fsv.r.renderToTex = true
+                    }
+                }
+                else {
+                    act.showMessage(resources.getString(R.string.msg_invalid_format))
+                }
+                val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
+                //bailoutSignificandEdit.setText("%.5f".format(bailoutStrings[0].toFloat()))
+                bailoutSignificandEdit.setText("%.2f".format(bailoutStrings[0].toFloat()))
+
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
+            }
+
+        })
+        bailoutExponentBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
 
@@ -413,6 +457,8 @@ class TextureFragment : MenuFragment() {
         }
         textureDoneButton.setOnClickListener {
 
+            if (fsv.r.isRendering) fsv.r.pauseRender = true
+
             texturePreviewName.text = resources.getString(f.texture.displayName)
 
             act.showCategoryButtons()
@@ -489,7 +535,7 @@ class TextureFragment : MenuFragment() {
 
         val param = f.texture.activeParam
         qEdit.setText(param.toString())
-        qSeekBar.max = if (param.discrete) param.interval.toInt() else 500
+        qSeekBar.max = if (param.discrete) param.interval.toInt() else 1000
         //Log.d("TEXTURE FRAGMENT", "qSeekBar max: ${qSeekBar.max}")
         qSeekBar.progress = (param.progress*qSeekBar.max.toDouble()).roundToInt()
         //Log.d("TEXTURE FRAGMENT", "${param.progress}")
