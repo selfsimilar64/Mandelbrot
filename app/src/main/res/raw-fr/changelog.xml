@@ -1,12 +1,30 @@
 <changelog>
 
-    <!-- simple example - no version name => will be generated based on verionCode: 100 => v1.00 -->
+
+    <release versionCode="18" versionName="v1.3.4" date="2020-07-22">
+        <new type="summary">Toutes les formes prennent désormais en charge le zoom profond (jusqu'à 1e-12) avec des textures</new>
+        <new type="summary">Texture Temps de Échappement (Lisse) désormais compatible avec toutes les formes divergentes</new>
+        <new type="summary">Textures Rayure Moyenne et Courbure Moyenne améliorées (pas de discontinuités)</new>
+        <new type="summary">Palettes de couleurs Temps, Étourneau, Cultivé et Pagode ajoutées</new>
+        <new type="summary">Augmentez PARAMÊTRES -> RENDER -> MORCEAUX si l'application plante pour des valeurs élevées de FORME -> ITÉRER</new>
+        <info>Correction de paramètres TEXTURE -> MODE -> INT/LES DEUX</info>
+        <info>Correction de erreurs de COULEUR -> AUTO</info>
+        <info>Correction d'un autre bogue qui provoquait un crash au démarrage</info>
+    </release>
+
+
+    <release versionCode="17" versionName="v1.3.3" date="2020-06-25">
+        <info>Ajout de la prise en charge des appareils avec OpenGL ES 3.0/3.1</info>
+        <info>Correction de plusieurs bugs qui provoquaient un crash au démarrage</info>
+    </release>
+
+
     <release versionCode="16" versionName="v1.3.2" date="2020-06-15">
-        <new type="summary">Palettes de couleurs Chroma, Île, Rose, Martin-Pêcheur, Bioluminescente, Atlas, Fossile, Alpha, Pêche, Jazz et Polygone ajoutés</new>
-        <new type="summary">Interrompre le processus de rendu d'image en modifiant la position / résolution</new>
-        <new type="summary">Basculer COULEUR -> AUTO pour ajuster automatiquement les couleurs en fonction de la position</new>
-        <new type="summary">Zoom plus profond (sans textures, jusqu'à 1e-12) disponible sur les formes transcendantales, c'est-à-dire Mandelbrot (Puissance), Trèfle, Sinus 1, Sinus 2, Limule et Kleinian</new>
-        <new type="summary">Plus d'options de résolution</new>
+        <info>Palettes de couleurs Chroma, Île, Rose, Martin-Pêcheur, Bioluminescente, Atlas, Fossile, Alpha, Pêche, Jazz et Polygone ajoutés</info>
+        <info>Interrompre le processus de rendu d'image en modifiant la position / résolution</info>
+        <info>Basculer COULEUR -> AUTO pour ajuster automatiquement les couleurs en fonction de la position</info>
+        <info>Zoom plus profond (sans textures, jusqu'à 1e-12) disponible sur les formes transcendantales, c'est-à-dire Mandelbrot (Puissance), Trèfle, Sinus 1, Sinus 2, Limule et Kleinian</info>
+        <info>Plus d'options de résolution</info>
         <info>Plus grande hauteur de menu lors du changement de texture/forme/palette</info>
         <info>L'activation du ~Rendu Continue~ désactive ~Rendre Fond~</info>
         <info>Conseils ajoutés pour la FORME -> ITERER</info>

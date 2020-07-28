@@ -1,12 +1,30 @@
 <changelog>
 
-    <!-- simple example - no version name => will be generated based on verionCode: 100 => v1.00 -->
+
+    <release versionCode="18" versionName="v1.3.4" date="2020-07-22">
+        <new type="summary">Alle Formen unterstützen jetzt den Tiefenzoom (bis zu 1e-12) mit Texturen </new>
+        <new type="summary">Fluchtzeit (Glatt) Textur ist jetzt mit allen abweichenden Formen kompatibel </new>
+        <new type="summary">Die Texturen für Streifendurchschnitt und Krümmungsdurchschnitt wurden verbessert (keine Diskontinuitäten)</new>
+        <new type="summary">Farbpaletten Zeit, Star, Überwuchert und Pagode hinzugefügt </new>
+        <new type="summary">Erhöhen Sie EINSTELLUNGEN -> RENDER -> STÜCKE, wenn die App für hohe Werte von FORM -> ITERIEREN abstürzt </new>
+        <info>Behobene TEXTUR -> MODUS -> IM/BEIDE Einstellungen </info>
+        <info>Behoben FARBE -> AUTO </info>
+        <info>Ein weiterer Fehler wurde behoben, der beim Start zum Absturz führte</info>
+    </release>
+
+
+    <release versionCode="17" versionName="v1.3.3" date="2020-06-25">
+        <info>Unterstützung für Geräte mit OpenGL ES 3.0/3.1 hinzugefügt</info>
+        <info>Es wurden mehrere Fehler behoben, die beim Start zum Absturz führten</info>
+    </release>
+
+
     <release versionCode="16" versionName="v1.3.2" date="2020-06-15">
-        <new type="summary">Farbpaletten Chroma, Insel, Rose, Eisvogel, Biolumineszenz, Atlas, Fossil, Alpha, Pfirsich, Jazz und Polygon hinzugefügt</new>
-        <new type="summary">Unterbrechen Sie den Bildwiedergabeprozess, indem Sie Position / Auflösung ändern</new>
-        <new type="summary">Schalten Sie FARBE -> AUTO um, um Farben basierend auf der Position automatisch anzupassen</new>
-        <new type="summary">Tieferer Zoom (ohne Texturen, bis zu 1e-12) für transzendentale Formen, d. H. Mandelbrot (Kraft), Klee, Sinus 1, Sinus 2, Pfeilschwanzkrebs und Kleinian</new>
-        <new type="summary">Weitere Auflösungsoptionen</new>
+        <info>Farbpaletten Chroma, Insel, Rose, Eisvogel, Biolumineszenz, Atlas, Fossil, Alpha, Pfirsich, Jazz und Polygon hinzugefügt</info>
+        <info>Unterbrechen Sie den Bildwiedergabeprozess, indem Sie Position / Auflösung ändern</info>
+        <info>Schalten Sie FARBE -> AUTO um, um Farben basierend auf der Position automatisch anzupassen</info>
+        <info>Tieferer Zoom (ohne Texturen, bis zu 1e-12) für transzendentale Formen, d. H. Mandelbrot (Kraft), Klee, Sinus 1, Sinus 2, Pfeilschwanzkrebs und Kleinian</info>
+        <info>Weitere Auflösungsoptionen</info>
         <info>Größere Menühöhe beim Ändern von Textur / Form / Palette</info>
         <info>Durch Aktivieren von ~Kontinuierliches Rendern~ wird der ~Hintergrund Rendern~ deaktiviert</info>
         <info>Hinweise für FORM -> ITERIEREN hinzugefügt</info>

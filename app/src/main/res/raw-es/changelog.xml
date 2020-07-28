@@ -1,12 +1,30 @@
 <changelog>
 
-    <!-- simple example - no version name => will be generated based on verionCode: 100 => v1.00 -->
+
+    <release versionCode="18" versionName="v1.3.4" date="2020-07-22">
+        <new type="summary">Todas las formas ahora admiten zoom profundo (hasta 1e-12) con texturas</new>
+        <new type="summary">Tiempo de Escape (Suave) textura ahora es compatible con todas las formas divergentes</new>
+        <new type="summary">Promedio de Rayas y Promedio de Curvatura texturas mejoradas (sin discontinuidades)</new>
+        <new type="summary">Paletas de colores Tiempo, Estornino, Cultivada y Pagoda añadidos</new>
+        <new type="summary">Aumente AJUSTES -> RENDER -> TROZOS si la aplicación falla por valores altos de FORMA -> ITERAR</new>
+        <info>Fija TEXTURA -> MODO -> ENTRADA/AMBAS ajustes</info>
+        <info>Fijo errores de COLOR -> AUTO</info>
+        <info>Se corrigió otro error que causaba un bloqueo al inicio</info>
+    </release>
+
+
+    <release versionCode="17" versionName="v1.3.3" date="2020-06-25">
+        <info>Soporte agregado para dispositivos con OpenGL ES 3.0/3.1</info>
+        <info>Se corrigieron varios errores que causaban un bloqueo al inicio</info>
+    </release>
+
+
     <release versionCode="16" versionName="v1.3.2" date="2020-06-15">
-        <new type="summary">Paletas de colores Croma, Isla, Rosa, Martín Pescador, Bioluminiscente, Atlas, Fósil, Alfa, Melocotón, Jazz y Polígono agregado</new>
-        <new type="summary">Interrumpa el proceso de renderizado de imágenes cambiando la posición/resolución</new>
-        <new type="summary">Alternar COLOR -> AUTO para ajustar automáticamente los colores según la posición</new>
-        <new type="summary">Zoom más profundo (sin texturas, hasta 1e-12) disponible en formas trascendentales, es decir, Mandelbrot (Potencia), Trébol, Seno 1, Seno 2, Límulo y Kleinian</new>
-        <new type="summary">Más opciones de resolución</new>
+        <info>Paletas de colores Croma, Isla, Rosa, Martín Pescador, Bioluminiscente, Atlas, Fósil, Alfa, Melocotón, Jazz y Polígono agregado</info>
+        <info>Interrumpa el proceso de renderizado de imágenes cambiando la posición/resolución</info>
+        <info>Alternar COLOR -> AUTO para ajustar automáticamente los colores según la posición</info>
+        <info>Zoom más profundo (sin texturas, hasta 1e-12) disponible en formas trascendentales, es decir, Mandelbrot (Potencia), Trébol, Seno 1, Seno 2, Límulo y Kleinian</info>
+        <info>Más opciones de resolución</info>
         <info>Mayor altura del menú al cambiar la textura/forma/paleta</info>
         <info>Habilitar ~Renderizado Continuo~ desactiva ~Renderizar Fondo~</info>
         <info>Sugerencias agregadas para FORMA -> ITERAR</info>
