@@ -31,14 +31,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := native-fractalimage
 LOCAL_SRC_FILES := \
 $(JNI_PATH)/../cpp/native-reference.cpp \
-$(JNI_PATH)/../cpp/native-sine.cpp \
 $(JNI_PATH)/../cpp/native-sine2.cpp \
-$(JNI_PATH)/../cpp/native-clover.cpp \
-$(JNI_PATH)/../cpp/native-kleinian.cpp \
-$(JNI_PATH)/../cpp/native-nova2.cpp \
-$(JNI_PATH)/../cpp/native-collatz.cpp \
-$(JNI_PATH)/../cpp/native-mandelbrotpow.cpp \
-$(JNI_PATH)/../cpp/native-horseshoecrab.cpp
 LOCAL_CPP_FEATURES += exceptions
 LOCAL_LDLIBS += -llog
 LOCAL_SHARED_LIBRARIES := gmp
