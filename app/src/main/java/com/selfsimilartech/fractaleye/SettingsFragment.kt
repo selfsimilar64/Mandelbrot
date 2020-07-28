@@ -51,11 +51,6 @@ class SettingsFragment : MenuFragment() {
         val sc = act.sc
 
 
-//        networkButton.setOnClickListener {
-//            act.connectToServer()
-//        }
-
-
 //        restartActivityButton.setOnClickListener {
 //
 //            act.recreate()
@@ -199,6 +194,31 @@ class SettingsFragment : MenuFragment() {
 
 
         showChangelogButton.setOnClickListener { act.showChangelog() }
+
+        chunkProfileTabs.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+
+                tab?.view?.setBackgroundColor(resources.getColor(R.color.menu4, null))
+
+            }
+
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+
+                tab?.view?.setBackgroundColor(resources.getColor(R.color.menu3, null))
+
+                sc.chunkProfile = ChunkProfile.values()[tab?.position ?: 0]
+                fsv.r.updateNumRenderChunks()
+
+            }
+
+        })
+        chunkProfileTabs.getTabAt(sc.chunkProfile.ordinal)?.apply {
+            view.setBackgroundColor(resources.getColor(R.color.menu3, null))
+            select()
+        }
 
 
 
