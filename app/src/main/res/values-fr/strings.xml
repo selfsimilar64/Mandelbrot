@@ -40,7 +40,7 @@
     <string name="solid_fill_black">noir</string>
     <string name="solid_fill_white">blanc</string>
     <string name="texture">texture</string>
-    <string name="texture_mode">Mode Texture</string>
+    <string name="texture_mode">Mode</string>
     <string name="texture_mode_both">les deux</string>
     <string name="texture_mode_in">int</string>
     <string name="texture_mode_out">ext</string>
@@ -137,4 +137,10 @@
     <string name="fossil">Fossile</string>
     <string name="atlas">Atlas</string>
     <string name="changelog">Histoire</string>
+    <string name="chunk_count">Morceaux</string>
+    <string name="time">Temps</string>
+    <string name="starling">Étourneau</string>
+    <string name="overgrown">Cultivé</string>
+    <string name="pagoda">Pagode</string>
+    <string name="converge">Temps de Convergence</string>
 </resources>

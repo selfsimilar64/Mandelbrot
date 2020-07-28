@@ -137,4 +137,10 @@
     <string name="fossil">Fósil</string>
     <string name="atlas">Atlas</string>
     <string name="changelog">Cambios</string>
+    <string name="chunk_count">Trozos</string>
+    <string name="time">Tiempo</string>
+    <string name="starling">Estornino</string>
+    <string name="overgrown">Cultivada</string>
+    <string name="pagoda">Pagoda</string>
+    <string name="converge">Tiempo de Convergencia</string>
 </resources>

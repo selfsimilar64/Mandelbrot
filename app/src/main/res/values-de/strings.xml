@@ -35,7 +35,7 @@
     <string name="solid_fill_black">schwarz</string>
     <string name="solid_fill_white">weiß</string>
     <string name="texture">textur</string>
-    <string name="texture_mode">Texturmodus</string>
+    <string name="texture_mode">Modus</string>
     <string name="texture_mode_both">beide</string>
     <string name="texture_mode_in">im</string>
     <string name="texture_mode_out">aus</string>
@@ -137,4 +137,10 @@
     <string name="fossil">Fossil</string>
     <string name="atlas">Atlas</string>
     <string name="changelog">Änderungen</string>
+    <string name="chunk_count">Stücke</string>
+    <string name="time">Zeit</string>
+    <string name="starling">Star</string>
+    <string name="overgrown">Überwuchert</string>
+    <string name="pagoda">Pagode</string>
+    <string name="converge">Zeit der Konvergenz</string>
 </resources>
