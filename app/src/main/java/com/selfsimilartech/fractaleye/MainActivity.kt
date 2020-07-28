@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Point
+import android.graphics.PointF
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Bundle
@@ -70,6 +71,8 @@ const val HARDWARE_PROFILE = "hardwareProfile"
 const val GPU_PRECISION = "gpuPrecision"
 const val CPU_PRECISION = "cpuPrecision"
 const val PALETTE = "palette"
+const val SOLID_FILL_COLOR = "solidFillColor"
+const val CHUNK_PROFILE = "chunkProfile"
 const val VERSION_NAME_TAG = "versionName"
 const val SHARED_PREFERENCES = "com.selfsimilartech.fractaleye.SETTINGS"
 
@@ -92,6 +95,13 @@ fun List<Texture>.replace(old: Texture, new: Texture) : List<Texture> {
     val index = this.indexOf(old)
     newList.remove(old)
     newList.add(index, new)
+    return newList
+
+}
+fun List<Texture>.remove(rem: List<Texture>) : List<Texture> {
+
+    val newList = this.toMutableList()
+    newList.removeAll(rem)
     return newList
 
 }
@@ -120,7 +130,9 @@ fun now() = System.currentTimeMillis()
 
 fun View.show() { visibility = View.VISIBLE }
 fun View.hide() { visibility = View.GONE }
+fun View.invisible() { visibility = View.INVISIBLE }
 fun View.isVisible() : Boolean { return visibility == View.VISIBLE}
+fun View.isInvisible() : Boolean { return visibility == View.INVISIBLE }
 fun View.isHidden() : Boolean { return visibility == View.GONE}
 
 
@@ -201,7 +213,7 @@ enum class Reaction(val numDisplayParams: Int) {
     NONE(0), SHAPE(3), COLOR(2), POSITION(4)
 }
 enum class Resolution(private val scale: Float, val square: Boolean = false) {
-    SXTNTH(1/16f), EIGHTH(1/8f), FOURTH(1/4f), HALF(1/2f), R34(3/4f), FULL(1f),
+    SXTNTH(1/16f), EIGHTH(1/8f), FOURTH(1/4f), THIRD(1/3f), HALF(1/2f), R34(3/4f), FULL(1f),
     THREEHALVES(1.5f), DOUBLE(2f), FIVEHALVES(2.5f),
     // TRIPLE(3f), SEVENHALVES(3.5f), QUAD(4f),   // RG16F largeheap only
     THUMB(1/6f, true);
@@ -216,6 +228,9 @@ enum class Resolution(private val scale: Float, val square: Boolean = false) {
         val NUM_VALUES_FREE = values().size - NUM_VALUES_GT_SCREEN_DIMS - 1
         val HIGHEST = if (BuildConfig.PAID_VERSION) FIVEHALVES else FULL
     }
+}
+enum class ChunkProfile(val fgSingle: Int, val bgSingle: Int, val fgDual: Int, val bgDual: Int) {
+    LOW(10, 3, 30, 10), MED(15, 5, 45, 15), HIGH(25, 10, 50, 20)
 }
 enum class TextureMode { OUT, IN, BOTH }
 enum class ListLayoutType { GRID, LINEAR }
@@ -580,7 +595,11 @@ class RecyclerTouchListener(
 }
 
 
-
+fun split(a: Double) : PointF {
+    val hi = a.toFloat()
+    val lo = (a - hi.toDouble()).toFloat()
+    return PointF(hi, lo)
+}
 
 
 class MainActivity : AppCompatActivity() {
@@ -593,7 +612,7 @@ class MainActivity : AppCompatActivity() {
 
 
     lateinit var db : AppDatabase
-    var f : Fractal = Fractal.mandelbrot
+    var f : Fractal = Fractal.m5
     var sc : SettingsConfig = SettingsConfig()
     lateinit var fsv : FractalSurfaceView
     private var screenWidth = 0
@@ -804,6 +823,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
+        //setTheme(R.style.AppTheme)
+
         db = Room.databaseBuilder(
                 applicationContext,
                 AppDatabase::class.java, "palettes"
@@ -826,7 +847,11 @@ class MainActivity : AppCompatActivity() {
         sc.shapeListViewType = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
         sc.textureListViewType = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
         sc.autofitColorRange = sp.getBoolean(AUTOFIT_COLOR_RANGE, true)
+        f.solidFillColor = sp.getInt(SOLID_FILL_COLOR, R.color.white)
+        sc.chunkProfile = ChunkProfile.values()[sp.getInt(CHUNK_PROFILE, 1)]
         //sc.showHints = sp.getBoolean(SHOW_HINTS, true)
+
+
 
         val displayMetrics = baseContext.resources.displayMetrics
         windowManager.defaultDisplay.getRealMetrics(displayMetrics)
@@ -854,6 +879,8 @@ class MainActivity : AppCompatActivity() {
             it.initialize(resources, Resolution.THUMB.scaleRes(screenRes))
         }
 
+        Shape.all.forEach { it.initialize(resources) }
+
 
         val r = FractalRenderer(f, sc, this, baseContext, ActivityHandler(this), screenRes)
         fsv = FractalSurfaceView(baseContext, r)
@@ -867,94 +894,6 @@ class MainActivity : AppCompatActivity() {
 
 
         super.onCreate(savedInstanceState)
-
-
-//        mTcpClient = TcpClient(this@MainActivity, TcpClient.OnMessageReceived { message ->
-//            Log.d("message", "messageReceived: $message")
-//            when {
-//                message.contains("Hallo") -> {
-//                    sendRenderscriptMessage("dev", "28712990mjk")
-//                }
-//                message.contains("Succesful") -> {
-//                    /*
-//                         * the next code is needed in the following situation
-//                         * the remember user option is selected but the user has not yet logged in via the login button
-//                         * or during a previous session.
-//                         * If we receive the Succesful message from the server,we can deduce that the send username en password
-//                         * were correct and therefore can be stored to the shared preferences file
-//                         */
-////                        if (settings.getBoolean("rememberUser", false)) {
-////                            if (username !== "" && passwd !== "") {
-////                                val editor: Editor = settings.edit()
-////                                editor.putString("userName", username)
-////                                editor.putString("passwd", passwd)
-////                                editor.commit()
-////                            }
-////                        }
-//                    Log.d("MAIN", "Build Succesful")
-//                    mTcpClient.sendMessage("give bc\n")
-//                    Log.d("MAIN", "give bc")
-//                }
-//                message.contains("UPLOADED") -> {
-//
-//                    //Connect to ftp server and fetch the file.
-//                        GlobalScope.launch {
-//
-//                            var status = false
-////                            Log.i("MainAct", "FtpThread")
-////                            // Replace your UID & PW here
-////                            Log.i("ftp", "ftp connect with $username $passwd")
-////                            if (settings.getBoolean("UseDefault", true)) {
-////                                MainActivity.IP_ADDR = MainActivity.DEFAULT_IP_ADDR
-////                            } else {
-////                                MainActivity.IP_ADDR = settings.getString("ServerIP", MainActivity.DEFAULT_IP_ADDR)
-////                            }
-//                            status = ftpclient.ftpConnect(resources.getString(R.string.defaultIP), "dev", "28712990mjk", 21)
-//                            if (status) {
-//                                Log.d("FTP", "Connection Success")
-//                                status = ftpclient.ftpDownload("/bc64/template.bc", filesDir.path + "/template.bc")  // may need to change with Android 10 file access
-//                                if (status) {
-//                                    Log.e("MAIN", "download success!")
-//                                }
-//                                else {
-//                                    Log.e("MAIN", "download failed :(")
-//                                }
-//                            } else {
-//                                Log.e("FTP", "Connection failed")
-//                                //createToast("Connection with TCP server failed!", false);
-//                            }
-//
-//                        }
-//
-//                }
-//                message.contains("login ok") -> {
-//                    Log.d("MAIN", "login_ok")
-//                }
-//                message.contains("login error") -> {
-//                    Log.d("MAIN", "login_nok")
-//                }
-//                message.contains("acount error") -> {
-//                    Log.d("MAIN", "account_error")
-//                }
-//                message.contains("acount created") -> {
-//                    Log.d("MAIN", "acount_created")
-//                }
-//                else -> {
-////                        if (settings.getBoolean("rememberUser", false)) {
-////                            if (username !== "" && passwd !== "") {
-////                                val editor: Editor = settings.edit()
-////                                editor.putString("userName", username)
-////                                editor.putString("passwd", passwd)
-////                                editor.commit()
-////                            }
-////                        }
-//                    Log.d("MAIN", "Error message: $message")
-//                }
-//            }
-//        })
-//        ftpclient = MyFTPClient()
-
-
 
 //        orientation = baseContext.resources.configuration.orientation
 //        Log.d("MAIN ACTIVITY", "orientation: $orientation")
@@ -1090,6 +1029,25 @@ class MainActivity : AppCompatActivity() {
 
         if (sp.getString(VERSION_NAME_TAG, "") != BuildConfig.VERSION_NAME) showChangelog()
 
+
+
+        var splits = arrayListOf<PointF>()
+        splits.apply {
+            add(split(Math.PI))
+            add(split(2.0*Math.PI))
+            add(split(Math.PI/2.0))
+            add(split(Math.PI/4.0))
+            add(split(3.0*Math.PI/4.0))
+            add(split(Math.E))
+            add(split(ln(2.0)))
+            add(split(ln(10.0)))
+            add(split(Math.PI/16.0))
+        }
+
+        splits.forEach { Log.e("MAIN", "(%e, %e)".format(it.x, it.y)) }
+
+
+
     }
 
 
@@ -1112,7 +1070,7 @@ class MainActivity : AppCompatActivity() {
     }
     fun uiSetHeight(newHeight: Int) {
 
-
+        if (fsv.r.isRendering) fsv.r.pauseRender = true
         if (newHeight != uiInnerLayout.layoutParams.height) {
 
             uiInnerLayout.layoutParams.height = newHeight
@@ -1224,10 +1182,12 @@ class MainActivity : AppCompatActivity() {
 
 
     fun showMessage(msg: String) {
-        val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_LONG)
-        val toastHeight = ui.height + resources.getDimension(R.dimen.toastMargin).toInt()
-        toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
-        toast.show()
+        runOnUiThread {
+            val toast = Toast.makeText(baseContext, msg, Toast.LENGTH_LONG)
+            val toastHeight = ui.height + resources.getDimension(R.dimen.toastMargin).toInt()
+            toast.setGravity(Gravity.BOTTOM, 0, toastHeight)
+            toast.show()
+        }
     }
     fun disableTextures() {
         texturePreviewName.alpha = 0.3f
@@ -1374,9 +1334,13 @@ class MainActivity : AppCompatActivity() {
     }
     fun updateTextureEditTexts() {
 
+        Log.e("MAIN", "bailout: ${"%e".format(Locale.US, f.bailoutRadius)}")
         val bailoutStrings = "%e".format(Locale.US, f.bailoutRadius).split("e")
-        bailoutSignificandEdit?.setText("%.5f".format(bailoutStrings[0].toFloat()))
+        bailoutSignificandEdit?.setText("%.2f".format(bailoutStrings[0].toFloat()))
         bailoutExponentEdit?.setText("%d".format(bailoutStrings[1].toInt()))
+
+        bailoutSignificandBar?.progress = ((bailoutStrings[0].toDouble() - 1.0)/8.99*bailoutSignificandBar.max).toInt()
+        bailoutExponentBar?.progress = (bailoutStrings[1].toInt())
 
         //qEdit?.setText(f.texture.params[0].toString())
 
@@ -1408,6 +1372,11 @@ class MainActivity : AppCompatActivity() {
     }
     fun updateTexturePreviewName() {
         texturePreviewName.text = resources.getString(f.texture.name)
+    }
+    fun updateBailoutRadiusLayout() {
+
+
+
     }
     fun updateHintVisibility() {
 
@@ -1463,6 +1432,8 @@ class MainActivity : AppCompatActivity() {
         edit.putBoolean(AUTOFIT_COLOR_RANGE, sc.autofitColorRange)
         edit.putInt(PALETTE, ColorPalette.all.indexOf(f.palette))
         edit.putString(VERSION_NAME_TAG, BuildConfig.VERSION_NAME)
+        edit.putInt(SOLID_FILL_COLOR, f.solidFillColor)
+        edit.putInt(CHUNK_PROFILE, sc.chunkProfile.ordinal)
         edit.apply()
 
         super.onPause()
@@ -1523,188 +1494,6 @@ class MainActivity : AppCompatActivity() {
         // button click handled
         return true
     }
-
-
-
-    //    /*! \brief Message for the server used for the runtime compilation of RenderScript
-//	 *
-//	 * This function will be called when the user clicks on the submitbutton with the RenderScript Radiobutton selected.<br>
-//	 * The message, beginning with the STARTPACKAGE tag, will contain the username and the hashed password. This is send
-//	 * over TCP to the server, followed by the code from the code field in the app, which is send line per line. The end
-//	 * of the message is indicated with the ENDPACKAGE tag.
-//	 *
-//	 * @param username name of the user
-//	 * @param passwd the password of the user
-//	 */
-//    private fun sendRenderscriptMessage(username: String, passwd: String) {
-//
-//        if (mTcpClient.isConnected) {
-//
-//            Log.d("MAIN", "Processing. Please wait...")
-//            val message = """
-//#pragma version(1)
-//#pragma rs java_package_name(com.selfsimilartech.fractaleye)
-//#pragma rs_fp_full
-//
-//double width;
-//double height;
-//double aspectRatio;
-//double bgScale;
-//
-//uint32_t maxIter;
-//float escapeRadius;
-//
-//double scale;
-//double xCoord;
-//double yCoord;
-//double sinRotation;
-//double cosRotation;
-//
-//
-//
-//float2 RS_KERNEL iterate(uint32_t x, uint32_t y) {
-//
-//    // send update progress message at regular intervals
-//    if (x == 0 && y % (int)(height/50) == 0) { rsSendToClient(0); }
-//
-//    float2 color;
-//
-//    // [-1.0, 1.0]
-//    double u = 2.0*(x/width) - 1.0;
-//    double v = 2.0*(y/height) - 1.0;
-//
-//    double aAux = u*scale;
-//    double bAux = v*scale*aspectRatio;
-//    double a = aAux*cosRotation - bAux*sinRotation + xCoord;
-//    double b = aAux*sinRotation + bAux*cosRotation + yCoord;
-//    complex c = a + b*I;
-//
-//
-//
-//
-//    //complex z = 0.0 + 0.0*I;
-//    //complex z1 = 0.0 + 0.0*I;
-//    double zModSqr = 0.0;
-//
-//
-//    for (int n = 0; n <= maxIter; n++) {
-//
-//
-//        // ${'$'} SHAPE LOOP ${'$'}
-//        //z = z*z + c;
-//
-//        //zModSqr = z.x*z.x + z.y*z.y;
-//
-//        if (zModSqr > escapeRadius*escapeRadius) {
-//            color = (float2) { (float)n / (float)maxIter, 0.f };
-//            break;
-//        }
-//        else if (n == maxIter) {
-//            color = (float2) { 1.f, 1.f };
-//        }
-//
-//
-//        z1 = z;
-//
-//    }
-//
-//
-//    return color;
-//
-//
-//}
-//
-//                """
-//
-//            val lines = message.split("\\r?\\n").toTypedArray()
-//            val strHash: String = createHash(passwd)
-//            Log.i("send after conversion", strHash)
-//            mTcpClient.sendMessage("STARTPACKAGE $username $passwd 24\n")
-//            for (i in lines.indices) {
-//                mTcpClient.sendMessage(lines[i])
-//                Log.d("MAIN", lines[i])
-//            }
-//
-//            //separator so that the code and the ENDPACKAGE message cannot be linked
-//            mTcpClient.sendMessage("\n")
-//
-//            //wait some time
-//            handlerUi.postDelayed({
-//                GlobalScope.launch {
-//
-//                    mTcpClient.sendMessage("ENDPACKAGE\n")
-//                    Log.i("ENDPACKAGE", "ENDPACKAGE")
-//
-//                }
-//
-//            }, 1000)
-//
-//        } else Log.e("MAIN", "Not connected")
-//
-//    }
-//
-//    /*! \brief Creates a MD5 hash of the password
-//	 *
-//	 * Converts the password to a MD5 hash, used for security reasons. Because the Hash consists of hex values
-//	 * who need to be send over TCP, it's necessary to convert the byte array to a String. The resulting string
-//	 * will be two times as long because each byte in hex is represented as two characters e.g. 01, 0A etc.
-//	 * @param passwd The password used to create the hash value
-//	 * @return strHash The resulting hash as a hex presented string
-//	 */
-//    private fun createHash(passwd: String): String { //create hash
-//        var bytesOfMessage: ByteArray? = null
-//        try {
-//            bytesOfMessage = passwd.toByteArray(charset("UTF-8"))
-//        } catch (e: UnsupportedEncodingException) {
-//            e.printStackTrace()
-//        }
-//        var md: MessageDigest? = null
-//        try {
-//            md = MessageDigest.getInstance("MD5")
-//        } catch (e: NoSuchAlgorithmException) {
-//            e.printStackTrace()
-//        }
-//        val hash = md!!.digest(bytesOfMessage!!)
-//        return byteArrayToHex(hash)
-//    }
-//
-//    /* \brief Converts bytes to their hex value
-//	 *
-//	 * @param a is the array of bytes to be converted
-//	 * @return Returns the String form of the bytes
-//	 */
-//    private fun byteArrayToHex(a: ByteArray): String {
-//        val sb = StringBuilder()
-//        for (b in a) sb.append(String.format("%02x", b and 0xff.toByte()))
-//        return sb.toString()
-//    }
-//
-//    /* \brief Converts byte to its hex value
-//	 *
-//	 * @param bytes are the bytes to be converted
-//	 * @return Returns the String form of the byte
-//	 */
-//    private fun bytesToHex(bytes: ByteArray): String {
-//        val hexChars = CharArray(bytes.size * 2)
-//        for (j in bytes.indices) {
-//            val v = (bytes[j] and 0xFF.toByte()).toUByte()
-//            Log.e("MAIN", "v: $v")
-//            hexChars[j * 2] = hexArray[v.toInt() ushr 4]
-//            hexChars[j * 2 + 1] = hexArray[(v and 0x0F.toUByte()).toInt()]
-//        }
-//        return String(hexChars)
-//    }
-//
-//    fun connectToServer() {
-//
-//        GlobalScope.launch {
-//            Log.e("MAIN", "doing in background...")
-//            mTcpClient.run()
-//        }
-//
-//    }
-
-
 
 
 }
