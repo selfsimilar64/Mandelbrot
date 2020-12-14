@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="@color/menu2"
+    android:background="@color/menuDark1"
     android:orientation="vertical"
     tools:context="com.selfsimilartech.fractaleye.MainActivity">
 
@@ -154,7 +154,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:animateLayoutChanges="true"
-            android:background="@color/menu2"
+            android:background="@color/menuDark1"
             android:clickable="true"
             android:focusableInTouchMode="true"
             android:orientation="vertical"
@@ -185,28 +185,19 @@
                 android:animateLayoutChanges="true"
                 android:orientation="vertical">
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/uiInnerCard"
+                <com.selfsimilartech.fractaleye.NoScrollViewPager
+                    android:id="@+id/categoryPager"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_marginStart="@dimen/categoryPagerMarginHorizontal"
                     android:layout_marginEnd="@dimen/categoryPagerMarginHorizontal"
                     android:layout_weight="1"
-                    android:animateLayoutChanges="true"
-                    app:cardBackgroundColor="@color/transparent"
-                    app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
-
-                    <com.selfsimilartech.fractaleye.NoScrollViewPager
-                        android:id="@+id/categoryPager"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:animateLayoutChanges="true" />
-                </androidx.cardview.widget.CardView>
+                    android:animateLayoutChanges="true" />
 
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/categoryButtons"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/menuButtonsHeight"
+                    android:layout_height="@dimen/menuButtonHeight"
                     android:layout_marginStart="5dp"
                     android:layout_marginEnd="5dp"
                     app:tabIndicatorColor="#0000"

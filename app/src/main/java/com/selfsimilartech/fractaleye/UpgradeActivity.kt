@@ -1,0 +1,168 @@
+package com.selfsimilartech.fractaleye
+
+import android.animation.LayoutTransition
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import android.util.Log
+import android.view.Gravity
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import com.android.billingclient.api.*
+import kotlinx.android.synthetic.main.activity_upgrade.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.ArrayList
+
+class UpgradeActivity : AppCompatActivity() {
+
+    private lateinit var billingClient : BillingClient
+
+    private val purchaseUpdateListener =
+            PurchasesUpdatedListener { billingResult, purchases ->
+                when (billingResult.responseCode) {
+                    BillingClient.BillingResponseCode.OK -> {
+//                        if (purchases != null) purchases[0]?.apply {
+//                            Log.e("MAIN", "processing purchase...")
+//                            Log.e("MAIN", originalJson)
+//                            when (purchaseState) {
+//                                Purchase.PurchaseState.PURCHASED -> {
+//                                    finish()
+//                                }
+//                                Purchase.PurchaseState.PENDING -> {
+//                                    finish()
+//                                }
+//                            }
+//                        }
+                        finish()
+                    }
+                    BillingClient.BillingResponseCode.USER_CANCELED -> {
+                        // Handle an error caused by a user cancelling the purchase flow.
+                    }
+                    else -> {
+                        // Handle any other error codes.
+                    }
+                }
+            }
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_upgrade)
+
+
+        billingClient = BillingClient.newBuilder(this)
+                .setListener(purchaseUpdateListener)
+                .enablePendingPurchases()
+                .build()
+        billingClient.startConnection(object : BillingClientStateListener {
+
+            override fun onBillingSetupFinished(billingResult: BillingResult) {
+                when (billingResult.responseCode) {
+                    BillingClient.BillingResponseCode.OK -> {
+                        Log.e("UPGRADE", "billing service setup finished")
+                    }
+                }
+            }
+
+            override fun onBillingServiceDisconnected() {
+                Log.e("UPGRADE", "!! BILLING SERVICE DISCONNECTED !!")
+                // Try to restart the connection on the next request to
+                // Google Play by calling the startConnection() method.
+            }
+
+        })
+
+
+        layout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+
+//        val timer = Timer()
+//
+//        val proShapes = Shape.default.filter { it.proFeature }.shuffled()
+//        var shapeIndex = 0
+//        val numProShapesRounded = proShapes.size - proShapes.size % 10
+//        numProShapesText.text = numProShapesText.text.toString().format(numProShapesRounded)
+//        timer.scheduleAtFixedRate(object : TimerTask() {
+//            override fun run() {
+//                runOnUiThread {
+//                    proShapeIcon.animate().alpha(0f).withEndAction {
+//                        proShapeIcon.setImageResource(proShapes[shapeIndex].thumbnailId)
+//                        proShapeIcon.animate().alpha(1f).start()
+//                    }.start()
+//                    shapeIndex = (shapeIndex + 1) % proShapes.size
+//                }
+//            }
+//        }, 2000L, 3500L)
+//
+//        val displayMetrics = baseContext.resources.displayMetrics
+//        windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+//        val screenWidth = displayMetrics.widthPixels
+//        val screenHeight = displayMetrics.heightPixels
+//        val screenRes = Point(screenWidth, screenHeight)
+//        val highestResDims = Resolution.R2880.size
+//        resolutionDiffText2.text = resolutionDiffText2.text.toString().format(highestResDims.x, highestResDims.y)
+
+        upgradeNoThanksButton.setOnClickListener {
+            finish()
+        }
+        upgradeConfirmButton.setOnClickListener {
+            GlobalScope.launch(Dispatchers.IO) { launchUpgradeFlow() }
+            //finish()
+        }
+
+        upgradeCustomizationText1.text = resources.getString(R.string.upgrade_customization_content1).format(Shape.all.filter { it.goldFeature }.size)
+        upgradeCustomizationText2.text = resources.getString(R.string.upgrade_customization_content2).format(Texture.all.filter { it.goldFeature }.size)
+        upgradeCustomizationText3.text = resources.getString(R.string.upgrade_customization_content3).format(
+                Shape.all.sumBy { shape ->
+                    if (shape!!.goldFeature) shape.params.list.size + 1
+                    else                    shape.params.list.filter { it.goldFeature }.size + 1
+                } + Texture.all.sumBy { texture ->
+                    if (texture.goldFeature) texture.params.size
+                    else                     texture.params.filter { it.goldFeature }.size
+                }
+        )
+
+        goldResolutionLabel.showGradient = true
+        goldResolutionDims.showGradient = true
+        freeResolutionDims.text = "%d x %d".format(Resolution.MAX_FREE.size.x, Resolution.MAX_FREE.size.y)
+        goldResolutionDims.text = "%d x %d".format(Resolution.R2880.size.x, Resolution.R2880.size.y)
+
+    }
+
+
+    private suspend fun querySkuDetails() : SkuDetailsResult {
+        val skuList = ArrayList<String>()
+        skuList.add("gold_upgrade")
+        val params = SkuDetailsParams.newBuilder()
+        params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP)
+        return withContext(Dispatchers.IO) {
+            billingClient.querySkuDetails(params.build())
+        }
+    }
+    private suspend fun launchUpgradeFlow() {
+
+        // Retrieve a value for "skuDetails" by calling querySkuDetailsAsync().
+        val skuDetailsList = querySkuDetails().skuDetailsList
+        if (skuDetailsList != null && skuDetailsList.isNotEmpty()) {
+            val flowParams = BillingFlowParams.newBuilder()
+                    .setSkuDetails(skuDetailsList[0])
+                    .build()
+            val responseCode = billingClient.launchBillingFlow(this, flowParams).responseCode
+            Log.e("UPGRADE", "response code: $responseCode")
+        }
+        else {
+            // not connected to internet, debug version, etc.
+            runOnUiThread {
+                AlertDialog.Builder(this, R.style.AlertDialogCustom)
+                        .setIcon(R.drawable.warning)
+                        .setMessage(R.string.upgrade_error)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+            }
+        }
+
+    }
+
+}

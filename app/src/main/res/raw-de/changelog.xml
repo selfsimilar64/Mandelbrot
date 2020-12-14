@@ -1,12 +1,24 @@
 <changelog>
 
 
+    <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
+        <new type="summary">Gold Upgrade hinzugefügt!</new>
+        <new type="summary">Es wurden mehrere neue Formen, Texturen, Farbpaletten und Parameter hinzugefügt</new>
+        <new type="summary">GOLD: Benutzerdefinierte Form und benutzerdefinierte Farbpalettenerstellung hinzugefügt</new>
+        <new type="summary">GOLD: Optionen mit höherer Auflösung bis zu 4K hinzugefügt</new>
+        <new type="summary">Möglichkeit zur Auswahl von Favoriten in Artikellisten hinzugefügt</new>
+        <new type="summary">Allen Parametern wurde die Option RATE hinzugefügt, um kontrollierte Anpassungen zu ermöglichen</new>
+        <new type="summary">Die Auflösung wird bei Parameteränderungen automatisch gewählt</new>
+        <new type="summary">Verbesserte Speichernutzung</new>
+    </release>
+
+
     <release versionCode="18" versionName="v1.3.4" date="2020-07-22">
-        <new type="summary">Alle Formen unterstützen jetzt den Tiefenzoom (bis zu 1e-12) mit Texturen </new>
-        <new type="summary">Fluchtzeit (Glatt) Textur ist jetzt mit allen abweichenden Formen kompatibel </new>
-        <new type="summary">Die Texturen für Streifendurchschnitt und Krümmungsdurchschnitt wurden verbessert (keine Diskontinuitäten)</new>
-        <new type="summary">Farbpaletten Zeit, Star, Überwuchert und Pagode hinzugefügt </new>
-        <new type="summary">Erhöhen Sie EINSTELLUNGEN -> RENDER -> STÜCKE, wenn die App für hohe Werte von FORM -> ITERIEREN abstürzt </new>
+        <info>Alle Formen unterstützen jetzt den Tiefenzoom (bis zu 1e-12) mit Texturen </info>
+        <info>Fluchtzeit (Glatt) Textur ist jetzt mit allen abweichenden Formen kompatibel </info>
+        <info>Die Texturen für Streifendurchschnitt und Krümmungsdurchschnitt wurden verbessert (keine Diskontinuitäten)</info>
+        <info>Farbpaletten Zeit, Star, Überwuchert und Pagode hinzugefügt </info>
+        <info>Erhöhen Sie EINSTELLUNGEN -> RENDER -> STÜCKE, wenn die App für hohe Werte von FORM -> ITERIEREN abstürzt </info>
         <info>Behobene TEXTUR -> MODUS -> IM/BEIDE Einstellungen </info>
         <info>Behoben FARBE -> AUTO </info>
         <info>Ein weiterer Fehler wurde behoben, der beim Start zum Absturz führte</info>

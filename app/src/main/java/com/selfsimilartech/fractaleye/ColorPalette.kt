@@ -51,19 +51,24 @@ fun Int.value() : Float {
 }
 
 class ColorPalette (
-        val nameId: Int = -1,
-        var name: String = "",
-        private val ids: List<Int> = listOf(),
-        var colors: ArrayList<Int> = arrayListOf(),
-        oscillate: Boolean = true,
-        var customId: Int = -1
+        val nameId       : Int = -1,
+        var name         : String = "",
+        private val ids  : List<Int> = listOf(),
+        var colors       : ArrayList<Int> = arrayListOf(),
+        oscillate        : Boolean = true,
+        var customId     : Int = -1,
+        var isFavorite   : Boolean = false
 ) {
 
 
     companion object {
 
-        const val MAX_CUSTOM_PALETTE_COLORS = 6
+        const val MAX_CUSTOM_COLORS_GOLD = 12
+        const val MAX_CUSTOM_COLORS_FREE = 3
+        const val MAX_CUSTOM_PALETTES_FREE = 2
 
+        val emptyFavorite = ColorPalette(name = "Empty Favorite", ids = listOf(R.color.black))
+        val emptyCustom = ColorPalette(name = "Empty Custom", ids = listOf(R.color.black))
         val yinyang = ColorPalette(
                 nameId = R.string.yinyang,
                 ids = listOf(
@@ -149,16 +154,37 @@ class ColorPalette (
                 R.color.q9,
                 R.color.purple3
         ))
+//        val anubis = ColorPalette(
+//                nameId = R.string.anubis,
+//                ids = listOf(
+//                R.color.black,
+//                R.color.purple2,
+//                R.color.mint,
+//                R.color.yellowish1,
+//                R.color.q10,
+//                R.color.tangerine
+//        ))
+
         val anubis = ColorPalette(
                 nameId = R.string.anubis,
                 ids = listOf(
-                R.color.black,
-                R.color.purple2,
-                R.color.mint,
-                R.color.yellowish1,
-                R.color.q10,
-                R.color.tangerine
-        ))
+                        R.color.anubis1,
+                        R.color.anubis2,
+                        R.color.anubis3,
+                        R.color.anubis4,
+                        R.color.anubis5,
+                        R.color.anubis6,
+                        R.color.anubis7,
+                        R.color.anubis8,
+                        R.color.anubis9,
+                        R.color.anubis10,
+                        R.color.anubis11,
+                        R.color.anubis12,
+                        R.color.anubis13,
+                        R.color.anubis14
+                )
+        )
+
         val p9 = ColorPalette(
                 nameId = R.string.p9,
                 ids = listOf(
@@ -255,24 +281,29 @@ class ColorPalette (
                 R.color.elephant6,
                 R.color.elephant7
         ))
+        val bronze = ColorPalette(
+                nameId = R.string.bronze,
+                ids = listOf(
+                        R.color.bronze1,
+                        R.color.bronze2,
+                        R.color.bronze3,
+                        R.color.bronze4,
+                        R.color.bronze5,
+                        R.color.bronze6,
+                        R.color.bronze7
+                )
+        )
         val gold = ColorPalette(
                 nameId = R.string.gold,
                 ids = listOf(
-                R.color.gold1,
-                R.color.gold2,
-                R.color.gold3,
-                R.color.gold4,
+                R.color.gold8,
+                R.color.gold7,
+                R.color.gold6,
                 R.color.gold5,
-                R.color.gold6
-        ))
-        val clover = ColorPalette(
-                nameId = R.string.empty,
-                ids = listOf(
-                R.color.clover1,
-                R.color.clover2,
-                R.color.clover3,
-                R.color.clover4,
-                R.color.clover5
+                R.color.gold4,
+                R.color.gold3,
+                R.color.gold2,
+                R.color.gold1
         ))
         val backwards = ColorPalette(
                 nameId = R.string.backwards,
@@ -478,7 +509,7 @@ class ColorPalette (
                 )
         )
         val melted = ColorPalette(
-                name = "MELTED",
+                nameId = R.string.melted,
                 ids = listOf(
                         R.color.melted1,
                         R.color.melted2,
@@ -491,20 +522,260 @@ class ColorPalette (
                         R.color.melted9
                 )
         )
+        val torus = ColorPalette(
+                nameId = R.string.torus,
+                oscillate = false,
+                ids = listOf(
+                        R.color.torus1,
+                        R.color.torus2,
+                        R.color.torus3,
+                        R.color.torus4,
+                        R.color.torus5,
+                        R.color.torus6,
+                        R.color.torus7,
+                        R.color.torus8,
+                        R.color.torus9,
+                        R.color.torus10,
+                        R.color.torus11,
+                        R.color.torus12
+                )
+        )
+        val ruby = ColorPalette(
+                nameId = R.string.ruby,
+                ids = listOf(
+                        R.color.ruby1,
+                        R.color.ruby2,
+                        R.color.ruby3,
+                        R.color.ruby4,
+                        R.color.ruby6,
+                        R.color.ruby7,
+                        R.color.ruby8
+                )
+        )
+        val sapphire = ColorPalette(
+                nameId = R.string.sapphire,
+                ids = listOf(
+                        R.color.sapphire1,
+                        R.color.sapphire2,
+                        R.color.sapphire3,
+                        R.color.sapphire4,
+                        R.color.sapphire5,
+                        R.color.sapphire6,
+                        R.color.sapphire7
+                )
+        )
+        val amethyst = ColorPalette(
+                nameId = R.string.amethyst,
+                ids = listOf(
+                        R.color.amethyst1,
+                        R.color.amethyst2,
+                        R.color.amethyst3,
+                        R.color.amethyst4,
+                        R.color.amethyst5,
+                        R.color.amethyst6,
+                        R.color.amethyst7
+                )
+        )
+        val diamond = ColorPalette(
+                nameId = R.string.diamond,
+                ids = listOf(
+                        R.color.diamond1,
+                        R.color.diamond3,
+                        R.color.diamond4,
+                        R.color.diamond5,
+                        R.color.diamond6,
+                        R.color.diamond7,
+                        R.color.diamond8
+                )
+        )
+        val aztec = ColorPalette(
+                nameId = R.string.aztec,
+                ids = listOf(
+                        R.color.aztec1,
+                        R.color.aztec2,
+                        R.color.aztec3,
+                        R.color.aztec4,
+                        R.color.aztec5,
+                        R.color.aztec6,
+                        R.color.aztec7,
+                        R.color.aztec8,
+                        R.color.aztec9,
+                        R.color.aztec10,
+                        R.color.aztec11,
+                        R.color.aztec12,
+                        R.color.aztec13
+                )
+        )
+        val neon = ColorPalette(
+                nameId = R.string.neon,
+                ids = listOf(
+                        R.color.neon1,
+                        R.color.neon2,
+                        R.color.neon3,
+                        R.color.neon4,
+                        R.color.neon5,
+                        R.color.neon6
+                )
+        )
+        val dragon = ColorPalette(
+                nameId = R.string.dragon,
+                ids = listOf(
+                        R.color.dragon1,
+                        R.color.dragon2,
+                        R.color.dragon3,
+                        R.color.dragon4,
+                        R.color.dragon5,
+                        R.color.dragon6,
+                        R.color.dragon7,
+                        R.color.dragon8,
+                        R.color.dragon9,
+                        R.color.dragon10,
+                        R.color.dragon11
+                )
+        )
+        val coral = ColorPalette(
+                nameId = R.string.coral,
+                ids = listOf(
+                        R.color.ccoral1,
+                        R.color.ccoral2,
+                        R.color.ccoral3,
+                        R.color.ccoral4,
+                        R.color.ccoral5,
+                        R.color.ccoral6,
+                        R.color.ccoral7,
+                        R.color.ccoral8,
+                        R.color.ccoral9,
+                        R.color.ccoral10,
+                        R.color.ccoral11,
+                        R.color.ccoral12,
+                        R.color.ccoral13
+                )
+        )
+        val cactus = ColorPalette(
+                nameId = R.string.cactus,
+                ids = listOf(
+                        R.color.cactus1,
+                        R.color.cactus2,
+                        R.color.cactus3,
+                        R.color.cactus4,
+                        R.color.cactus5,
+                        R.color.cactus6,
+                        R.color.cactus7,
+                        R.color.cactus8,
+                        R.color.cactus9,
+                        R.color.cactus10,
+                        R.color.cactus11,
+                        R.color.cactus12,
+                        R.color.cactus13,
+                        R.color.cactus14,
+                        R.color.cactus15
+                )
+        )
+        val aquamarine = ColorPalette(
+                nameId = R.string.aquamarine,
+                ids = listOf(
+                        R.color.aquamarine1,
+                        R.color.aquamarine2,
+                        R.color.aquamarine3,
+                        R.color.aquamarine4,
+                        R.color.aquamarine5,
+                        R.color.aquamarine6,
+                        R.color.aquamarine7,
+                        R.color.aquamarine8,
+                        R.color.aquamarine9,
+                        R.color.aquamarine10,
+                        R.color.aquamarine11,
+                        R.color.aquamarine12,
+                        R.color.aquamarine13
+                )
+        )
+        val parachute = ColorPalette(
+                nameId = R.string.parachute,
+                ids = listOf(
+                        R.color.parachute4,
+                        R.color.parachute5,
+                        R.color.parachute6,
+                        R.color.parachute7,
+                        R.color.parachute8,
+                        R.color.parachute9,
+                        R.color.parachute10,
+                        R.color.parachute11,
+                        R.color.parachute12,
+                        R.color.parachute13,
+                        R.color.parachute14
+                )
+        )
+        val polyphonic = ColorPalette(
+                nameId = R.string.polyphonic,
+                ids = listOf(
+                        R.color.polyphonic1,
+                        R.color.polyphonic2,
+                        R.color.polyphonic3,
+                        R.color.polyphonic4,
+                        R.color.polyphonic5,
+                        R.color.polyphonic6,
+                        R.color.polyphonic7,
+                        R.color.polyphonic8,
+                        R.color.polyphonic9,
+                        R.color.polyphonic10,
+                        R.color.polyphonic11,
+                        R.color.polyphonic12
+                ),
+                oscillate = false
+        )
+        val anaglyph = ColorPalette(
+                nameId = R.string.anaglyph,
+                ids = listOf(
+                        R.color.anaglyph1,
+                        R.color.anaglyph2,
+                        R.color.anaglyph3,
+                        R.color.anaglyph4,
+                        R.color.anaglyph5
+                )
+        )
+        val catalyst = ColorPalette(
+                nameId = R.string.catalyst,
+                ids = listOf(
+                        R.color.catalyst1,
+                        R.color.catalyst2,
+                        R.color.catalyst3,
+                        R.color.catalyst4,
+                        R.color.catalyst5,
+                        R.color.catalyst6,
+                        R.color.catalyst7,
+                        R.color.catalyst8,
+                        R.color.catalyst9
+                )
+        )
 
-        val all = arrayListOf(
+        var nextCustomPaletteNum = 0
+        val custom = arrayListOf<ColorPalette>()
+        val default = arrayListOf(
                 yinyang,
+                parachute,
                 night,
+                torus,
                 time,
+                polyphonic,
+                coral,
                 overgrown,
+                catalyst,
                 starling,
                 pagoda,
                 island,
+                aquamarine,
+                cactus,
                 chroma,
                 rose,
                 kingfisher,
+                anaglyph,
                 melted,
+                dragon,
                 bioluminescent,
+                ruby,
+                sapphire,
+                amethyst,
+                aztec,
                 atlas,
                 fossil,
                 cosmic,
@@ -516,8 +787,9 @@ class ColorPalette (
                 polygon,
                 elephant,
                 oldskool,
+                bronze,
                 gold,
-                p9,
+                neon,
                 viridis,
                 plasma,
                 magma,
@@ -528,6 +800,7 @@ class ColorPalette (
                 slow,
                 anubis
         )
+        val all = ArrayList(default)
 
 
         fun generateColors(n: Int) : ArrayList<Int> {
@@ -549,7 +822,7 @@ class ColorPalette (
     }
 
 
-    val isCustom : Boolean
+    val hasCustomId : Boolean
         get() = customId != -1
 
     val size : Int
@@ -614,6 +887,26 @@ class ColorPalette (
     }
     private fun intArrayToList(C: List<Int>) : List<FloatArray> {
         return List(C.size) { i: Int -> colorToRGB(C[i]) }
+    }
+    fun toDatabaseEntity() : ColorPaletteEntity {
+        return ColorPaletteEntity(
+                id = if (hasCustomId) customId else 0,
+                name = name,
+                size = colors.size,
+                c1 = colors.getOrNull(0) ?: 0,
+                c2 = colors.getOrNull(1) ?: 0,
+                c3 = colors.getOrNull(2) ?: 0,
+                c4 = colors.getOrNull(3) ?: 0,
+                c5 = colors.getOrNull(4) ?: 0,
+                c6 = colors.getOrNull(5) ?: 0,
+                c7 = colors.getOrNull(6) ?: 0,
+                c8 = colors.getOrNull(7) ?: 0,
+                c9 = colors.getOrNull(7) ?: 0,
+                c10 = colors.getOrNull(7) ?: 0,
+                c11 = colors.getOrNull(7) ?: 0,
+                c12 = colors.getOrNull(7) ?: 0,
+                starred = isFavorite
+        )
     }
 
     override fun equals(other: Any?): Boolean {

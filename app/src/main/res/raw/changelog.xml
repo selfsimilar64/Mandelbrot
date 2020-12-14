@@ -1,12 +1,24 @@
 <changelog>
 
 
+    <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
+        <new type="summary">Added Gold upgrade!</new>
+        <new type="summary">Added several new shapes, textures, color palettes, and parameters</new>
+        <new type="summary">GOLD: Added custom shape and custom color palette creation</new>
+        <new type="summary">GOLD: Added higher resolution options up to 4K</new>
+        <new type="summary">Added ability to choose favorites in item lists</new>
+        <new type="summary">Added RATE option to all parameters for more controlled adjustments</new>
+        <new type="summary">Resolution automatically chosen during parameter changes</new>
+        <new type="summary">Improved memory usage</new>
+    </release>
+
+
     <release versionCode="18" versionName="v1.3.4" date="2020-07-22">
-        <new type="summary">All shapes now support deep zoom (up to 1e-12) with textures</new>
-        <new type="summary">Escape Time (Smooth) texture now compatible with all divergent shapes</new>
-        <new type="summary">Stripe Average and Curvature Average textures improved (no discontinuities)</new>
-        <new type="summary">Color palettes Time, Starling, Overgrown, and Pagoda added</new>
-        <new type="summary">Increase SETTINGS -> RENDER -> CHUNKS if the app crashes for high values of SHAPE -> ITERATE</new>
+        <info>All shapes now support deep zoom (up to 1e-12) with textures</info>
+        <info>Escape Time (Smooth) texture now compatible with all divergent shapes</info>
+        <info>Stripe Average and Curvature Average textures improved (no discontinuities)</info>
+        <info>Color palettes Time, Starling, Overgrown, and Pagoda added</info>
+        <info>Increase SETTINGS -> RENDER -> CHUNKS if the app crashes for high values of SHAPE -> ITERATE</info>
         <info>Fixed TEXTURE -> MODE -> IN/BOTH settings</info>
         <info>Fixed COLOR -> AUTO errors</info>
         <info>Fixed another bug that caused crash on startup</info>

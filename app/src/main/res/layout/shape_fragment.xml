@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/shapeLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@color/menu2"
+    android:background="@color/menuDark1"
     android:orientation="vertical">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -76,24 +76,24 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/realParamLayout"
+        android:id="@+id/sensitivityLayout"
         style="@style/FragmentItem"
         android:layout_width="match_parent"
         android:layout_height="@dimen/fragmentItemHeight"
         android:visibility="visible">
 
         <com.selfsimilartech.fractaleye.SeekBar2
-            android:id="@+id/realParamSeekBar"
+            android:id="@+id/sensitivitySeekBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:max="500"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/uEdit2" />
+            app:layout_constraintTop_toBottomOf="@+id/sensitivityEdit" />
 
         <EditText
-            android:id="@+id/uEdit2"
+            android:id="@+id/sensitivityEdit"
             style="@style/EditNumberDark"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
@@ -103,94 +103,17 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/complexParamLayout"
+    <include
+        android:id="@+id/realShapeParam"
+        layout="@layout/real_param"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeight"
-        android:visibility="visible">
+        android:layout_height="@dimen/fragmentItemHeight" />
 
-        <LinearLayout
-            android:id="@+id/linearLayout3"
-            android:layout_width="190dp"
-            android:layout_height="35dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/uLabel"
-                style="@style/TextDark"
-                android:layout_width="10dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="48dp"
-                android:gravity="center_vertical"
-                android:text="@string/u" />
-
-            <EditText
-                android:id="@+id/uEdit"
-                style="@style/EditNumberDark"
-                android:layout_width="wrap_content"
-                android:imeOptions="actionDone" />
-
-            <ToggleButton
-                android:id="@+id/uLock"
-                style="@style/LockDark"
-                android:layout_width="30dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="10dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linearLayout4"
-            android:layout_width="190dp"
-            android:layout_height="35dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/linearLayout3">
-
-            <TextView
-                android:id="@+id/vLabel"
-                style="@style/TextDark"
-                android:layout_width="10dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="48dp"
-                android:gravity="center_vertical"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
-                android:text="@string/v" />
-
-            <EditText
-                android:id="@+id/vEdit"
-                style="@style/EditNumberDark"
-                android:layout_width="wrap_content"
-                android:imeOptions="actionDone" />
-
-            <ToggleButton
-                android:id="@+id/vLock"
-                style="@style/LockDark"
-                android:layout_width="30dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="10dp" />
-        </LinearLayout>
-
-        <ToggleButton
-            android:id="@+id/linkParamButton"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="20dp"
-            android:background="@color/transparent"
-            android:foreground="@drawable/link"
-            android:foregroundTint="@color/colorDarkSelected"
-            android:textOff="@string/empty"
-            android:textOn="@string/empty"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/linearLayout3"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <include
+        android:id="@+id/complexShapeParam"
+        layout="@layout/complex_param"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight" />
 
     <LinearLayout
         android:id="@+id/shapePreviewLayout"
@@ -203,7 +126,8 @@
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingTop="2dp"
-        android:paddingBottom="2dp">
+        android:paddingBottom="2dp"
+        tools:visibility="gone">
 
         <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
@@ -219,9 +143,9 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:contentDescription="@string/dscript_shape_preview"
-                android:tint="@color/menu2"
                 android:tintMode="add"
-                app:srcCompat="@drawable/mandelbrot_icon" />
+                app:srcCompat="@drawable/mandelbrot_icon"
+                app:tint="@color/menuDark1" />
 
         </androidx.cardview.widget.CardView>
 
@@ -246,8 +170,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:animateLayoutChanges="true"
-        android:orientation="vertical"
-        tools:visibility="visible">
+        android:orientation="vertical">
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -258,337 +181,917 @@
                 android:id="@+id/shapePreviewList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/menu4"
+                android:background="@color/menuDark4"
                 android:orientation="vertical"
                 android:scrollbars="vertical"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
                 tools:itemCount="6"
-                tools:listitem="@layout/texture_shape_preview_item_grid">
+                tools:listitem="@layout/texture_shape_list_item_grid_fg">
 
             </androidx.recyclerview.widget.RecyclerView>
         </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:id="@+id/customShapeLayout"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeightTall"
-        android:orientation="vertical"
-        android:descendantFocusability="blocksDescendants">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/customShapeName"
+            style="@style/EditTextDark"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            tools:text="Shape Name" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/customShapeKeyboard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/menu4"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:layout_editor_absoluteX="177dp">
+            android:layout_height="match_parent"
+            android:descendantFocusability="blocksDescendants"
+            android:orientation="vertical">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/operatorKeys"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/customShapeKeyboard"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:background="@color/menuDark1"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:layout_editor_absoluteX="2dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@color/menuDark1"
+                    android:orientation="vertical">
+
+                    <ImageButton
+                        android:id="@+id/numpadButton"
+                        style="@style/MenuImageButtonDark"
+                        android:layout_width="40dp"
+                        android:layout_marginStart="0dp"
+                        android:padding="3dp"
+                        android:scaleType="fitCenter"
+                        app:srcCompat="@drawable/ic_123_icon" />
+
+                    <ImageButton
+                        android:id="@+id/functionsButton"
+                        style="@style/MenuImageButtonDark"
+                        android:layout_width="40dp"
+                        android:layout_marginStart="0dp"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        app:srcCompat="@drawable/function" />
+
+                    <ImageButton
+                        android:id="@+id/constantsButton"
+                        style="@style/MenuImageButtonDark"
+                        android:layout_width="40dp"
+                        android:layout_marginStart="0dp"
+                        android:padding="10dp"
+                        android:scaleType="centerInside"
+                        android:scaleY="0.9"
+                        android:visibility="gone"
+                        app:srcCompat="@drawable/pi" />
+                </LinearLayout>
+
+                <ScrollView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:fadeScrollbars="false"
+                    android:scrollbarAlwaysDrawVerticalTrack="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TableLayout
+                            android:id="@+id/numberKeys"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            tools:visibility="gone">
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="center">
+
+                                <ImageButton
+                                    android:id="@+id/oneKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_1"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/twoKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_2"
+                                    app:layout_constraintStart_toEndOf="@+id/oneKey"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/threeKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_3"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toEndOf="@+id/twoKey"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="center">
+
+                                <ImageButton
+                                    android:id="@+id/fourKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_4"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    tools:layout_editor_absoluteY="43dp" />
+
+                                <ImageButton
+                                    android:id="@+id/fiveKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_5"
+                                    app:layout_constraintStart_toEndOf="@+id/fourKey"
+                                    tools:layout_editor_absoluteY="43dp" />
+
+                                <ImageButton
+                                    android:id="@+id/sixKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_6"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toEndOf="@+id/fiveKey"
+                                    tools:layout_editor_absoluteY="43dp" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center">
+
+                                <ImageButton
+                                    android:id="@+id/sevenKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_7"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    tools:layout_editor_absoluteY="82dp" />
+
+                                <ImageButton
+                                    android:id="@+id/eightKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_8"
+                                    app:layout_constraintStart_toEndOf="@+id/sevenKey"
+                                    tools:layout_editor_absoluteY="82dp" />
+
+                                <ImageButton
+                                    android:id="@+id/nineKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_9"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toEndOf="@+id/eightKey"
+                                    tools:layout_editor_absoluteY="82dp" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center">
+
+                                <ImageButton
+                                    android:id="@+id/zeroKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_0"
+                                    app:layout_constraintStart_toStartOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/decimalKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_decimal"
+                                    app:layout_constraintStart_toEndOf="@+id/zeroKey" />
+
+                                <ImageButton
+                                    android:id="@+id/iKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:src="@drawable/key_i"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toEndOf="@+id/decimalKey" />
+                            </TableRow>
+                        </TableLayout>
+
+                        <TableLayout
+                            android:id="@+id/operatorSpecialKeys"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1">
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/sqrKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="5dp"
+                                    android:src="@drawable/key_sqr"
+                                    app:layout_constraintStart_toEndOf="@+id/conjKey"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/cubeKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="5dp"
+                                    android:src="@drawable/key_cube"
+                                    app:layout_constraintStart_toEndOf="@+id/modulusKey"
+                                    app:layout_constraintTop_toBottomOf="@+id/sqrKey" />
+
+                                <ImageButton
+                                    android:id="@+id/quadKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="5dp"
+                                    android:src="@drawable/key_quad"
+                                    app:layout_constraintStart_toEndOf="@+id/argKey"
+                                    app:layout_constraintTop_toBottomOf="@+id/powKey" />
+
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/powKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="5dp"
+                                    android:src="@drawable/key_pow"
+                                    app:layout_constraintStart_toEndOf="@+id/modulusKey"
+                                    app:layout_constraintTop_toBottomOf="@+id/sqrKey" />
+
+                                <ImageButton
+                                    android:id="@+id/inverseKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_inverse"
+                                    app:layout_constraintStart_toEndOf="@+id/argKey"
+                                    app:layout_constraintTop_toBottomOf="@+id/powKey" />
+
+                                <ImageButton
+                                    android:id="@+id/sqrtKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="3dp"
+                                    android:src="@drawable/key_sqrt"
+                                    app:layout_constraintStart_toEndOf="@+id/argKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/conjKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:padding="7dp"
+                                    android:src="@drawable/key_conj"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/modulusKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:padding="3dp"
+                                    android:src="@drawable/key_modulus"
+                                    app:layout_constraintStart_toStartOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/argKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:padding="1dp"
+                                    android:src="@drawable/key_arg"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/absKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:padding="2dp"
+                                    android:scaleType="centerCrop"
+                                    android:src="@drawable/key_abs"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/rabsKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:padding="2dp"
+                                    android:scaleType="centerCrop"
+                                    android:src="@drawable/key_rabs"
+                                    app:layout_constraintStart_toStartOf="parent" />
+
+                                <ImageButton
+                                    android:id="@+id/iabsKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:padding="2dp"
+                                    android:scaleType="centerCrop"
+                                    android:src="@drawable/key_iabs"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/sinKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_sin"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/cosKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_cos"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/tanKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_tan"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/cscKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_csc"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/secKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_sec"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/cotKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_cot"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/sinhKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_sinh"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/coshKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_cosh"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/tanhKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_tanh"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/cschKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_csch"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/sechKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_sech"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/cothKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_coth"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/asinKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_1"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/acosKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_2"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/atanKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_3"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/acscKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_4"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/asecKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_5"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/acotKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_6"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/asinhKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_1"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/acoshKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_2"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/atanhKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_3"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <ImageButton
+                                    android:id="@+id/acschKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_4"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/asechKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_5"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+
+                                <ImageButton
+                                    android:id="@+id/acothKey"
+                                    style="@style/KeyboardButtonRect"
+                                    android:layout_weight="1"
+                                    android:padding="0dp"
+                                    android:src="@drawable/key_6"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
+                            </TableRow>
+
+                        </TableLayout>
+                    </LinearLayout>
+                </ScrollView>
+
+                <TableLayout
+                    android:id="@+id/operatorBasicKeys"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ImageButton
+                            android:id="@+id/plusKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_plus"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ImageButton
+                            android:id="@+id/minusKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_minus"
+                            app:layout_constraintEnd_toEndOf="parent" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ImageButton
+                            android:id="@+id/timesKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_times"
+                            app:layout_constraintEnd_toEndOf="parent" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ImageButton
+                            android:id="@+id/divKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_div"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/sqrtKey" />
+                    </TableRow>
+                </TableLayout>
+
+                <View
+                    android:id="@+id/divider4"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_margin="3dp"
+                    android:background="@color/menuDark7" />
+
+                <TableLayout
+                    android:id="@+id/variableKeys"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/zKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_z"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <ImageButton
+                            android:id="@+id/cKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_c"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/zKey"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/p1Key"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_p1"
+                            app:layout_constraintStart_toStartOf="parent" />
+
+                        <ImageButton
+                            android:id="@+id/p2Key"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_p2"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/p1Key" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/prevKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_prev"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/deleteKey" />
+
+                        <ImageButton
+                            android:id="@+id/nextKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:src="@drawable/key_next"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/prevKey"
+                            app:layout_constraintTop_toBottomOf="@+id/parensKey" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/parensKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:layout_weight="1"
+                            android:padding="2dp"
+                            android:src="@drawable/key_parens" />
+
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center">
+
+                        <ImageButton
+                            android:id="@+id/deleteKey"
+                            style="@style/KeyboardButtonSquare"
+                            android:layout_weight="1"
+                            android:padding="7dp"
+                            android:src="@drawable/key_delete"
+                            app:layout_constraintStart_toStartOf="parent" />
+                    </TableRow>
+
+                </TableLayout>
+
+            </LinearLayout>
+
+            <com.selfsimilartech.fractaleye.MathQuillView
+                android:id="@+id/shapeMathQuill"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="2dp"
+                android:focusable="false"
+                android:focusableInTouchMode="true"
+                app:layout_constraintBottom_toTopOf="@+id/customShapeKeyboard"
+                app:layout_constraintEnd_toStartOf="@+id/eqnErrorIndicator"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <ImageButton
-                    android:id="@+id/conjKey"
-                    style="@style/KeyboardButton"
-                    android:padding="7dp"
-                    android:src="@drawable/key_conj"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+            </com.selfsimilartech.fractaleye.MathQuillView>
 
-                <ImageButton
-                    android:id="@+id/modulusKey"
-                    style="@style/KeyboardButton"
-                    android:padding="5dp"
-                    android:src="@drawable/key_modulus"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/conjKey" />
-
-                <ImageButton
-                    android:id="@+id/argKey"
-                    style="@style/KeyboardButton"
-                    android:padding="3dp"
-                    android:src="@drawable/key_arg"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/modulusKey" />
-
-
-                <ImageButton
-                    android:id="@+id/sqrKey"
-                    style="@style/KeyboardButton"
-                    android:padding="5dp"
-                    android:src="@drawable/key_sqr"
-                    app:layout_constraintStart_toEndOf="@+id/conjKey"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/powKey"
-                    style="@style/KeyboardButton"
-                    android:padding="5dp"
-                    android:src="@drawable/key_pow"
-                    app:layout_constraintStart_toEndOf="@+id/modulusKey"
-                    app:layout_constraintTop_toBottomOf="@+id/sqrKey" />
-
-                <ImageButton
-                    android:id="@+id/inverseKey"
-                    style="@style/KeyboardButton"
-                    android:padding="1dp"
-                    android:src="@drawable/key_inverse"
-                    app:layout_constraintStart_toEndOf="@+id/argKey"
-                    app:layout_constraintTop_toBottomOf="@+id/powKey" />
-
-                <ImageButton
-                    android:id="@+id/sqrtKey"
-                    style="@style/KeyboardButton"
-                    android:padding="3dp"
-                    android:src="@drawable/key_sqrt"
-                    app:layout_constraintStart_toEndOf="@+id/argKey"
-                    app:layout_constraintTop_toBottomOf="@+id/inverseKey" />
-
-                <ImageButton
-                    android:id="@+id/plusKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_plus"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/sqrKey"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/minusKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_minus"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/powKey"
-                    app:layout_constraintTop_toBottomOf="@+id/plusKey" />
-
-                <ImageButton
-                    android:id="@+id/timesKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_times"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/inverseKey"
-                    app:layout_constraintTop_toBottomOf="@+id/minusKey" />
-
-                <ImageButton
-                    android:id="@+id/divKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_div"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/sqrtKey"
-                    app:layout_constraintTop_toBottomOf="@+id/timesKey" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/numberKeys"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/variableKeys"
-                app:layout_constraintStart_toEndOf="@+id/operatorKeys"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0">
-
-                <ImageButton
-                    android:id="@+id/oneKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/twoKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_2"
-                    app:layout_constraintStart_toEndOf="@+id/oneKey"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/threeKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_3"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/twoKey"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/fourKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_4"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/oneKey" />
-
-                <ImageButton
-                    android:id="@+id/fiveKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_5"
-                    app:layout_constraintStart_toEndOf="@+id/fourKey"
-                    app:layout_constraintTop_toBottomOf="@+id/twoKey" />
-
-                <ImageButton
-                    android:id="@+id/sixKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_6"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/fiveKey"
-                    app:layout_constraintTop_toBottomOf="@+id/threeKey" />
-
-                <ImageButton
-                    android:id="@+id/sevenKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_7"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/fourKey" />
-
-                <ImageButton
-                    android:id="@+id/eightKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_8"
-                    app:layout_constraintStart_toEndOf="@+id/sevenKey"
-                    app:layout_constraintTop_toBottomOf="@+id/fiveKey" />
-
-                <ImageButton
-                    android:id="@+id/nineKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_9"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/eightKey"
-                    app:layout_constraintTop_toBottomOf="@+id/sixKey" />
-
-                <ImageButton
-                    android:id="@+id/zeroKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_0"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/sevenKey" />
-
-                <ImageButton
-                    android:id="@+id/decimalKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_decimal"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/zeroKey"
-                    app:layout_constraintTop_toBottomOf="@+id/eightKey" />
-
-                <ImageButton
-                    android:id="@+id/iKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_i"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/decimalKey"
-                    app:layout_constraintTop_toBottomOf="@+id/nineKey" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/variableKeys"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="parent"
+            <ImageView
+                android:id="@+id/eqnErrorIndicator"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintBottom_toBottomOf="@+id/shapeMathQuill"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <ImageButton
-                    android:id="@+id/zKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_z"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/cKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_c"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/zKey"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/p1Key"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_p1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/zKey" />
-
-                <ImageButton
-                    android:id="@+id/p2Key"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_p2"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/p1Key"
-                    app:layout_constraintTop_toBottomOf="@+id/cKey" />
-
-                <ImageButton
-                    android:id="@+id/prevKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_prev"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/deleteKey" />
-
-                <ImageButton
-                    android:id="@+id/nextKey"
-                    style="@style/KeyboardButton"
-                    android:src="@drawable/key_next"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/prevKey"
-                    app:layout_constraintTop_toBottomOf="@+id/parensKey" />
-
-                <ImageButton
-                    android:id="@+id/parensKey"
-                    style="@style/KeyboardButton"
-                    android:padding="2dp"
-                    android:src="@drawable/key_parens"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/deleteKey"
-                    app:layout_constraintTop_toBottomOf="@+id/p2Key" />
-
-                <ImageButton
-                    android:id="@+id/deleteKey"
-                    style="@style/KeyboardButton"
-                    android:padding="7dp"
-                    android:src="@drawable/key_delete"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/p1Key" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                app:layout_constraintTop_toTopOf="@+id/shapeMathQuill"
+                app:srcCompat="@drawable/warning" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
-        <com.selfsimilartech.fractaleye.MathQuillView
-            android:id="@+id/shapeMathQuill"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:focusable="false"
-            android:focusableInTouchMode="true"
-            app:layout_constraintBottom_toTopOf="@+id/customShapeKeyboard"
-            app:layout_constraintEnd_toStartOf="@+id/eqnErrorIndicator"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+    <LinearLayout
+        android:id="@+id/shapeSubMenuButtons"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/menuButtonHeight"
+        android:animateLayoutChanges="true"
+        android:orientation="horizontal">
 
-        </com.selfsimilartech.fractaleye.MathQuillView>
+        <Button
+            android:id="@+id/shapeListButton"
+            style="@style/MenuNavListButton"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:drawableTop="@drawable/shape_preview"
+            android:text="@string/shape" />
+
+        <View
+            android:id="@+id/juliaDivider"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/menuDark5" />
+
+        <com.selfsimilartech.fractaleye.ToggleButton
+            android:id="@+id/juliaModeButton"
+            style="@style/MenuNavToggleButton"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:drawableTop="@drawable/julia"
+            android:text="@string/julia" />
+
+        <View
+            android:id="@+id/divider6"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#999" />
 
         <ImageView
-            android:id="@+id/eqnErrorIndicator"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="8dp"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="@+id/shapeMathQuill"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/shapeMathQuill"
-            app:srcCompat="@drawable/warning" />
+            android:id="@+id/shapeScrollArrowLeft"
+            android:layout_width="15dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            app:srcCompat="@drawable/scroll_indicator_left" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <HorizontalScrollView
+            android:id="@+id/shapeButtonsScroll"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/shapeButtonsScrollLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:paddingStart="5dp">
+
+                <Button
+                    android:id="@+id/maxIterButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/iterate"
+                    android:text="@string/max_iter" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/juliaParamButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/julia" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/shapeParamButton1"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param1" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/shapeParamButton2"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param2" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/shapeParamButton3"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param3" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/shapeParamButton4"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param4" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <ImageView
+            android:id="@+id/shapeScrollArrowRight"
+            android:layout_width="15dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            app:srcCompat="@drawable/scroll_indicator_right" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/shapeNavButtons"
@@ -605,18 +1108,18 @@
             android:text="@string/view" />
 
         <Button
-            android:id="@+id/newCustomShapeButton"
+            android:id="@+id/shapeListDoneButton"
+            style="@style/MenuNavButton"
+            android:layout_height="@dimen/navButtonSize"
+            android:drawableTop="@drawable/done"
+            android:text="@android:string/ok" />
+
+        <Button
+            android:id="@+id/customShapeNewButton"
             style="@style/MenuNavButton"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/add"
             android:text="@string/new_str" />
-
-        <Button
-            android:id="@+id/shapeDoneButton"
-            style="@style/MenuNavButton"
-            android:layout_height="@dimen/navButtonSize"
-            android:drawableTop="@drawable/done"
-            android:text="@string/done" />
 
         <Button
             android:id="@+id/customShapeCancelButton"
@@ -624,120 +1127,16 @@
             android:layout_width="60dp"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/cancel"
-            android:text="@string/cancel" />
+            android:text="@android:string/cancel" />
 
-        <Button
+        <com.selfsimilartech.fractaleye.GradientButton
             android:id="@+id/customShapeDoneButton"
             style="@style/MenuNavButton"
             android:layout_width="60dp"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/done"
-            android:text="@string/done" />
-
-        <Button
-            android:id="@+id/customShapeEditButton"
-            style="@style/MenuNavButton"
-            android:layout_height="@dimen/navButtonSize"
-            android:drawableTop="@drawable/edit"
-            android:text="@string/edit" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/shapeSubMenuButtons"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/menuButtonsHeight"
-        android:animateLayoutChanges="true"
-        android:orientation="horizontal">
-
-        <HorizontalScrollView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/shapePreviewButton"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:drawableTop="@drawable/shape_preview"
-                    android:text="@string/shape" />
-
-                <Button
-                    android:id="@+id/maxIterButton"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:drawableTop="@drawable/iterate"
-                    android:text="@string/max_iter" />
-
-                <Button
-                    android:id="@+id/juliaParamButton"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:drawableTop="@drawable/parameter"
-                    android:text="@string/julia" />
-
-                <Button
-                    android:id="@+id/shapeParamButton1"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:drawableTop="@drawable/parameter"
-                    android:text="@string/param1" />
-
-                <Button
-                    android:id="@+id/shapeParamButton2"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:drawableTop="@drawable/parameter"
-                    android:text="@string/param2" />
-
-                <Button
-                    android:id="@+id/shapeParamButton3"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:drawableTop="@drawable/parameter"
-                    android:text="@string/param3" />
-
-                <Button
-                    android:id="@+id/shapeParamButton4"
-                    style="@style/MenuNavToggleButton"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:drawableTop="@drawable/parameter"
-                    android:text="@string/param4" />
-            </LinearLayout>
-        </HorizontalScrollView>
-
-        <View
-            android:id="@+id/divider6"
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/menu3" />
-
-        <Button
-            android:id="@+id/shapeResetButton"
-            style="@style/MenuNavButton"
-            android:background="?attr/selectableItemBackground"
-            android:drawableTop="@drawable/reset"
-            android:text="@string/reset" />
-
-        <com.selfsimilartech.fractaleye.ToggleButton
-            android:id="@+id/juliaModeButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:drawableTop="@drawable/julia"
-            android:text="@string/julia" />
+            android:foregroundGravity="clip_vertical|clip_horizontal"
+            android:text="@android:string/ok" />
 
     </LinearLayout>
 

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:background="@color/menuDark2"
+    android:gravity="end"
+    android:orientation="horizontal">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="30dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="-15dp"
+        android:foreground="?attr/selectableItemBackground"
+        android:translationX="-15dp"
+        app:cardBackgroundColor="@color/menuDark4"
+        app:cardCornerRadius="15dp" />
+
+    <ToggleButton
+        android:id="@+id/favoriteButton"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?android:attr/selectableItemBackground"
+        android:foreground="@drawable/starred_state_selector"
+        android:foregroundGravity="center"
+        android:textOff="@string/empty"
+        android:textOn="@string/empty" />
+
+    <View
+        android:id="@+id/divider12"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_weight="1"
+        android:background="?android:attr/listDivider" />
+
+    <ImageButton
+        android:id="@+id/editButton"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:background="?android:attr/selectableItemBackground"
+        app:srcCompat="@drawable/edit" />
+
+    <View
+        android:id="@+id/divider11"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="?android:attr/listDivider" />
+
+    <ImageButton
+        android:id="@+id/deleteButton"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:background="?android:attr/selectableItemBackground"
+        app:srcCompat="@drawable/delete" />
+
+</LinearLayout>

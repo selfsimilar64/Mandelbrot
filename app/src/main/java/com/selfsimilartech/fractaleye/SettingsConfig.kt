@@ -1,14 +1,16 @@
 package com.selfsimilartech.fractaleye
 
 class SettingsConfig (
-        var resolution               : Resolution       = Resolution.FULL,
+        var goldEnabled              : Boolean          = false,
+        var resolution               : Resolution       = Resolution.R1440,
         var gpuPrecision             : GpuPrecision     = GpuPrecision.SINGLE,
         var cpuPrecision             : CpuPrecision     = CpuPrecision.DOUBLE,
         var perturbPrecision         : Long             = 64L,
         var hardwareProfile          : HardwareProfile  = HardwareProfile.GPU,
-        var chunkProfile             : ChunkProfile     = ChunkProfile.LOW,
+        var chunkProfile             : ChunkProfile     = ChunkProfile.MED,
         var autoPrecision            : Boolean          = true,
-        var continuousRender         : Boolean          = false,
+        var continuousPosRender      : Boolean          = false,
+        var continuousParamRender    : Boolean          = true,
         var displayParams            : Boolean          = false,
         var showProgress             : Boolean          = true,
         var sampleOnStrictTranslate  : Boolean          = true,

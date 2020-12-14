@@ -1,10 +1,7 @@
 
 package com.selfsimilartech.fractaleye
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
 
 @Dao
 interface ColorPaletteDao {
@@ -23,6 +20,9 @@ interface ColorPaletteDao {
 
     @Insert
     fun insert(palette: ColorPaletteEntity) : Long
+
+    @Update
+    fun update(palette: ColorPaletteEntity) : Int
 
     @Delete
     fun delete(palette: ColorPaletteEntity)

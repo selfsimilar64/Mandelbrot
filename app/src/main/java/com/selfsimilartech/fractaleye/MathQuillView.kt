@@ -9,15 +9,15 @@ import android.webkit.WebView
 
 class MathQuillView : WebView {
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
 
 
     fun enterExpr(expr: Expr) {
 
-        if (expr.isCmd) evaluateJavascript("javascript:mathField.cmd('${expr.str}')", null)
-        else evaluateJavascript("javascript:mathField.typedText('${expr.str}')", null)
+        if (expr.isCmd) evaluateJavascript("javascript:enterCmd('${expr.latex}')", null)
+        else evaluateJavascript("javascript:enterTypedText('${expr.latex}')", null)
 
         if (expr.insertParens) evaluateJavascript("javascript:mathField.typedText('()')", null)
 

@@ -2,8 +2,7 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <!-- Customize your theme here. -->
-        <!-- <item name="android:statusBarColor">@android:color/transparent</item> -->
+        <item name="selectableItemBackground">@drawable/selector_item</item>
         <item name="android:navigationBarColor">@color/black</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -11,11 +10,15 @@
         <item name="colorSurface">@color/colorPrimaryDark</item>
     </style>
 
-    <!-- The launcher theme. It sets the main window background to the launch_screen drawable -->
+    <style name="AlertDialogCustom" parent="Theme.MaterialComponents.Dialog">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:headerDividersEnabled">true</item>
+        <item name="android:typeface">normal</item>
+        <item name="android:background">@color/menuDark1</item>
+    </style>
+
     <style name="AppTheme.Launcher">
-    <item name="android:windowBackground">@drawable/launch_screen</item>
-    <!-- Optional, on Android 5+ you can modify the colorPrimaryDark color to match the windowBackground color for further branding-->
-    <!-- <item name="colorPrimaryDark">@android:color/white</item> -->
+        <item name="android:windowBackground">@drawable/launch_screen</item>
     </style>
 
 
@@ -45,6 +48,12 @@
         <item name="android:layout_gravity">start|center_vertical</item>
         <item name="android:textColor">@color/colorDarkText</item>
         <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="TextHeaderDark" parent="TextDark">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:drawablePadding">5dp</item>
     </style>
 
     <style name="TextDescriptionDark" parent="android:style/Widget.Material.TextView">
@@ -115,8 +124,8 @@
     <style name="LockDark">
         <item name="android:layout_width">40dp</item>
         <item name="android:layout_height">40dp</item>
-        <item name="android:textOn"> </item>
-        <item name="android:textOff"> </item>
+        <item name="android:textOn">@string/empty</item>
+        <item name="android:textOff">@string/empty</item>
         <item name="android:foreground">@drawable/lock_state_selector</item>
         <item name="android:foregroundGravity">center</item>
         <item name="android:layout_marginStart">10dp</item>
@@ -153,8 +162,8 @@
         <item name="android:layout_height">45dp</item>
         <item name="android:layout_marginStart">5dp</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:scaleType">fitCenter</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:tint">#fff</item>
     </style>
 
@@ -163,6 +172,7 @@
         <item name="android:layout_height">40dp</item>
         <item name="android:layout_weight">1</item>
         <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:foreground">@drawable/pro_indicator_button</item>
         <item name="android:textAlignment">center</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
@@ -182,20 +192,26 @@
     </style>
 
     <style name="MenuNavButton">
-        <item name="android:layout_width">60dp</item>
-        <item name="android:layout_height">@dimen/menuButtonsHeight</item>
+        <item name="android:layout_width">@dimen/menuButtonWidth</item>
+        <item name="android:layout_height">@dimen/menuButtonHeight</item>
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:textSize">10sp</item>
         <item name="android:paddingTop">3dp</item>
     </style>
 
     <style name="MenuNavToggleButton">
-        <item name="android:layout_width">60dp</item>
-        <item name="android:layout_height">@dimen/menuButtonsHeight</item>
+        <item name="android:layout_width">@dimen/menuButtonWidth</item>
+        <item name="android:layout_height">@dimen/menuButtonHeight</item>
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:textSize">10sp</item>
         <item name="android:paddingTop">3dp</item>
-        <item name="android:alpha">0.5</item>
+        <item name="android:alpha">0.4</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="MenuNavListButton" parent="MenuNavButton">
+        <item name="android:layout_width">80dp</item>
+        <item name="android:drawableEnd">@drawable/arrow_up</item>
     </style>
 
     <style name="CustomColorButton">
@@ -210,13 +226,17 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
-    <style name="KeyboardButton">
+    <style name="KeyboardButtonSquare">
         <item name="android:layout_width">35dp</item>
         <item name="android:layout_height">35dp</item>
         <item name="android:padding">5dp</item>
-        <item name="android:layout_margin">4dp</item>
+        <item name="android:layout_margin">2dp</item>
         <item name="android:background">@drawable/shape_key</item>
         <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="KeyboardButtonRect" parent="KeyboardButtonSquare">
+        <item name="android:layout_width">50dp</item>
     </style>
 
 </resources>

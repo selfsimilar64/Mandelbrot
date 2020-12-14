@@ -2,25 +2,42 @@ package com.selfsimilartech.fractaleye
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.SeekBar
 
 @SuppressLint("AppCompatCustomView")
-class SeekBar2 : SeekBar {
+open class SeekBar2 : SeekBar {
 
-    private var rect: Rect = Rect()
-    private var paint: Paint = Paint()
+    private var viewWidth : Int = 0
+    private var viewHeight : Int = 0
+
+    private var progressRect = Rect()
+    private var gradientRect = Rect()
+    private var paint = Paint()
+    private var gradientPaint = Paint()
     private var seekbarHeight = 0
     private var thumbSize = 0f
 
+    private val goldColors = intArrayOf(
+            R.color.gold1,
+            R.color.gold2,
+            R.color.gold3,
+            R.color.gold4,
+            R.color.gold5
+    ).map{ resources.getColor(it, null) }.toIntArray()
+
+    var showGradient : Boolean = false
+        set(value) {
+            field = value
+            invalidate()
+        }
+    var gradientStartProgress : Int = 0
+
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
-        rect = Rect()
+        progressRect = Rect()
         paint = Paint()
         seekbarHeight = 6
         thumbSize = resources.getDimension(R.dimen.satValueSelectorRadius)
@@ -28,21 +45,51 @@ class SeekBar2 : SeekBar {
 
     constructor(context: Context?, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
 
+
+    override fun onSizeChanged(xNew: Int, yNew: Int, xOld: Int, yOld: Int) {
+        super.onSizeChanged(xNew, yNew, xOld, yOld)
+
+        viewWidth = xNew
+        viewHeight = yNew
+
+        progressRect = Rect(
+                0, 0,
+                viewWidth,
+                viewHeight
+        )
+
+        // assuming width >= height
+        gradientPaint.shader = LinearGradient(
+                gradientStartProgress * viewWidth.toFloat() / max - thumbOffset,
+                0f,
+                viewWidth.toFloat() - thumbOffset,
+                viewHeight.toFloat(),
+                goldColors, null, Shader.TileMode.CLAMP
+        )
+
+    }
+
+
     @Synchronized
     override fun onDraw(canvas: Canvas) {
 
-        rect[0 + thumbOffset, height / 2 - seekbarHeight / 2, width - thumbOffset] = height / 2 + seekbarHeight / 2
+        progressRect[0 + thumbOffset, height / 2 - seekbarHeight / 2, width - thumbOffset] = height / 2 + seekbarHeight / 2
         paint.color = Color.GRAY
-        canvas.drawRect(rect, paint)
+        canvas.drawRect(progressRect, paint)
 
-        rect.set(
+        gradientRect.set(progressRect)
+        gradientRect.left = gradientStartProgress * gradientRect.width() / max + 2*thumbSize.toInt()
+        if (showGradient) canvas.drawRect(gradientRect, gradientPaint)
+
+        progressRect.set(
                 thumbOffset,
                 height/2 - seekbarHeight/2,
                 (progress.toFloat()/max*(width - 4f*thumbSize) + 2f*thumbSize).toInt(),
                 height/2 + seekbarHeight/2
         )
+
         paint.color = Color.WHITE
-        canvas.drawRect(rect, paint)
+        canvas.drawRect(progressRect, paint)
         canvas.drawCircle(
                 progress.toFloat()/max*(width - 4f*thumbSize) + 2f*thumbSize,
                 height/2f,

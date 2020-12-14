@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/realParamLayout"
+    style="@style/FragmentItem"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/fragmentItemHeight"
+    android:visibility="visible">
+
+    <Button
+        android:id="@+id/realRateButton"
+        style="@style/MenuNavButton"
+        android:drawableTop="@drawable/sensitivity"
+        android:text="@string/sensitivity"
+        app:layout_constraintBottom_toTopOf="@+id/realParamSeekBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/realResetButton"
+        style="@style/MenuNavButton"
+        android:layout_height="wrap_content"
+        android:drawableTop="@drawable/reset"
+        android:text="@string/reset"
+        app:layout_constraintBottom_toTopOf="@+id/realParamSeekBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.selfsimilartech.fractaleye.SeekBar2
+        android:id="@+id/realParamSeekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:max="500"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/uEdit2" />
+
+    <EditText
+        android:id="@+id/uEdit2"
+        style="@style/EditNumberDark"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:imeOptions="actionDone"
+        app:layout_constraintEnd_toEndOf="@+id/realParamSeekBar"
+        app:layout_constraintStart_toStartOf="@+id/realParamSeekBar"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

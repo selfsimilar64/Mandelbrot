@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle" >
+    <gradient
+        android:type="radial"
+        android:gradientRadius="250dp"
+        android:startColor="#666"
+        android:centerColor="@color/menuDark5"
+        android:endColor="@color/menuDark1" />
+    <corners android:bottomRightRadius="@dimen/upgradeButtonCornerRadius"
+        android:bottomLeftRadius="@dimen/upgradeButtonCornerRadius"
+        android:topRightRadius="@dimen/upgradeButtonCornerRadius"
+        android:topLeftRadius="@dimen/upgradeButtonCornerRadius"/>
+</shape>

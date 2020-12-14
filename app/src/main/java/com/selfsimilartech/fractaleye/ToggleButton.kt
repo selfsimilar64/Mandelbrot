@@ -2,9 +2,8 @@ package com.selfsimilartech.fractaleye
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.Button
 
-class ToggleButton : androidx.appcompat.widget.AppCompatButton {
+class ToggleButton : GradientButton {
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
@@ -13,7 +12,7 @@ class ToggleButton : androidx.appcompat.widget.AppCompatButton {
     var isChecked = false
         set(value) {
             field = value
-            alpha = if (isChecked) 1f else 0.5f
+            alpha = if (isChecked || showGradient) 1f else 0.5f
         }
 
     override fun performClick(): Boolean {

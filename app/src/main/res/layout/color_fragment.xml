@@ -105,7 +105,8 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/fragmentItemHeight"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:visibility="gone">
 
         <TextView
             android:id="@+id/colorPreviewName"
@@ -130,166 +131,187 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <androidx.cardview.widget.CardView
         android:id="@+id/customPaletteLayout"
-        style="@style/FragmentItem"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeightTall"
-        android:foreground="?attr/selectableItemBackground"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="visible">
-
-        <EditText
-            android:id="@+id/customPaletteName"
-            style="@style/EditTextDark"
-            android:layout_width="wrap_content"
-            android:layout_gravity="center"
-            android:imeOptions="actionDone"
-            android:inputType="text|textCapSentences"
-            android:text="@string/palette_name" />
-
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:cardBackgroundColor="@color/black"
+        app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
         <LinearLayout
+            style="@style/FragmentItem"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:gravity="center_horizontal">
+            android:layout_height="match_parent"
+            android:background="@color/menuDark4"
+            android:orientation="vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:visibility="visible">
 
-            <com.woxthebox.draglistview.DragListView
-                android:id="@+id/customColorsDragList"
+            <EditText
+                android:id="@+id/customPaletteName"
+                style="@style/EditTextDark"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-            </com.woxthebox.draglistview.DragListView>
-
-            <ImageButton
-                android:id="@+id/newCustomColorButton"
-                android:layout_width="@dimen/customColorLayoutSizeWithPadding"
-                android:layout_height="@dimen/customColorLayoutSizeWithPadding"
-                android:background="@color/menu3"
-                android:scaleType="fitXY"
-                app:srcCompat="@drawable/add" />
-        </LinearLayout>
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:imeOptions="actionDone"
+                android:inputType="text|textCapSentences"
+                android:text="@string/palette_name" />
 
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/satValueSelectorLayoutHeight"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal">
+            <androidx.cardview.widget.CardView
+                android:id="@+id/customPaletteGradient"
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                app:cardCornerRadius="13dp"
+                app:cardElevation="6dp" />
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="5dp"
-                android:gravity="center_vertical"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/customColorComponent1"
-                    style="@style/TextDark"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:text="H:" />
-
-                <TextView
-                    android:id="@+id/customColorComponent2"
-                    style="@style/TextDark"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:text="S:" />
-
-                <TextView
-                    android:id="@+id/customColorComponent3"
-                    style="@style/TextDark"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:text="V:" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="35dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:gravity="center_vertical|end"
-                android:orientation="vertical">
-
-                <EditText
-                    android:id="@+id/customColorComponentEdit1"
-                    style="@style/EditNumberDark"
-                    android:layout_width="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:layout_marginBottom="0dp"
-                    android:layout_weight="1"
-                    android:imeOptions="actionDone">
-
-                </EditText>
-
-                <EditText
-                    android:id="@+id/customColorComponentEdit2"
-                    style="@style/EditNumberDark"
-                    android:layout_width="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:layout_marginBottom="0dp"
-                    android:layout_weight="1"
-                    android:imeOptions="actionDone">
-
-                </EditText>
-
-                <EditText
-                    android:id="@+id/customColorComponentEdit3"
-                    style="@style/EditNumberDark"
-                    android:layout_width="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:layout_marginBottom="0dp"
-                    android:layout_weight="1"
-                    android:imeOptions="actionDone">
-
-                </EditText>
-
-            </LinearLayout>
-
-            <com.selfsimilartech.fractaleye.SatValueSelectorView
-                android:id="@+id/satValueSelector"
-                android:layout_width="@dimen/satValueSelectorLayoutWidth"
-                android:layout_height="@dimen/satValueSelectorLayoutHeight"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp" />
-
-            <LinearLayout
-                android:id="@+id/hueSelectorBackground"
-                android:layout_width="wrap_content"
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:orientation="vertical">
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="0dp">
 
-                <com.selfsimilartech.fractaleye.VerticalSeekBar
-                    android:id="@+id/hueSelector"
+                <com.woxthebox.draglistview.DragListView
+                    android:id="@+id/customColorsDragList"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/customColorLayoutSizeWithPadding"
+                    android:layout_weight="1"
+                    android:fadeScrollbars="false">
+
+                </com.woxthebox.draglistview.DragListView>
+            </androidx.cardview.widget.CardView>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/satValueSelectorLayoutHeight"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp">
+
+                <LinearLayout
                     android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="5dp"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/customColorComponent1"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="H:" />
+
+                    <TextView
+                        android:id="@+id/customColorComponent2"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="S:" />
+
+                    <TextView
+                        android:id="@+id/customColorComponent3"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="V:" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="35dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:gravity="center_vertical|end"
+                    android:orientation="vertical">
+
+                    <EditText
+                        android:id="@+id/customColorHueEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="wrap_content"
+                        android:layout_marginTop="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext">
+
+                    </EditText>
+
+                    <EditText
+                        android:id="@+id/customColorSaturationEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="wrap_content"
+                        android:layout_marginTop="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext">
+
+                    </EditText>
+
+                    <EditText
+                        android:id="@+id/customColorValueEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="wrap_content"
+                        android:layout_marginTop="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:layout_weight="1"
+                        android:imeOptions="actionDone">
+
+                    </EditText>
+
+                </LinearLayout>
+
+                <com.selfsimilartech.fractaleye.SatValueSelectorView
+                    android:id="@+id/satValueSelector"
+                    android:layout_width="0dp"
                     android:layout_height="@dimen/satValueSelectorLayoutHeight"
-                    android:paddingStart="0dp"
-                    android:paddingEnd="0dp"
-                    android:progressDrawable="@drawable/hue_slider_track"
-                    android:splitTrack="false"
-                    android:thumb="@drawable/hue_slider_thumb"
-                    android:thumbOffset="0dp" />
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1" />
+
+                <LinearLayout
+                    android:id="@+id/hueSelectorBackground"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:orientation="vertical">
+
+                    <com.selfsimilartech.fractaleye.VerticalSeekBar
+                        android:id="@+id/hueSelector"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/satValueSelectorLayoutHeight"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="0dp"
+                        android:progressDrawable="@drawable/hue_slider_track"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/hue_slider_thumb"
+                        android:thumbOffset="0dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical" />
+
             </LinearLayout>
 
+
         </LinearLayout>
-
-
-    </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <LinearLayout
         android:id="@+id/colorPreviewListLayout"
@@ -310,13 +332,13 @@
                 android:id="@+id/colorPreviewList"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/fragmentItemHeightTall"
-                android:background="@color/menu4"
+                android:background="@color/menuDark4"
                 android:orientation="vertical"
                 android:scrollbars="vertical"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
                 tools:itemCount="6"
-                tools:listitem="@layout/color_preview_item_grid" />
+                tools:listitem="@layout/palette_list_item_grid_fg" />
         </androidx.cardview.widget.CardView>
 
 
@@ -325,22 +347,20 @@
     <LinearLayout
         android:id="@+id/colorNavBar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/menuButtonsHeight"
+        android:layout_height="@dimen/menuButtonHeight"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/colorListViewTypeButton"
             style="@style/MenuNavButton"
-            android:layout_width="60dp"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/list_view"
             android:text="@string/view" />
 
-        <Button
-            android:id="@+id/newCustomPaletteButton"
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/customPaletteNewButton"
             style="@style/MenuNavButton"
-            android:layout_width="60dp"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/add"
             android:text="@string/new_str" />
@@ -348,102 +368,140 @@
         <Button
             android:id="@+id/colorPreviewListDoneButton"
             style="@style/MenuNavButton"
-            android:layout_width="60dp"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/done"
-            android:text="@string/done" />
-
-        <Button
-            android:id="@+id/customPaletteRandomizeButton"
-            style="@style/MenuNavButton"
-            android:layout_width="60dp"
-            android:layout_height="@dimen/navButtonSize"
-            android:drawableTop="@drawable/random"
-            android:text="@string/random" />
+            android:text="@android:string/ok" />
 
         <Button
             android:id="@+id/customPaletteCancelButton"
             style="@style/MenuNavButton"
-            android:layout_width="60dp"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/cancel"
-            android:text="@string/cancel" />
+            android:text="@android:string/cancel" />
 
         <Button
             android:id="@+id/customPaletteDoneButton"
             style="@style/MenuNavButton"
-            android:layout_width="60dp"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/done"
-            android:text="@string/done" />
+            android:text="@android:string/ok" />
+
+        <View
+            android:id="@+id/divider9"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_margin="3dp"
+            android:background="#999" />
 
         <Button
-            android:id="@+id/customPaletteDeleteButton"
+            android:id="@+id/customPaletteRandomizeButton"
             style="@style/MenuNavButton"
-            android:layout_width="60dp"
             android:layout_height="wrap_content"
-            android:drawableTop="@drawable/delete"
-            android:text="@string/delete" />
+            android:drawableTop="@drawable/random"
+            android:text="@string/random" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/newCustomColorButton"
+            style="@style/MenuNavButton"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/add"
+            android:text="@string/add" />
+
+        <Button
+            android:id="@+id/deleteCustomColorButton"
+            style="@style/MenuNavButton"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/remove"
+            android:text="@string/remove" />
 
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/colorSubMenuButtons"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/menuButtonsHeight"
+        android:layout_height="@dimen/menuButtonHeight"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/palettePreviewButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
+            android:id="@+id/paletteListButton"
+            style="@style/MenuNavListButton"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:drawableTop="@drawable/palette"
             android:text="@string/palette" />
 
-        <Button
-            android:id="@+id/frequencyButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/frequency2"
-            android:text="@string/frequency" />
+        <View
+            android:id="@+id/divider15"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/menuDark5" />
 
-        <Button
-            android:id="@+id/phaseButton"
+        <com.selfsimilartech.fractaleye.ToggleButton
+            android:id="@+id/colorAutofitButton"
             style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/phase"
-            android:text="@string/offset" />
-
-        <Button
-            android:id="@+id/solidFillButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/ic_fill"
-            android:text="@string/solid_fill" />
+            android:drawableTop="@drawable/autofit"
+            android:text="@string/autofit" />
 
         <View
             android:id="@+id/divider8"
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/menu3" />
+            android:background="#999" />
 
-        <com.selfsimilartech.fractaleye.ToggleButton
-            android:id="@+id/colorAutofitButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/autofit"
-            android:text="@string/autofit" />
+        <ImageView
+            android:id="@+id/colorScrollArrowLeft"
+            android:layout_width="15dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            app:srcCompat="@drawable/scroll_indicator_left" />
+
+        <HorizontalScrollView
+            android:id="@+id/colorButtonsScroll"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/colorButtonsScrollLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/frequencyButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/frequency2"
+                    android:text="@string/frequency" />
+
+                <Button
+                    android:id="@+id/phaseButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/phase"
+                    android:text="@string/phase" />
+
+                <Button
+                    android:id="@+id/solidFillButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/ic_fill"
+                    android:text="@string/solid_fill" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <ImageView
+            android:id="@+id/colorScrollArrowRight"
+            android:layout_width="15dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            app:srcCompat="@drawable/scroll_indicator_right" />
+
     </LinearLayout>
 
 </LinearLayout>

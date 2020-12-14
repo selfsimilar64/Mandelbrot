@@ -30,8 +30,10 @@ LOCAL_PATH := $(JNI_PATH)
 include $(CLEAR_VARS)
 LOCAL_MODULE := native-fractalimage
 LOCAL_SRC_FILES := \
+$(JNI_PATH)/../cpp/toojpeg.cpp \
+$(JNI_PATH)/../cpp/native-compress.cpp \
 $(JNI_PATH)/../cpp/native-reference.cpp \
-$(JNI_PATH)/../cpp/native-sine2.cpp \
+$(JNI_PATH)/../cpp/native-sine2.cpp
 LOCAL_CPP_FEATURES += exceptions
 LOCAL_LDLIBS += -llog
 LOCAL_SHARED_LIBRARIES := gmp

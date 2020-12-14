@@ -12,15 +12,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.SeekBar
+import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.tabs.TabLayout
 import com.woxthebox.draglistview.DragListView
 import com.woxthebox.draglistview.DragListView.DragListListener
+import eu.davidea.flexibleadapter.FlexibleAdapter
+import eu.davidea.flexibleadapter.SelectableAdapter
 import kotlinx.android.synthetic.main.color_fragment.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.lang.IndexOutOfBoundsException
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -33,10 +39,10 @@ class ColorFragment : MenuFragment() {
     private lateinit var fsv : FractalSurfaceView
     private lateinit var sc : SettingsConfig
 
-    private fun loadNavButtons(buttons: List<Button>) {
+    private fun loadNavButtons(views: List<View>) {
 
-        colorNavBar.removeAllViews()
-        buttons.forEach { colorNavBar.addView(it) }
+        for (i in 0 until colorNavBar.childCount) colorNavBar.getChildAt(i).hide()
+        views.forEach { it.show() }
 
     }
     private fun updatePreview(palette: ColorPalette) {
@@ -59,6 +65,16 @@ class ColorFragment : MenuFragment() {
         f = act.f
         fsv = act.fsv
         sc = act.sc
+
+
+        if (!sc.goldEnabled) {
+            newCustomColorButton.showGradient = true
+            if (ColorPalette.custom.size == ColorPalette.MAX_CUSTOM_PALETTES_FREE) {
+                customPaletteNewButton.showGradient = true
+            }
+        }
+
+        FlexibleAdapter.enableLogs(eu.davidea.flexibleadapter.utils.Log.Level.DEBUG)
 
 
         colorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
@@ -93,26 +109,26 @@ class ColorFragment : MenuFragment() {
         }}
 
         val handler = Handler()
-        var prevSelectedPaletteIndex = 0
         var customPalette = ColorPalette(name="", colors = arrayListOf())
+        var savedCustomColors = arrayListOf<Int>()
 
         val previewListNavButtons = listOf(
                 colorListViewTypeButton,
-                newCustomPaletteButton.apply { setProFeature(true) },
-                colorPreviewListDoneButton
-        ).filter { BuildConfig.PAID_VERSION || !it.isProFeature() }
-        val previewListNavButtonsCustom = listOf(
-                colorListViewTypeButton,
-                customPaletteDeleteButton,
-                newCustomPaletteButton,
+                customPaletteNewButton,
                 colorPreviewListDoneButton
         )
-
-        //Log.e("COLOR FRAGMENT", "${previewListNavButtons.size}")
         val customPaletteNavButtons = listOf(
-                customPaletteRandomizeButton,
                 customPaletteCancelButton,
-                customPaletteDoneButton
+                customPaletteDoneButton,
+                divider9,
+                customPaletteRandomizeButton,
+                deleteCustomColorButton,
+                newCustomColorButton
+        )
+        val nonClickableViewTypes = listOf(
+                R.layout.list_header,
+                R.layout.list_item_linear_empty_favorite,
+                R.layout.list_item_linear_empty_custom
         )
 
 
@@ -146,8 +162,6 @@ class ColorFragment : MenuFragment() {
 
 
 
-
-
         val colorPreviewListWidth = fsv.r.screenRes.x -
                 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) -
                 resources.getDimension(R.dimen.colorPreviewListMarginEnd) -
@@ -157,82 +171,186 @@ class ColorFragment : MenuFragment() {
         //Log.e("COLOR FRAGMENT", "colorPreviewListWidth: $colorPreviewListWidth")
         //Log.e("COLOR FRAGMENT", "colorPreviewGridWidth: $colorPreviewGridWidth")
         val spanCount = floor(colorPreviewListWidth.toDouble() / colorPreviewGridWidth).toInt()
-        //Log.e("COLOR FRAGMENT", "spanCount: ${colorPreviewListWidth.toDouble() / colorPreviewGridWidth}")
+        Log.e("COLOR FRAGMENT", "spanCount: $spanCount")
+
+
+        colorButtonsScroll.setOnScrollChangeListener(scrollListener(
+                colorButtonsScrollLayout,
+                colorButtonsScroll,
+                colorScrollArrowLeft,
+                colorScrollArrowRight
+        ))
+        colorScrollArrowLeft.invisible()
+        colorScrollArrowRight.invisible()
+
 
         val colorPreviewListLinearManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        val colorPreviewListLinearAdapter = ColorPaletteAdapter(ColorPalette.all, R.layout.color_preview_item_linear)
         val colorPreviewListGridManager = GridLayoutManager(context, spanCount)
-        val colorPreviewListGridAdapter = ColorPaletteAdapter(ColorPalette.all, R.layout.color_preview_item_grid)
-        when (sc.colorListViewType) {
-            ListLayoutType.LINEAR -> {
-                colorPreviewList.layoutManager = colorPreviewListLinearManager
-                colorPreviewList.adapter = colorPreviewListLinearAdapter
+
+        val onEditCustomPalette = { adapter: ListAdapter<ColorPalette>, palette: ColorPalette ->
+
+            colorPreviewListLayout.hide()
+            customPaletteLayout.show()
+            newCustomColorButton.show()
+            loadNavButtons(customPaletteNavButtons)
+            fsv.r.renderProfile = RenderProfile.MANUAL
+
+            f.palette = palette
+            fsv.requestRender()
+
+            customPalette = palette
+            val customPaletteAdapter = ColorPaletteDragAdapter(
+                    customPalette.colors,
+                    R.layout.color_drag_item,
+                    R.id.customColorLayout,
+                    true
+            ) { selectedItemIndex, color ->  // LINK COLOR
+                satValueSelector.activeColorIndex = selectedItemIndex
+                satValueSelector.loadFrom(color, update=true)
+                hueSelector.progress = color.hue().toInt()
             }
-            ListLayoutType.GRID -> {
-                colorPreviewList.layoutManager = colorPreviewListGridManager
-                colorPreviewList.adapter = colorPreviewListGridAdapter
+
+            customColorsDragList.setAdapter(customPaletteAdapter, true)
+            customPaletteAdapter.apply {
+                linkColor(0, itemList[0].second)
             }
+            customPaletteName.setText(customPalette.name)
+
+            savedCustomColors = ArrayList(customPalette.colors)
+
+        }
+        val onDeleteCustomPalette = { adapter: ListAdapter<ColorPalette>, palette: ColorPalette ->
+
+            val deleteId = palette.customId
+
+            GlobalScope.launch {
+                act.db.colorPaletteDao().apply {
+                    delete(findById(deleteId))
+                }
+            }
+
+            adapter.apply {
+                setActivatedPosition(
+                        getGlobalPositionOf(getFavoriteItems().getOrNull(0) ?: getDefaultItems()[1])
+                )
+                f.palette = (getItem(activatedPos) as? PaletteListItem)!!.palette
+            }
+            ColorPalette.all.remove(palette)
+            ColorPalette.custom.remove(palette)
+            if (!sc.goldEnabled && ColorPalette.custom.size < ColorPalette.MAX_CUSTOM_PALETTES_FREE) {
+                customPaletteNewButton.showGradient = false
+            }
+            fsv.requestRender()
+
+        }
+
+        val emptyFavorite = PaletteListItem(ColorPalette.emptyFavorite, ListHeader.favorites, sc.colorListViewType, true)
+        val emptyCustom = PaletteListItem(ColorPalette.emptyCustom, ListHeader.custom, sc.colorListViewType, true)
+        val listItems = arrayListOf<PaletteListItem>()
+
+
+        ColorPalette.all.forEach { listItems.add(
+
+            PaletteListItem(
+                    it,
+                    if (it.hasCustomId || it == ColorPalette.emptyCustom) ListHeader.custom else ListHeader.default,
+                    sc.colorListViewType,
+                    it == ColorPalette.emptyCustom
+
+            ).apply {
+
+                if (it.isFavorite) {
+                    val favorite = PaletteListItem(
+                            it,
+                            ListHeader.favorites,
+                            sc.colorListViewType,
+                            compliment = this
+                    )
+                    compliment = favorite
+                    listItems.add(favorite)
+                }
+
+            })
+        }
+        if (ColorPalette.all.none { it.isFavorite }) listItems.add(emptyFavorite)
+        if (ColorPalette.custom.isEmpty()) listItems.add(emptyCustom)
+        listItems.sortBy { it.header.type }
+
+
+
+        val paletteListAdapter = ListAdapter(
+                listItems,
+                onEditCustomPalette,
+                onDeleteCustomPalette,
+                emptyFavorite,
+                emptyCustom
+        )
+        colorPreviewList.adapter = paletteListAdapter
+        paletteListAdapter.apply {
+            //isLongPressDragEnabled = true
+            mode = SelectableAdapter.Mode.SINGLE
+            showAllHeaders()
+            //setActivatedPosition(getFirstPositionOf(f.palette))
+            //setAnimationOnForwardScrolling(true)
+            //setAnimationOnReverseScrolling(true)
+        }
+        paletteListAdapter.mItemClickListener = FlexibleAdapter.OnItemClickListener { view, position ->
+
+            if (paletteListAdapter.getItemViewType(position) !in nonClickableViewTypes) {
+
+                if (position != paletteListAdapter.activatedPos) {
+                    paletteListAdapter.setActivatedPosition(position)
+                }
+                val newPalette: ColorPalette = try {
+                    paletteListAdapter.getActivatedItem()?.t ?: f.palette
+                } catch (e: IndexOutOfBoundsException) {
+                    Log.e("COLOR", "array index out of bounds -- list size: ${ColorPalette.all.size}, index: $position")
+                    act.showMessage(resources.getString(R.string.msg_error))
+                    f.palette
+                }
+
+                if (newPalette != f.palette) {
+
+                    f.palette = newPalette
+                    fsv.requestRender()
+
+                }
+                true //Important!
+
+            }
+            else false
+
+        }
+        colorPreviewListGridManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                return if (paletteListAdapter.getItemViewType(position) in nonClickableViewTypes) spanCount else 1
+            }
+        }
+        colorPreviewList.layoutManager = when (sc.colorListViewType) {
+            ListLayoutType.LINEAR -> colorPreviewListLinearManager
+            ListLayoutType.GRID -> colorPreviewListGridManager
         }
 
 
-        updatePreview(f.palette)
 
 
-        colorPreviewList.addOnItemTouchListener(
-                RecyclerTouchListener(
-                        v.context,
-                        colorPreviewList,
-                        object : ClickListener {
-
-                            override fun onClick(view: View, position: Int) {
-                                val newPalette : ColorPalette = try {
-                                    ColorPalette.all[position]
-                                } catch (e: ArrayIndexOutOfBoundsException) {
-                                    Log.e("COLOR", "array index out of bounds -- list size: ${ColorPalette.all.size}, index: $position")
-                                    act.showMessage(resources.getString(R.string.msg_error))
-                                    f.palette
-                                }
-                                if (newPalette != f.palette) {
-
-                                    if (BuildConfig.PAID_VERSION) {
-                                        if (newPalette.isCustom != f.palette.isCustom) {
-                                            loadNavButtons(if (f.palette.isCustom)
-                                                previewListNavButtons else
-                                                previewListNavButtonsCustom
-                                            )
-                                        }
-                                    }
-
-                                    f.palette = newPalette
-                                    fsv.requestRender()
-
-                                }
-                            }
-
-                            override fun onLongClick(view: View, position: Int) {}
-
-                        }
-                )
-        )
-
-
+        if (f.solidFillColor == Color.WHITE) solidFillColorTabs.getTabAt(1)?.select()
+        else solidFillColorTabs.getTabAt(0)?.select()
         solidFillColorTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabReselected(tab: TabLayout.Tab) {}
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabSelected(tab: TabLayout.Tab) {
 
                 f.solidFillColor = when (tab.position) {
-                    0 -> R.color.black
-                    1 -> R.color.white
-                    else -> R.color.black
+                    0 -> Color.BLACK
+                    1 -> Color.WHITE
+                    else -> Color.BLACK
                 }
 
                 fsv.requestRender()
 
             }
         })
-        if (f.solidFillColor == R.color.white) solidFillColorTabs.getTabAt(1)?.select()
-        else solidFillColorTabs.getTabAt(0)?.select()
 
 
 
@@ -274,12 +392,13 @@ class ColorFragment : MenuFragment() {
 
             customPalette.colors[activeColorIndex] = newColor
             customPalette.updateFlatPalette()
+            customPaletteGradient.foreground = customPalette.gradientDrawable
             (customColorsDragList.adapter as ColorPaletteDragAdapter).updateColor(activeColorIndex, newColor)
 
             val hsv = newColor.toHSV()
-            customColorComponentEdit1.setText("%d".format(hue.toInt()))
-            customColorComponentEdit2.setText("%d".format((100f*hsv[1]).roundToInt()))
-            customColorComponentEdit3.setText("%d".format((100f*hsv[2]).roundToInt()))
+            customColorHueEdit.setText("%d".format(hue.toInt()))
+            customColorSaturationEdit.setText("%d".format((100f*hsv[1]).roundToInt()))
+            customColorValueEdit.setText("%d".format((100f*hsv[2]).roundToInt()))
 
             invalidate()
             fsv.requestRender()
@@ -320,14 +439,14 @@ class ColorFragment : MenuFragment() {
 
 
         // HSV EDIT TEXTS
-        customColorComponentEdit1.setOnEditorActionListener(editListener(null) { w: TextView ->
+        customColorHueEdit.setOnEditorActionListener(editListener(customColorSaturationEdit) { w: TextView ->
             val result = w.text.toString().formatToDouble()?.toFloat()
             if (result != null) {
                 hueSelector.progress = result.toInt()
             }
             w.text = "%d".format(satValueSelector.hue.toInt())
         })
-        customColorComponentEdit2.setOnEditorActionListener(editListener(null) { w: TextView ->
+        customColorSaturationEdit.setOnEditorActionListener(editListener(customColorValueEdit) { w: TextView ->
             val result = w.text.toString().formatToDouble()?.toFloat()
             if (result != null) {
                 satValueSelector.loadFrom(Color.HSVToColor(floatArrayOf(
@@ -338,7 +457,7 @@ class ColorFragment : MenuFragment() {
             }
             w.text = "%d".format((100f*satValueSelector.sat()).roundToInt())
         })
-        customColorComponentEdit3.setOnEditorActionListener(editListener(null) { w: TextView ->
+        customColorValueEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             val result = w.text.toString().formatToDouble()?.toFloat()
             if (result != null) {
                 satValueSelector.loadFrom(Color.HSVToColor(floatArrayOf(
@@ -360,7 +479,44 @@ class ColorFragment : MenuFragment() {
 
 
         // LISTENERS
-        palettePreviewButton.setOnClickListener(subMenuButtonListener(palettePreviewLayout, palettePreviewButton))
+        paletteListButton.setOnClickListener {
+
+            // ui changes
+            handler.postDelayed({
+
+                act.hideCategoryButtons()
+
+                colorSubMenuButtons.hide()
+                act.hideCategoryButtons()
+
+                showLayout(colorPreviewListLayout)
+                colorNavBar.show()
+                loadNavButtons(previewListNavButtons)
+
+                paletteListAdapter.apply {
+                    if (selectedPositions.isEmpty()) {
+                        Log.d("COLOR", "palette: ${f.palette.name}, first pos: ${getFirstPositionOf(f.palette)}")
+                        setActivatedPosition(getFirstPositionOf(f.palette))
+                    }
+                }
+
+                act.uiSetOpenTall()
+
+            }, BUTTON_CLICK_DELAY_SHORT)
+
+            // color thumbnail render
+            handler.postDelayed({
+
+                if (sc.colorListViewType == ListLayoutType.GRID) {
+                    fsv.r.renderProfile = RenderProfile.COLOR_THUMB
+                    fsv.r.renderThumbnails = true
+                    if (!fsv.r.colorThumbsRendered) fsv.r.renderToTex = true
+                    fsv.requestRender()
+                }
+
+            }, BUTTON_CLICK_DELAY_LONG)
+
+        }
         palettePreviewLayout.setOnClickListener {
             handler.postDelayed({
 
@@ -375,16 +531,20 @@ class ColorFragment : MenuFragment() {
 
                 loadNavButtons(previewListNavButtons)
 
+                paletteListAdapter.apply {
+                    if (selectedPositions.isEmpty()) setActivatedPosition(getFirstPositionOf(f.palette))
+                }
+
                 act.uiSetOpenTall()
 
-                with (colorPreviewList.adapter as ColorPaletteAdapter) { if (isGridLayout) {
+                if (sc.colorListViewType == ListLayoutType.GRID) {
                     fsv.r.renderProfile = RenderProfile.COLOR_THUMB
                     fsv.r.renderThumbnails = true
                     if (!fsv.r.colorThumbsRendered) fsv.r.renderToTex = true
                     fsv.requestRender()
-                }}
+                }
 
-            }, BUTTON_CLICK_DELAY_LONG)
+            }, BUTTON_CLICK_DELAY_MED)
         }
 
         frequencyButton.setOnClickListener(subMenuButtonListener(frequencyLayout, frequencyButton))
@@ -450,57 +610,18 @@ class ColorFragment : MenuFragment() {
         colorPreviewListDoneButton.setOnClickListener {
             handler.postDelayed({
 
-                colorPreviewGradient.foreground = f.palette.gradientDrawable
-                colorPreviewName.text = f.palette.name
+                //colorPreviewGradient.foreground = f.palette.gradientDrawable
+                //colorPreviewName.text = f.palette.name
 
                 if (!act.uiIsClosed()) act.uiSetOpen() else MainActivity.Category.COLOR.onMenuClosed(act)
 
-                colorPreviewListLayout.hide()
-                palettePreviewLayout.show()
+                frequencyButton.performClick()
+                //palettePreviewLayout.show()
                 colorSubMenuButtons.show()
                 colorNavBar.hide()
                 act.showCategoryButtons()
 
                 fsv.r.renderProfile = RenderProfile.MANUAL
-
-            }, BUTTON_CLICK_DELAY_SHORT)
-        }
-        newCustomPaletteButton.setOnClickListener {
-            handler.postDelayed({
-
-                colorPreviewListLayout.hide()
-                customPaletteLayout.show()
-                loadNavButtons(customPaletteNavButtons)
-                fsv.r.renderProfile = RenderProfile.MANUAL
-
-                customPalette = ColorPalette(
-                        name = "Custom Palette 1",
-                        colors = ColorPalette.generateHighlightColors(4)
-                ).apply { initialize(resources, Resolution.THUMB.scaleRes(fsv.r.screenRes)) }
-
-                prevSelectedPaletteIndex = ColorPalette.all.indexOf(f.palette)
-                ColorPalette.all.add(0, customPalette)
-                f.palette = ColorPalette.all[0]
-                fsv.requestRender()
-
-
-                val customPaletteAdapter = ColorPaletteDragAdapter(
-                        customPalette.colors,
-                        R.layout.color_drag_item,
-                        R.id.customColorLayout,
-                        true
-                ) { selectedItemIndex, color ->  // LINK COLOR
-                    satValueSelector.activeColorIndex = selectedItemIndex
-                    satValueSelector.loadFrom(color, update=true)
-                    hueSelector.progress = color.hue().toInt()
-                }
-
-
-                customColorsDragList.setAdapter(customPaletteAdapter, true)
-                customPaletteAdapter.apply {
-                    linkColor(0, itemList[0].second)
-                }
-                customPaletteName.setText(customPalette.name)
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
@@ -509,12 +630,12 @@ class ColorFragment : MenuFragment() {
             sc.colorListViewType = ListLayoutType.values().run {
                 get((sc.colorListViewType.ordinal + 1) % size)
             }
+            paletteListAdapter.updateLayoutType(sc.colorListViewType)
 
             when (sc.colorListViewType) {
                 ListLayoutType.LINEAR -> {
 
                     colorPreviewList.layoutManager = colorPreviewListLinearManager
-                    colorPreviewList.adapter = colorPreviewListLinearAdapter
 
                     fsv.r.renderProfile = RenderProfile.MANUAL
 
@@ -522,93 +643,161 @@ class ColorFragment : MenuFragment() {
                 ListLayoutType.GRID -> {
 
                     colorPreviewList.layoutManager = colorPreviewListGridManager
-                    colorPreviewList.adapter = colorPreviewListGridAdapter
+                    Log.e("COLOR", "${colorPreviewListGridManager.spanSizeLookup.getSpanSize(0)}")
 
                     fsv.r.renderProfile = RenderProfile.COLOR_THUMB
                     fsv.r.renderThumbnails = true
-                    fsv.r.renderToTex = true
+                    if (!fsv.r.colorThumbsRendered) fsv.r.renderToTex = true
                     fsv.requestRender()
 
                 }
             }
 
         }
-        customPaletteDeleteButton.setOnClickListener {
 
-            val deleteId = f.palette.customId
+        customPaletteNewButton.setOnClickListener {
+            if (ColorPalette.custom.size == ColorPalette.MAX_CUSTOM_PALETTES_FREE && !sc.goldEnabled) act.showUpgradeScreen()
+            else {
+                handler.postDelayed({
 
-            GlobalScope.launch {
-                act.db.colorPaletteDao().apply {
-                    delete(findById(deleteId))
-                }
+                    colorPreviewListLayout.hide()
+                    customPaletteLayout.show()
+                    newCustomColorButton.show()
+                    loadNavButtons(customPaletteNavButtons)
+                    fsv.r.renderProfile = RenderProfile.MANUAL
+
+                    customPalette = ColorPalette(
+                            name = "%s %s %d".format(
+                                    resources.getString(R.string.header_custom),
+                                    resources.getString(R.string.palette),
+                                    ColorPalette.nextCustomPaletteNum
+                            ),
+                            colors = ColorPalette.generateHighlightColors(if (sc.goldEnabled) 5 else 3)
+                    ).apply { initialize(resources, Resolution.THUMB.size) }
+
+                    // ColorPalette.all.add(0, customPalette)
+                    f.palette = customPalette
+                    fsv.requestRender()
+
+
+                    val customPaletteAdapter = ColorPaletteDragAdapter(
+                            customPalette.colors,
+                            R.layout.color_drag_item,
+                            R.id.customColorLayout,
+                            true
+                    ) { selectedItemIndex, color ->  // LINK COLOR
+                        satValueSelector.activeColorIndex = selectedItemIndex
+                        satValueSelector.loadFrom(color, update = true)
+                        hueSelector.progress = color.hue().toInt()
+                    }
+
+
+
+                    customColorsDragList.setAdapter(customPaletteAdapter, true)
+                    customPaletteAdapter.apply {
+                        linkColor(0, itemList[0].second)
+                    }
+                    customPaletteName.setText(customPalette.name)
+
+                }, BUTTON_CLICK_DELAY_SHORT)
             }
-
-            val index = ColorPalette.all.indexOf(f.palette)
-            ColorPalette.all.remove(f.palette)
-            f.palette = ColorPalette.all[index]
-            fsv.requestRender()
-            colorPreviewList.adapter?.apply { notifyItemRemoved(index) }
-
         }
-
         customPaletteDoneButton.setOnClickListener {
-
-            GlobalScope.launch {
-
-                val colors = MutableList(8) { 0 }
-                customPalette.colors.forEachIndexed { i: Int, c: Int ->
-                    colors[i] = c
-                }
-                Log.e("COLOR", "custom palette size: ${customPalette.size}")
-
-                act.db.colorPaletteDao().apply {
-                    customPalette.customId = insert(ColorPaletteEntity(
-                            name = customPalette.name,
-                            size = customPalette.colors.size,
-                            c1 = colors[0],
-                            c2 = colors[1],
-                            c3 = colors[2],
-                            c4 = colors[3],
-                            c5 = colors[4],
-                            c6 = colors[5],
-                            c7 = colors[6],
-                            c8 = colors[7]
-                    )).toInt()
-                }
-
+            if (ColorPalette.all.any {
+                        if (customPalette.name == it.name) {
+                            if (customPalette.hasCustomId) customPalette.customId != it.customId
+                            else true
+                        }
+                        else false
+                    }) {
+                act.showMessage(resources.getString(R.string.msg_custom_name_duplicate).format(
+                        resources.getString(R.string.palette)
+                ))
             }
+            else {
 
-            handler.postDelayed({
+                if (customPalette.hasCustomId) {
+                    // update existing palette in database
+                    GlobalScope.launch {
+                        act.db.colorPaletteDao().apply {
+                            update(customPalette.toDatabaseEntity())
+                        }
+                        paletteListAdapter.getActivatedItem()?.run { paletteListAdapter.updateItem(this) }
+                    }
+                }
+                else {
 
-                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
+                    // add new palette to database
+                    GlobalScope.launch {
+                        act.db.colorPaletteDao().apply {
+                            customPalette.customId = insert(customPalette.toDatabaseEntity()).toInt()
+                        }
+                        paletteListAdapter.apply {
+                            val item = PaletteListItem(customPalette, ListHeader.custom, sc.colorListViewType)
+                            setActivatedPosition(addItemToCustom(item, 0))
+                        }
+                        ColorPalette.nextCustomPaletteNum++
+                    }
 
-                customPaletteLayout.hide()
-                palettePreviewLayout.show()
-                colorSubMenuButtons.show()
-                colorNavBar.hide()
-                act.showCategoryButtons()
+                    ColorPalette.all.add(0, customPalette)
+                    ColorPalette.custom.add(0, customPalette)
 
-                colorPreviewList.adapter?.notifyDataSetChanged()
-                updatePreview(f.palette)
+                    if (sc.colorListViewType == ListLayoutType.GRID) {
+                        fsv.r.renderProfile = RenderProfile.COLOR_THUMB
+                        fsv.r.renderThumbnails = true
+                        fsv.requestRender()
+                    }
 
-            }, BUTTON_CLICK_DELAY_SHORT)
+                }
+
+                // update ui
+                handler.postDelayed({
+
+                    if (ColorPalette.custom.size == ColorPalette.MAX_CUSTOM_PALETTES_FREE && !sc.goldEnabled) {
+                        customPaletteNewButton.showGradient = true
+                    }
+                    act.uiSetOpenTall()
+
+                    customPaletteLayout.hide()
+                    colorPreviewListLayout.show()
+                    // palettePreviewLayout.show()
+                    // colorSubMenuButtons.show()
+                    loadNavButtons(previewListNavButtons)
+                    // colorNavBar.hide()
+                    // act.showCategoryButtons()
+
+                    // colorPreviewList.adapter?.notifyDataSetChanged()
+                    // updatePreview(f.palette)
+
+                }, BUTTON_CLICK_DELAY_SHORT)
+            }
         }
         customPaletteCancelButton.setOnClickListener {
             handler.postDelayed({
 
-                ColorPalette.all.removeAt(0)
-                f.palette = ColorPalette.all[prevSelectedPaletteIndex]
-                fsv.requestRender()
+                if (customPalette.hasCustomId) {
+                    // revert changes
+                    customPalette.colors = ArrayList(savedCustomColors)
+                    customPalette.updateFlatPalette()
+                    paletteListAdapter.getActivatedItem()?.run { paletteListAdapter.updateItem(this) }
+                }
+                else {
+                    // select previous palette
+                    f.palette = (paletteListAdapter.getItem(paletteListAdapter.selectedPositions[0]) as? PaletteListItem)?.palette ?: f.palette
+                    fsv.requestRender()
+                }
 
-                act.uiSetOpen()
+                act.uiSetOpenTall()
 
                 customPaletteLayout.hide()
-                palettePreviewLayout.show()
-                colorSubMenuButtons.show()
-                colorNavBar.hide()
-                act.showCategoryButtons()
+                colorPreviewListLayout.show()
+                loadNavButtons(previewListNavButtons)
+                // palettePreviewLayout.show()
+                // colorSubMenuButtons.show()
+                // colorNavBar.hide()
+                // act.showCategoryButtons()
 
-                updatePreview(f.palette)
+                // updatePreview(f.palette)
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
@@ -617,24 +806,57 @@ class ColorFragment : MenuFragment() {
             (customColorsDragList.adapter as ColorPaletteDragAdapter).updateColors(newColors)
             customPalette.colors = newColors
             customPalette.updateFlatPalette()
+            customPaletteGradient.foreground = customPalette.gradientDrawable
             fsv.requestRender()
         }
         newCustomColorButton.setOnClickListener {
 
+            if (customPalette.colors.size == ColorPalette.MAX_CUSTOM_COLORS_FREE && !sc.goldEnabled) act.showUpgradeScreen()
+            else { with(customColorsDragList.adapter as ColorPaletteDragAdapter) {
+                    if (customPalette.colors.size < ColorPalette.MAX_CUSTOM_COLORS_GOLD) {
+
+                        val newColor = randomColor()
+                        customPalette.colors.add(newColor)
+                        addItem(itemCount, Pair(nextUniqueId, newColor))
+                        // itemList.add(Pair(getNextUniqueId(), newColor))
+                        notifyItemInserted(itemCount)
+
+                        customPalette.updateFlatPalette()
+                        customPaletteGradient.foreground = customPalette.gradientDrawable
+                        fsv.requestRender()
+
+                        when (customPalette.colors.size) {
+                            ColorPalette.MAX_CUSTOM_COLORS_FREE -> {
+                                if (!sc.goldEnabled) newCustomColorButton.showGradient = true
+                                deleteCustomColorButton.enable()
+                            }
+                            ColorPalette.MAX_CUSTOM_COLORS_GOLD -> newCustomColorButton.disable()
+                        }
+
+                    }
+                } }
+
+        }
+        deleteCustomColorButton.setOnClickListener {
+
             with (customColorsDragList.adapter as ColorPaletteDragAdapter) {
 
-                if (customPalette.colors.size < ColorPalette.MAX_CUSTOM_PALETTE_COLORS) {
+                customPalette.colors.removeAt(selectedItemIndex)
+                removeItem(selectedItemIndex)
+                // itemList.removeAt(selectedItemIndex)
+                if (selectedItemIndex == itemList.size) selectedItemIndex--
+                notifyDataSetChanged()
 
-                    val newColor = randomColor()
-                    customPalette.colors.add(newColor)
-                    itemList.add(Pair(this.itemList.size.toLong(), newColor))
-                    notifyDataSetChanged()
+                customPalette.updateFlatPalette()
+                customPaletteGradient.foreground = customPalette.gradientDrawable
+                fsv.requestRender()
 
-                    customPalette.updateFlatPalette()
-                    fsv.requestRender()
-
-                    if (customPalette.colors.size == ColorPalette.MAX_CUSTOM_PALETTE_COLORS) newCustomColorButton.hide()
-
+                when (customPalette.colors.size) {
+                    ColorPalette.MAX_CUSTOM_COLORS_GOLD - 1 -> newCustomColorButton.enable()
+                    ColorPalette.MAX_CUSTOM_COLORS_FREE - 1 -> {
+                        if (!sc.goldEnabled) newCustomColorButton.showGradient = false
+                        deleteCustomColorButton.disable()
+                    }
                 }
 
             }
@@ -642,9 +864,7 @@ class ColorFragment : MenuFragment() {
         }
 
 
-
-        currentLayout = palettePreviewLayout
-        currentButton = palettePreviewButton
+        
         palettePreviewLayout.hide()
         frequencyLayout.hide()
         phaseLayout.hide()
@@ -654,11 +874,24 @@ class ColorFragment : MenuFragment() {
         customPaletteLayout.hide()
         colorNavBar.hide()
 
-        palettePreviewButton.performClick()
+        currentLayout = frequencyLayout
+        currentButton = frequencyButton
+        showLayout(frequencyLayout)
+        alphaButton(frequencyButton)
 
         act.updateColorEditTexts()
+
+        if (sc.goldEnabled) onGoldEnabled()
+
         super.onViewCreated(v, savedInstanceState)
 
+    }
+
+
+    fun onGoldEnabled() {
+        customPaletteNewButton.showGradient = false
+        newCustomColorButton.showGradient = false
+        deleteCustomColorButton.show()
     }
 
     fun updateFrequencyLayout() {

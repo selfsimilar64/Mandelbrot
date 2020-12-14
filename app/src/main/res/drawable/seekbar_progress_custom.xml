@@ -3,10 +3,10 @@
     <item android:id="@android:id/background"
         android:gravity="center_vertical|fill_horizontal">
         <shape android:shape="rectangle"
-            android:tint="@color/menu1">
+            android:tint="@color/menuDark4">
             <corners android:radius="8dp"/>
             <size android:height="15dp" />
-            <solid android:color="@color/menu1" />
+            <solid android:color="@color/menuDark4" />
         </shape>
     </item>
     <item android:id="@android:id/progress"

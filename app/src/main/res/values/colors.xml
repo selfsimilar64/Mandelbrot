@@ -3,22 +3,28 @@
 
     <!-- LAYOUT COLORS -->
     <color name="colorPrimary">#fff</color>
-    <color name="colorPrimaryDark">#1c1c1c</color>
+    <color name="colorPrimaryDark">@color/black</color>
     <color name="colorPrimaryDark2">#555</color>
     <color name="colorDarkSelected">#3a3a3a</color>
-    <color name="colorDarkUnselected">@color/menu4</color>
+    <color name="colorDarkUnselected">@color/menuDark5</color>
     <color name="colorDarkText">#ffffff</color>
     <color name="colorDescriptionDark">#9a9a9a</color>
     <color name="halfTransparentBlack">#a000</color>
     <color name="halfTransparentWhite">#3fff</color>
     <color name="transparent">#0000</color>
     <color name="colorAccent">#fff</color>
-    <color name="menu1">#1a1a1a</color>
-    <color name="menu2">#000000</color>
-    <color name="menu3">#4a4a4a</color>
-    <color name="menu4">#202020</color>
-    <color name="menu5">#303030</color>
-    <color name="shapeKeyColor">@color/black</color>
+    <color name="menuDark1">#000000</color>
+    <color name="menuDark2">#0e0e0e</color>
+    <color name="menuDark3">#121212</color>
+    <color name="menuDark4">#202020</color>
+    <color name="menuDark5">#2a2a2a</color>
+    <color name="menuDark6">#3a3a3a</color>
+    <color name="menuDark7">#4a4a4a</color>
+
+    <color name="disabled">#777</color>
+
+    <color name="shapeKeyColor">#1D1D1D</color>
+    <color name="star">#FE1</color>
 
 
     <color name="fractaleye1">#006CB0</color>
@@ -26,6 +32,15 @@
     <color name="fractaleye3">#B030A2</color>
     <color name="fractaleye4">#EC891D</color>
     <color name="fractaleye5">#F2C100</color>
+
+    <color name="gold1">#fdf1cc</color>
+    <color name="gold2">#f6eca7</color>
+    <color name="gold3">#efdc61</color>
+    <color name="gold4">#e6b32c</color>
+    <color name="gold5">#D68A08</color>
+    <color name="gold6">#643D02</color>
+    <color name="gold7">#191001</color>
+    <color name="gold8">#0E0900</color>
 
 
     <color name="hueslider1">#FF0000</color>
@@ -154,13 +169,13 @@
     <color name="elephant6">#ADCCB7</color>
     <color name="elephant7">#E5F2E1</color>
 
-    <color name="gold1">@color/black</color>
-    <color name="gold2">#261B10</color>
-    <color name="gold3">#47351D</color>
-    <color name="gold4">#876832</color>
-    <color name="gold5">#D2AE70</color>
-    <color name="gold6">#F5E1BE</color>
-    <color name="gold7">@color/white</color>
+    <color name="bronze1">@color/black</color>
+    <color name="bronze2">#261B10</color>
+    <color name="bronze3">#47351D</color>
+    <color name="bronze4">#876832</color>
+    <color name="bronze5">#D2AE70</color>
+    <color name="bronze6">#F5E1BE</color>
+    <color name="bronze7">@color/white</color>
 
     <color name="oldskool1">#9767A7</color>
     <color name="oldskool2">#4B978A</color>
@@ -350,6 +365,199 @@
     <color name="melted7">#EAA519</color>
     <color name="melted8">#DD5E01</color>
     <color name="melted9">#B03800</color>
+
+    <color name="torus1">#251738</color>
+    <color name="torus2">#254A90</color>
+    <color name="torus3">#007AB9</color>
+    <color name="torus4">#0C9FD8</color>
+    <color name="torus5">#87C9E9</color>
+    <color name="torus6">#CDE5E7</color>
+    <color name="torus7">#EDECCD</color>
+    <color name="torus8">#F6DF93</color>
+    <color name="torus9">#F2BF4A</color>
+    <color name="torus10">#E08131</color>
+    <color name="torus11">#B93C2F</color>
+    <color name="torus12">#651F34</color>
+
+    <color name="ruby1">#150201</color>
+    <color name="ruby2">#3F0E0A</color>
+    <color name="ruby3">#92202C</color>
+    <color name="ruby4">#E33746</color>
+    <color name="ruby5">#FF4B85</color>
+    <color name="ruby6">#FF7DD8</color>
+    <color name="ruby7">#FDAAE4</color>
+    <color name="ruby8">#FFE6F7</color>
+
+    <color name="sapphire1">#000019</color>
+    <color name="sapphire2">#060631</color>
+    <color name="sapphire3">#14106D</color>
+    <color name="sapphire4">#2C2FD0</color>
+    <color name="sapphire5">#2280FF</color>
+    <color name="sapphire6">#9AFAFB</color>
+    <color name="sapphire7">#C8FBFB</color>
+
+    <color name="amethyst1">#040207</color>
+    <color name="amethyst2">#180229</color>
+    <color name="amethyst3">#33004F</color>
+    <color name="amethyst4">#6B0092</color>
+    <color name="amethyst5">#FD73EA</color>
+    <color name="amethyst6">#EAA7FF</color>
+    <color name="amethyst7">#FBEBFF</color>
+
+    <color name="aztec1">#CBFFDD</color>
+    <color name="aztec2">#71E590</color>
+    <color name="aztec3">#3AAB58</color>
+    <color name="aztec4">#04631C</color>
+    <color name="aztec5">#0F3518</color>
+    <color name="aztec6">#0C1E11</color>
+    <color name="aztec7">#060E08</color>
+    <color name="aztec8">@color/black</color>
+    <color name="aztec9">#3C2B0E</color>
+    <color name="aztec10">#C0991D</color>
+    <color name="aztec11">#EFCB50</color>
+    <color name="aztec12">#FFF69A</color>
+    <color name="aztec13">#FFFDE8</color>
+
+    <color name="neon1">#FF2F77</color>
+    <color name="neon2">#AA44FD</color>
+    <color name="neon3">#36BDFD</color>
+    <color name="neon4">#83E3D7</color>
+    <color name="neon5">#FFEF3A</color>
+    <color name="neon6">#EA7501</color>
+
+    <color name="dragon1">@color/white</color>
+    <color name="dragon2">#DFADD2</color>
+    <color name="dragon3">#90587F</color>
+    <color name="dragon4">#5B3B53</color>
+    <color name="dragon5">#352933</color>
+    <color name="dragon6">@color/black</color>
+    <color name="dragon7">#721621</color>
+    <color name="dragon8">#FD011A</color>
+    <color name="dragon9">#FC8D58</color>
+    <color name="dragon10">#FFFF8D</color>
+    <color name="dragon11">#FFFFFE</color>
+
+    <color name="diamond1">#14181E</color>
+    <color name="diamond3">#175678</color>
+    <color name="diamond4">#0682B6</color>
+    <color name="diamond5">#2FC9D7</color>
+    <color name="diamond6">#78EDEA</color>
+    <color name="diamond7">#B2EDED</color>
+    <color name="diamond8">@color/white</color>
+
+    <color name="coral1">#0B032F</color>
+    <color name="coral2">#16105F</color>
+    <color name="coral3">#3639DF</color>
+    <color name="coral4">#379AE5</color>
+    <color name="coral5">#54EDE1</color>
+    <color name="coral6">#24ACA2</color>
+    <color name="coral7">#0F5990</color>
+    <color name="coral8">#9F156A</color>
+    <color name="coral9">#EF6BA4</color>
+    <color name="coral10">#FFF3A7</color>
+    <color name="coral11">#FFFDF1</color>
+
+    <color name="ccoral1">#350221</color>
+    <color name="ccoral2">#7a0069</color>
+    <color name="ccoral3">#fb00b2</color>
+    <color name="ccoral4">#feb2fd</color>
+    <color name="ccoral5">@color/white</color>
+    <color name="ccoral6">#fffdc8</color>
+    <color name="ccoral7">#FDE363</color>
+    <color name="ccoral8">#F3FF4F</color>
+    <color name="ccoral9">#00A093</color>
+    <color name="ccoral10">#02feef</color>
+    <color name="ccoral11">#008d8f</color>
+    <color name="ccoral12">#002e3d</color>
+    <color name="ccoral13">#001820</color>
+
+    <color name="cactus1">#0b1004</color>
+    <color name="cactus2">#10200f</color>
+    <color name="cactus3">#102C0C</color>
+    <color name="cactus4">#1D3514</color>
+    <color name="cactus5">#2B4A20</color>
+    <color name="cactus6">#4A7619</color>
+    <color name="cactus7">#81A03A</color>
+    <color name="cactus8">#B9C35A</color>
+    <color name="cactus9">#fef6ae</color>
+    <color name="cactus10">#ffc959</color>
+    <color name="cactus11">#ff822d</color>
+    <color name="cactus12">#ff4142</color>
+    <color name="cactus13">#ff326d</color>
+    <color name="cactus14">#ff65c8</color>
+    <color name="cactus15">#FFBFF2</color>
+
+    <color name="aquamarine1">#ccf6fe</color>
+    <color name="aquamarine2">#86e8fe</color>
+    <color name="aquamarine3">#08AFD8</color>
+    <color name="aquamarine4">#0178a4</color>
+    <color name="aquamarine5">#014262</color>
+    <color name="aquamarine6">#011d38</color>
+    <color name="aquamarine7">#00091d</color>
+    <color name="aquamarine8">@color/black</color>
+    <color name="aquamarine9">#021b26</color>
+    <color name="aquamarine10">#063640</color>
+    <color name="aquamarine11">#3f928d</color>
+    <color name="aquamarine12">#89c7ae</color>
+    <color name="aquamarine13">#dbf9e3</color>
+
+    <color name="parachute4">#fffec2</color>
+    <color name="parachute5">#ffec1e</color>
+    <color name="parachute6">#ffb54d</color>
+    <color name="parachute7">#ff8d08</color>
+    <color name="parachute8">#ff5229</color>
+    <color name="parachute9">#ff2453</color>
+    <color name="parachute10">#9D328D</color>
+    <color name="parachute11">#513889</color>
+    <color name="parachute12">#2375A4</color>
+    <color name="parachute13">#3CCAD3</color>
+    <color name="parachute14">#82FFD7</color>
+
+
+
+    <color name="anubis1">#ffffff</color>
+    <color name="anubis2">#00ebf6</color>
+    <color name="anubis3">#006da1</color>
+    <color name="anubis4">#0b1a6d</color>
+    <color name="anubis5">#43029E</color>
+    <color name="anubis6">#88008e</color>
+    <color name="anubis7">#2b1445</color>
+    <color name="anubis8">#1d0f1f</color>
+    <color name="anubis9">@color/black</color>
+    <color name="anubis10">#462f1a</color>
+    <color name="anubis11">#d39500</color>
+    <color name="anubis12">#fbf003</color>
+    <color name="anubis13">#fff788</color>
+    <color name="anubis14">#fefefe</color>
+
+    <color name="polyphonic1">@color/black</color>
+    <color name="polyphonic2">#22114C</color>
+    <color name="polyphonic3">#581B7D</color>
+    <color name="polyphonic4">#B52884</color>
+    <color name="polyphonic5">#FF6BAB</color>
+    <color name="polyphonic6">#FFB2C4</color>
+    <color name="polyphonic7">@color/white</color>
+    <color name="polyphonic8">#7bf9af</color>
+    <color name="polyphonic9">#2DCFC9</color>
+    <color name="polyphonic10">#14585C</color>
+    <color name="polyphonic11">#003534</color>
+    <color name="polyphonic12">#001517</color>
+
+    <color name="anaglyph1">#c7e0ff</color>
+    <color name="anaglyph2">#0c7581</color>
+    <color name="anaglyph3">#27041a</color>
+    <color name="anaglyph4">#aa0003</color>
+    <color name="anaglyph5">#ffd6d7</color>
+
+    <color name="catalyst1">#FFBD4A</color>
+    <color name="catalyst2">#f67e30</color>
+    <color name="catalyst3">#d73b25</color>
+    <color name="catalyst4">#871424</color>
+    <color name="catalyst5">#562136</color>
+    <color name="catalyst6">#196D66</color>
+    <color name="catalyst7">#20bf96</color>
+    <color name="catalyst8">#8cfada</color>
+    <color name="catalyst9">@color/white</color>
 
 
     <color name="pink4ashley">#DF8D94</color>

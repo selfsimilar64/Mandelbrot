@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/previewGridPaddingHorizontal"
+    android:paddingTop="@dimen/previewGridPaddingVertical"
+    android:paddingEnd="@dimen/previewGridPaddingHorizontal"
+    android:paddingBottom="@dimen/previewGridPaddingVertical">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        app:cardBackgroundColor="@color/black"
+        app:cardCornerRadius="10dp">
+
+        <com.selfsimilartech.fractaleye.GradientImageView
+            android:id="@+id/previewImage"
+            android:layout_width="@dimen/textureShapePreviewSize"
+            android:layout_height="@dimen/textureShapePreviewSize"
+            app:srcCompat="@drawable/mandelbrot_icon" />
+
+    </androidx.cardview.widget.CardView>
+
+
+    <com.selfsimilartech.fractaleye.GradientTextView
+        android:id="@+id/previewText"
+        style="@style/TextDark"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="2dp"
+        android:gravity="center_horizontal"
+        android:lines="2"
+        android:text="@string/hyperbolic_cosine"
+        android:textAlignment="center"
+        android:textSize="13sp" />
+
+</LinearLayout>

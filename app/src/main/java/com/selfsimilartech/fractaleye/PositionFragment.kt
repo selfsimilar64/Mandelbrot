@@ -1,7 +1,6 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
-import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.util.Log
 import android.view.ViewGroup
@@ -11,8 +10,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import kotlinx.android.synthetic.main.position_fragment.*
-import java.text.NumberFormat
-import java.text.ParseException
 import java.util.*
 import kotlin.math.pow
 
@@ -64,7 +61,7 @@ class PositionFragment : MenuFragment() {
 
         }}
 
-        xEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+        xEdit.setOnEditorActionListener(editListener(yEdit) { w: TextView ->
             val result = w.text.toString().formatToDouble()
             if (result != null) {
                 f.position.x = result
@@ -190,16 +187,16 @@ class PositionFragment : MenuFragment() {
 
                 val zoomFactor = 10f.pow(progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
                 fsv.r.zoom(zoomFactor/previousZoomFactor)
-                if (sc.continuousRender) prevZoom = f.position.zoom
+                if (sc.continuousPosRender) prevZoom = f.position.zoom
                 f.position.zoom(zoomFactor/previousZoomFactor, doubleArrayOf(0.0, 0.0))
-                if (sc.continuousRender) fsv.r.checkThresholdCross(prevZoom)
+                if (sc.continuousPosRender) fsv.r.checkThresholdCross(prevZoom)
                 previousZoomFactor = zoomFactor
 
                 val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
                 scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
                 scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
 
-                if (sc.continuousRender) fsv.r.renderToTex = true
+                if (sc.continuousPosRender) fsv.r.renderToTex = true
                 if (fsv.r.isRendering && zoomSeekBar.progress != zoomSeekBar.max/2) fsv.r.interruptRender = true
                 fsv.requestRender()
 
@@ -207,14 +204,25 @@ class PositionFragment : MenuFragment() {
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 //previousZoom = f.position.scale.toFloat()
+                if (sc.continuousPosRender) {
+                    // fsv.r.beginContinuousRender = true
+                    fsv.r.renderContinuousTex = true
+                }
                 previousZoomFactor = 1f
                 prevZoom = f.position.zoom
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                if (!sc.continuousRender) fsv.r.checkThresholdCross(prevZoom)
-                fsv.r.renderToTex = true
-                fsv.requestRender()
+
+                if (sc.continuousPosRender) {
+                    fsv.r.renderContinuousTex = false
+                }
+                else {
+                    fsv.r.checkThresholdCross(prevZoom)
+                    fsv.r.renderToTex = true
+                    fsv.requestRender()
+                }
+
                 previousZoomFactor = 1f
                 zoomSeekBar.progress = zoomSeekBar.max/2
             }
@@ -222,22 +230,32 @@ class PositionFragment : MenuFragment() {
         })
         rotationButton.setOnClickListener(  subMenuButtonListener(rotationLayout,   rotationButton  ))
         rotationSeekBarListener = object : SeekBar.OnSeekBarChangeListener {
+
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val newTheta = ((progress/(rotationSeekBar.max/2).toDouble() - 1.0)*180.0).inRadians()
                 rotationEdit.setText("%.1f".format(newTheta.inDegrees()))
                 fsv.r.rotate((f.position.rotation - newTheta).toFloat())
                 f.position.rotation = newTheta
-                if (sc.continuousRender) fsv.r.renderToTex = true
+                if (sc.continuousPosRender) fsv.r.renderToTex = true
                 if (fsv.r.isRendering) fsv.r.interruptRender = true
                 fsv.requestRender()
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+                if (sc.continuousPosRender) {
+                    // fsv.r.beginContinuousRender = true
+                    fsv.r.renderContinuousTex = true
+                }
+
+            }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (sc.continuousPosRender) fsv.r.renderContinuousTex = false
                 fsv.r.renderToTex = true
                 fsv.requestRender()
             }
+
         }
         rotationSeekBar.setOnSeekBarChangeListener(rotationSeekBarListener)
 

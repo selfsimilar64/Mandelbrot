@@ -1,71 +1,36 @@
 package com.selfsimilartech.fractaleye
 
+import android.content.res.Resources
 import android.graphics.Bitmap
-import kotlin.math.roundToInt
+import android.graphics.Point
+import android.util.Range
 
 class Texture (
 
-        val name            : Int,
-        val init            : Int = R.string.empty,
-        val loop            : String = "",
+        val nameId          : Int = -1,
+        var name            : String = "",
+        val init            : String = "",
+        var loop            : String = "",
         var final           : String = "",
         val isAverage       : Boolean = false,
         val usesFirstDelta  : Boolean = false,
         val usesSecondDelta : Boolean = false,
         val params          : List<Param> = listOf(),
+        val bins            : Param = Param(nameId = R.string.bins, u = 20.0, uRange = Range(0.0, 20.0), goldFeature = true),
         val auto            : Boolean = false,
-        val bailoutRadius   : Float = 1e2f,
+        val radius          : Float = 1e2f,
         val frequency       : Float? = null,
-        val proFeature      : Boolean = false,
-        val displayName     : Int = name
+        val goldFeature      : Boolean = false,
+        val displayName     : Int = nameId,
+        var isFavorite      : Boolean = false
 
 ) {
 
-    class Param (
-            val name: Int,
-            val min: Double = 0.0,
-            val max: Double = 1.0,
-            q: Double = 0.0,
-            val discrete: Boolean = false,
-            val proFeature: Boolean = false
-    ) {
-
-
-        private val qInit = q
-        var q = qInit
-
-        val interval = max - min
-        var progress = 0.0
-
-
-        init {
-            setProgressFromValue()
-        }
-
-        fun setValueFromProgress() {
-            q = (1.0 - progress)*min + progress*max
-        }
-        fun setProgressFromValue() {
-            progress = (q - min) / (max - min)
-        }
-
-        override fun toString(): String {
-            return if (discrete) "%d".format(q.roundToInt()) else "%.3f".format(q)
-        }
-
-        fun toString(Q: Double) : String {
-            return if (discrete) "%d".format(Q.roundToInt()) else "%.3f".format(Q)
-        }
-
-        fun reset() {
-            q = qInit
-        }
-
-    }
 
     companion object {
 
-        val empty = Texture(name = R.string.empty)
+        val emptyFavorite = Texture(name = "Empty Favorite")
+        val emptyCustom = Texture(name = "Empty Custom")
         val absoluteEscape = Texture(
                 R.string.empty
         )
@@ -75,25 +40,35 @@ class Texture (
         )
         val converge = Texture(
                 R.string.converge,
-                final = "iteration_final(n)"
+                final = "iteration_final(n)",
+                radius = 1e-8f
         )
         val escapeSmooth = Texture(
                 R.string.escape_smooth,
                 final = "escape_smooth_final(n, z, z1, textureIn)",
-                bailoutRadius = 1e2f
+                radius = 1e2f
         )
-        val distanceEstimationInt = Texture(
+        val distanceEstimation = Texture(
                 R.string.distance_est,
                 final = "dist_estim_final(modsqrz, alpha)",
                 usesFirstDelta = true,
                 auto = true,
-                bailoutRadius = 1e2f
+                radius = 1e2f
+        )
+        val absoluteDistance = Texture(
+                R.string.distance_est_abs,
+                final = "dist_estim_abs_final(modsqrz, alpha)",
+                usesFirstDelta = true,
+                auto = true,
+                params = listOf(Param(R.string.size, 1.0, Range(0.000001, 3.0))),
+                radius = 3e1f,
+                goldFeature = true
         )
         val normalMap1 = Texture(
                 R.string.normal1,
                 final = "normal_map1_final(z, alpha)",
                 usesFirstDelta = true,
-                bailoutRadius = 1e1f,
+                radius = 1e1f,
                 frequency = 1f
         )
         val normalMap2 = Texture(
@@ -101,22 +76,21 @@ class Texture (
                 final = "normal_map2_final(modsqrz, z, alpha, beta)",
                 usesFirstDelta = true,
                 usesSecondDelta = true,
-                bailoutRadius = 1e2f,
+                radius = 1e2f,
                 frequency = 1f
         )
         val triangleIneqAvgInt = Texture(
                 R.string.triangle_ineq_avg_int,
                 loop = "triangle_ineq_avg_int_loop(sum, sum1, n, modc, z1, z2);",
                 isAverage = true,
-                params = listOf(Param(R.string.alpha, 0.0, 5.0, 1.0)),
-                bailoutRadius = 1e6f,
+                radius = 1e6f,
                 displayName = R.string.triangle_ineq_avg
         )
         val triangleIneqAvgFloat = Texture(
-                name = R.string.triangle_ineq_avg_float,
+                nameId = R.string.triangle_ineq_avg_float,
                 loop = "triangle_ineq_avg_float_loop(sum, sum1, n, modc, z1, z2);",
                 isAverage = true,
-                bailoutRadius = 1e6f,
+                radius = 1e6f,
                 displayName = R.string.triangle_ineq_avg
         )
         val curvatureAvg = Texture(
@@ -124,105 +98,150 @@ class Texture (
                 loop = "curvature_avg_loop(sum, sum1, n, z, z1, z2);",
                 isAverage = true,
                 params = listOf(
-                        Param(R.string.thickness, 0.075, 2.0, 1.0, false, proFeature = true)
+                        Param(R.string.width, 1.0, Range(0.075, 10.0), goldFeature = true),
+                        Param(R.string.bend, 0.0, Range(-5.0, 5.0), goldFeature = true)
                 ),
-                bailoutRadius = 1e8f
+                radius = 1e8f
         )
         val stripeAvg = Texture(
                 R.string.stripe_avg,
                 loop = "stripe_avg_loop(sum, sum1, z);",
                 isAverage = true,
                 params = listOf(
-                        Param(R.string.density, 1.0, 8.0, 2.0, true),
-                        Param(R.string.thickness, 0.075, 2.0, 1.0, false, proFeature = true)
+                        Param(R.string.frequency,  1.0,  Range(1.0, 8.0),                     goldFeature = true),
+                        Param(R.string.phase,      0.0,  Range(0.0, 360.0), toRadians = true, goldFeature = true),
+                        Param(R.string.width,      1.0,  Range(0.075, 30.0),                  goldFeature = true)
                 ),
-                bailoutRadius = 1e6f
+                radius = 1e6f
         )
-        val orbitTrap = Texture(
-                R.string.orbit_trap_miny,
-                loop = "orbit_trap_minx_loop(minx, z);",
-                final = "minx",
-                bailoutRadius = 1e2f
+        val orbitTrapLine = Texture(
+                R.string.orbit_trap_line,
+                init = "float minDist = R;",
+                loop = "orbit_trap_line_loop(z, minDist);",
+                final = "minDist",
+                params = listOf(
+                        Param(R.string.shift, 0.0, Range(-10.0, 10.0), goldFeature = true),
+                        Param(R.string.rotate, 0.0, Range(0.0, 180.0), toRadians = true, goldFeature = true)
+                )
+        )
+        val orbitTrapCirc = Texture(
+                R.string.orbit_trap_circ,
+                init = "float minDist = R;",
+                loop = "orbit_trap_circ_loop(z, minDist);",
+                final = "minDist",
+                params = listOf(
+                        ComplexParam(R.string.center),
+                        Param(R.string.size, 0.0, Range(0.0, 2.0))
+                ),
+                radius = 1e2f,
+                goldFeature = true
+        )
+        val orbitTrapBox = Texture(
+                R.string.orbit_trap_box,
+                init = "float minDist = R;",
+                loop = "orbit_trap_box_loop(z, minDist);",
+                final = "minDist",
+                params = listOf(
+                        ComplexParam(R.string.center),
+                        ComplexParam(R.string.size, 1.0, 1.0)
+                ),
+                goldFeature = true
+        )
+        val orbitTrapCircPuncture = Texture(
+                R.string.mandelbrot,
+                init = "float minDist = R; float angle = 0.0;",
+                loop = "orbit_trap_circ_puncture_loop(z, minDist, angle);",
+                final = "angle",
+                params = listOf(
+                        ComplexParam(R.string.center),
+                        Param(u = 1.0)
+                )
         )
         val overlayAvg = Texture(
                 R.string.overlay_avg,
                 loop = "overlay_avg_loop(sum, sum1, z);",
                 isAverage = true,
-                params = listOf(Param(R.string.sharpness, 0.4, 0.5, 0.49)),
-                bailoutRadius = 1e2f
+                params = listOf(
+                        Param(R.string.sharpness, 0.45, Range(0.4, 0.5))
+                ),
+                radius = 1e2f
         )
         val exponentialSmoothing = Texture(
                 R.string.exponential_smooth,
                 loop = "exp_smoothing_loop(sum, modsqrz);",
                 final = "exp_smoothing_final(sum)",
-                bailoutRadius = 1e2f
+                radius = 1e2f
         )
-        val orbitTrapMinXY = Texture(
-                R.string.empty,
-                init = R.string.orbittrapminxy_init,
-                bailoutRadius = 1e2f
-        )
-        val testAvg = Texture(
-                name = R.string.alpha,
-                loop = "test_avg_loop(sum, sum1, n, z, z1, z2, z3, z4, c);",
-                params = listOf(
-                        Param(R.string.alpha, 0.0, 2.0*Math.PI, 0.0, proFeature = true)
-                ),
+        val angularMomentum = Texture(
+                nameId = R.string.angular_momentum,
+                loop = "angular_momentum_loop(sum, sum1, z, z1, z2);",
                 isAverage = true,
-                bailoutRadius = 1e10f,
-                proFeature = true
+                params = listOf(Param(R.string.alpha, 0.0, Range(0.0, 2.0*Math.PI), goldFeature = true)),
+                radius = 1e10f,
+                goldFeature = true
+        )
+        val umbrella = Texture(
+                nameId = R.string.umbrella,
+                loop = "umbrella_loop(sum, sum1, z, z1);",
+                isAverage = true,
+                params = listOf(Param(R.string.frequency, 4.0, Range(1.0, 8.0))),
+                goldFeature = true
+        )
+        val umbrellaInverse = Texture(
+                nameId = R.string.inverse_umbrella,
+                loop = "umbrella_inverse_loop(sum, sum1, z, z1);",
+                isAverage = true,
+                params = listOf(Param(R.string.frequency, 4.0, Range(1.0, 5.0))),
+                goldFeature = true
+        )
+        val exitAngle = Texture(
+                nameId = R.string.texture_name,
+                loop = "exit_angle_loop(sum, sum1, z, z1);",
+                isAverage = true,
+                goldFeature = true
         )
 
 
 
         val all = mutableListOf(
-                testAvg,
+                umbrella,
+                umbrellaInverse,
+                angularMomentum,
                 escape,
                 escapeSmooth,
                 converge,
                 exponentialSmoothing,
-                distanceEstimationInt,
+                distanceEstimation,
+                absoluteDistance,
                 triangleIneqAvgInt,
                 triangleIneqAvgFloat,
                 curvatureAvg,
                 stripeAvg,
-                orbitTrap,
+                orbitTrapLine,
+                orbitTrapCirc,
+                orbitTrapBox,
                 normalMap1,
                 normalMap2,
                 overlayAvg
         )
 
-        val mandelbrot = mutableListOf(
-                testAvg,
-                escape,
-                escapeSmooth,
-                exponentialSmoothing,
-                distanceEstimationInt,
+        val mandelbrot = all.minus(converge)
+
+        val divergent = all.minus(listOf(
+                converge,
                 triangleIneqAvgInt,
                 triangleIneqAvgFloat,
-                curvatureAvg,
-                stripeAvg,
-                orbitTrap,
+                distanceEstimation,
                 normalMap1,
-                normalMap2,
-                overlayAvg
-        )
-
-        val divergent = mutableListOf(
-                testAvg,
-                escape,
-                escapeSmooth,
-                exponentialSmoothing,
-                curvatureAvg,
-                stripeAvg,
-                overlayAvg,
-                orbitTrap
-        )
+                normalMap2
+        ))
 
         val convergent = mutableListOf(
                 converge,
                 exponentialSmoothing,
-                orbitTrap
+                orbitTrapLine,
+                orbitTrapCirc,
+                orbitTrapBox
         )
 
     }
@@ -232,18 +251,31 @@ class Texture (
         if (isAverage) this.final = "avg_final(sum, sum1, n, z, z1, textureIn)"
     }
 
-    var activeParam = if (params.isNotEmpty()) params[0] else Param(R.string.empty)
+    fun initialize(res: Resources, thumbRes: Point) {
 
-    val numParamsInUse = if (BuildConfig.PAID_VERSION) params.size else {
+        when {
+            nameId == -1 && name == "" -> {
+                throw Error("neither nameId nor name was passed to the constructor")
+            }
+            name == "" -> {
+                name = res.getString(nameId)
+            }
+        }
 
-        params.filter { param -> !param.proFeature } .size
+        params.forEach { p ->
+            if (p.nameId != -1) p.name = res.getString(p.nameId)
+        }
+
+        thumbnail = Bitmap.createBitmap(thumbRes.x, thumbRes.x, Bitmap.Config.ARGB_8888)
 
     }
+
+    var activeParam = if (params.isNotEmpty()) params[0] else Param(R.string.empty)
 
     var thumbnail : Bitmap? = null
 
     override fun equals(other: Any?): Boolean {
-        return other is Texture && name == other.name
+        return other is Texture && nameId == other.nameId
     }
 
     override fun hashCode(): Int {

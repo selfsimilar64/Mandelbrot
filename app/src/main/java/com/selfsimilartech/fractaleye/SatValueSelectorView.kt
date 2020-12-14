@@ -100,7 +100,7 @@ class SatValueSelectorView : View {
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        Log.e("SATVAL SELECTOR", "size changed")
+        // Log.e("SATVAL SELECTOR", "size changed")
         super.onSizeChanged(w, h, oldw, oldh)
         rect.set(0, 0, w, h)
         updateRectShader()

@@ -1,15 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <dimen name="menuButtonWidth">60dp</dimen>
+    <dimen name="menuButtonHeight">45dp</dimen>
+
     <dimen name="uiLayoutHeight">175dp</dimen>
     <dimen name="uiLayoutHeightTall">310dp</dimen>
-    <dimen name="uiLayoutHeightClosed">@dimen/menuButtonsHeight</dimen>
+    <dimen name="uiLayoutHeightClosed">@dimen/menuButtonHeight</dimen>
     <dimen name="fragmentItemHeight">80dp</dimen>
     <dimen name="fragmentItemHeightTall">265dp</dimen>
     <dimen name="categoryLayoutHeightTall">200dp</dimen>
     <dimen name="categoryNameButtonHeight">35dp</dimen>
-    <dimen name="menuButtonsHeight">45dp</dimen>
     <dimen name="categoryPagerHeight">130dp</dimen>
+
+    <dimen name="recyclerViewDividerMargin">5dp</dimen>
+    <dimen name="recyclerViewDividerSize">1dp</dimen>
+
+    <dimen name="proIndicatorThickness">15dp</dimen>
+    <dimen name="upgradeButtonHeight">36dp</dimen>
+    <dimen name="upgradeButtonCornerRadius">18dp</dimen>
+
+    <dimen name="paletteListItemHeightLinear">48dp</dimen>
+    <dimen name="paletteListItemHeightGrid">145dp</dimen>
 
 
     <dimen name="previewHeight">145dp</dimen>
@@ -29,13 +41,13 @@
     <dimen name="colorPreviewSize">80dp</dimen>
     <dimen name="colorPreviewGradientCornerRadius">10dp</dimen>
 
-    <dimen name="navButtonSize">@dimen/menuButtonsHeight</dimen>
+    <dimen name="navButtonSize">@dimen/menuButtonHeight</dimen>
     <dimen name="colorPreviewListMarginEnd">7dp</dimen>
     <dimen name="categoryPagerMarginHorizontal">7dp</dimen>
     <dimen name="listButtonMarginHorizontal">10dp</dimen>
 
     <dimen name="satValueSelectorLayoutWidth">190dp</dimen>
-    <dimen name="satValueSelectorLayoutHeight">110dp</dimen>
+    <dimen name="satValueSelectorLayoutHeight">125dp</dimen>
     <dimen name="satValueSelectorRadius">8dp</dimen>
     <dimen name="satValueSelectorRadiusDiff">1dp</dimen>
     <dimen name="hueSelectorLayoutWidth">25dp</dimen>

@@ -3,11 +3,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/settingsLayout"
+    android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@color/menu2"
+    android:background="@color/menuDark1"
     android:orientation="vertical">
 
     <ScrollView
@@ -65,7 +65,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menu3" />
+                android:background="@color/menuDark7" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -99,7 +99,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menu3" />
+                android:background="@color/menuDark7" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -189,7 +189,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menu3" />
+                android:background="@color/menuDark7" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/renderBackgroundLayout"
@@ -232,7 +232,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menu3" />
+                android:background="@color/menuDark7" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/chunkProfileLayout"
@@ -263,7 +263,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:layout_marginTop="8dp"
-                    android:background="@color/menu4"
+                    android:background="@color/menuDark5"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/chunkCountHint"
@@ -293,7 +293,7 @@
         android:id="@+id/resolutionLayout"
         style="@style/FragmentItem"
         android:layout_width="match_parent"
-        android:backgroundTint="@color/menu4"
+        android:backgroundTint="@color/menuDark5"
         android:orientation="vertical">
 
         <TextView
@@ -364,7 +364,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/menuButtonsHeight"
+        android:layout_height="@dimen/menuButtonHeight"
         android:orientation="horizontal">
 
         <HorizontalScrollView
@@ -409,6 +409,24 @@
                     android:drawableTop="@drawable/changelog"
                     android:text="@string/changelog" />
 
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/upgradeButton"
+                    style="@style/MenuNavButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:drawableTop="@drawable/upgrade"
+                    android:text="@string/upgrade" />
+
+                <Button
+                    android:id="@+id/toggleGoldButton"
+                    style="@style/MenuNavButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:drawableTop="@drawable/custom"
+                    android:text="@string/gold" />
+
             </LinearLayout>
         </HorizontalScrollView>
 
@@ -416,7 +434,7 @@
             android:id="@+id/divider7"
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/menu3" />
+            android:background="@color/menuDark7" />
 
         <Button
             android:id="@+id/saveToFileButton"

@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/textureLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@color/black"
+    android:background="@color/menuDark1"
     android:orientation="vertical">
 
     <LinearLayout
@@ -120,31 +121,17 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/textureParamLayout"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent">
+    <include
+        android:id="@+id/realTextureParam"
+        layout="@layout/real_param"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight" />
 
-        <com.selfsimilartech.fractaleye.SeekBar2
-            android:id="@+id/qSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:max="1000"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/qEdit" />
-
-        <EditText
-            android:id="@+id/qEdit"
-            style="@style/EditNumberDark"
-            android:layout_width="wrap_content"
-            android:imeOptions="actionDone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <include
+        android:id="@+id/complexTextureParam"
+        layout="@layout/complex_param"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight" />
 
     <LinearLayout
         android:id="@+id/texturePreviewListLayout"
@@ -152,27 +139,24 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:animateLayoutChanges="true"
-        android:orientation="vertical"
-        android:visibility="visible">
+        android:orientation="vertical">
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:cardBackgroundColor="@color/transparent"
             app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/texturePreviewList"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/fragmentItemHeightTall"
-                android:background="@color/menu4"
+                android:layout_height="match_parent"
+                android:background="@color/menuDark4"
                 android:orientation="vertical"
                 android:scrollbars="vertical"
-                android:visibility="visible"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
                 tools:itemCount="6"
-                tools:listitem="@layout/texture_shape_preview_item_grid">
+                tools:listitem="@layout/texture_shape_list_item_grid_fg">
 
             </androidx.recyclerview.widget.RecyclerView>
         </androidx.cardview.widget.CardView>
@@ -182,7 +166,7 @@
     <LinearLayout
         android:id="@+id/textureNavBar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/menuButtonsHeight"
+        android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
@@ -198,54 +182,98 @@
             style="@style/MenuNavButton"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/done"
-            android:text="@string/done" />
+            android:text="@android:string/ok" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/textureSubMenuButtons"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/menuButtonsHeight"
+        android:layout_height="wrap_content"
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/texturePreviewButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:id="@+id/textureListButton"
+            style="@style/MenuNavListButton"
+            android:layout_width="wrap_content"
             android:drawableTop="@drawable/texture_preview"
             android:text="@string/texture" />
 
-        <Button
-            android:id="@+id/textureModeButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/mode"
-            android:text="@string/mode" />
+        <View
+            android:id="@+id/divider16"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#999" />
 
-        <Button
-            android:id="@+id/escapeRadiusButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/radius"
-            android:text="@string/radius" />
+        <ImageView
+            android:id="@+id/textureScrollArrowLeft"
+            android:layout_width="15dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            app:srcCompat="@drawable/scroll_indicator_left" />
 
-        <Button
-            android:id="@+id/textureParamButton1"
-            style="@style/MenuNavToggleButton"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/parameter"
-            android:text="@string/param1" />
+        <HorizontalScrollView
+            android:id="@+id/textureButtonsScroll"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/menuButtonHeight"
+            android:layout_weight="1">
 
-        <Button
-            android:id="@+id/textureParamButton2"
-            style="@style/MenuNavToggleButton"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/parameter"
-            android:text="@string/param2" />
+            <LinearLayout
+                android:id="@+id/textureButtonsScrollLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/textureModeButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/mode"
+                    android:text="@string/mode" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/escapeRadiusButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/radius"
+                    android:text="@string/radius" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/textureParamButton1"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param1" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/textureParamButton2"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param2" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/textureParamButton3"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param3" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/textureParamButton4"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/param4" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <ImageView
+            android:id="@+id/textureScrollArrowRight"
+            android:layout_width="15dp"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            app:srcCompat="@drawable/scroll_indicator_right" />
     </LinearLayout>
 
 </LinearLayout>

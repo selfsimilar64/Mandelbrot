@@ -1,7 +1,6 @@
 package com.selfsimilartech.fractaleye
 
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +24,12 @@ class ColorPaletteDragAdapter(
         // itemList.forEachIndexed { index, pair -> Log.e("DRAG ADAPTER", "item $index: <${pair.first}, ${pair.second}>") }
 
     }
+
+    var nextUniqueId = (colors.size - 1).toLong()
+        get() {
+            field++
+            return field
+        }
 
     var selectedItemIndex = 0
         set(value) {

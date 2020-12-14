@@ -13,6 +13,7 @@ const float Sh = 1e4;
 const vec2 ZERO = vec2(0.0);
 const vec2 ONE = vec2(1.0, 0.0);
 const vec2 I = vec2(0.0, 1.0);
+const vec2 INF = vec2(1e38, 1e38);
 
 const vec2 _pi = vec2(3.141593e+00, -8.742278e-08);
 const vec2 _2pi = vec2(6.283185e+00, -1.748456e-07);
@@ -23,7 +24,7 @@ const vec2 _e = vec2(2.718282e+00, 8.254840e-08);
 const vec2 _log2 = vec2(6.931472e-01, -1.904654e-09);
 const vec2 _log10 = vec2(2.302585e+00, -3.197544e-08);
 const vec2 _pi16 = vec2(1.963495e-01, -5.463924e-09);
-const float _eps = 4.93038065763132e-32;  // 2^-104
+const float _eps = 1e-18;
 
 /* Table of sin(k * pi/16) and cos(k * pi/16). */
 const vec2 sin_table[4] = vec2[4](
@@ -59,19 +60,46 @@ const vec2 inv_fact[15] = vec2[15](
     vec2(2.811457e-15, -1.046208e-22)
 );
 
+const int n_fact = 9;
+const float fact[9] = float[9](1.0, 1.0, 2.0, 6.0, 24.0, 120.0, 720.0, 5040.0, 40320.0);
+
+const int n_gamma_vals = 8;
+const float gamma_vals[8] = float[8](
+    676.5203681218851,
+    -1259.1392167224028,
+    771.32342877765313,
+    -176.61502916214059,
+    12.507343278686905,
+    -0.13857109526572012,
+    9.9843695780195716e-6,
+    1.5056327351493116e-7
+);
+
+const int n_primes = 25;
+const float primes[25] = float[25](
+    2.0,  3.0,  5.0,  7.0,  11.0,
+    13.0, 17.0, 19.0, 23.0, 29.0,
+    31.0, 37.0, 41.0, 43.0, 47.0,
+    53.0, 59.0, 61.0, 67.0, 71.0,
+    73.0, 79.0, 83.0, 89.0, 97.0
+);
+
 
 uniform uint maxIter;
 uniform float R;
 uniform float power;
 uniform float x0;
 uniform float y0;
+uniform vec2 alpha0;
 uniform vec2 j;
 uniform vec2 p1;
 uniform vec2 p2;
 uniform vec2 p3;
 uniform vec2 p4;
-uniform float q1;
-uniform float q2;
+uniform vec2 q1;
+uniform vec2 q2;
+uniform vec2 q3;
+uniform vec2 q4;
 uniform vec2 xScale;
 uniform vec2 yScale;
 uniform vec2 xCoord;
@@ -80,10 +108,19 @@ uniform float sinRotate;
 uniform float cosRotate;
 
 in vec4 viewPos;
-out uvec2 fragmentColor;
+out uint fragmentColor;
 
 
 
+
+vec2 complex(float a) { return vec2(a, 0.0); }
+vec4 complex(vec2 a) { return vec4(a, ZERO); }
+
+vec2 _float(vec2 z) { return z; }
+vec2 _float(vec4 z) { return z.xz; }
+
+vec2 _double(float a) { return vec2(a, 0.0); }
+vec4 _double(vec2 z) { return vec4(z.x, 0.0, z.y, 0.0); }
 
 
 vec2 quickTwoSum(float a, float b) {
@@ -158,6 +195,17 @@ vec2 twoSqr(float a) {
 
 
 
+vec2 add(vec2 a, float b) {
+    vec2 s;
+    s = twoSum(a.x, b);
+    s.y += a.y;
+    s = quickTwoSum(s.x, s.y);
+    s = quickTwoSum(s.x, s.y);
+    return s;
+}
+vec2 add(float b, vec2 a) {
+    return add(a, b);
+}
 vec2 add(vec2 a, vec2 b) {
     vec2 s;
     vec2 t;
@@ -170,6 +218,10 @@ vec2 add(vec2 a, vec2 b) {
     return s;
 }
 
+vec2 sub(vec2 a, float b) { return add(a, -b); }
+vec2 sub(float b, vec2 a) { return add(-a, b); }
+vec2 sub(vec2 a, vec2 b) { return add(a, -b); }
+
 vec2 mult(vec2 a, vec2 b) {
     vec2 p;
     p = twoProd(a.x, b.x);
@@ -178,7 +230,14 @@ vec2 mult(vec2 a, vec2 b) {
     p = quickTwoSum(p.x, p.y);
     return p;
 }
-vec2 mult(float a, vec2 b) { return mult(vec2(a, 0.0), b); }
+vec2 mult(float a, vec2 b) {
+    vec2 p;
+    p = twoProd(a, b.x);
+    p.y += a * b.y;
+    p = quickTwoSum(p.x, p.y);
+    return p;
+}
+vec2 mult(vec2 a, float b) { return mult(b, a); }
 
 vec2 sqr(vec2 a) {
     vec2 p;
@@ -187,8 +246,21 @@ vec2 sqr(vec2 a) {
     p = quickTwoSum(p.x, p.y);
     return p;
 }
+vec2 cube(vec2 a) {
+    return mult(sqr(a), a);
+}
+vec2 quad(vec2 a) {
+    return sqr(sqr(a));
+}
+vec2 quint(vec2 a) {
+    return mult(quad(a), a);
+}
+vec2 sext(vec2 a) {
+    return sqr(cube(a));
+}
 
 vec2 sqrtd(vec2 a) {
+    if (a == ZERO) return ZERO;
     float xn = 1.0/sqrt(a.x);
     float yn = a.x*xn;
     vec2 ynSqr = sqr(vec2(yn, 0.0));
@@ -200,9 +272,23 @@ vec2 sqrtd(vec2 a) {
 vec2 div(vec2 a, vec2 b) {
     float xn = 1.0/b.x;
     float yn = a.x*xn;
-    float diff = add(a, -mult(b, vec2(yn, 0.0))).x;
+    float diff = add(a, -mult(b, yn)).x;
     vec2 prod = twoProd(xn, diff);
-    return add(vec2(yn, 0.0), prod);
+    return add(yn, prod);
+}
+vec2 div(vec2 a, float b) {
+    float xn = 1.0/b;
+    float yn = a.x*xn;
+    float diff = add(a, -b*yn).x;
+    vec2 prod = twoProd(xn, diff);
+    return add(yn, prod);
+}
+vec2 div(float a, vec2 b) {
+    float xn = 1.0/b.x;
+    float yn = a*xn;
+    float diff = add(a, -mult(b, yn)).x;
+    vec2 prod = twoProd(xn, diff);
+    return add(yn, prod);
 }
 
 vec2 inv(vec2 a) {
@@ -217,8 +303,17 @@ vec2 absd(vec2 a) {
     else { return a; }
 }
 
+vec2 modd(vec2 a, float b) {
+    int n = int(div(a, vec2(b, 0.0)).x);  // optimize ??
+    return add(a, -mult(b, vec2(float(n), 0.0)));
+}
+
 bool gtd(vec2 a, float b) {
     if (a.x > b || (a.x == b && a.y > 0.0)) return true;
+    else return false;
+}
+bool ltd(vec2 a, float b) {
+    if (a.x < b || (a.x == b && a.y < 0.0)) return true;
     else return false;
 }
 
@@ -279,6 +374,11 @@ void sincosd_taylor(vec2 a, out vec2 sin_a, out vec2 cos_a) {
 
 }
 
+float signd(vec2 a) {
+    if (a.x == 0.0) return sign(a.y);
+    else return sign(a.x);
+}
+
 vec2 roundd(vec2 a) {
     if (a.x == 0.5) {
         if (a.y > 0.0) return vec2(ceil(a.x), 0.0);
@@ -336,21 +436,30 @@ vec2 sind(vec2 a) {
     vec2 v = sin_table[abs_k - 1];
     vec2 sin_t, cos_t;
     sincosd_taylor(t, sin_t, cos_t);
+
     if (j == 0) {
-        if (k > 0) { r = add(mult(u, sin_t), mult(v, cos_t)); }
-        else { r = add(mult(u, sin_t), -mult(v, cos_t)); }
+
+        if (k > 0)  r = add(mult(u, sin_t), mult(v, cos_t));
+        else        r = add(mult(u, sin_t), -mult(v, cos_t));
+
     }
     else if (j == 1) {
-        if (k > 0) { r = add(mult(u, cos_t), -mult(v, sin_t)); }
-        else { r = add(mult(u, cos_t), mult(v, sin_t)); }
+
+        if (k > 0)  r = add(mult(u, cos_t), -mult(v, sin_t));
+        else        r = add(mult(u, cos_t), mult(v, sin_t));
+
     }
     else if (j == -1) {
-        if (k > 0) { r = add(mult(v, sin_t), -mult(u, cos_t)); }
-        else if (k < 0) { r = add(mult(-u, cos_t), -mult(v, sin_t)); }
+
+        if (k > 0)  r = add(mult(v, sin_t), -mult(u, cos_t));
+        else        r = add(mult(-u, cos_t), -mult(v, sin_t));
+
     }
     else {
-        if (k > 0) { r = add(mult(-u, sin_t), -mult(v, cos_t)); }
-        else { r = add(mult(v, cos_t), -mult(u, sin_t)); }
+
+        if (k > 0)  r = add(mult(-u, sin_t), -mult(v, cos_t));
+        else        r = add(mult(v, cos_t), -mult(u, sin_t));
+
     }
 
     return r;
@@ -484,127 +593,43 @@ void sincosd(vec2 a, out vec2 sin_a, out vec2 cos_a) {
 
 }
 
-vec2 expd(vec2 a) {
-
-    /* Strategy:  We first reduce the size of x by noting that
-       
-            exp(kr + m * log(2)) = 2^m * exp(r)^k
-    
-       where m and k are integers.  By choosing m appropriately
-       we can make |kr| <= log(2) / 2 = 0.347.  Then exp(r) is 
-       evaluated using the familiar Taylor series.  Reducing the 
-       argument substantially speeds up the convergence.       */
-    
-    float k = 512.0;
-    float inv_k = 1.0 / k;
-    
-    if (a.x <= -709.0) return ZERO;
-    if (a.x >=  709.0) return ZERO; // inf
-    if (a == ZERO) return ONE;
-    if (a == ONE) return _e;
-    
-    float m = floor(a.x / _log2.x + 0.5);
-    vec2 r = inv_k*add(a, -mult(m, _log2));
-    vec2 s, t, p;
-    
-    p = sqr(r);
-    s = add(r, 0.5*p);
-    p = mult(p, r);
-    t = mult(p, inv_fact[0]);
-    int i = 0;
-    do {
-        s = add(s, t);
-        p = mult(p, r);
-        ++i;
-        t = mult(p, inv_fact[i]);
-    } while (abs(t.x) > inv_k*_eps && i < 5);
-    
-    s = add(s, t);
-    
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(2.0*s, sqr(s));
-    s = add(s, ONE);
-    
-    return exp2(m)*s;
-
+vec2 tand(vec2 a) {
+    if (modd(sub(a, _pi2), pi) == ZERO) return INF;
+    vec2 sina, cosa;
+    sincosd(a, sina, cosa);
+    return div(sina, cosa);
 }
 
-vec2 logd(vec2 a) {
-
-    /* Strategy.  The Taylor series for log converges much more
-         slowly than that of exp, due to the lack of the factorial
-         term in the denominator.  Hence this routine instead tries
-         to determine the root of the function
-
-             f(x) = exp(x) - a
-
-         using Newton iteration.  The iteration is given by
-
-             x' = x - f(x)/f'(x)
-                = x - (1 - a * exp(-x))
-                = x + a * exp(-x) - 1.
-
-         Only one iteration is needed, since Newton's iteration
-         approximately doubles the number of digits per iteration. */
-
-    if (a == ONE) { return ZERO; }
-    if (a.x <= 0.0) { return ZERO; } // error
-
-    vec2 x = vec2(log(a.x), 0.0);
-
-    x = add(add(x, mult(a, expd(-x))), -ONE);
-    return x;
-
+float cscd(float a) {
+    if (mod(a, pi) == 0.0) return INF.x;
+    return 1.0/sin(a);
+}
+vec2 cscd(vec2 a) {
+    if (modd(a, pi) == ZERO) return INF;
+    return inv(sind(a));
 }
 
-vec2 powd(vec2 a, vec2 b) { return expd(mult(b, logd(a))); }
-
-vec2 modd(vec2 a, float b) {
-    int n = int(div(a, vec2(b, 0.0)).x);  // optimize ??
-    return add(a, -mult(b, vec2(float(n), 0.0)));
+float secd(float a) {
+    if (mod(a - 0.5*pi, pi) == 0.0) return INF.x;
+    return 1.0/cos(a);
+}
+vec2 secd(vec2 a) {
+    if (modd(sub(a, _pi2), pi) == ZERO) return INF;
+    return inv(cosd(a));
 }
 
-
-
-
-
-bool isSpecial(float a) { return isinf(a) || isnan(a); }
-
-vec2 complex(float a) { return vec2(a, 0.0); }
-vec4 complex(vec2 a) { return vec4(a.xy, ZERO); }
-
-vec2 _double(float a) { return vec2(a, 0.0); }
-vec4 _double(vec2 z) { return vec4(z.x, 0.0, z.y, 0.0); }
-
-vec4 cadd(vec4 z, float a) {
-    return vec4(add(z.xy, vec2(a, 0.0)), z.zw);
+float cotd(float a) {
+    if (mod(a, pi) == 0.0) return INF.x;
+    return cos(a)/sin(a);
 }
-vec4 cadd(float a, vec4 z) {
-    return cadd(z, a);
-}
-vec4 cadd(vec4 z, vec4 w) {
-    vec2 u = add(z.xy, w.xy);
-    vec2 v = add(z.zw, w.zw);
-    return vec4(u, v);
-}
-vec4 cadd(vec4 z, vec2 w) {
-    return cadd(z, vec4(w.x, 0.0, w.y, 0.0));
-}
-vec4 cadd(vec2 w, vec4 z) {
-    return cadd(z, w);
+vec2 cotd(vec2 a) {
+    if (modd(a, pi) == ZERO) return INF;
+    vec2 sina, cosa;
+    sincosd(a, sina, cosa);
+    return div(cosa, sina);
 }
 
-float atan2(vec2 z) {
-    return atan(z.y, z.x);
-}
-vec2 atan2(vec2 y, vec2 x) {
+vec2 atan2d(vec2 y, vec2 x) {
 
     /* Strategy: Instead of using Taylor series to compute
      arctan, we instead use Newton's iteration to solve
@@ -666,13 +691,360 @@ vec2 atan2(vec2 y, vec2 x) {
 
 }
 
+vec2 asind(vec2 a) {
+    vec2 abs_a = absd(a);
+
+    if (gtd(abs_a, 1.0)) return ZERO; // out of domain
+
+    if (abs_a == ONE) {
+        if (a.x == 1.0) return _pi2;
+        else            return -_pi2;
+    }
+
+    return atan2d(a, sqrtd(sub(1.0, sqr(a))));
+}
+
+vec2 acosd(vec2 a) {
+    vec2 abs_a = absd(a);
+
+    if (gtd(abs_a, 1.0)) return ZERO; // out of domain
+
+    if (abs_a == ONE) {
+        if (a.x == 1.0) return ZERO;
+        else            return _pi;
+    }
+
+    return atan2d(sqrtd(sub(1.0, sqr(a))), a);
+}
+
+vec2 atand(vec2 a) {
+    return atan2d(a, ONE);
+}
+
+float acsc(float a) {
+    if (abs(a) < 1.0) return 0.0; // out of domain
+    return asin(1.0/a);
+}
+vec2 acscd(vec2 a) {
+    if (ltd(absd(a), 1.0)) return ZERO; // out of domain
+    return asind(inv(a));
+}
+
+float asec(float a) {
+    if (abs(a) < 1.0) return 0.0; // out of domain
+    return acos(1.0/a);
+}
+vec2 asecd(vec2 a) {
+    if (ltd(absd(a), 1.0)) return ZERO; // out of domain
+    return acosd(inv(a));
+}
+
+float acot(float a) {
+    if (a == 0.0) return _pi2.x;
+    return atan(1.0/a);
+}
+vec2 acotd(vec2 a) {
+    if (a == ZERO) return _pi2;
+    return atand(inv(a));
+}
+
+vec2 expd(vec2 a) {
+
+    /* Strategy:  We first reduce the size of x by noting that
+       
+            exp(kr + m * log(2)) = 2^m * exp(r)^k
+    
+       where m and k are integers.  By choosing m appropriately
+       we can make |kr| <= log(2) / 2 = 0.347.  Then exp(r) is 
+       evaluated using the familiar Taylor series.  Reducing the 
+       argument substantially speeds up the convergence.       */
+
+//    float k = 512.0;
+    float k = 16.0;
+    float inv_k = 1.0 / k;
+    
+    if (a.x <= -709.0) return ZERO;
+    if (a.x >=  709.0) return ZERO; // inf
+    if (a == ZERO) return ONE;
+    if (a == ONE) return _e;
+    
+    float m = floor(a.x / _log2.x + 0.5);
+    vec2 r = inv_k*add(a, -mult(m, _log2));
+    vec2 s, t, p;
+    
+    p = sqr(r);
+    s = add(r, 0.5*p);
+    p = mult(p, r);
+    t = mult(p, inv_fact[0]);
+    int i = 0;
+    do {
+        s = add(s, t);
+        p = mult(p, r);
+        ++i;
+        t = mult(p, inv_fact[i]);
+    } while (abs(t.x) > inv_k*_eps && i < 5);
+    
+    s = add(s, t);
+    
+    s = add(2.0*s, sqr(s));
+    s = add(2.0*s, sqr(s));
+    s = add(2.0*s, sqr(s));
+    s = add(2.0*s, sqr(s));
+//    s = add(2.0*s, sqr(s));
+//    s = add(2.0*s, sqr(s));
+//    s = add(2.0*s, sqr(s));
+//    s = add(2.0*s, sqr(s));
+//    s = add(2.0*s, sqr(s));
+    s = add(s, ONE);
+    
+    return exp2(m)*s;
+
+}
+
+vec2 logd(vec2 a) {
+
+    /* Strategy.  The Taylor series for log converges much more
+         slowly than that of exp, due to the lack of the factorial
+         term in the denominator.  Hence this routine instead tries
+         to determine the root of the function
+
+             f(x) = exp(x) - a
+
+         using Newton iteration.  The iteration is given by
+
+             x' = x - f(x)/f'(x)
+                = x - (1 - a * exp(-x))
+                = x + a * exp(-x) - 1.
+
+         Only one iteration is needed, since Newton's iteration
+         approximately doubles the number of digits per iteration. */
+
+    if (a == ONE) { return ZERO; }
+    if (a.x <= 0.0) { return ZERO; } // error
+
+    vec2 x = vec2(log(a.x), 0.0);
+
+    x = add(add(x, mult(a, expd(-x))), -ONE);
+    return x;
+
+}
+
+vec2 sinhd(vec2 a) {
+
+//    if (a == ZERO) return ZERO;
+//    vec2 ea = expd(a);
+//    return 0.5*(ea - inv(ea));
+
+    float thresh = 0.5*abs(a.x)*_eps;
+    vec2 r, s, t, x;
+
+    if (a == ZERO) { return ZERO; }
+
+    int i = 0;
+    x = sqr(a);
+    s = a;
+    r = a;
+    do {
+        r = mult(r, x);
+        t = mult(r, inv_fact[i]);
+        s = add(s, t);
+        i += 2;
+    } while (i < n_inv_fact && abs(t.x) > thresh);
+
+    return s;
+
+}
+
+vec2 coshd(vec2 a) {
+
+//    if (a == ZERO) return ONE;
+//    vec2 ea = expd(a);
+//    return 0.5*(ea + inv(ea));
+
+    float thresh = 0.5*_eps;
+    vec2 r, s, t, x;
+
+    if (a == ZERO) { return ONE; }
+
+    x = sqr(a);
+    r = x;
+    s = add(0.5*r, 1.0);
+    int i = 1;
+    do {
+        r = mult(r, x);
+        t = mult(r, inv_fact[i]);
+        s = add(s, t);
+        i += 2;
+    } while (i < n_inv_fact && abs(t.x) > thresh);
+
+    return s;
+
+}
+
+void sinhcoshd(vec2 a, out vec2 sinh_a, out vec2 cosh_a) {
+
+    if (a == ZERO) {
+        sinh_a = ZERO;
+        cosh_a = ONE;
+        return;
+    }
+
+//    vec2 t1 = expd(a);
+//    vec2 t2 = inv(t1);
+//    sinh_a = 0.5*add(t1, -t2);
+//    cosh_a = 0.5*add(t1, t2);
+
+//    sinh_a = sinhd(a);
+    cosh_a = coshd(a);
+    sinh_a = signd(a)*sqrtd(add(sqr(cosh_a), -1.0));
+//    cosh_a = sqrtd(add(sqr(sinh_a), 1.0));
+
+}
+
+vec2 tanhd(vec2 a) {
+
+    vec2 sinha, cosha;
+    sinhcoshd(a, sinha, cosha);
+    return div(sinha, cosha);
+
+}
+
+float cschd(float a) {
+    if (a == 0.0) return INF.x;
+    return 1.0/sinh(a);
+}
+vec2 cschd(vec2 a) {
+    if (a == ZERO) return INF;
+    return inv(sinhd(a));
+}
+
+float sechd(float a) {
+    return 1.0/cosh(a);
+}
+vec2 sechd(vec2 a) {
+    return inv(coshd(a));
+}
+
+float cothd(float a) {
+    if (a == 0.0) return INF.x;
+    return cosh(a)/sinh(a);
+}
+vec2 cothd(vec2 a) {
+    if (a == ZERO) return INF;
+    vec2 sinha, cosha;
+    sinhcoshd(a, sinha, cosha);
+    return div(cosha, sinha);
+}
+
+vec2 asinhd(vec2 a) {
+    return logd(add(a, sqrtd(add(sqr(a), 1.0))));
+}
+
+vec2 acoshd(vec2 a) {
+    if (ltd(a, 1.0)) return ZERO; // out of domain
+    return logd(add(a, sqrtd(sub(sqr(a), 1.0))));
+}
+
+vec2 atanhd(vec2 a) {
+    vec2 abs_a = absd(a);
+    if (gtd(abs_a, 1.0) || abs_a == ONE) return ZERO; // out of domain
+    return 0.5*(logd(div(add(1.0, a), sub(1.0, a))));
+}
+
+float acsch(float a) {
+    if (a == 0.0) return INF.x;
+    float ainv = 1.0/a;
+    return log(ainv + sqrt(ainv*ainv + 1.0));
+}
+vec2 acschd(vec2 a) {
+    if (a == ZERO) return INF;
+    vec2 ainv = inv(a);
+    return logd(add(ainv, sqrtd(add(sqr(ainv), 1.0))));
+}
+
+float asech(float a) {
+    if (a == 0.0) return INF.x;
+    else if (a < 0.0 || a > 1.0) return 0.0; // out of domain
+    return log((1.0 + sqrt(1.0 - a*a))/a);
+}
+vec2 asech(vec2 a) {
+    if (a == ZERO) return INF;
+    else if (ltd(a, 0.0) || gtd(a, 1.0)) return ZERO; // out of domain
+    return logd(div(add(1.0, sqrtd(sub(1.0, sqr(a)))), a));
+}
+
+float acoth(float a) {
+    if (a == 1.0) return INF.x;
+    else if (a == -1.0) return -INF.x;
+    else if (abs(a) < 1.0) return 0.0; // out of domain
+    return 0.5*log((a + 1.0)/(a - 1.0));
+}
+vec2 acoth(vec2 a) {
+    if (a == ONE) return INF;
+    else if (a == -ONE) return -INF;
+    else if (ltd(absd(a), 1.0)) return ZERO; // out of domain
+    return 0.5*logd(div(add(a, 1.0), sub(a, 1.0)));
+}
+
+vec2 powd(vec2 a, float b) { return expd(mult(b, logd(a))); }
+vec2 powd(float a, vec2 b) { return expd(mult(b, log(a))); }
+vec2 powd(vec2 a, vec2 b) { return expd(mult(b, logd(a))); }
+
+
+
+
+
+bool isSpecial(float a) { return isinf(a) || isnan(a); }
+
+vec2 cadd(vec2 z, float a) { return vec2(z.x + a, z.y); }
+vec2 cadd(vec2 z, vec2 w) {
+    return z + w;
+}
+vec2 cadd(float a, vec2 z) { return cadd(z, a); }
+vec4 cadd(vec4 z, float a) {
+    return vec4(add(z.xy, complex(a)), z.zw);
+}
+vec4 cadd(float a, vec4 z) {
+    return cadd(z, a);
+}
+vec4 cadd(vec4 z, vec4 w) {
+    vec2 u = add(z.xy, w.xy);
+    vec2 v = add(z.zw, w.zw);
+    return vec4(u, v);
+}
+vec4 cadd(vec4 z, vec2 w) {
+    return cadd(z, vec4(w.x, 0.0, w.y, 0.0));
+}
+vec4 cadd(vec2 w, vec4 z) {
+    return cadd(z, w);
+}
+
+float arg(float a) {
+    if (a > 0.0) return 0.0;
+    else return pi;
+}
+float arg(vec2 a) {
+    if (gtd(a, 0.0)) return 0.0;
+    else return pi;
+}
+float carg(vec2 z) {
+    return atan(z.y, z.x);
+}
+vec2 carg(vec4 z) {
+    return atan2d(z.zw, z.xy);
+}
+
 vec2 conj(vec2 z) {
     return vec2(z.x, -z.y);
 }
 vec4 conj(vec4 z) { return vec4(z.xy, -z.zw); }
 
 vec2 cmult(vec2 z, vec2 w) {
-    return vec2(z.x*w.x - z.y*w.y, z.x*w.y + w.x*z.y);
+    float k1 = w.x*(z.x + z.y);
+    float k2 = z.x*(w.y - w.x);
+    float k3 = z.y*(w.x + w.y);
+    return vec2(k1 - k3, k1 + k2);
+    // return vec2(z.x*w.x - z.y*w.y, z.x*w.y + w.x*z.y);
 }
 vec4 cmult(float a, vec4 z) {
     vec2 b = vec2(a, 0.0);
@@ -686,9 +1058,14 @@ vec4 cmult(vec4 z, vec4 w) {
     vec2 y = z.zw;
     vec2 u = w.xy;
     vec2 v = w.zw;
-    vec2 p = add(mult(x, u), -mult(y, v));
-    vec2 q = add(mult(x, v), mult(y, u));
-    return vec4(p, q);
+    // vec2 k1 = mult(u, add(x, y));
+    // vec2 k2 = mult(x, sub(v, u));
+    // vec2 k3 = mult(y, add(u, v));
+    // return vec4(sub(k1, k3), add(k1, k2));
+    return vec4(
+        add(mult(x, u), -mult(y, v)),
+        add(mult(x, v), mult(y, u))
+    );
 }
 vec4 cmult(vec2 z, vec4 w) { return cmult(_double(z), w); }
 vec4 cmult(vec4 w, vec2 z) { return cmult(z, w); }
@@ -759,8 +1136,8 @@ vec2 cquint(vec2 z) {
     float xsqr = z.x*z.x;
     float ysqr = z.y*z.y;
     return vec2(
-    z.x*xsqr*(xsqr - 3.0*ysqr) - z.x*ysqr*(7.0*xsqr - 5.0*ysqr),
-    xsqr*z.y*(5.0*xsqr - 7.0*ysqr) - z.y*ysqr*(3.0*xsqr - ysqr)
+        z.x*xsqr*(xsqr - 3.0*ysqr) - z.x*ysqr*(7.0*xsqr - 5.0*ysqr),
+        xsqr*z.y*(5.0*xsqr - 7.0*ysqr) - z.y*ysqr*(3.0*xsqr - ysqr)
     );
 }
 vec4 cquint(vec4 z) {
@@ -769,8 +1146,38 @@ vec4 cquint(vec4 z) {
     vec2 xsqr = sqr(x);
     vec2 ysqr = sqr(y);
     return vec4(
-    add(mult(x, mult(xsqr, add(xsqr, mult(-3.0, ysqr)))), -mult(x, mult(ysqr, add(mult(7.0, xsqr), mult(-5.0, ysqr))))),
-    add(mult(xsqr, mult(y, add(mult(5.0, xsqr), mult(-7.0, ysqr)))), -mult(y, mult(ysqr, add(mult(3.0, xsqr), -ysqr))))
+        add(mult(x, mult(xsqr, add(xsqr, mult(-3.0, ysqr)))), -mult(x, mult(ysqr, add(mult(7.0, xsqr), mult(-5.0, ysqr))))),
+        add(mult(xsqr, mult(y, add(mult(5.0, xsqr), mult(-7.0, ysqr)))), -mult(y, mult(ysqr, add(mult(3.0, xsqr), -ysqr))))
+    );
+}
+
+float sext(float a) { return a*quint(a); }
+vec2 csext(vec2 z) {
+    float xsqr = z.x*z.x;
+    float ysqr = z.y*z.y;
+    float a1 = 3.0*xsqr;
+    float a2 = 2.0*a1;
+    float a3 = a2 + 4.0*xsqr;
+    float b1 = 3.0*ysqr;
+    float b2 = 2.0*b1;
+    float b3 = b2 + 4.0*ysqr;
+    return vec2(
+        xsqr*xsqr*(xsqr - b1) - 12.0*xsqr*ysqr*(xsqr - ysqr) + ysqr*ysqr*(a1 - ysqr),
+        z.x*xsqr*z.y*(a2 - b3) - z.x*z.y*ysqr*(a3 - b2)
+    );
+}
+vec4 csext(vec4 z) {
+    vec2 xsqr = sqr(z.xy);
+    vec2 ysqr = sqr(z.zw);
+    vec2 a1 = mult(3.0, xsqr);
+    vec2 a2 = 2.0*a1;
+    vec2 a3 = add(a2, 4.0*xsqr);
+    vec2 b1 = mult(3.0, ysqr);
+    vec2 b2 = 2.0*b1;
+    vec2 b3 = add(b2, 4.0*ysqr);
+    return vec4(
+        add(sub(mult(xsqr, mult(xsqr, sub(xsqr, b1))), mult(12.0, mult(xsqr, mult(ysqr, sub(xsqr, ysqr))))), mult(ysqr, mult(ysqr, sub(a1, ysqr)))),
+        sub(mult(z.xy, mult(xsqr, mult(z.zw, sub(a2, b3)))), mult(z.xy, mult(z.zw, mult(ysqr, sub(a3, b2)))))
     );
 }
 
@@ -808,30 +1215,28 @@ vec4 cinv(vec4 w) {
     );
 }
 
-float carg(vec2 w) {
-    return atan(w.y, w.x);
-}
-float carg(vec4 w) {
-    return atan(w.z, w.x);
-}
-
 vec2 cdiv(float a, vec2 w) {
+    if (w == ZERO) return INF;
     return a*conj(w)/dot(w, w);
 }
 vec2 cdiv(vec2 z, vec2 w) {
+    if (w == ZERO) return INF;
     vec2 u = cmult(z, conj(w));
     return u/dot(w, w);
 }
 vec4 cdiv(float a, vec4 w) {
+    if (w == vec4(0.0)) return vec4(INF, INF);
     vec4 u = cmult(a, conj(w));
     vec2 s = cmodsqr(w);
     return vec4(div(u.xy, s), div(u.zw, s));
 }
 vec4 cdiv(vec4 z, float a) {
+    if (a == 0.0) return vec4(INF, INF);
     vec2 b = vec2(a, 0.0);
     return vec4(div(z.xy, b), div(z.zw, b));
 }
 vec4 cdiv(vec4 z, vec4 w) {
+    if (w == vec4(0.0)) return vec4(INF, INF);
     vec2 s1 = cmodsqr(w);
     vec4 s2 = cmult(z, conj(w));
     vec2 p = div(s2.xy, s1);
@@ -841,21 +1246,39 @@ vec4 cdiv(vec4 z, vec4 w) {
 vec4 cdiv(vec4 z, vec2 w) { return cdiv(z, _double(w)); }
 vec4 cdiv(vec2 z, vec4 w) { return cdiv(_double(z), w); }
 
+vec2 csign(vec2 z) {
+    if (z == ZERO) return vec2(INF);
+    return z/cmod(z);
+}
+vec4 csign(vec4 z) {
+    if (z == vec4(0.0)) return vec4(INF, INF);
+    return cdiv(z, complex(cmod(z)));
+}
+
 vec2 csqrt(vec2 z) {
-    float p = sqrt(cmod(z));
-    float phi = atan(z.y, z.x) / 2.0;
-    return p*vec2(cos(phi), sin(phi));
+    if (z == ZERO) return ZERO;
+    float modz = cmod(z);
+    float a = modz + z.x;
+    float b = modz - z.x;
+    return vec2(
+        sqrt(0.5*a),
+        sign(z.y)*sqrt(0.5*b)
+        //sqrt(modz)*sin(0.5*carg(z))
+    );
 }
 vec4 csqrt(vec4 z) {
-    vec2 p = sqrtd(cmod(z));
-    vec2 t = 0.5*atan2(z.zw, z.xy);
-    vec2 sint, cost;
-    sincosd(t, sint, cost);
-    return cmult(complex(p), vec4(cost, sint));
+    if (z == vec4(0.0)) return vec4(0.0);
+    vec2 modz = cmod(z);
+    vec2 a = add(modz, z.xy);
+    vec2 b = sub(modz, z.xy);
+    return vec4(
+        sqrtd(0.5*a),
+        signd(z.zw)*sqrtd(0.5*b)
+    );
 }
 
 vec2 cexp(vec2 w) {
-    if (w.y == 0.0) return _double(exp(w.x));
+    if (w.y == 0.0) return complex(exp(w.x));
     else return exp(w.x)*vec2(cos(w.y), sin(w.y));
 }
 vec4 cexp(vec4 w) {
@@ -864,12 +1287,26 @@ vec4 cexp(vec4 w) {
     else {
         vec2 siny, cosy;
         sincosd(w.zw, siny, cosy);
-        return cmult(complex(t), vec4(cosy, siny));
+        return vec4(mult(t, cosy), mult(t, siny));
     }
 }
 
+vec2 cexp2(vec2 w) {
+    return cexp(_log2.x*w);
+}
+vec4 cexp2(vec4 w) {
+    return cexp(cmult(complex(_log2), w));
+}
+
+vec2 cexp10(vec2 w) {
+    return cexp(_log10.x*w);
+}
+vec4 cexp10(vec4 w) {
+    return cexp(cmult(complex(_log10), w));
+}
+
 vec2 clog(vec2 z) {
-    if (z == ZERO) return vec2(-1e30, 0.0);
+    if (z == ZERO) return vec2(-2e28, 0.0);
     float rsqr = cmodsqr(z);
     float theta;
     if (z.y == 0.0) {
@@ -880,30 +1317,64 @@ vec2 clog(vec2 z) {
     return vec2(0.5*log(rsqr), theta);
 }
 vec4 clog(vec4 z) {
+    if (z == vec4(0.0)) return vec4(-2e28, 0.0, 0.0, 0.0);
     vec2 rsqr = cmodsqr(z);
     vec2 theta;
     if (z.zw == ZERO) {
         if (gtd(z.xy, 0.0)) theta = ZERO;
         else theta = _pi;
     }
-    else theta = atan2(z.zw, z.xy);
+    else theta = carg(z);
     return vec4(
         0.5*logd(rsqr),
         theta
     );
 }
 
+vec2 clog2(vec2 z) {
+    return clog(z)/_log2.x;
+}
+vec4 clog2(vec4 z) {
+    return cdiv(clog(z), complex(_log2));
+}
+
+vec2 clog10(vec2 z) {
+    return clog(z)/_log10.x;
+}
+vec4 clog10(vec4 z) {
+    return cdiv(clog(z), complex(_log10));
+}
+
+vec2 clog(vec2 z, float b) {
+    return clog(z)/log(b);
+}
+vec4 clog(vec4 z, float b) {
+    return cdiv(clog(z), complex(log(b)));
+}
+
 vec2 cpow(float x, vec2 s) {
 
     float theta;
+    float c;
+    float f;
     if (x == 0.0) return ZERO;
-    else if (x > 0.0) theta = 0.0;
-    else theta = pi;
+    else if (s == ZERO) return ONE;
+    else {
+        float lnx = log(abs(x));
+        if (x > 0.0) {
+             c = exp(s.x*lnx);
+//            c = pow(x, s.x);
+            f = s.y*lnx;
+        }
+        else {
+             c = exp(s.x*lnx - s.y*pi);
+//            c = pow(x, s.x)*exp(-s.y*pi);
+            f = s.x*pi + s.y*lnx;
+        }
+    }
 
-    float lnx = log(abs(x));
 
-    float c = exp(s.x*lnx - s.y*theta);
-    float f = s.x*theta + s.y*lnx;
+
     return c*vec2(cos(f), sin(f));
 
 }
@@ -938,13 +1409,64 @@ vec4 cpow(vec2 x, vec4 s) {
     );
 
 }
+vec4 cpow(float x, vec4 s) {
+
+    vec2 theta;
+    if (x == 0.0) return vec4(0.0);
+    else if (x > 0.0) theta = ZERO;
+    else theta = _pi;
+
+    float lnx = log(abs(x));
+
+    vec2 c, f, sinf, cosf;
+    if (s.zw == ZERO) {
+        if (theta == ZERO) return vec4(powd(x, s.xy), ZERO);
+        c = expd(mult(s.xy, lnx));
+        f = mult(s.xy, theta);
+    }
+    else if (s.xy == ZERO) {
+        c = expd(-mult(s.zw, theta));
+        f = mult(s.zw, lnx);
+    }
+    else {
+        c = expd(add(mult(s.xy, lnx), -mult(s.zw, theta)));
+        f = add(mult(s.xy, theta), mult(s.zw, lnx));
+    }
+
+    sincosd(f, sinf, cosf);
+    return vec4(
+        mult(c, cosf),
+        mult(c, sinf)
+    );
+
+}
+
+vec2 cpow(vec2 z, int n) {
+    vec2 w = z;
+    for (int i = 1; i < n; i++) w = cmult(w, z);
+    return w;
+}
+vec4 cpow(vec4 z, int n) {
+    vec4 w = z;
+    for (int i = 1; i < n; i++) w = cmult(w, z);
+    return w;
+}
 
 vec2 cpow(vec2 z, float p) {
-    if (p == 2.0) return csqr(z);
+    if (p == 1.0) return z;
+    else if (p == 2.0) return csqr(z);
     else if (p == 3.0) return ccube(z);
     else if (p == 4.0) return cquad(z);
     else if (p == 5.0) return cquint(z);
+    else if (p == -1.0) return cinv(z);
+    else if (p == -2.0) return cinv(csqr(z));
+    else if (p == -3.0) return cinv(ccube(z));
+    else if (p == -4.0) return cinv(cquad(z));
+    else if (p == -5.0) return cinv(cquint(z));
     else return cexp(p*clog(z));
+}
+vec4 cpow(vec4 z, float p) {
+    return cexp(cmult(p, clog(z)));
 }
 
 vec2 cpow(vec2 z, vec2 s) {
@@ -1002,6 +1524,14 @@ vec2 ccos_series(vec2 z) {
     return _w*Sp;
 }
 
+vec2 sin_taylor(vec2 z) {
+    vec2 w = ccube(z);
+    vec2 t2 = w*inv_fact[0].x;
+    w = cmult(w, csqr(w));
+    vec2 t3 = w*inv_fact[2].x;
+    return z - t2 + t3;
+}
+
 vec2 csin(vec2 z) {
     float t1 = exp(z.y);
     float t2 = 1.0/t1;
@@ -1011,76 +1541,362 @@ vec2 csin(vec2 z) {
     );
 }
 vec4 csin(vec4 z) {
-    vec2 t1 = expd(z.zw);
-    vec2 t2 = div(ONE, t1);
 
     vec2 sinx, cosx;
     sincosd(z.xy, sinx, cosx);
 
-    return 0.5*vec4(
-        mult(sinx, add(t1, t2)),
-        mult(cosx, add(t1, -t2))
+    vec2 sinhy, coshy;
+    sinhcoshd(z.zw, sinhy, coshy);
+
+    return vec4(
+        mult(sinx, coshy),
+        mult(cosx, sinhy)
     );
+
 }
 
 vec2 ccos(vec2 z) {
-    float t1 = exp(z.y);
-    float t2 = 1.0/t1;
-    return 0.5*vec2(
-        cos(z.x)*(t1 + t2),
-        -sin(z.x)*(t1 - t2)
+    return vec2(
+        cos(z.x)*cosh(z.y),
+        -sin(z.x)*sinh(z.y)
     );
 }
 vec4 ccos(vec4 z) {
-    vec2 t1 = expd(z.zw);
-    vec2 t2 = div(ONE, t1);
-
     vec2 sinx, cosx;
     sincosd(z.xy, sinx, cosx);
-
-    return 0.5*vec4(
-        mult(cosx, add(t1, t2)),
-        mult(-sinx, add(t1, -t2))
+    vec2 sinhy, coshy;
+    sinhcoshd(z.zw, sinhy, coshy);
+    return vec4(
+        mult(cosx, coshy),
+        -mult(sinx, sinhy)
     );
 }
 
-vec2 ctan(vec2 z) { return cdiv(csin(z), ccos(z)); }
-vec4 ctan(vec4 z) { return cdiv(csin(z), ccos(z)); }
+vec2 ctan(vec2 z) {
+    vec2 cosz = ccos(z);
+    if (cosz == ZERO) return INF;
+    return cdiv(csin(z), cosz);
+}
+vec4 ctan(vec4 z) {
+    vec4 cosz = ccos(z);
+    if (cosz == vec4(0.0)) return vec4(INF, INF);
+    return cdiv(csin(z), cosz);
+}
 
-vec2 ccsc(vec2 z) { return cinv(csin(z)); }
-vec4 ccsc(vec4 z) { return cinv(csin(z)); }
+vec2 ccsc(vec2 z) {
+    vec2 sinz = csin(z);
+    if (sinz == ZERO) return INF;
+    return cinv(sinz);
+}
+vec4 ccsc(vec4 z) {
+    vec4 sinz = csin(z);
+    if (sinz == vec4(0.0)) return vec4(INF, INF);
+    return cinv(sinz);
+}
 
-vec2 csec(vec2 z) { return cinv(ccos(z)); }
-vec4 csec(vec4 z) { return cinv(ccos(z)); }
+vec2 csec(vec2 z) {
+    vec2 cosz = ccos(z);
+    if (cosz == ZERO) return INF;
+    return cinv(cosz);
+}
+vec4 csec(vec4 z) {
+    vec4 cosz = ccos(z);
+    if (cosz == vec4(0.0)) return vec4(INF, INF);
+    return cinv(ccos(z));
+}
 
-vec2 ccot(vec2 z) { return cinv(ctan(z)); }
-vec4 ccot(vec4 z) { return cinv(ctan(z)); }
+vec2 ccot(vec2 z) {
+    vec2 sinz = csin(z);
+    if (sinz == ZERO) return INF;
+    return cdiv(sinz, ccos(z));
+}
+vec4 ccot(vec4 z) {
+    vec4 sinz = csin(z);
+    if (sinz == vec4(0.0)) return vec4(INF, INF);
+    return cdiv(sinz, ccos(z));
+}
+
+vec2 casin(vec2 z) {
+    return cmult(I, clog(csqrt(ONE - csqr(z)) - cmult(I, z)));
+}
+vec4 casin(vec4 z) {
+    return cmult(I, clog(csqrt(cadd(ONE, -csqr(z))) - cmult(I, z)));
+}
+
+vec2 cacos(vec2 z) {
+    return vec2(0.5*pi, 0.0) - casin(z);
+}
+vec4 cacos(vec4 z) {
+    return cadd(complex(_pi2), -casin(z));
+}
+
+vec2 catan(vec2 z) {
+    vec2 iz = cmult(I, z);
+    return -0.5*cmult(I, clog(cdiv(ONE + iz, ONE - iz)));
+}
+vec4 catan(vec4 z) {
+    vec4 iz = cmult(I, z);
+    return -0.5*cmult(I, clog(cdiv(cadd(1.0, iz), cadd(1.0, -iz))));
+}
+
+vec2 cacsc(vec2 z) {
+    return cmult(I, clog(csqrt(ONE - cinv(csqr(z))) - cdiv(I, z)));
+}
+vec4 cacsc(vec4 z) {
+    return cmult(I, clog(cadd(csqrt(cadd(1.0, -cinv(csqr(z)))), -cdiv(I, z))));
+}
+
+vec2 casec(vec2 z) {
+    return vec2(0.5*pi, 0.0) - cacsc(z);
+}
+vec4 casec(vec4 z) {
+    return cadd(complex(_pi2), -cacsc(z));
+}
+
+vec2 cacot(vec2 z) {
+    vec2 iz = cmult(I, z);
+    return -0.5*cmult(I, clog(cdiv(iz - ONE, iz + ONE)));
+}
+vec4 cacot(vec4 z) {
+    vec4 iz = cmult(I, z);
+    return -0.5*cmult(I, clog(cdiv(cadd(iz, -1.0), cadd(iz, 1.0))));
+}
 
 vec2 csinh(vec2 z) {
-    float t1 = exp(z.y);
-    float t2 = 1.0/t1;
-    return 0.5*vec2(
-        cos(z.y)*(t1 - t2),
-        sin(z.y)*(t1 + t2)
+    return vec2(
+        cos(z.y)*sinh(z.x),
+        sin(z.y)*cosh(z.x)
+    );
+}
+vec4 csinh(vec4 z) {
+    vec2 siny, cosy;
+    sincosd(z.zw, siny, cosy);
+    vec2 sinhx, coshx;
+    sinhcoshd(z.xy, sinhx, coshx);
+    return vec4(
+        mult(cosy, sinhx),
+        mult(siny, coshx)
     );
 }
 
 vec2 ccosh(vec2 z) {
-    float t1 = exp(z.y);
-    float t2 = 1.0/t1;
-    return 0.5*vec2(
-        cos(z.y)*(t1 + t2),
-        sin(z.y)*(t1 - t2)
+    return vec2(
+        cos(z.y)*cosh(z.x),
+        sin(z.y)*sinh(z.x)
+    );
+}
+vec4 ccosh(vec4 z) {
+    vec2 siny, cosy;
+    sincosd(z.zw, siny, cosy);
+    vec2 sinhx, coshx;
+    sinhcoshd(z.xy, sinhx, coshx);
+    return vec4(
+        mult(cosy, coshx),
+        mult(siny, sinhx)
     );
 }
 
-vec2 ctanh(vec2 z) { return cdiv(csinh(z), ccosh(z)); }
+vec2 ctanh(vec2 z) {
+    if (z.x == 0.0 && fract(z.y/pi + 0.5) == 0.0) return INF;
+    return cdiv(csinh(z), ccosh(z));
+}
+vec4 ctanh(vec4 z) {
+    if (z.xy == ZERO && fract(z.z/pi + 0.5) == 0.0) return vec4(INF, INF);
+    return cdiv(csinh(z), ccosh(z));
+}
 
-vec2 ccsch(vec2 z) { return cinv(csinh(z)); }
+vec2 ccsch(vec2 z) {
+    if (z == ZERO) return INF;
+    else return cinv(csinh(z));
+}
+vec4 ccsch(vec4 z) {
+    if (z == vec4(0.0)) return INF.xxxx;
+    else return cinv(csinh(z));
+}
 
 vec2 csech(vec2 z) { return cinv(ccosh(z)); }
+vec4 csech(vec4 z) { return cinv(ccosh(z)); }
 
-vec2 ccoth(vec2 z) { return cinv(ctanh(z)); }
+vec2 ccoth(vec2 z) {
+    if (z == ZERO) return INF;
+    else return cinv(ctanh(z));
+}
+vec4 ccoth(vec4 z) {
+    if (z == vec4(0.0)) return INF.xxxx;
+    else return cinv(ctanh(z));
+}
+
+vec2 casinh(vec2 z) {
+    return clog(z + csqrt(csqr(z) + ONE));
+}
+vec4 casinh(vec4 z) {
+    return clog(cadd(z, csqrt(cadd(csqr(z), 1.0))));
+}
+
+vec2 cacosh(vec2 z) {
+    return clog(z + cmult(csqrt(z + ONE), csqrt(z - ONE)));
+}
+vec4 cacosh(vec4 z) {
+    return clog(cadd(z, cmult(csqrt(cadd(z, 1.0)), csqrt(cadd(z, -1.0)))));
+}
+
+vec2 catanh(vec2 z) {
+    return 0.5*clog(cdiv(ONE + z, ONE - z));
+}
+vec4 catanh(vec4 z) {
+    return 0.5*clog(cdiv(cadd(1.0, z), cadd(1.0, -z)));
+}
+
+vec2 cacsch(vec2 z) {
+    return clog(cinv(z) + csqrt(cinv(csqr(z)) + ONE));
+}
+vec4 cacsch(vec4 z) {
+    return clog(cadd(cinv(z), csqrt(cadd(cinv(csqr(z)), 1.0))));
+}
+
+vec2 casech(vec2 z) {
+    vec2 zinv = cinv(z);
+    return clog(zinv + cmult(csqrt(zinv + ONE), csqrt(zinv - ONE)));
+}
+vec4 casech(vec4 z) {
+    vec4 zinv = cinv(z);
+    return clog(cadd(zinv, cmult(csqrt(cadd(zinv, 1.0)), csqrt(cadd(zinv, -1.0)))));
+}
+
+vec2 cacoth(vec2 z) {
+    return 0.5*clog(cdiv(z + ONE, z - ONE));
+}
+vec4 cacoth(vec4 z) {
+    return 0.5*clog(cdiv(cadd(z, 1.0), cadd(z, -1.0)));
+}
+
+vec2 bessel(vec2 z) {
+
+    if (z == ZERO) return ONE;
+    vec2 t1 = ccos(0.5*z);
+    vec2 t2 = 2.0*csqr(t1) - ONE;
+    float modz = cmod(z);
+
+    vec2 low = vec2(1.0/6.0, 0.0) + t1/3.0 + ccos(0.5*sqrt(3.0)*z)/3.0 + t2/6.0;
+//    vec2 high = cmult(csqrt(2.0*cinv(pi*z)), ccos(z - vec2(_pi4.x, 0.0)) + vec2(exp(abs(z.y))/cmod(z), 0.0));
+    vec2 high2 = sqrt(2.0/(pi*modz))*ccos((1.0 - 0.25*pi/modz)*z);
+    float q = 1.0/(exp(20.0*log(abs(z.x)/7.0)) + 1.0);
+//    return cmult(1.0/6.0 + ccos(0.5*z)/3.0 + ccos(0.5*sqrt(3.0)*z)/3.0 + ccos(z)/6.0, q) + sqrt(2.0/(pi*cmod(z)))*cmult(ccos(z - 0.25*pi*z/cmod(z)), ONE - q);
+//    return cmult(low, q) + cmult(high2, ONE - q);
+    return q*low + (1.0 - q)*high2;
+
+}
+vec4 bessel(vec4 z) {
+
+    if (z == vec4(0.0)) return vec4(1.0, 0.0, 0.0, 0.0);
+    vec4 t1 = ccos(0.5*z);
+    vec4 t2 = cadd(2.0*csqr(t1), -1.0);
+    vec2 modz = cmod(z);
+
+    vec4 low = cadd(1.0/6.0, cadd(cdiv(t1, 3.0), cadd(cdiv(ccos(0.5*cmult(sqrt(3.0), z)), 3.0), cdiv(t2, 6.0))));
+    vec4 high = cmult(sqrtd(div(_double(2.0/pi), modz)), ccos(cmult(add(1.0, div(-_pi4, modz)), z)));
+    float q = 1.0/(exp(20.0*log(abs(z.x)/7.0)) + 1.0);
+    return cadd(cmult(q, low), cmult(1.0 - q, high));
+
+}
+
+vec2 gamma(vec2 z) {
+
+    // infinite product method
+//    if (z.y == 0.0 && z.x <= 0.0 && fract(z.x) == 0.0) { return INF; }
+//    float thresh = _eps;
+//    vec2 p = ONE;
+//    vec2 prev;
+//    int i = 1;
+//    do {
+//        prev = p;
+//        p = cmult(p, cdiv(cpow(1.0 + 1.0/float(i), z), ONE + z/float(i)));
+//        i++;
+//    } while (i < 35);
+//    return cdiv(p, z);
+
+
+    // Stirling approximation
+//    return cmult(cmult(csqrt(cdiv(2.0*pi, z)), cpow(z/_e.x, z)), ONE + cinv(z));
+
+
+    // Lanczos approximation
+    vec2 w = z;
+    if (z.x < 0.5) w = ONE - z;
+    w.x -= 1.0;
+    vec2 x = vec2(0.99999999999980993, 0.0);
+    for (int i = 0; i < n_gamma_vals; i++) {
+        x += cdiv(gamma_vals[i], (w + vec2(float(i) + 1.0, 0.0)));
+    }
+    vec2 t = w + vec2(float(n_gamma_vals) - 0.5, 0.0);
+    vec2 y = sqrt(2.0*pi)*cmult(cpow(t, w + vec2(0.5, 0.0)), cmult(cexp(-t), x));
+
+//    if (abs(y.y) < 1e-7) y.y = 0.0;
+    if (z.x < 0.5) y = cdiv(pi, cmult(csin(pi*z), y));
+
+    return y;
+
+
+    // Nemes approximation
+//    return cexp(0.5*(vec2(log(2.0*pi), 0.0) - clog(z)) + cmult(z, clog(z + cinv(12.0*z - cinv(10.0*z))) - ONE));
+//    return cmult(csqrt(2.0*pi*cinv(z)), cpow((z + cinv(12.0*z - cinv(10.0*z)))/_e.x, z));
+
+}
+
+vec2 zeta(vec2 z) {
+
+    if (z.y == 0.0) {
+        if (z.x == 0.0) return vec2( -0.5,  0.0  );
+        if (z.x == 1.0) return vec2(  1e38, 1e38 );
+    }
+
+    vec2 w = z;
+    if (z.x <= 1.0) w = ONE - z;
+
+    vec2 s1 = ZERO;
+    vec2 s2;
+    float sgn;
+    int N = n_fact;
+
+    for (int n = 0; n < N; n++) {
+        s2 = ZERO;
+        sgn = 1.0;
+        for (int k = 0; k <= n; k++) {
+            s2 += sgn*(fact[n]/(fact[k]*fact[n - k]))*cpow(float(k + 1), -w);
+            sgn *= -1.0;
+        }
+        s1 += s2 / exp2(float(n + 1));
+    }
+    s1 = cdiv(s1, ONE - cexp2(ONE - w));
+
+    // infinite product of inverse primes
+//    vec2 p = ONE;
+//    int n = 0;
+//    while (n < n_primes) {
+//        p = cmult(p, cinv(ONE - cpow(primes[n], -w)));
+//        n++;
+//    }
+
+    // infinite sum of inverse integers
+//    vec2 s = ZERO;
+//    int n = 0;
+//    while (n < 100) {
+//        s += cinv(cpow(float(n + 1), w));
+//        n++;
+//    }
+
+    // reflection formula
+    if (z.x <= 1.0) {
+        s1 = cdiv(cmult(cmult(gamma(0.5*w), cpow(pi, -0.5*w)), s1), cmult(gamma(0.5*z), cpow(pi, -0.5*z)));
+        // s1 = cdiv(cmult(cpow(_2pi.x, w), s1), 2.0*cmult(ccos(0.5*pi*w), gamma(w)));
+    }
+    return s1;
+
+}
+
+vec2 eta(vec2 z) {
+    return cmult(ONE - cexp2(ONE - z), zeta(z));
+}
 
 vec2 boxfold(vec2 z) {
     vec2 w = z;
@@ -1116,6 +1932,28 @@ vec4 ballfold(vec4 z) {
     else if (modsqrz.x > 0.25 && modsqrz.x < 1.0) { w = cdiv(z, complex(modsqrz)); }
     return w;
 }
+
+vec2 cabs(vec2 z) {
+    return abs(z);
+}
+vec4 cabs(vec4 z) {
+    return vec4(absd(z.xy), absd(z.zw));
+}
+
+vec2 cabsr(vec2 z) {
+    return vec2(abs(z.x), z.y);
+}
+vec4 cabsr(vec4 z) {
+    return vec4(absd(z.xy), z.zw);
+}
+
+vec2 cabsi(vec2 z) {
+    return vec2(z.x, abs(z.y));
+}
+vec4 cabsi(vec4 z) {
+    return vec4(z.xy, absd(z.zw));
+}
+
 
 
 float triwave(float x) {
@@ -1188,13 +2026,21 @@ vec4 wrapcirc(vec4 z, float r) {
 }
 
 vec2 rotate(vec2 a, float phi) {
-    return vec2(a.x*cos(phi) - a.y*sin(phi), a.x*sin(phi) + a.y*cos(phi));
+    return cmult(a, vec2(cos(phi), sin(phi)));
 }
 vec4 rotate(vec4 z, float phi) {
     return cmult(z, vec2(cos(phi), sin(phi)));
 }
+
 vec2 rotate(vec2 a, float sinPhi, float cosPhi) {
     return vec2(a.x*cosPhi - a.y*sinPhi, a.x*sinPhi + a.y*cosPhi);
+}
+
+vec2 rotate(vec2 p, vec2 q, float phi) {
+    return rotate(p - q, phi) + q;
+}
+vec4 rotate(vec4 p, vec4 q, float phi) {
+    return cadd(rotate(cadd(p, -q), phi), q);
 }
 
 vec2 circinv(vec2 p, float r) {
@@ -1280,7 +2126,7 @@ vec4 rect(vec4 z) {
 }
 
 vec2 polar(vec2 z) { return vec2(cmod(z), atan(z.y, z.x)); }
-vec4 polar(vec4 z) { return vec4(cmod(z), atan2(z.zw, z.xy)); }
+vec4 polar(vec4 z) { return vec4(cmod(z), carg(z)); }
 
 vec2 mod_theta(vec2 z) { return vec2(z.x, mod(z.y + pi, 2.0*pi) - pi); }
 vec4 mod_theta(vec4 z) { return vec4(z.xy, add(modd(add(z.zw, _pi), 2.0*pi), -_pi)); }
@@ -1301,7 +2147,7 @@ vec4 cadd_polar(vec4 z, vec4 w) {
     sincosd(add(w.zw, -z.zw), sint, cost);
     return vec4(
         sqrtd(add(add(sqr(z.xy), sqr(w.xy)), 2.0*mult(z.xy, mult(w.xy, cost)))),
-        add(z.zw, atan2(mult(w.xy, sint), add(z.xy, mult(w.xy, cost))))
+        add(z.zw, carg(vec4(mult(w.xy, sint), add(z.xy, mult(w.xy, cost)))))
     );
 
 }
@@ -1344,18 +2190,31 @@ vec4 cinv_polar(vec4 z) { return vec4(inv(z.xy), -z.zw); }
 
 
 
+vec2 delta(vec2 z, vec2 ze, vec2 alpha) {
+    return cmult(alpha, (z - ze)/0.001);
+}
+vec2 delta(vec4 z, vec4 ze, vec2 alpha) {
+    return cmult(alpha, cdiv(cadd(z, -ze), 0.001)).xz;
+}
 
-vec2 testshape(vec2 z, vec2 c) { return csqr(z) + c; }
-vec4 testshape(vec4 z, vec4 c) { return cmult_polar(c, cpow_polar(z, vec4(p1.x, 0.0, p1.y, 0.0))); }
+vec2 testshape(vec2 z, vec2 c) {
+
+//    return cmult(c, z - ctan(z));
+    return eta(z) + c;
+//    return cmult(z, cexp(-z)) + c;
+
+    //return cmult(cinv(c), gamma(z));
+    // j = 1.90825873 + 2.49050274i
+}
+vec4 testshape(vec4 z, vec4 c) { return vec4(0.0); }
+
+vec2 cephalopod(vec2 z, vec2 c) { return cmult(c, ctan(z)); }
+vec4 cephalopod(vec4 z, vec4 c) { return cmult(c, ctan(z)); }
 
 vec2 mandelbrot(vec2 z, vec2 c) { return csqr(z) + c; }
 vec4 mandelbrot(vec4 z, vec4 c) { return cadd(csqr(z), c); }
 vec2 mandelbrot_delta1(vec2 alpha, vec2 z1) {
-    vec2 powz1 = z1;
-    for (int i = 1; i < int(power) - 1; i++) {
-        powz1 = cmult(powz1, z1);
-    }
-    return power*cmult(powz1, alpha) + ONE;
+    return power*cmult(cpow(z1, int(power) - 1), alpha) + ONE;
 }
 vec2 mandelbrot_delta1(vec2 alpha, vec4 z1) {
     return mandelbrot_delta1(alpha, z1.xz);
@@ -1369,6 +2228,12 @@ vec2 mandelbrot_delta2(vec2 beta, vec2 alpha, vec2 z1) {
 vec2 mandelbrot_delta2(vec2 beta, vec2 alpha, vec4 z1) {
     return mandelbrot_delta2(beta, alpha, z1.xz);
 }
+vec2 mandelbrot_julia_delta1(vec2 alpha, vec2 z1) {
+    return power*cmult(cpow(z1, int(power) - 1), alpha);
+}
+vec2 mandelbrot_julia_delta1(vec2 alpha, vec4 z1) {
+    return mandelbrot_julia_delta1(alpha, z1.xz);
+}
 
 vec2 mandelbrot_cubic(vec2 z, vec2 c) { return ccube(z) + c; }
 vec4 mandelbrot_cubic(vec4 z, vec4 c) { return cadd(ccube(z), c); }
@@ -1379,20 +2244,19 @@ vec4 mandelbrot_quartic(vec4 z, vec4 c) { return cadd(cquad(z), c); }
 vec2 mandelbrot_quintic(vec2 z, vec2 c) { return cquint(z) + c; }
 vec4 mandelbrot_quintic(vec4 z, vec4 c) { return cadd(cquint(z), c); }
 
+vec2 mandelbrot_sextic(vec2 z, vec2 c) { return csext(z) + c; }
+vec4 mandelbrot_sextic(vec4 z, vec4 c) { return cadd(csext(z), c); }
+
 vec2 mandelbrot_power(vec2 z, vec2 c) { return cpow(z, p1) + c; }
 vec4 mandelbrot_power(vec4 z, vec4 c) { return cadd(cpow(z, p1), c); }
 
 vec2 clover(vec2 z, vec2 c) {
-    vec2 q = cpow(z, p1);
+    vec2 q = cpow(z, int(floor(p1.x)));
     return cmult(c, q + cinv(q));
-//    vec2 q = cpow_polar(z, p1);
-//    return mod_theta(cmult_polar(c, cadd_polar(q, cinv_polar(q))));
 }
 vec4 clover(vec4 z, vec4 c) {
-    vec4 q = cpow(z, p1);
+    vec4 q = cpow(z, int(floor(p1.x)));
     return cmult(c, cadd(q, cinv(q)));
-//    vec4 q = cpow_polar(z, complexd(p1));
-//    return mod_theta(cmult_polar(c, cadd_polar(q, cinv_polar(q))));
 }
 
 vec2 mandelbox(vec2 z, vec2 c) {
@@ -1412,14 +2276,28 @@ vec4 kali(vec4 z, vec4 c) {
 }
 
 vec2 kali_square(vec2 z, vec2 c) { return abs(z)/(z.x*z.y) + c; }
+vec4 kali_square(vec4 z, vec4 c) { return cadd(cdiv(vec4(absd(z.xy), absd(z.zw)), mult(z.xy, z.zw)), c); }
 
 vec2 mandelbar(vec2 z, vec2 c) { return csqr(conj(z)) + c; }
+vec4 mandelbar(vec4 z, vec4 c) { return cadd(csqr(conj(z)), c); }
 
 vec2 burning_ship(vec2 z, vec2 c) { return csqr(abs(z)) + c; }
 vec4 burning_ship(vec4 z, vec4 c) { return cadd(csqr(vec4(absd(z.xy), absd(z.zw))), c); }
 
-vec2 sine1(vec2 z, vec2 c) { return csin(z) + c; }
-vec4 sine1(vec4 z, vec4 c) { return cadd(csin(z), c); }
+vec2 sine(vec2 z, vec2 c) { return csin(z) + c; }
+vec4 sine(vec4 z, vec4 c) { return cadd(csin(z), c); }
+
+vec2 cosine(vec2 z, vec2 c) { return ccos(z) + c; }
+vec4 cosine(vec4 z, vec4 c) { return cadd(ccos(z), c); }
+
+vec2 hyperbolic_sine(vec2 z, vec2 c) { return -cmult(I, csinh(z)) + c; }
+vec4 hyperbolic_sine(vec4 z, vec4 c) { return cadd(-cmult(I, csinh(z)), c); }
+
+vec2 hyperbolic_cosine(vec2 z, vec2 c) { return ccosh(z) + c; }
+vec4 hyperbolic_cosine(vec4 z, vec4 c) { return cadd(ccosh(z), c); }
+
+vec2 bessel(vec2 z, vec2 c) { return bessel(z) + c; }
+vec4 bessel(vec4 z, vec4 c) { return cadd(bessel(z), c); }
 
 vec2 sine2(vec2 z, vec2 c) { return csin(cdiv(csqr(z) + p1, c)); }
 vec4 sine2(vec4 z, vec4 c) { return csin(cdiv(cadd(csqr(z), p1), c)); }
@@ -1429,8 +2307,15 @@ vec4 horseshoe_crab(vec4 z, vec4 c) { return csin(cadd(cdiv(p1, z), cdiv(z, c)))
 
 void kleinian_init(inout vec2 z, vec2 c) {
     vec2 q = z - c;
-    float h = atan(q.y, q.x);
-    z = c + vec2(cos(h), sin(h))/cmod(q);
+    // float h = atan(q.y, q.x);
+    z = c + q/cmodsqr(q);
+}
+void kleinian_init(inout vec4 z, vec4 c) {
+    vec4 q = cadd(z, -c);
+    // vec2 a = carg(q);
+    // vec2 sina, cosa;
+    // sincosd(a, sina, cosa);
+    z = cadd(c, cdiv(q, complex(cmodsqr(q))));
 }
 vec2 kleinian(vec2 z, vec2 c) {
     vec2 w = z;
@@ -1442,13 +2327,49 @@ vec2 kleinian(vec2 z, vec2 c) {
         return cdiv(I, cmult(I, w) + vec2(p1.x, 0.0));
     }
 }
+vec4 kleinian(vec4 z, vec4 c) {
+    vec4 w = z;
+    w.xy = add(modd(add(z.xy, 2.0*float(maxIter) - 1.0), 2.0), -1.0);
+    if (ltd(z.zw, p1.x/2.0)) {
+        return cdiv(cadd(cmult(p1.x, w), -I), cmult(-I, w));
+    }
+    else {
+        return cdiv(I, cadd(cmult(I, w), p1.x));
+    }
+}
 bool kleinian_exit(inout float modsqrz, vec2 z) {
     modsqrz = cmodsqr(z);
     if (modsqrz > R*R || z.y < 0.0 || z.y > p1.x) { return true; }
     return false;
 }
+bool kleinian_exit(inout vec2 modsqrz, vec4 z) {
+    modsqrz = cmodsqr(z);
+    if (modsqrz.x > R*R || ltd(z.zw, 0.0) || gtd(z.zw, p1.x)) return true;
+    else return false;
+}
 
-vec2 newton1(vec2 z, vec2 c) { return z - cdiv(cquad(z) - ONE, 4.0*ccube(z)); }
+vec2 necklace(vec2 z, vec2 c) { return z - cmult(c, (z + cinv(cpow(z, int(floor(p1.x)) - 1)))/floor(p1.x)); }
+vec4 necklace(vec4 z, vec4 c) { return cadd(z, -cmult(c, cdiv(cadd(z, cinv(cpow(z, int(floor(p1.x)) - 1))), floor(p1.x)))); }
+
+vec2 magnet1(vec2 z, vec2 c) {
+    return csqr(cdiv(csqr(z) + c - complex(p1.x), 2.0*z + c - complex(p1.y)));
+}
+vec4 magnet1(vec4 z, vec4 c) {
+    return csqr(cdiv(cadd(cadd(csqr(z), c), -p1.x), cadd(2.0*z, cadd(c, -p1.y))));
+}
+
+vec2 magnet2(vec2 z, vec2 c) {
+    vec2 a = c - complex(p1.x);
+    vec2 b = c - complex(p1.y);
+    vec2 ab = cmult(a, b);
+    return csqr(cdiv(((ccube(z) + cmult(3.0*a, z)) + ab), (((3.0*csqr(z) + cmult(3.0*b, z)) + ab) + ONE)));
+}
+vec4 magnet2(vec4 z, vec4 c) {
+    vec4 a = cadd(c, -p1.x);
+    vec4 b = cadd(c, -p1.y);
+    vec4 ab = cmult(a, b);
+    return csqr(cdiv(cadd(cadd(ccube(z), cmult(cmult(3.0, a), z)), ab), cadd(cadd(cadd(cmult(3.0, csqr(z)), cmult(cmult(3.0, b), z)), ab), 1.0)));
+}
 
 vec2 nova1(vec2 z, vec2 c) {
     vec2 zsqr = csqr(z);
@@ -1478,12 +2399,12 @@ vec4 collatz(vec4 z, vec4 c) {
 vec2 mandelex(vec2 z, vec2 c) {
     vec2 w = linearpull(z, p4.x, p4.x);
     if (abs(c.x) < 2.0 && abs(c.y) < 2.0) { w = nonlinearpull(w, 2.0, 2.0); }
-    return linearpull(rotate(circinv(wrapbox(w, 0.5, 0.5), p2.x)*p3.x, p1.x/180.0*3.1415926) + c, p4.x, p4.x);
+    return linearpull(rotate(circinv(wrapbox(w, 0.5, 0.5), p2.x)*p3.x, p1.x) + c, p4.x, p4.x);
 }
 vec4 mandelex(vec4 z, vec4 c) {
     vec4 w = linearpull(z, p4.x, p4.x);
     if (abs(c.x) < 2.0 && abs(c.z) < 2.0) { w = nonlinearpull(w, 2.0, 2.0); }
-    return linearpull(cadd(rotate(cmult(vec4(p3.x, 0.0, 0.0, 0.0), circinv(wrapbox(w, 0.5, 0.5), p2.x)), p1.x/180.0*3.1415926), c), p4.x, p4.x);
+    return linearpull(cadd(rotate(cmult(vec4(p3.x, 0.0, 0.0, 0.0), circinv(wrapbox(w, 0.5, 0.5), p2.x)), p1.x), c), p4.x, p4.x);
 }
 
 vec2 binet(vec2 z, vec2 c) {
@@ -1492,6 +2413,315 @@ vec2 binet(vec2 z, vec2 c) {
 vec4 binet(vec4 z, vec4 c) {
     return cadd(cdiv(cadd(cpow(vec2(phi, 0.0), z), -cpow(vec2(-1.0/phi, 0.0), z)), sqrt(5.0)), c);
 }
+
+vec2 cactus(vec2 z, vec2 c) {
+    return ccube(z) + cmult(c - ONE, z) - c;
+}
+vec4 cactus(vec4 z, vec4 c) {
+    return cadd(ccube(z), cadd(cmult(cadd(c, -ONE), z), -c));
+}
+
+vec2 sierpinski_tri(vec2 z, vec2 c) {
+
+    float h = 0.5;
+    float q = sqrt(3.0)/3.0;
+
+    vec2 w = z;
+
+    if (z.y >= 0.0) {
+        w.y -= h;
+        w = rotate(w, 2.0*vec2(0.0, h), p2.x);
+    }
+    else {
+        if (z.x > 0.0) {
+            w = rotate(w, 2.0*vec2(q, -h), p2.x);
+            w.x -= q;
+        }
+        else {
+            w = rotate(w, 2.0*vec2(-q, -h), p2.x);
+            w.x += q;
+        }
+        w.y += h;
+    }
+
+    return 2.0*p1.x*w + c;
+
+}
+vec4 sierpinski_tri(vec4 z, vec4 c) {
+
+    float h = 0.5;
+    float q = sqrt(3.0)/3.0;
+
+    vec4 w = z;
+
+    if (z.zw == ZERO || z.z > 0.0 || (z.z == 0.0 && z.w > 0.0)) {
+        w.zw = add(w.zw, _double(-h));
+        w = rotate(w, _double(2.0*vec2(0.0, h)), p1.x);
+    }
+    else {
+        if (gtd(z.xy, 0.0)) {
+            w = rotate(w, _double(2.0*vec2(q, -h)), p1.x);
+            w.xy = add(w.xy, _double(-q));
+        }
+        else {
+            w = rotate(w, _double(2.0*vec2(-q, -h)), p1.x);
+            w.xy = add(w.xy, _double(q));
+        }
+        w.zw = add(w.zw, _double(h));
+    }
+
+    return cadd(cmult(2.0*p1.y, w), c);
+
+}
+
+vec2 sierpinski_sqr(vec2 z, vec2 c) {
+
+    float t = 1.0/3.0;
+    float s = 1.0/6.0;
+
+    vec2 w = z;
+    if (z.x < -s) {
+        w.x += t;
+        if (z.y < -s) w.y += t;
+        else if (z.y > s) w.y -= t;
+    }
+    else if (z.x < s) {
+        if (z.y > 0.0) w.y -= t;
+        else w.y += t;
+    }
+    else {
+        w.x -= t;
+        if (z.y < -s) w.y += t;
+        else if (z.y > s) w.y -= t;
+    }
+
+    return 3.0*w + c;
+
+}
+vec4 sierpinski_sqr(vec4 z, vec4 c) {
+
+    float t = 1.0/3.0;
+    float s = 1.0/6.0;
+
+    vec4 w = z;
+    if (ltd(z.xy, -s)) {
+        w.xy = add(w.xy, t);
+        if (ltd(z.zw, -s)) w.zw = add(w.zw, t);
+        else if (gtd(z.zw, s)) w.zw = add(w.zw, -t);
+    }
+    else if (ltd(z.xy, s)) {
+        if (gtd(z.zw, 0.0)) w.zw = add(w.zw, -t);
+        else w.zw = add(w.zw, t);
+    }
+    else {
+        w.xy = add(w.xy, -t);
+        if (ltd(z.zw, -s)) w.zw = add(w.zw, t);
+        else if (gtd(z.zw, s)) w.zw = add(w.zw, -t);
+    }
+
+    return cadd(cmult(3.0, w), c);
+
+}
+
+vec2 sierpinski_pent(vec2 z, vec2 c) {
+
+    // julia = -1.25852935i
+    // center = 1.5
+    // scale = 1.68
+
+    float pi5 = pi/5.0;
+    float delta = 2.0*pi5;
+    float phi1 = 3.0*pi/10.0;
+    float phi2 = phi1 + delta;
+    float phi3 = phi1 - delta;
+    float phi4 = phi3 - delta;
+    float phi5 = phi4 - delta;
+
+    float theta = carg(z);
+    vec2 w = z;
+    float dir;
+    float r = p1.x;                 // center radius
+    float s = 2.0*r*sin(pi/5.0);    // side length
+    float t = 0.5*s/tan(pi/5.0);    // distance to edge
+
+    float tanpi5 =  0.726542528;
+    float tan2pi5 = 3.077683537;
+    if (z.y < tanpi5*z.x + r &&
+    z.y < -tanpi5*z.x + r &&
+    z.y > tan2pi5*(z.x - r*cos(pi/10.0)) + r*sin(pi/10.0) &&
+    z.y > -tan2pi5*(z.x - r*cos(-7.0*pi/10.0)) + r*sin(-7.0*pi/10.0) &&
+    z.y > -t) {
+
+        w.y = -w.y;
+
+    }
+    else {
+        if (abs(theta - phi1) < pi5) dir = phi1;
+        else if (abs(theta - phi2) < pi5) dir = phi2;
+        else if (abs(theta - phi3) < pi5) dir = phi3;
+        else if (abs(theta - phi4) < pi5) dir = phi4;
+        else dir = phi5;
+        w -= phi*vec2(cos(dir), sin(dir));
+    }
+
+    w = p2.x*w + c;
+    return rotate(w, p3.x);
+
+}
+vec4 sierpinski_pent(vec4 z, vec4 c) {
+
+    // scale = 2.82
+    // texture: orbit trap high val
+    // position rotation = -135
+
+    // julia = -1.25852935i
+    // center = 1.5
+    // scale = 1.68
+
+    float pi5 = pi/5.0;
+    float delta = 2.0*pi5;
+    float phi1 = 3.0*pi/10.0;
+    float phi2 = phi1 + delta;
+    float phi3 = phi1 - delta;
+    float phi4 = phi3 - delta;
+    float phi5 = phi4 - delta;
+
+    float theta = atan(z.z, z.x);
+    vec4 w = z;
+    float dir;
+    float r = p1.x;                 // center radius
+    float s = 2.0*r*sin(pi/5.0);    // side length
+    float t = 0.5*s/tan(pi/5.0);    // distance to edge
+
+    float tanpi5 =  0.726542528;
+    float tan2pi5 = 3.077683537;
+    if (z.z < tanpi5*z.x + r &&
+        z.z < -tanpi5*z.x + r &&
+        z.z > tan2pi5*(z.x - r*cos(pi/10.0)) + r*sin(pi/10.0) &&
+        z.z > -tan2pi5*(z.x - r*cos(-7.0*pi/10.0)) + r*sin(-7.0*pi/10.0) &&
+        z.z > -t) {
+
+            w.zw = -w.zw;
+
+        }
+    else {
+        if (abs(theta - phi1) < pi5) dir = phi1;
+        else if (abs(theta - phi2) < pi5) dir = phi2;
+        else if (abs(theta - phi3) < pi5) dir = phi3;
+        else if (abs(theta - phi4) < pi5) dir = phi4;
+        else dir = phi5;
+        w = cadd(w, -phi*vec2(cos(dir), sin(dir)));
+    }
+
+    w = cadd(cmult(p2.x, w), c);
+    return rotate(w, p3.x);
+
+}
+
+vec2 dragon(vec2 z, vec2 c) {
+
+    // if (z.y < z.x && z.y < 1.0 - z.x && z.y > 0.0) return z;
+    if (z.y < z.x && z.x < 0.5 && z.y > 0.0) return vec2(0.5 - z.x, z.y);
+
+    vec2 w = z;
+    if (z.x > p1.x) {
+        w = p1.y*rotate(w - ONE, -_3pi4.x);
+        //w = p1.y*cdiv(ONE - z, ONE - I);
+    }
+    else {
+        w = p1.y*rotate(w, -_pi4.x);
+        //w = p1.y*cdiv(z, ONE + I);
+    }
+    return w + c;
+
+}
+
+vec2 tsquare(vec2 z, vec2 c) {
+
+    // shift = 1.0
+    // scale = 1.71
+    // rotate = 45
+
+    vec2 root = rotate(z, p3.x);
+    if (abs(root.x) < 0.5 && abs(root.y) < 0.5) return R/z;
+
+    vec2 w = z;
+    if (z.x < 0.0) {
+        w.x += p1.x;
+        if (z.y < 0.0) w.y += p1.x;
+        else w.y -= p1.x;
+    }
+    else {
+        w.x -= p1.x;
+        if (z.y < 0.0) w.y += p1.x;
+        else w.y -= p1.x;
+    }
+
+    w *= p2.x;
+
+    return rotate(w, p3.x) + c;
+
+}
+vec4 tsquare(vec4 z, vec4 c) {
+
+    // shift = 1.0
+    // scale = 1.71
+    // rotate = 45
+
+    vec4 root = rotate(z, p3.x);
+    if (abs(root.x) < 0.5 && abs(root.z) < 0.5) return cdiv(R, z);
+
+    vec4 w = z;
+    if (ltd(z.xy, 0.0)) {
+        w.xy = add(w.xy, p1.x);
+        if (ltd(z.zw, 0.0)) w.zw = add(w.zw, p1.x);
+        else w.zw = add(w.zw, -p1.x);
+    }
+    else {
+        w.xy = add(w.xy, -p1.x);
+        if (ltd(z.zw, 0.0)) w.zw = add(w.zw, p1.x);
+        else w.zw = add(w.zw, -p1.x);
+    }
+
+    w = cmult(p2.x, w);
+
+    return cadd(rotate(w, p3.x), c);
+
+}
+
+vec2 lambert_newton(vec2 z, vec2 c) {
+    vec2 expz = cexp(z);
+    return z - cdiv(cmult(z, expz) + c, cmult(z + ONE, expz));
+}
+vec4 lambert_newton(vec4 z, vec4 c) {
+    vec4 expz = cexp(z);
+    return cadd(z, -cdiv(cadd(cmult(z, expz), c), cmult(cadd(z, ONE), expz)));
+}
+
+vec2 taurus(vec2 z, vec2 c) {
+    vec2 zsqr = csqr(z);
+    vec2 zcube = cmult(z, zsqr);
+    return cdiv(zcube + zsqr + ONE, 2.0*zsqr - c + ONE);
+}
+vec4 taurus(vec4 z, vec4 c) {
+    vec4 zsqr = csqr(z);
+    vec4 zcube = cmult(z, zsqr);
+    return cdiv(cadd(zcube, cadd(zsqr, 1.0)), cadd(2.0*zsqr, cadd(1.0, -c)));
+}
+
+vec2 ammonite(vec2 z, vec2 c) {
+    return csinh(clog(cabsi(csqr(z + c) - ONE)));
+}
+vec4 ammonite(vec4 z, vec4 c) {
+    return csinh(clog(cabsi(cadd(csqr(cadd(z, c)), -1.0))));
+}
+
+vec2 phoenix(vec2 z1, vec2 z2, vec2 c) {
+    return cpow(z1, int(p1.x)) + cmult(c, cpow(z1, int(p2.x))) + cmult(p3, z2);
+}
+
+// customShapeHandleSingle
+// customShapeHandleDual
 
 
 
@@ -1505,7 +2735,7 @@ float divergence(vec2 z, vec2 z1, out float modz1, bool textureIn) {
 
     if (isSpecial(z.x) || isSpecial(z.y))   div = log(1e38)/log(modz1);
     else if (isSpecial(modz))               div = 0.5*log(1e38)/log(modz1);
-    else if (textureIn)                     div = 0.0;
+    else if (textureIn)                     div = power;
     else                                    div = log(modz)/log(modz1);
 
     return div;
@@ -1520,7 +2750,7 @@ float divergence(vec4 z, vec4 z1, out vec2 modz1, bool textureIn) {
 
     if (isSpecial(z.x) || isSpecial(z.z))   div = log(1e38)/log(modz1.x);
     else if (isSpecial(modz.x))             div = 0.5*log(1e38)/log(modz1.x);
-    else if (textureIn)                     div = 0.0;
+    else if (textureIn)                     div = power;
     else                                    div = log(modz.x)/log(modz1.x);
 
     return div;
@@ -1562,7 +2792,16 @@ float dist_estim_final(float modsqrz, vec2 alpha) {
     return sqrt(modsqrz)*0.5*log(modsqrz)/cmod(alpha);
 }
 float dist_estim_final(vec2 modsqrz, vec2 alpha) {
-    return sqrt(modsqrz.x)*0.5*log(modsqrz.x)/cmod(alpha);
+    return dist_estim_final(modsqrz.x, alpha);
+}
+
+float dist_estim_abs_final(float modsqrz, vec2 alpha) {
+    float d = sqrt(modsqrz)*0.5*log(modsqrz)/cmod(alpha);
+    if (d*200.0/xScale.x > log(q1.x + 1.0)) return 1.5;
+    else return 0.0;
+}
+float dist_estim_abs_final(vec2 modsqrz, vec2 alpha) {
+    return dist_estim_abs_final(modsqrz.x, alpha);
 }
 
 void orbit_trap_minx_loop(inout float minx, vec2 z) {
@@ -1572,6 +2811,73 @@ void orbit_trap_minx_loop(inout float minx, vec2 z) {
 void orbit_trap_minx_loop(inout float minx, vec4 z) {
     float dist = abs(z.x);
     if (dist < minx) { minx = dist; }
+}
+
+void orbit_trap_miny_loop(inout float miny, vec2 z) {
+    float dist = abs(z.y);
+    if (dist < miny) { miny = dist; }
+}
+void orbit_trap_miny_loop(inout float miny, vec4 z) {
+    float dist = abs(z.y);
+    if (dist < miny) { miny = dist; }
+}
+
+void orbit_trap_circ_loop(vec2 z, inout float minDist) {
+    // float xdist = z.x - q1.x;
+    // float ydist = z.y - q1.y;
+    // float dist = sqrt(q2.x*xdist*xdist + (1.0 - q2.x)*ydist*ydist);
+    float dist = abs(cmod(z - q1) - q2.x);
+    if (dist < minDist) { minDist = dist; }
+}
+void orbit_trap_circ_loop(vec4 z, inout float minDist) {
+    orbit_trap_circ_loop(z.xz, minDist);
+}
+
+void orbit_trap_line_loop(vec2 z, inout float minDist) {
+    // q1.x :: distance from origin
+    // q2.x :: rotation
+    float m = tan(q2.x);
+    vec2 center = rotate(vec2(0.0, q1.x), q2.x);
+    float dist = abs(abs(-m*z.x + z.y + m*center.x - center.y)*cos(q2.x));
+    if (dist < minDist) minDist = dist;
+}
+void orbit_trap_line_loop(vec4 z, inout float minDist) {
+    orbit_trap_line_loop(z.xz, minDist);
+}
+
+void orbit_trap_box_loop(vec2 z, inout float minDist) {
+    // q1 :: center
+    // q2 :: (width, height)
+    float dist;
+    float d1 = q1.x - q2.x - z.x;
+    float d2 = z.x - (q1.x + q2.x);
+    float d3 = q1.y - q2.y - z.y;
+    float d4 = z.y - (q1.y + q2.y);
+
+    if (z.x > q1.x + q2.x || z.x < q1.x - q2.x || z.y > q1.y + q2.y || z.y < q1.y - q2.y) {
+        // outside box
+        vec2 d = vec2(
+            max(d1, max(0.0, d2)),
+            max(d3, max(0.0, d4))
+        );
+        dist = cmod(d);
+    }
+    else {
+        dist = min(min(abs(d1), abs(d2)), min(abs(d3), abs(d4)));
+    }
+
+    if (dist < minDist) minDist = dist;
+}
+void orbit_trap_box_loop(vec4 z, inout float minDist) {
+    orbit_trap_box_loop(z.xz, minDist);
+}
+
+void orbit_trap_circ_puncture_loop(vec2 z, inout float minDist, inout float angle) {
+    float dist = cmod(z - q1);
+    if (abs(dist - q2.x) < minDist)  {
+        minDist = dist;
+        angle = carg(z - q1);
+    }
 }
 
 float normal_map1_final(vec2 z, vec2 alpha) {
@@ -1621,12 +2927,12 @@ float avg_final(vec2 sum, vec2 sum1, uint n, vec4 z, vec4 z1, bool textureIn) {
 void stripe_avg_loop(inout float sum, inout float sum1, vec2 z) {
     sum1 = sum;
     float argz = atan(z.y, z.x);
-    sum += pow(0.5*(sin(q1*argz) + 1.0), q2);
+    sum += pow(0.5*(sin(q1.x*argz + q2.x) + 1.0), q3.x);
 }
 void stripe_avg_loop(inout vec2 sum, inout vec2 sum1, vec4 z) {
     sum1 = sum;
     float argz = atan(z.z, z.x);
-    sum.x += pow(0.5*(sin(q1*argz) + 1.0), q2);
+    sum.x += pow(0.5*(sin(q1.x*argz + q2.x) + 1.0), q3.x);
 }
 float stripe_avg_final(float sum, float sum1, uint n, float il, float llr, vec2 z1) {
     sum /= float(n + 1u);
@@ -1717,15 +3023,16 @@ float triangle_ineq_avg_final(vec2 sum, vec2 sum1, uint n, float il, float llr, 
 void curvature_avg_loop(inout float sum, inout float sum1, uint n, vec2 z, vec2 z1, vec2 z2) {
     if (n > 1u) {
         sum1 = sum;
-        vec2 w = cdiv(z - z1, z1 - z2);
-        sum += pow(abs(atan(w.y, w.x))/pi, q1);
+        vec2 w = cmult(z - z1, cpow(z1 - z2, vec2(-1.0, q2.x)));
+        float argz = carg(w);
+        sum += pow(abs(argz)/pi, q1.x);
     }
 }
 void curvature_avg_loop(inout vec2 sum, inout vec2 sum1, uint n, vec4 z, vec4 z1, vec4 z2) {
     if (n > 1u) {
         sum1.x = sum.x;
-        vec2 w = cdiv(vec2(z.x - z1.x, z.z - z1.z), vec2(z1.x - z2.x, z1.z - z2.z));
-        sum.x += pow(abs(atan(w.y, w.x))/pi, q1);
+        vec2 w = cmult(vec2(z.x - z1.x, z.z - z1.z), cpow(vec2(z1.x - z2.x, z1.z - z2.z), vec2(-1.0, q2.x)));
+        sum.x += pow(abs(atan(w.y, w.x))/pi, q1.x);
     }
 }
 float curvature_avg_final(float sum, float sum1, uint n, float il, float llr, vec2 z1) {
@@ -1743,15 +3050,27 @@ float curvature_avg_final(vec2 sum, vec2 sum1, uint n, float il, float llr, vec4
     return s;
 }
 
+void curvature_avg2_loop(inout float sum, inout float sum1, uint n, vec2 z, vec2 z1, vec2 z2, vec2 z3) {
+    if (n > 3u) {
+        sum1 = sum;
+        vec2 v = z - z1;
+        vec2 v1 = z1 - z2;
+        vec2 v2 = z2 - z3;
+        vec2 v3 = z3;
+        vec2 w = rotate(cdiv(cmult(v, v2), cmult(v1, v3)), q1.x);
+        sum += abs(carg(w))/pi;
+    }
+}
+
 void overlay_avg_loop(inout float sum, inout float sum1, vec2 z) {
     sum1 = sum;
     float argz = atan(z.y, z.x);
-    sum += 0.5*(tan(q1*argz)/tan(q1*pi) + 1.0);
+    sum += 0.5*(tan(q1.x*argz)/tan(q1.x*pi) + 1.0);
 }
 void overlay_avg_loop(inout vec2 sum, inout vec2 sum1, vec4 z) {
     sum1.x = sum.x;
     float argz = atan(z.z, z.x);
-    sum.x += 0.5*(tan(q1*argz)/tan(q1*pi) + 1.0);
+    sum.x += 0.5*(tan(q1.x*argz)/tan(q1.x*pi) + 1.0);
 }
 float overlay_avg_final(float sum, float sum1, uint n, float il, float llr, vec2 z1) {
     sum /= float(n);
@@ -1768,50 +3087,59 @@ float overlay_avg_final(vec2 sum, vec2 sum1, uint n, float il, float llr, vec4 z
     return s;
 }
 
-void test_avg_loop(inout float sum, inout float sum1, uint n, vec2 z, vec2 z1, vec2 z2, vec2 z3, vec2 z4, vec2 c) {
+void angular_momentum_loop(inout float sum, inout float sum1, vec2 z, vec2 z1, vec2 z2) {
 
-//    sum1 = sum;
-//    vec2 w = cmult(z, conj(z1));
-//    sum += pow(0.5*(acos(w.x) + 1.0), q1);
-//    sum += pow(0.5*(cos(w.x) + 1.0), q1);
+    sum1 = sum;
 
-//    float w = atan2(z)/atan2(z1);
-//    sum += 0.5*(q1*sin(w) + 1.0);
+    vec2 v = z1 - z2;
+    float r = cmod(z);
+    float phi = carg(v) - carg(z);
+    float vperp = dot(cmult(I, z)/r, v);
+    float vang = vperp/r;
 
-
-    // angular momentum
-//    vec2 v = z1 - z2;
-//    float r = cmod(z);
-//    float phi = atan2(v) - atan2(z);
-//    float vperp = dot(cmult(I, z)/r, v);
-//    float vang = vperp/r;
-//    sum += vang;
-
-
-    if (n > 3u) {
-        sum1 = sum;
-        vec2 v = z - z1;
-        vec2 v1 = z1 - z2;
-        vec2 v2 = z2 - z3;
-        vec2 v3 = z3;
-        vec2 w = rotate(cdiv(cmult(v, v2), cmult(v1, v3)), q1);
-        sum += abs(atan2(w))/pi;
-    }
-
+    sum += vang;
 
 }
-void test_avg_loop(inout vec2 sum, inout vec2 sum1, uint n, vec4 z, vec4 z1, vec4 z2, vec4 z3, vec4 z4, vec4 c) {
+void angular_momentum_loop(inout vec2 sum, inout vec2 sum1, vec4 z, vec4 z1, vec4 z2) {
+    angular_momentum_loop(sum.x, sum1.x, z.xz, z1.xz, z2.xz);
+}
 
-    if (n > 3u) {
-        sum1 = sum;
-        vec2 v = z.xz - z1.xz;
-        vec2 v1 = z1.xz - z2.xz;
-        vec2 v2 = z2.xz - z3.xz;
-        vec2 v3 = z3.xz;
-        vec2 w = cdiv(cmult(v, v2), cmult(v1, v3));
-        sum += abs(atan2(w))/pi;
-    }
+void umbrella_loop(inout float sum, inout float sum1, vec2 z, vec2 z1) {
 
+    sum1 = sum;
+    vec2 w = cpow(cmult(z, conj(z1)), -q1.x);
+    float t = acos(w.x);
+    sum += 0.5*(t + 1.0);
+
+}
+void umbrella_loop(inout vec2 sum, inout vec2 sum1, vec4 z, vec4 z1) {
+
+    sum1 = sum;
+    vec2 w = cpow(cmult(z.xz, conj(z1.xz)), -q1.x);
+    float t = acos(w.x);
+    sum.x += 0.5*(t + 1.0);
+
+}
+
+void umbrella_inverse_loop(inout float sum, inout float sum1, vec2 z, vec2 z1) {
+
+    sum1 = sum;
+    vec2 w = cpow(cmult(z, conj(z1)), q1.x);
+    float t = acos(w.x);
+    sum += 0.5*(t + 1.0);
+
+}
+void umbrella_inverse_loop(inout vec2 sum, inout vec2 sum1, vec4 z, vec4 z1) {
+
+    sum1 = sum;
+    vec2 w = cpow(cmult(z.xz, conj(z1.xz)), q1.x);
+    float t = acos(w.x);
+    sum.x += 0.5*(t + 1.0);
+
+}
+
+void exit_angle_loop(inout float sum, inout float sum1, vec2 z, vec2 z1) {
+    if (z.x > 0.0 && z1.x < 0.0 || z.x < 0.0 && z1.x > 0.0) sum += 1.0;
 }
 
 
@@ -1847,13 +3175,42 @@ bool escape(inout vec2 modsqrz, vec4 z) {
 
 bool converge(inout float eps, vec2 z, vec2 z1) {
     eps = cmodsqr(z - z1);
-    if (eps < 1e-8) { return true; }
+    if (eps < R) { return true; }
     return false;
 }
 bool converge(inout float eps, vec4 z, vec4 z1) {
     eps = cmodsqr(cadd(z, -z1)).x;
-    if (eps < 1e-8) { return true; }
+    if (eps < R) { return true; }
     return false;
+}
+
+bool escape_tri(vec2 z) {
+    return z.y > sqrt(3.0)*z.x + R || z.y > -sqrt(3.0)*z.x + R || z.y < -R;
+}
+bool escape_tri(vec4 z) {
+    return z.z > sqrt(3.0)*z.x + R || z.z > -sqrt(3.0)*z.x + R || z.z < -R;
+}
+
+bool escape_sqr(vec2 z) {
+    return abs(z.x) > 0.5*R || abs(z.y) > 0.5*R;
+}
+bool escape_sqr(vec4 z) {
+    return abs(z.x) > 0.5*R || abs(z.z) > 0.5*R;
+}
+
+bool escape_pent(vec2 z) {
+    return  -z.y > 0.726542528*z.x + R ||
+            -z.y > -0.726542528*z.x + R ||
+            -z.y < 3.077683537*(z.x - R*0.9510565163) + R*0.309016994375 ||
+            -z.y < -3.077683537*(z.x - R*-0.5877852522925) + R*-0.8090169943749475 ||
+            -z.y < -R*0.809016994375;
+}
+bool escape_pent(vec4 z) {
+    return  -z.z > 0.726542528*z.x + R ||
+            -z.z > -0.726542528*z.x + R ||
+            -z.z < 3.077683537*(z.x - R*0.9510565163) + R*0.309016994375 ||
+            -z.z < -3.077683537*(z.x - R*-0.5877852522925) + R*-0.8090169943749475 ||
+            -z.z < -R*0.809016994375;
 }
 
 
@@ -1862,6 +3219,7 @@ bool converge(inout float eps, vec4 z, vec4 z1) {
 void main() {
 
     bool textureIn = false;
+    uint textureMask = 0u;
 
     // generalInit
     // seedInit
@@ -1874,13 +3232,12 @@ void main() {
 
         if (n == maxIter) {
             textureIn = true;
+            textureMask = 1u;
             // textureFinal
             colorParams.y = 1.0;
             break;
         }
 
-        z4 = z3;
-        z3 = z2;
         z2 = z1;
         z1 = z;
 
@@ -1895,6 +3252,9 @@ void main() {
     }
 
     if (isinf(colorParams.x) || isnan(colorParams.x)) colorParams.x = 0.0;
-    fragmentColor = floatBitsToUint(colorParams);
+    // fragmentColor = floatBitsToUint(colorParams);
+    // fragmentColor = (packHalf2x16(vec2(colorParams.x, 0.0)) & textureResetMask) | textureMask;
+    // fragmentColor = packHalf2x16(vec2(colorParams.x, 0.0));
+    fragmentColor = (floatBitsToUint(colorParams.x) & ~1u) | textureMask;
 
 }

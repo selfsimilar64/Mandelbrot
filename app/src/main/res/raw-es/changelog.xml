@@ -1,12 +1,24 @@
 <changelog>
 
 
+    <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
+        <new type="summary">¡Mejora de Oro añadida!</new>
+        <new type="summary">Se agregaron varias formas, texturas, paletas de colores y parámetros nuevos</new>
+        <new type="summary">ORO: Se agregó una forma personalizada y creación de paleta de colores personalizada.</new>
+        <new type="summary">ORO: Se agregaron opciones de mayor resolución hasta 4K</new>
+        <new type="summary">Capacidad agregada para elegir favoritos en listas de artículos</new>
+        <new type="summary">Se agregó la opción TASA a todos los parámetros para ajustes más controlados</new>
+        <new type="summary">Resolución elegida automáticamente durante los cambios de parámetros</new>
+        <new type="summary">Uso de memoria mejorado</new>
+    </release>
+
+
     <release versionCode="18" versionName="v1.3.4" date="2020-07-22">
-        <new type="summary">Todas las formas ahora admiten zoom profundo (hasta 1e-12) con texturas</new>
-        <new type="summary">Tiempo de Escape (Suave) textura ahora es compatible con todas las formas divergentes</new>
-        <new type="summary">Promedio de Rayas y Promedio de Curvatura texturas mejoradas (sin discontinuidades)</new>
-        <new type="summary">Paletas de colores Tiempo, Estornino, Cultivada y Pagoda añadidos</new>
-        <new type="summary">Aumente AJUSTES -> RENDER -> TROZOS si la aplicación falla por valores altos de FORMA -> ITERAR</new>
+        <info>Todas las formas ahora admiten zoom profundo (hasta 1e-12) con texturas</info>
+        <info>Tiempo de Escape (Suave) textura ahora es compatible con todas las formas divergentes</info>
+        <info>Promedio de Rayas y Promedio de Curvatura texturas mejoradas (sin discontinuidades)</info>
+        <info>Paletas de colores Tiempo, Estornino, Cultivada y Pagoda añadidos</info>
+        <info>Aumente AJUSTES -> RENDER -> TROZOS si la aplicación falla por valores altos de FORMA -> ITERAR</info>
         <info>Fija TEXTURA -> MODO -> ENTRADA/AMBAS ajustes</info>
         <info>Fijo errores de COLOR -> AUTO</info>
         <info>Se corrigió otro error que causaba un bloqueo al inicio</info>

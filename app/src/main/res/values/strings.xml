@@ -4,11 +4,8 @@
     <string name="fe_abbrev">FE</string>
 
 
-
-
     <!-- LAYOUT -->
     <!-- ===================================================================================== -->
-
 
 
     <!-- MAIN -->
@@ -25,7 +22,7 @@
     <string name="display_param4" translatable="false">param4</string>
     <string name="e" translatable="false">e</string>
     <string name="welcome_message" translatable="false">Welcome to Fractal Eye!</string>
-    <string name="tutorial_position1" tools:ignore="ExtraTranslation" translatable="false">To move around and explore the fractal, click the POSITION button.</string>
+    <string name="tutorial_position1" translatable="false" tools:ignore="ExtraTranslation">To move around and explore the fractal, click the POSITION button.</string>
     <string name="tutorial_position2" translatable="false">Swipe in any direction to move</string>
     <string name="tutorial_position3" translatable="false">Pinch to zoom in or out!</string>
     <string name="tutorial_color1" translatable="false">To change how the fractal is colored, click the COLOR button.</string>
@@ -38,14 +35,36 @@
     <string name="done">done</string>
     <string name="random">random</string>
     <string name="cancel">cancel</string>
-    <string name="delete">delete</string>
+    <string name="delete">Delete</string>
+    <string name="list">List</string>
+    <string name="empty_list_favorite">Swipe left on an item and press the star icon to add it to your favorites!</string>
+    <string name="empty_list_custom">Press the «NEW» button at the bottom of the screen to create a custom item!</string>
+    <string name="gold_enabled">Upgrade Successful!</string>
+    <string name="gold_enabled_dscript">All features should now be available! For questions or concerns please contact selfsimilartech@gmail.com. Thank you for your purchase and happy fractal-making!</string>
+    <string name="gold_pending">Purchase Pending…</string>
+    <string name="gold_pending_dscript">Your purchase is still being processed. Please check back later.</string>
+    <string name="epilepsy_title">Caution</string>
+    <string name="epilepsy_dscript">This app can sometimes produce fast flashing images which may be harmful to users with photosensitive epilepsy.</string>
 
 
 
-    <!-- SERVER -->
-    <string name="defaultIP" translatable="false">"35.245.206.128"</string>
-    <string name="defaultPORT" translatable="false">"64000"</string>
-
+    <!-- UPGRADE ACTIVITY -->
+    <string name="upgrade">Upgrade</string>
+    <string name="no_thanks">No thanks</string>
+    <string name="upgrade_resolution_header">Preserve Details</string>
+    <string name="upgrade_customization_header">Unlock Everything</string>
+    <string name="upgrade_creativity_header">Unleash Your Creativity</string>
+    <string name="upgrade_resolution_dscript">Save images with the highest quality resolution!</string>
+    <string name="free">Free</string>
+    <string name="upgrade_customization_content1">%d new shapes!</string>
+    <string name="upgrade_customization_content2">%d new textures!</string>
+    <string name="upgrade_customization_content3">%d new parameters!</string>
+    <string name="upgrade_customization_dscript1">Get access to Julia mode with every shape!</string>
+    <string name="upgrade_customization_dscript2">Explore countless combinations and styles with fine-tuned control over every aspect!</string>
+    <string name="upgrade_creativity_dscript1">Save as many custom palettes and shapes as you can create!</string>
+    <string name="upgrade_creativity_dscript2">Create color palettes with up to 12 colors!</string>
+    <string name="upgrade_creativity_dscript3">Use the custom shape calculator to discover unique shapes that have never been seen before!</string>
+    <string name="upgrade_error">An error occurred. Please make sure you are connected to the internet.</string>
 
 
     <!-- SETTINGS FRAGMENT -->
@@ -79,7 +98,12 @@
     <string name="chunk_count_hint">Controls how many sections the image is divided into when rendering (increase if the app crashes for large values of SHAPE -> ITERATE)</string>
     <string name="changelog">Changes</string>
     <string name="edit">Edit</string>
-
+    <string name="header_favorites">Favorites</string>
+    <string name="header_custom">Custom</string>
+    <string name="header_default">Default</string>
+    <string name="header_custom_descript">(swipe left to edit)</string>
+    <string name="highres_render">High Resolution Render</string>
+    <string name="dont_show_again">Don\'t show this message again</string>
 
 
     <!-- TEXTURE FRAGMENT -->
@@ -93,7 +117,7 @@
     <string name="texture_mode_in">in</string>
     <string name="texture_mode_both">both</string>
     <string name="bailout_hint" translatable="false">Determines how large the numbers can get during calcualtion before terminating</string>
-
+    <string name="bins">Bins</string>
 
 
     <!-- SHAPE FRAGMENT -->
@@ -106,7 +130,7 @@
     <string name="param2">Param 2</string>
     <string name="param3">Param 3</string>
     <string name="param4">Param 4</string>
-    <string name="sensitivity">sensitivity</string>
+    <string name="sensitivity">rate</string>
     <string name="max_iter">iterate</string>
     <string name="julia_mode">Julia Mode</string>
     <string name="max_iter_hint" translatable="false">Determines the maximum number of calculations per pixel.
@@ -116,22 +140,26 @@
     <string name="faster">Faster</string>
     <string name="more_detail">More detail</string>
     <string name="less_detail">Less detail</string>
-
-
+    <string name="slow_dualfloat_title">Slow Renders</string>
+    <string name="slow_dualfloat_dscript1">Rendering this shape at deeper zooms uses calculations that are significantly slower and may even cause crashes on some devices</string>
+    <string name="slow_dualfloat_dscript2">Switch to dual-float mode?</string>
+    <string name="slow_dualfloat_choice">Remember my choice</string>
+    <string name="rendering_icons">Rendering Custom Icons …</string>
 
 
     <!-- COLOR FRAGMENT -->
     <string name="palette">Palette</string>
     <string name="palette_name" translatable="false">Palette Name</string>
-    <string name="frequency">Frequency</string>
-    <string name="offset">Phase</string>
+    <string name="frequency">frequency</string>
+    <string name="phase">phase</string>
     <string name="solid_fill">fill</string>
     <string name="solid_fill_white">white</string>
     <string name="solid_fill_black">black</string>
     <string name="autofit">auto</string>
+    <string name="add">add</string>
+    <string name="remove">remove</string>
     <string name="phase_hint" translatable="false">Determines the color offset. Swipe left or right with one finger to change.</string>
     <string name="freq_hint" translatable="false">Determines how frequently the colors change. Use pinch gestures to change.</string>
-
 
 
     <!-- POSITION FRAGMENT -->
@@ -143,19 +171,23 @@
     <string name="rotate">rotate</string>
 
 
-
     <!-- SHAPE NAMES -->
     <string name="mandelbrot" translatable="false">Mandelbrot</string>
     <string name="mandelbrot_cubic">Mandelbrot Cubic</string>
     <string name="mandelbrot_quartic">Mandelbrot Quartic</string>
     <string name="mandelbrot_quintic">Mandelbrot Quintic</string>
+    <string name="mandelbrot_sextic">Mandelbrot Sextic</string>
     <string name="mandelbrot_anypow">Mandelbrot (Power)</string>
     <string name="clover">Clover</string>
     <string name="burning_ship">Burning Ship</string>
     <string name="burning_ship_anypow">Burning Ship (Power)</string>
     <string name="mandelbox">Mandelbox</string>
     <string name="kali" translatable="false">Kali</string>
-    <string name="sine1">Sine 1</string>
+    <string name="sine">Sine 1</string>
+    <string name="cosine">Cosine</string>
+    <string name="hyperbolic_sine">Hyperbolic Sine</string>
+    <string name="hyperbolic_cosine">Hyperbolic Cosine</string>
+    <string name="bessel" translatable="false">Bessel</string>
     <string name="sine2">Sine 2</string>
     <string name="horseshoe_crab">Horseshoe Crab</string>
     <string name="kleinian" translatable="false">Kleinian</string>
@@ -163,7 +195,22 @@
     <string name="nova2" translatable="false">Nova 2</string>
     <string name="collatz" translatable="false">Collatz</string>
     <string name="mandelex" translatable="false">Mandelex</string>
-
+    <string name="binet" translatable="false">Binet</string>
+    <string name="sierpinski_triangle">Sierpiński Triangle</string>
+    <string name="sierpinski_square">Sierpinski Square</string>
+    <string name="sierpinski_pentagon">Sierpinski Pentagon</string>
+    <string name="tsquare">T-Square</string>
+    <string name="heighway_dragon">Heighway Dragon</string>
+    <string name="cactus">Cactus</string>
+    <string name="cephalopod">Cephalopod</string>
+    <string name="kali_square">Kali Square</string>
+    <string name="mandelbar" translatable="false">Mandelbar</string>
+    <string name="lambert_newton" translatable="false">Lambert Newton</string>
+    <string name="magnet1">Magnet 1</string>
+    <string name="magnet2">Magnet 2</string>
+    <string name="necklace">Necklace</string>
+    <string name="taurus">Taurus</string>
+    <string name="ammonite">Ammonite</string>
 
 
     <!-- PALETTE NAMES -->
@@ -173,6 +220,7 @@
     <string name="peacock">Peacock</string>
     <string name="elephant">Elephant</string>
     <string name="oldskool">Old Sk00l</string>
+    <string name="bronze">Bronze</string>
     <string name="gold">Gold</string>
     <string name="p9">P9</string>
     <string name="viridis">Viridis</string>
@@ -201,7 +249,21 @@
     <string name="starling">Starling</string>
     <string name="overgrown">Overgrown</string>
     <string name="pagoda">Pagoda</string>
-
+    <string name="melted">Melted</string>
+    <string name="torus">Torus</string>
+    <string name="ruby">Ruby</string>
+    <string name="sapphire">Sapphire</string>
+    <string name="amethyst">Amethyst</string>
+    <string name="diamond">Diamond</string>
+    <string name="aztec">Aztec</string>
+    <string name="neon">Neon</string>
+    <string name="dragon">Dragon</string>
+    <string name="coral">Coral</string>
+    <string name="aquamarine">Aquamarine</string>
+    <string name="parachute">Parachute</string>
+    <string name="polyphonic">Polyphonic</string>
+    <string name="anaglyph">Anaglyph</string>
+    <string name="catalyst">Catalyst</string>
 
 
     <!-- TEXTURE NAMES -->
@@ -210,26 +272,39 @@
     <string name="escape_smooth">Escape Time (Smooth)</string>
     <string name="exponential_smooth">Exponential Smoothing</string>
     <string name="distance_est">Distance Estimation</string>
+    <string name="distance_est_abs">Absolute Distance</string>
     <string name="triangle_ineq_avg">Triangle Inequality Average</string>
     <string name="triangle_ineq_avg_int" translatable="false">Triangle Inequality Average (Int)</string>
     <string name="triangle_ineq_avg_float" translatable="false">Triangle Inequality Average (Float)</string>
     <string name="curvature_avg">Curvature Average</string>
     <string name="stripe_avg">Stripe Average</string>
-    <string name="orbit_trap_miny">Orbit Trap</string>
+    <string name="orbit_trap_circ">Circular Orbit Trap</string>
+    <string name="orbit_trap_line">Linear Orbit Trap</string>
+    <string name="orbit_trap_box">Square Orbit Trap</string>
     <string name="normal1">Normal Map 1</string>
     <string name="normal2">Normal Map 2</string>
     <string name="overlay_avg">Overlay Average</string>
     <string name="stripe_avg_bins" translatable="false">Stripe Average (Bins)</string>
     <string name="stripe_median_bins" translatable="false">Stripe Median (Bins)</string>
     <string name="stripe_mode_bins" translatable="false">Stripe Mode (Bins)</string>
+    <string name="angular_momentum">Angular Momentum</string>
+    <string name="umbrella">Umbrella</string>
+    <string name="inverse_umbrella">Inverse Umbrella</string>
 
 
 
-    <!-- TEXTURE PARAM NAMES -->
+    <!-- PARAM NAMES -->
     <string name="density">Density</string>
-    <string name="thickness" translatable="false">Thickness</string>
+    <string name="width">Width</string>
     <string name="sharpness">Sharpness</string>
-
+    <string name="bend">Bend</string>
+    <string name="size">Size</string>
+    <string name="power">Power</string>
+    <string name="angle">Angle</string>
+    <string name="scale">Scale</string>
+    <string name="linear">Linear</string>
+    <string name="center">Center</string>
+    <string name="shift">Shift</string>
 
 
     <!-- MESSAGES -->
@@ -253,9 +328,9 @@
     <string name="msg_img_save_error2">Make sure storage permissions are enabled</string>
     <string name="msg_perturb">Switching to perturbation mode…</string>
     <string name="msg_classic">Switching to classic mode…</string>
-
-
-
+    <string name="msg_out_of_memory">Error - Not enough memory</string>
+    <string name="msg_custom_name_duplicate">A %s with this name already exists - please choose a different name</string>
+    <string name="msg_eqn_error">Please edit the equation until the error indicator is not showing</string>
 
 
     <!-- UTILITY -->
@@ -344,12 +419,6 @@
             }
         }
     </string>
-
-
-
-
-
-
 
 
     <!-- SHAPES -->
@@ -472,21 +541,6 @@
     </string>
 
 
-
-
-
-
-
-    <!-- TEXTURES -->
-    <!-- ===================================================================================== -->
-
-    <string name="escape_smooth_final_proto_sf" translatable="false">
-        float div = log(modSF(Z))/log(modSF(Z1));
-        if (isnan(div) || isinf(div)) { div = Q1*log(modSF(Z1))/log(modSF(Z2)); }
-        float i = -log(log(modSF(Z1))/log(R))/log(div);
-        colorParams.x = i;
-    </string>
-
     <!-- LIGHTING -->
     <string name="mandelbrot_light_init_sf" translatable="false">
         vec2 a = vec2(0.0);
@@ -533,47 +587,6 @@
         if (specular &lt; 0.0) { specular = 0.0; }
         specular = 0.75*(specular + 0.01);
         color = diffuse*color + specular;
-    </string>
-
-
-    <!-- ORBIT TRAP MIN XY -->
-    <string name="orbittrapminxy_init" translatable="false">
-        float minXY = R;
-        float dist = 0.0;
-        int m = 0;
-    </string>
-    <string name="orbittrapminxy_loop_sf" translatable="false">
-        dist = min(abs(Z.x), abs(Z.y));
-        if(dist &lt; minXY) {
-            minXY = dist;
-            m = n;
-        }
-    </string>
-    <string name="orbittrapminxy_final_radius" translatable="false">
-        colorParams.x = minXY;
-    </string>
-    <string name="orbittrapminxy_final_iter" translatable="false">
-        colorParams.x = m/float(maxIter);
-    </string>
-
-
-    <string name="stripe_final_proto_sf" translatable="false">
-        sum /= float(n + 1u);
-        sum1 /= float(n);
-
-        float div = log(modSF(Z))/log(modSF(Z1));
-        if (isnan(div) || isinf(div)) {
-            if (mod(Q1, 2.0) == 0.0) {
-                div = 2.0*log(modSF(Z1))/log(modSF(Z2));
-            }
-            else {
-                div = Q3*log(modSF(Z2))/log(modSF(Z3));;
-            }
-        }
-
-        float r = -log(log(modSF(Z1))/log(R))/log(div);
-        float s = (1.0 - r)*sum1 + r*sum;
-        colorParams.x = s;
     </string>
 
 </resources>
