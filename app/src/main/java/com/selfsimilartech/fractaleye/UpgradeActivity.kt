@@ -7,7 +7,13 @@ import android.util.Log
 import android.view.Gravity
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.res.ResourcesCompat
 import com.android.billingclient.api.*
+import com.bumptech.glide.Glide
+import com.bumptech.glide.GlideBuilder
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
+import com.bumptech.glide.request.RequestOptions
 import kotlinx.android.synthetic.main.activity_upgrade.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -112,6 +118,20 @@ class UpgradeActivity : AppCompatActivity() {
             //finish()
         }
 
+
+        Glide.with(this).apply {
+            setDefaultRequestOptions(
+                    RequestOptions()
+                            .format(DecodeFormat.PREFER_RGB_565)
+                            .downsample(DownsampleStrategy.AT_MOST)
+            )
+            load( ResourcesCompat.getDrawable(resources, R.drawable.pro_header, null)).into(headerImage)
+            load( R.drawable.creativity_collage     ).into(creativityImage)
+            load( R.drawable.customization_collage  ).into(customizationImage)
+            load( R.drawable.upgrade_resolution     ).into(resolutionImage)
+        }
+
+
         upgradeCustomizationText1.text = resources.getString(R.string.upgrade_customization_content1).format(Shape.all.filter { it.goldFeature }.size)
         upgradeCustomizationText2.text = resources.getString(R.string.upgrade_customization_content2).format(Texture.all.filter { it.goldFeature }.size)
         upgradeCustomizationText3.text = resources.getString(R.string.upgrade_customization_content3).format(
@@ -126,8 +146,8 @@ class UpgradeActivity : AppCompatActivity() {
 
         goldResolutionLabel.showGradient = true
         goldResolutionDims.showGradient = true
-        freeResolutionDims.text = "%d x %d".format(Resolution.MAX_FREE.size.x, Resolution.MAX_FREE.size.y)
-        goldResolutionDims.text = "%d x %d".format(Resolution.R2880.size.x, Resolution.R2880.size.y)
+        freeResolutionDims.text = "%d x %d".format(Resolution.MAX_FREE.w, Resolution.MAX_FREE.h)
+        goldResolutionDims.text = "%d x %d".format(Resolution.R2880.w, Resolution.R2880.h)
 
     }
 
