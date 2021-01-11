@@ -1,5 +1,6 @@
 package com.selfsimilartech.fractaleye
 
+import android.Manifest
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
 import android.content.Context
@@ -24,9 +25,11 @@ import android.view.animation.AlphaAnimation
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.updateLayoutParams
+import androidx.fragment.app.*
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import androidx.room.migration.Migration
@@ -35,6 +38,7 @@ import androidx.viewpager.widget.ViewPager
 import com.android.billingclient.api.*
 import com.google.android.material.tabs.TabLayout
 import com.michaelflisar.changelog.ChangelogBuilder
+import com.michaelflisar.changelog.ChangelogSetup
 import com.michaelflisar.changelog.classes.ImportanceChangelogSorter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.color_fragment.*
@@ -45,7 +49,6 @@ import kotlinx.android.synthetic.main.texture_fragment.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.apfloat.Apcomplex
 import org.apfloat.Apfloat
 import org.apfloat.ApfloatMath
@@ -71,6 +74,7 @@ const val GOLD_PENDING_DIALOG_SHOWN = "goldPendingDialogShown"
 const val SHOW_EPILEPSY_DIALOG = "showEpilepsyDialog"
 
 const val RESOLUTION = "resolution"
+const val ASPECT_RATIO = "aspectRatio"
 //const val PRECISION = "precision"
 //const val AUTO_PRECISION = "autoPrecision"
 const val DISPLAY_PARAMS = "displayParams"
@@ -90,6 +94,7 @@ const val CPU_PRECISION = "cpuPrecision"
 const val PALETTE = "palette"
 const val SOLID_FILL_COLOR = "solidFillColor"
 
+const val USE_ALTERNATE_SPLIT = "useAlternateSplit"
 const val CHUNK_PROFILE = "chunkProfile"
 const val VERSION_CODE_TAG = "versionCode"
 const val SHARED_PREFERENCES = "com.selfsimilartech.fractaleye.SETTINGS"
@@ -193,205 +198,7 @@ enum class TextureMode { OUT, IN, BOTH }
 enum class ListLayoutType { GRID, LINEAR }
 
 
-class Position(
-        x: Double = 0.0,
-        y: Double = 0.0,
-        zoom: Double = 1.0,
-        rotation: Double = 0.0,
-        xap: Apfloat = Apfloat(x.toString(), 32L),
-        yap: Apfloat = Apfloat(y.toString(), 32L),
-        var ap: Long = 32L,
-        xLocked: Boolean = false,
-        yLocked: Boolean = false,
-        scaleLocked: Boolean = false,
-        rotationLocked: Boolean = false
-) {
 
-    private val xInit = x
-    private val yInit = y
-    private val zoomInit = zoom
-    private val rotationInit = rotation
-    private val xLockedInit = xLocked
-    private val yLockedInit = yLocked
-    private val scaleLockedInit = scaleLocked
-    private val rotationLockedInit = rotationLocked
-
-
-    var x = xInit
-        set(value) { if (!xLocked) { field = value } }
-
-    var y = yInit
-        set(value) { if (!yLocked) { field = value } }
-
-    var zoom = zoomInit
-        set(value) { if (!scaleLocked) { field = value } }
-
-    var rotation = rotationInit
-        set(value) { if (!rotationLocked) {
-            field = when {
-                value <= Math.PI -> ((value - Math.PI).rem(2.0 * Math.PI)) + Math.PI
-                value > Math.PI -> ((value + Math.PI).rem(2.0 * Math.PI)) - Math.PI
-                else -> value
-            }
-
-        }}
-
-    var xLocked = xLockedInit
-    var yLocked = yLockedInit
-    var scaleLocked = scaleLockedInit
-    var rotationLocked = rotationLockedInit
-
-
-
-    private val xapInit = xap
-    private val yapInit = yap
-    var xap = xapInit
-    var yap = yapInit
-
-
-    fun clone() : Position {
-        return Position(x, y, zoom, rotation)
-    }
-
-    private fun translate(dx: Double, dy: Double) {
-
-        x += dx
-        y += dy
-
-    }
-    private fun translateAp(dx: Apfloat, dy: Apfloat) {
-
-        xap = xap.add(dx)
-        yap = yap.add(dy)
-
-    }
-    fun translate(dx: Float, dy: Float) {  // dx, dy --> [0, 1]
-
-        val tx = dx*zoom
-        val ty = dy*zoom
-        val sinTheta = sin(-rotation)
-        val cosTheta = cos(rotation)
-        x -= tx*cosTheta - ty*sinTheta
-        y += tx*sinTheta + ty*cosTheta
-
-        xap = xap.subtract(Apfloat(tx * cosTheta - ty * sinTheta, ap))
-        yap = yap.add(Apfloat(tx * sinTheta + ty * cosTheta, ap))
-
-    }
-    fun zoom(dZoom: Float, prop: DoubleArray) {
-
-        if (!scaleLocked) {
-
-            // unlock x and y to allow auxiliary transformations
-            val xLockedTemp = xLocked
-            val yLockedTemp = yLocked
-            xLocked = false
-            yLocked = false
-
-            // calculate scaling variables
-            val qx = prop[0] * zoom
-            val qy = prop[1] * zoom
-            val sinTheta = sin(rotation)
-            val cosTheta = cos(rotation)
-            val fx = x + qx * cosTheta - qy * sinTheta
-            val fy = y + qx * sinTheta + qy * cosTheta
-
-            // scale
-            translate(-fx, -fy)
-            x /= dZoom
-            y /= dZoom
-            translate(fx, fy)
-
-            val fxap = xap.add(Apfloat(qx * cosTheta - qy * sinTheta, ap))
-            val fyap = yap.add(Apfloat(qx * sinTheta + qy * cosTheta, ap))
-            translateAp(fxap.negate(), fyap.negate())
-            xap = xap.divide(Apfloat(dZoom, ap))
-            yap = yap.divide(Apfloat(dZoom, ap))
-            translateAp(fxap, fyap)
-
-
-            zoom /= dZoom
-
-            // set x and y locks to previous values
-            xLocked = xLockedTemp
-            yLocked = yLockedTemp
-
-        }
-
-    }
-    fun rotate(dTheta: Float, prop: DoubleArray) {
-
-        if (!rotationLocked) {
-
-            // unlock x and y to allow auxiliary transformations
-            val xLockedTemp = xLocked
-            val yLockedTemp = yLocked
-            xLocked = false
-            yLocked = false
-
-            // calculate rotation variables
-            var qx = prop[0] * zoom
-            var qy = prop[1] * zoom
-            val sinTheta = sin(rotation)
-            val cosTheta = cos(rotation)
-            val fx = x + qx * cosTheta - qy * sinTheta
-            val fy = y + qx * sinTheta + qy * cosTheta
-            val sindTheta = sin(-dTheta)
-            val cosdTheta = cos(dTheta)
-
-            // rotate
-            translate(-fx, -fy)
-            qx = x
-            qy = y
-            x = qx * cosdTheta - qy * sindTheta
-            y = qx * sindTheta + qy * cosdTheta
-            translate(fx, fy)
-
-
-            qx = prop[0] * zoom
-            qy = prop[1] * zoom
-            val fxap = xap.add(Apfloat(qx * cosTheta - qy * sinTheta, ap))
-            val fyap = yap.add(Apfloat(qx * sinTheta + qy * cosTheta, ap))
-            translateAp(fxap.negate(), fyap.negate())
-            val qxap = xap
-            val qyap = yap
-            val sindThetaAp = Apfloat(sindTheta, ap)
-            val cosdThetaAp = Apfloat(cosdTheta, ap)
-            xap = qxap.multiply(cosdThetaAp).subtract(qyap.multiply(sindThetaAp))
-            yap = qxap.multiply(sindThetaAp).add(qyap.multiply(cosdThetaAp))
-            translateAp(fxap, fyap)
-
-
-            rotation -= dTheta.toDouble()
-
-            // set x and y locks to previous values
-            xLocked = xLockedTemp
-            yLocked = yLockedTemp
-
-        }
-
-    }
-
-    fun reset() {
-        x = xInit
-        y = yInit
-        zoom = zoomInit
-        rotation = rotationInit
-        xLocked = xLockedInit
-        yLocked = yLockedInit
-        scaleLocked = scaleLockedInit
-        rotationLocked = rotationLockedInit
-    }
-    fun updatePrecision(newPrecision: Long) {
-
-        //Log.e("MAIN ACTIVITY", "new position precision: $newPrecision")
-        ap = newPrecision
-        xap = Apfloat(xap.toString(), ap)
-        yap = Apfloat(yap.toString(), ap)
-
-    }
-
-}
 
 class PositionList(
         val default: Position = Position(),
@@ -450,7 +257,7 @@ fun splitSD(a: Double) : FloatArray {
 
 fun getColors(res: Resources, ids: List<Int>) : IntArray {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
-    else IntArray(ids.size) { i: Int -> res.getColor(ids[i]) }
+    else IntArray(ids.size) { i: Int -> res.getColor(ids[i], null) }
 }
 
 
@@ -560,6 +367,15 @@ fun split(a: Double) : PointF {
     return PointF(hi, lo)
 }
 
+fun split(a: Float) : PointF {
+    val t = a*8193f
+    val q = t - a
+    val hi = t - q
+    val lo = a - hi
+    Log.e("SPLIT", "t: $t, q: $q, hi: $hi, lo: $lo")
+    return PointF(hi, lo)
+}
+
 
 class MainActivity : AppCompatActivity(), OnCompleteListener {
 
@@ -584,11 +400,15 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     private var goldEnabledDialogShown = false
     private var goldPendingDialogShown = false
     private var showEpilepsyDialog = true
+    private var dialog : AlertDialog? = null
+
 
     private lateinit var settingsFragment : Fragment
+    private lateinit var imageFragment : Fragment
     private lateinit var textureFragment : Fragment
     private lateinit var shapeFragment : Fragment
     private lateinit var colorFragment : Fragment
+
     private lateinit var positionFragment : Fragment
 
 
@@ -598,6 +418,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         override fun onBillingSetupFinished(billingResult: BillingResult) {
             when (billingResult.responseCode) {
                 BillingClient.BillingResponseCode.OK -> queryPurchases()
+                else -> Log.e("MAIN", "unknown billing response code")
             }
         }
 
@@ -631,9 +452,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         private val MSG_UPDATE_COLOR_THUMBNAILS = 0
         private val MSG_UPDATE_TEXTURE_THUMBNAILS = 1
-        private val MSG_UPDATE_SHAPE_THUMBNAILS = 4
         private val MSG_IMAGE_SAVED = 2
         private val MSG_ERROR = 3
+        private val MSG_UPDATE_SHAPE_THUMBNAILS = 4
 
 
         
@@ -645,8 +466,8 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         fun updateColorThumbnails() {
             sendMessage(obtainMessage(MSG_UPDATE_COLOR_THUMBNAILS))
         }
-        fun updateTextureThumbnail(index: Int) {
-            sendMessage(obtainMessage(MSG_UPDATE_TEXTURE_THUMBNAILS, index))
+        fun updateTextureThumbnail(layoutIndex: Int, n: Int) {
+            sendMessage(obtainMessage(MSG_UPDATE_TEXTURE_THUMBNAILS, layoutIndex, n))
         }
         fun updateShapeThumbnail(shape: Shape, customIndex: Int?) {
             sendMessage(obtainMessage(MSG_UPDATE_SHAPE_THUMBNAILS, customIndex ?: -1, -1, shape))
@@ -670,7 +491,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
             when(what) {
                 MSG_UPDATE_COLOR_THUMBNAILS -> activity?.updateColorThumbnails()
-                MSG_UPDATE_TEXTURE_THUMBNAILS -> activity?.updateTextureThumbnail(msg.obj as Int)
+                MSG_UPDATE_TEXTURE_THUMBNAILS -> activity?.updateTextureThumbnail(msg.arg1, msg.arg2)
                 MSG_UPDATE_SHAPE_THUMBNAILS -> activity?.updateShapeThumbnail(msg.obj as Shape, msg.arg1)
                 MSG_IMAGE_SAVED -> activity?.showMessage(
                         "${activity.resources.getString(R.string.msg_save_successful)} ${msg.obj}"
@@ -686,7 +507,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
     enum class Category(val displayName: Int, val icon: Int) {
 
-        SETTINGS(R.string.settings, R.drawable.settings) {
+        IMAGE(R.string.image, R.drawable.image2) {
             override fun onOpenMenu(act: MainActivity) {
                 onCategorySelected(act)
             }
@@ -700,17 +521,10 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 act.apply {
                     fsv.r.reaction = Reaction.NONE
                     hideTouchIcon()
-                    if (renderOptionsLayout.isVisible() || displayOptionsLayout.isVisible()) uiSetOpenTall()
-                    else if (uiIsClosed()) uiSetOpen()
+                    if (uiIsClosed()) uiSetOpen()
                 }
             }
-            override fun onCategoryUnselected(act: MainActivity) {
-                act.apply {
-                    if (uiIsOpen() && (renderOptionsLayout?.isVisible() == true || displayOptionsLayout?.isVisible() == true)) {
-                        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
-                    }
-                }
-            }
+            override fun onCategoryUnselected(act: MainActivity) {}
         },
         TEXTURE(R.string.texture, R.drawable.texture) {
             override fun onOpenMenu(act: MainActivity) {
@@ -881,9 +695,10 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         // set screen resolution
         // create and insert new resolution if different from preloaded resolutions
-        if (Resolution.all.none { it.size.x == screenWidth }) Resolution.addResolution(screenWidth)
+        if (Resolution.all.none { it.w == screenWidth }) Resolution.addResolution(screenWidth)
         Resolution.SCREEN = Resolution.valueOf(screenWidth) ?: Resolution.R1080
         Resolution.initialize(screenRatio)
+        AspectRatio.initialize()
 
 
         // restore SettingsConfig from SharedPreferences
@@ -896,22 +711,24 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         // val maxStartupRes = if (sc.goldEnabled) Resolution.SCREEN else Resolution.R1080
         val savedResolution = sp.getInt(RESOLUTION, Resolution.all.indexOf(Resolution.R1080))
-        sc.resolution = Resolution.all[savedResolution]
+        sc.resolution = Resolution.all.getOrNull(savedResolution) ?: Resolution.R720
+        val savedAspectRatio = sp.getInt(ASPECT_RATIO, 0)
+        sc.aspectRatio = AspectRatio.all.getOrNull(savedAspectRatio) ?: AspectRatio.RATIO_SCREEN
         //sc.resolution = Resolution.FOURTH
         //sc.precision = Precision.values()[sp.getInt(PRECISION, Precision.SINGLE.ordinal)]
         //sc.autoPrecision = sp.getBoolean(AUTO_PRECISION, true)
-        sc.continuousPosRender = sp.getBoolean(CONTINUOUS_RENDER, false)
-        sc.displayParams = sp.getBoolean(DISPLAY_PARAMS, false)
-        sc.renderBackground = sp.getBoolean(RENDER_BACKGROUND, true)
-        sc.fitToViewport = sp.getBoolean(FIT_TO_VIEWPORT, false)
-        sc.hideNavBar = sp.getBoolean(HIDE_NAV_BAR, true)
-        sc.colorListViewType = ListLayoutType.values()[sp.getInt(COLOR_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
-        sc.shapeListViewType = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
-        sc.textureListViewType = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
-        sc.autofitColorRange = sp.getBoolean(AUTOFIT_COLOR_RANGE, true)
-        f.solidFillColor = sp.getInt(SOLID_FILL_COLOR, Color.WHITE)
-        sc.chunkProfile = ChunkProfile.values()[sp.getInt(CHUNK_PROFILE, 1)]
-        //sc.showHints = sp.getBoolean(SHOW_HINTS, true)
+        sc.continuousPosRender  = sp.getBoolean(CONTINUOUS_RENDER, false)
+        sc.displayParams        = sp.getBoolean(DISPLAY_PARAMS, false)
+        sc.renderBackground     = sp.getBoolean(RENDER_BACKGROUND, true)
+        sc.fitToViewport        = sp.getBoolean(FIT_TO_VIEWPORT, false)
+        sc.hideNavBar           = sp.getBoolean(HIDE_NAV_BAR, true)
+        sc.colorListViewType    = ListLayoutType.values()[sp.getInt(COLOR_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
+        sc.shapeListViewType    = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
+        sc.textureListViewType  = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
+        sc.autofitColorRange    = sp.getBoolean(AUTOFIT_COLOR_RANGE, true)
+        sc.useAlternateSplit    = sp.getBoolean(USE_ALTERNATE_SPLIT, false)
+        sc.chunkProfile         = ChunkProfile.values()[sp.getInt(CHUNK_PROFILE, 1)]
+        f.solidFillColor        = sp.getInt(SOLID_FILL_COLOR, Color.WHITE)
 
 
 
@@ -929,7 +746,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             it.isFavorite = sp.getBoolean(
                     "Palette${usResources.getString(it.nameId).replace(" ", "")}Starred", false
             )
-            it.initialize(resources, Resolution.THUMB.size)
+            it.initialize(resources)
         }
         Shape.default.forEach {
             it.initialize(resources)
@@ -938,7 +755,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             )
         }
         Texture.all.forEach {
-            it.initialize(resources, Resolution.THUMB.size)
+            it.initialize(resources)
             it.isFavorite = sp.getBoolean(
                     "Texture${usResources.getString(it.nameId).replace(" ", "")}Starred", false
             )
@@ -948,15 +765,16 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
 
 
-        Log.e("MAIN", "available heap size in MB: ${getAvailableHeapMemory()}")
+        Log.d("MAIN", "available heap size in MB: ${getAvailableHeapMemory()}")
 
 
 
-        val r = FractalRenderer(f, sc, this, baseContext, ActivityHandler(this), screenRes)
-        fsv = FractalSurfaceView(baseContext, r)
-        fsv.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight)
+        val r = FractalRenderer(f, sc, this, baseContext, ActivityHandler(this))
+        //fsv = FractalSurfaceView(baseContext, f, sc, this, r)
+
 
         settingsFragment  = SettingsFragment()
+        imageFragment     = ImageFragment()
         textureFragment   = TextureFragment()
         shapeFragment     = ShapeFragment()
         colorFragment     = ColorFragment()
@@ -965,18 +783,27 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         super.onCreate(savedInstanceState)
 
+//        settingsFragment  = SettingsFragment()
+//        supportFragmentManager.beginTransaction().add(settingsFragment, "SETTINGS").commit()
+
 
         setContentView(R.layout.activity_main)
-        fractalLayout.addView(fsv)
-
+        // fractalLayout.addView(fsv)
+        fsv = fractalSurfaceView!!
+        fsv.initialize(r, f, sc, this)
+        fsv.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight, Gravity.CENTER)
+        fractalLayout.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight, Gravity.CENTER)
+        baseLayout.setOnTouchListener { v, event -> fsv.onTouchEvent(event) }
+        onAspectRatioChanged()
 
         deviceHasNotch = calcDeviceHasNotch()
         navBarHeight = calcNavBarHeight()
         statusBarHeight = calcStatusBarHeight()
-        updateSurfaceViewLayout(resources.getDimension(R.dimen.uiLayoutHeightClosed))
+        //updateSurfaceViewLayout(resources.getDimension(R.dimen.uiLayoutHeightClosed))
 
 
         val layoutList = listOf(
+                baseLayout,
                 fractalLayout,
                 overlay,
                 ui,
@@ -1003,15 +830,45 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         updateSystemUI()
 
 
+
+        settingsButton.setOnClickListener { openSettingsMenu() }
+
+        saveImageButton.setOnClickListener {
+
+            if (fsv.r.isRendering) showMessage(resources.getString(R.string.msg_save_wait))
+            else {
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    if (ContextCompat.checkSelfPermission(baseContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(
+                                this,
+                                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                                WRITE_STORAGE_REQUEST_CODE)
+                    } else {
+                        fsv.r.renderProfile = RenderProfile.SAVE_IMAGE
+                        fsv.requestRender()
+                    }
+                } else {
+                    fsv.r.renderProfile = RenderProfile.SAVE_IMAGE
+                    fsv.requestRender()
+                }
+
+            }
+
+        }
+
+
         categoryNameButton.setOnClickListener {
 
             if (!uiIsClosed()) uiSetClosed() else categoryButtons.getCurrentCategory().onOpenMenu(this)
 
         }
 
+        supportFragmentManager.beginTransaction().add(R.id.settingsFragmentContainer, settingsFragment, "SETTINGS").commit()
+        settingsFragmentContainer.hide()
 
         val categoryPagerAdapter = ViewPagerAdapter(supportFragmentManager)
-        categoryPagerAdapter.addFrag(settingsFragment)
+        categoryPagerAdapter.addFrag(imageFragment)
         categoryPagerAdapter.addFrag(textureFragment)
         categoryPagerAdapter.addFrag(shapeFragment)
         categoryPagerAdapter.addFrag(colorFragment)
@@ -1086,12 +943,17 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 getAll().forEach {
                     ColorPalette.custom.add(0, ColorPalette(
                             name = it.name,
-                            colors = ArrayList(arrayListOf(it.c1, it.c2, it.c3, it.c4, it.c5, it.c6, it.c7, it.c8).slice(0 until it.size)),
+                            colors = ArrayList(arrayListOf(
+                                    it.c1,  it.c2,  it.c3,
+                                    it.c4,  it.c5,  it.c6,
+                                    it.c7,  it.c8,  it.c9,
+                                    it.c10, it.c11, it.c12
+                            ).slice(0 until it.size)),
                             customId = it.id,
                             isFavorite = it.starred
                     ))
-                    ColorPalette.custom[0].initialize(resources, Resolution.THUMB.size)
-                    Log.e("MAIN", "custom palette ${ColorPalette.custom[0].name}, id: ${ColorPalette.custom[0].customId}")
+                    ColorPalette.custom[0].initialize(resources)
+                    Log.d("MAIN", "custom palette ${ColorPalette.custom[0].name}, id: ${ColorPalette.custom[0].customId}")
                 }
             }
 
@@ -1132,8 +994,8 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                             customLoopDF = it.loopDF,
                             isFavorite = it.isFavorite
                     ))
-                    Shape.custom[0].initialize(resources, Resolution.THUMB.size)
-                    Log.e("MAIN", "custom shape ${Shape.custom[0].name}, id: ${Shape.custom[0].customId}")
+                    Shape.custom[0].initialize(resources)
+                    Log.d("MAIN", "custom shape ${Shape.custom[0].name}, id: ${Shape.custom[0].customId}")
                 }
             }
             Shape.all.addAll(0, Shape.custom)
@@ -1142,28 +1004,30 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
 
         overlay.bringToFront()
+        settingsFragmentContainer.bringToFront()
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
 
-        if (showEpilepsyDialog) {
-            val dialogView = layoutInflater.inflate(R.layout.alert_dialog_custom, null)
-            val checkBox = dialogView?.findViewById<CheckBox>(R.id.dontShowCheckBox)
-            checkBox?.setOnCheckedChangeListener { buttonView, isChecked ->
-                showEpilepsyDialog = !isChecked
+        if (!BuildConfig.DEV_VERSION) {
+            if (showEpilepsyDialog) {
+                val dialogView = layoutInflater.inflate(R.layout.alert_dialog_custom, null)
+                val checkBox = dialogView?.findViewById<CheckBox>(R.id.dontShowCheckBox)
+                checkBox?.setOnCheckedChangeListener { buttonView, isChecked ->
+                    showEpilepsyDialog = !isChecked
+                }
+                AlertDialog.Builder(this, R.style.AlertDialogCustom)
+                        .setView(dialogView)
+                        .setIcon(R.drawable.warning)
+                        .setTitle(R.string.epilepsy_title)
+                        .setMessage(R.string.epilepsy_dscript)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .setOnDismissListener {
+                            if (sp.getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) showChangelog()
+                        }
+                        .show()
+            } else {
+                if (sp.getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) showChangelog()
             }
-            AlertDialog.Builder(this, R.style.AlertDialogCustom)
-                    .setView(dialogView)
-                    .setIcon(R.drawable.warning)
-                    .setTitle(R.string.epilepsy_title)
-                    .setMessage(R.string.epilepsy_dscript)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .setOnDismissListener {
-                        if (sp.getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) showChangelog()
-                    }
-                    .show()
-        }
-        else {
-            if (sp.getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) showChangelog()
         }
 
     }
@@ -1197,9 +1061,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             categoryNameButton.setCompoundDrawablesWithIntrinsicBounds(
                     null, null,
                     if (newHeight == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt())
-                        resources.getDrawable(R.drawable.expand, null)
+                        ResourcesCompat.getDrawable(resources, R.drawable.expand, null)
                     else
-                        resources.getDrawable(R.drawable.collapse, null),
+                        ResourcesCompat.getDrawable(resources, R.drawable.collapse, null),
                     null
             )
 
@@ -1207,7 +1071,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             anim.duration = uiInnerLayout.layoutTransition.getDuration(LayoutTransition.CHANGING) + 75L
             anim.addUpdateListener {
 
-                updateSurfaceViewLayout(uiInnerLayout.height.toFloat())
+                updateSurfaceViewLayout()
 
                 if (anim.animatedFraction == 1f) {
                     if (newHeight == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt()) {
@@ -1221,24 +1085,45 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         }
 
     }
-    fun updateSurfaceViewLayout(height: Float? = null) {
+    fun updateSurfaceViewLayout() {
 
-        var y = -(height ?: uiInnerLayout.height.toFloat())
-        y -= if (!sc.fitToViewport) categoryNameButton.height else 0
-        y -= if (!sc.hideNavBar) navBarHeight else 0
-        y -= if (deviceHasNotch) statusBarHeight else 0
-        y -= if (sc.fitToViewport) resources.getDimension(R.dimen.categoryNameButtonHeight).toInt() else 0
-        val scaleRatio = screenHeight.toFloat()/(screenHeight + y)
+        if (sc.fitToViewport && fractalLayout.layoutParams.height >= ui.top - header.bottom) {
+            val scaleFactor = (ui.top - header.bottom) / fractalLayout.layoutParams.height.toFloat()
+            fractalLayout.apply {
+                pivotX = (left + right)/2f
+                pivotY = (top + bottom)/2f
+                scaleX = scaleFactor
+                scaleY = scaleFactor
+            }
+        }
+        else {
+            fractalLayout.scaleX = 1f
+            fractalLayout.scaleY = 1f
+        }
+        fractalLayout.y = (ui.top + header.bottom - fractalLayout.height)/2f
+        fractalLayout.updateLayoutParams<FrameLayout.LayoutParams> { gravity = Gravity.CENTER }
 
-        y /= 2f
-        fsv.y = y
-
-        fsv.scaleX = if (sc.fitToViewport) 1f/scaleRatio else 1f
-        fsv.scaleY = if (sc.fitToViewport) 1f/scaleRatio else 1f
-
-        fsv.requestLayout()
+        fractalLayout.requestLayout()
 
     }
+    fun onAspectRatioChanged() {
+
+        val newWidth : Int
+        val newHeight : Int
+        if (sc.aspectRatio.r <= AspectRatio.RATIO_SCREEN.r) {
+            newWidth = FrameLayout.LayoutParams.MATCH_PARENT
+            newHeight = (Resolution.SCREEN.w * sc.aspectRatio.r).toInt()
+        }
+        else {
+            newWidth = (Resolution.SCREEN.h / sc.aspectRatio.r).toInt()
+            newHeight = Resolution.SCREEN.h
+        }
+        fractalLayout.layoutParams = FrameLayout.LayoutParams(newWidth, newHeight, Gravity.CENTER)
+
+        updateSurfaceViewLayout()
+
+    }
+
     private fun calcNavBarHeight() : Int {
 
         val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
@@ -1271,7 +1156,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     }
     fun updateSystemUI() {
 
-        updateSurfaceViewLayout(uiInnerLayout.height.toFloat())
+        updateSurfaceViewLayout()
         if (sc.hideNavBar) {
             fsv.systemUiVisibility = (
                     GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -1296,6 +1181,17 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                     )
         }
 
+    }
+
+    fun openSettingsMenu() {
+        settingsFragmentContainer.apply {
+            show()
+        }
+    }
+    fun closeSettingsMenu() {
+        settingsFragmentContainer.apply {
+            hide()
+        }
     }
 
 
@@ -1490,21 +1386,12 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         }
 
     }
-    fun updateTexturePreviewName() {
-        texturePreviewName.text = resources.getString(f.texture.nameId)
-    }
-    fun updateBailoutRadiusLayout() {
-
-
-
-    }
     fun updateHintVisibility() {
 
         val hints = listOf<TextView>(
                 continuousRenderHint,
                 renderBackgroundHint,
-                displayParamsHint,
-                fitViewportHint
+                displayParamsHint
 //                bailoutHint
 //                juliaModeHint,
 //                maxIterHint,
@@ -1515,26 +1402,53 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
     }
 
+    fun showThumbnailDialog() {
+
+        dialog = AlertDialog.Builder(this, R.style.AlertDialogCustom)
+                .setTitle(R.string.rendering_icons)
+                .setIcon(R.drawable.hourglass)
+                .setView(R.layout.alert_dialog_progress)
+                .setNegativeButton(android.R.string.cancel) { dialog, which ->
+                    fsv.r.interruptRender = true
+                }
+                .show()
+        dialog?.setCanceledOnTouchOutside(false)
+
+    }
+    fun updateDialog(index: Int, total: Int) {
+        dialog?.findViewById<ProgressBar>(R.id.alertProgress)?.apply {
+            max = total - 1
+            progress = index
+        }
+        dialog?.findViewById<TextView>(R.id.alertProgressText)?.text = "${index + 1}/$total"
+    }
+    fun dismissDialog() {
+        dialog?.dismiss()
+    }
+
     fun updateColorThumbnails() {
 
         (colorPreviewList?.adapter as? ListAdapter<ColorPalette>)?.notifyDataSetChanged()
 
     }
-    fun updateTextureThumbnail(index: Int) {
+    fun updateTextureThumbnail(layoutIndex: Int, n: Int) {
 
         // Log.e("MAIN ACTIVITY", "updateTextureThumbnail was called !!!")
-        texturePreviewList?.adapter?.notifyItemChanged(index)
+        texturePreviewList?.adapter?.notifyItemChanged(layoutIndex)
+        Log.d("MAIN", "n: $n")
+        updateDialog(n, f.shape.compatTextures.size)
+        if (n + 1 == f.shape.compatTextures.size) dismissDialog()
 
     }
     fun updateShapeThumbnail(shape: Shape, customIndex: Int) {
 
         (shapePreviewList?.adapter as? ListAdapter<Shape>)?.updateItems(shape)
-        if (customIndex != -1) { with(shapeFragment as ShapeFragment) {
-            Log.e("MAIN", "customIndex: $customIndex")
+        if (customIndex != -1) {
+            Log.d("MAIN", "customIndex: $customIndex")
             val numShapes = Shape.custom.size
             updateDialog(customIndex, numShapes)
             if (customIndex + 1 == numShapes) dismissDialog()
-        }}
+        }
 
     }
 
@@ -1550,7 +1464,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         GlobalScope.launch {
             db.colorPaletteDao().apply {
                 ColorPalette.custom.forEach {
-                    Log.e("MAIN", "saving custom palette ${it.name}, starred= ${it.isFavorite}")
+                    Log.d("MAIN", "saving custom palette ${it.name}, starred= ${it.isFavorite}")
                     update(it.toDatabaseEntity())
                 }
             }
@@ -1562,6 +1476,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         edit.putBoolean(GOLD_PENDING_DIALOG_SHOWN, goldPendingDialogShown)
         edit.putBoolean(SHOW_EPILEPSY_DIALOG, showEpilepsyDialog)
         edit.putInt(RESOLUTION, min(Resolution.all.indexOf(sc.resolution), if (sc.goldEnabled) Resolution.all.indexOf(Resolution.SCREEN) else Resolution.all.indexOf(Resolution.R1080)))
+        edit.putInt(ASPECT_RATIO, AspectRatio.all.indexOf(sc.aspectRatio))
         //edit.putInt(PRECISION, sc.precision.ordinal)
         //edit.putBoolean(AUTO_PRECISION, sc.autoPrecision)
         edit.putBoolean(CONTINUOUS_RENDER, sc.continuousPosRender)
@@ -1595,6 +1510,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         )}
 
         edit.putInt(VERSION_CODE_TAG, BuildConfig.VERSION_CODE)
+        edit.putBoolean(USE_ALTERNATE_SPLIT, sc.useAlternateSplit)
         edit.putInt(CHUNK_PROFILE, sc.chunkProfile.ordinal)
         edit.apply()
 
@@ -1605,7 +1521,6 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     override fun onResume() {
 
         super.onResume()
-        Log.e("MAIN", "!! onResume !!")
         if (fragmentsCompleted == 5) queryPurchases()
         fsv.onResume()
 
@@ -1616,6 +1531,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         if (hasFocus) updateSystemUI()
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             WRITE_STORAGE_REQUEST_CODE -> {
                 // If request is cancelled, the result arrays are empty.
@@ -1643,6 +1559,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         val showSummmary = false
 
         // Changelog
+        ChangelogSetup.get().registerTag(GoldTag())
         val builder: ChangelogBuilder = ChangelogBuilder() // Everything is optional!
                 .withUseBulletList(bulletList) // default: false
                 .withManagedShowOnStart(managed) // default: false
@@ -1670,8 +1587,8 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         val purchaseQueryResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP)
         purchaseQueryResult?.purchasesList?.getOrNull(0)?.apply {
-            Log.e("MAIN", "processing purchase...")
-            Log.e("MAIN", originalJson)
+            Log.d("MAIN", "processing purchase...")
+            Log.d("MAIN", originalJson)
             if (purchaseState == Purchase.PurchaseState.PURCHASED) {
                 GlobalScope.launch(Dispatchers.IO) {
                     billingClient.consumePurchase(
@@ -1687,9 +1604,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     fun queryPurchases() {
 
         val purchaseQueryResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP)
-        purchaseQueryResult?.purchasesList?.getOrNull(0)?.apply {
-            Log.e("MAIN", "processing purchase...")
-            Log.e("MAIN", originalJson)
+        purchaseQueryResult.purchasesList?.getOrNull(0)?.apply {
+            Log.d("MAIN", "processing purchase...")
+            Log.d("MAIN", originalJson)
             when (purchaseState) {
                 Purchase.PurchaseState.PURCHASED -> {
                     sc.goldEnabled = true
@@ -1724,9 +1641,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 }
             }
         }
-        if (purchaseQueryResult?.purchasesList == null) Log.e("MAIN", "purchaseList is null")
-        else Log.e("MAIN", "purchaseList size: ${purchaseQueryResult.purchasesList?.size}")
-        if (purchaseQueryResult?.purchasesList?.size == 0) {
+        if (purchaseQueryResult.purchasesList == null) Log.d("MAIN", "purchaseList is null")
+        else Log.d("MAIN", "purchaseList size: ${purchaseQueryResult.purchasesList?.size}")
+        if (purchaseQueryResult.purchasesList?.size == 0) {
             goldEnabledDialogShown = false
             goldPendingDialogShown = false
         }
@@ -1744,7 +1661,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         ( textureFragment  as TextureFragment  ).onGoldEnabled()
         ( shapeFragment    as ShapeFragment    ).onGoldEnabled()
         ( colorFragment    as ColorFragment    ).onGoldEnabled()
-        ( settingsFragment as SettingsFragment ).onGoldEnabled()
+        ( imageFragment    as ImageFragment    ).onGoldEnabled()
     }
 
     fun getAvailableHeapMemory() : Long {
@@ -1768,7 +1685,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
     override fun onComplete() {
         fragmentsCompleted++
-        Log.e("MAIN", "!! fragment callback !! $fragmentsCompleted fragments completed")
+        Log.d("MAIN", "!! fragment callback !! $fragmentsCompleted fragments completed")
         if (fragmentsCompleted == 5) {
             if (!billingClient.isReady) billingClient.startConnection(billingClientStateListener)
             else queryPurchases()
