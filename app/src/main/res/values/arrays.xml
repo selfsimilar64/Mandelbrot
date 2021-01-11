@@ -1,8 +1,600 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <array name="rgb">
-        <item>@color/red</item>
-        <item>@color/green</item>
-        <item>@color/blue</item>
+
+    <array name="empty_array">
+        <item>@color/black</item>
     </array>
+
+    <array name="yinyang">
+        <item>@color/black</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="vascular">
+        <item>@color/black</item>
+        <item>@color/purple3</item>
+        <item>@color/deepred</item>
+        <item>@color/yellowish1</item>
+        <item>@color/darkblue2</item>
+    </array>
+
+    <array name="royal">
+        <item>@color/yellowish1</item>
+        <item>@color/darkblue1</item>
+        <item>@color/softgreen2</item>
+        <item>@color/purple3</item>
+        <item>@color/maroon</item>
+    </array>
+
+    <array name="canyon">
+        <item>@color/deepred2</item>
+        <item>@color/q6</item>
+        <item>@color/q8</item>
+        <item>@color/q9</item>
+        <item>@color/purple3</item>
+    </array>
+    
+    <array name="fractaleye">
+        <item>@color/fractaleye1</item>
+        <item>@color/fractaleye2</item>
+        <item>@color/fractaleye3</item>
+        <item>@color/fractaleye4</item>
+        <item>@color/fractaleye5</item>
+    </array>
+
+    <array name="gold">
+        <item>@color/gold8</item>
+        <item>@color/gold7</item>
+        <item>@color/gold6</item>
+        <item>@color/gold5</item>
+        <item>@color/gold4</item>
+        <item>@color/gold3</item>
+        <item>@color/gold2</item>
+        <item>@color/gold1</item>
+    </array>
+
+    <array name="hueslider">
+        <item>#FF0000</item>
+        <item>#FF8000</item>
+        <item>#FFFF00</item>
+        <item>#80FF00</item>
+        <item>#00FF00</item>
+        <item>#00FF80</item>
+        <item>#00FFFF</item>
+        <item>#0080FF</item>
+        <item>#0000FF</item>
+        <item>#8000FF</item>
+        <item>#FF00FF</item>
+        <item>#FF0080</item>
+    </array>
+
+    <array name="plasma">
+        <item>#0C0785</item>
+        <item>#49029E</item>
+        <item>#9210A0</item>
+        <item>#D04E72</item>
+        <item>#EF804D</item>
+        <item>#FBBF29</item>
+        <item>#EEF622</item>
+    </array>
+
+    <array name="magma">
+        <item>@color/black</item>
+        <item>#410F73</item>
+        <item>#A4307D</item>
+        <item>#F5705B</item>
+        <item>#FCCA8D</item>
+        <item>#FAFBC5</item>
+    </array>
+
+    <array name="viridis">
+        <item>#440154</item>
+        <item>#3C4D89</item>
+        <item>#277E8D</item>
+        <item>#28AD7F</item>
+        <item>#8DD544</item>
+        <item>#FAE623</item>
+    </array>
+
+    <array name="night">
+        <item>#000630</item>
+        <item>#011B4C</item>
+        <item>#025587</item>
+        <item>#0191AB</item>
+        <item>#82B9B3</item>
+        <item>#B8D8C0</item>
+        <item>#FEFFFB</item>
+    </array>
+
+    <array name="cosmic">
+        <item>@color/black</item>
+        <item>#0B0022</item>
+        <item>#190329</item>
+        <item>#3A0742</item>
+        <item>#520066</item>
+        <item>#583B75</item>
+        <item>#548788</item>
+        <item>#8FC8B5</item>
+        <item>#CAF9D5</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="elephant">
+        <item>#10000B</item>
+        <item>#0E061D</item>
+        <item>#231830</item>
+        <item>#49374F</item>
+        <item>#80968C</item>
+        <item>#ADCCB7</item>
+        <item>#E5F2E1</item>
+    </array>
+
+    <array name="bronze">
+        <item>@color/black</item>
+        <item>#261B10</item>
+        <item>#47351D</item>
+        <item>#876832</item>
+        <item>#D2AE70</item>
+        <item>#F5E1BE</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="oldskool">
+        <item>#4B978A</item>
+        <item>#58A0CE</item>
+        <item>#FAEE9F</item>
+        <item>#E78DD2</item>
+    </array>
+
+    <array name="flora">
+        <item>#220022</item>
+        <item>#660066</item>
+        <item>#884477</item>
+        <item>#e0bbaa</item>
+        <item>#ffffd2</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="peacock">
+        <item>@color/black</item>
+        <item>#0B0018</item>
+        <item>#100027</item>
+        <item>#160738</item>
+        <item>#160745</item>
+        <item>#071D5F</item>
+        <item>#004E62</item>
+        <item>#007B69</item>
+        <item>#6C8E6D</item>
+        <item>#BDB671</item>
+        <item>#F5EBC4</item>
+        <item>#FFF7F2</item>
+    </array>
+
+    <array name="backwards">
+        <item>@color/black</item>
+        <item>#142D92</item>
+        <item>#99B3C4</item>
+        <item>#FF6D74</item>
+        <item>#FF301B</item>
+        <item>#FFD822</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="slow">
+        <item>#1A0800</item>
+        <item>#450D00</item>
+        <item>#772913</item>
+        <item>#D77B52</item>
+        <item>#F8C09D</item>
+        <item>#F7D8BB</item>
+        <item>#EBEBD5</item>
+        <item>#A1BAB4</item>
+        <item>#66A1A7</item>
+    </array>
+
+    <array name="alpha">
+        <item>#294379</item>
+        <item>#597FD0</item>
+        <item>#BBBEFF</item>
+        <item>@color/white</item>
+        <item>#FFC2E2</item>
+        <item>#FF7F9F</item>
+        <item>#8D3148</item>
+    </array>
+
+    <array name="peach">
+        <item>#0F0A21</item>
+        <item>#1F0A37</item>
+        <item>#6A224F</item>
+        <item>#FF7C7C</item>
+        <item>#FFD082</item>
+    </array>
+
+    <array name="jazz">
+        <item>#03C1C7</item>
+        <item>#75D8DF</item>
+        <item>#CFF1EF</item>
+        <item>@color/white</item>
+        <item>#FBCFFC</item>
+        <item>#7E3BA3</item>
+    </array>
+    
+    <array name="chroma">
+        <item>#280E22</item>
+        <item>#32275F</item>
+        <item>#7A0C62</item>
+        <item>#C2036A</item>
+        <item>#DF7C76</item>
+        <item>#F2B57F</item>
+        <item>#FFEB7E</item>
+        <item>#DEF6B8</item>
+        <item>#BEFBD9</item>
+        <item>#C2DEEC</item>
+        <item>#B9AEE8</item>
+        <item>#C07DCA</item>
+    </array>
+
+    <array name="island">
+        <item>#54351C</item>
+        <item>#C08250</item>
+        <item>#FFDA90</item>
+        <item>#F8EEB3</item>
+        <item>#CCF0E1</item>
+        <item>#74CFB8</item>
+        <item>#208C81</item>
+        <item>#0E505A</item>
+        <item>#042227</item>
+    </array>
+
+    <array name="bioluminescent">
+        <item>@color/black</item>
+        <item>#00142C</item>
+        <item>#003B41</item>
+        <item>#43B77A</item>
+        <item>#A9FCA4</item>
+        <item>#D4FFD1</item>
+    </array>
+
+    <array name="kingfisher">
+        <item>#0D58BA</item>
+        <item>#6CEEF8</item>
+        <item>#6E3A9E</item>
+        <item>#FBA7FF</item>
+        <item>#A41338</item>
+        <item>#FFAE32</item>
+        <item>#FDFC90</item>
+        <item>#FFFFDA</item>
+    </array>
+
+    <array name="polygon">
+        <item>#EB5A3D</item>
+        <item>#F3F259</item>
+        <item>#459C3B</item>
+        <item>#0064BE</item>
+    </array>
+
+    <array name="rose">
+        <item>#9FD14C</item>
+        <item>#1B853D</item>
+        <item>#001A27</item>
+        <item>#7E004A</item>
+        <item>#D39370</item>
+        <item>#FFF097</item>
+    </array>
+
+    <array name="fossil">
+        <item>#00031C</item>
+        <item>#131933</item>
+        <item>#6A655F</item>
+        <item>#EED9A4</item>
+        <item>#F7E9CE</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="atlas">
+        <item>#E1E4F6</item>
+        <item>#73BFBF</item>
+        <item>#316E6E</item>
+        <item>#123247</item>
+        <item>#050D1A</item>
+        <item>#0F1B26</item>
+        <item>#7A382B</item>
+        <item>#B0773E</item>
+        <item>#F7D6A1</item>
+        <item>#F9FBD3</item>
+    </array>
+
+    <array name="time">
+        <item>#FFFFFF</item>
+        <item>#B7DCFF</item>
+        <item>#4C9CD9</item>
+        <item>#026EB7</item>
+        <item>#004480</item>
+        <item>#002346</item>
+        <item>#000F1F</item>
+        <item>@color/black</item>
+        <item>#B15021</item>
+        <item>#FFB82A</item>
+        <item>#FFEB40</item>
+        <item>#FFFFFE</item>
+    </array>
+
+    <array name="overgrown">
+        <item>@color/black</item>
+        <item>#00222B</item>
+        <item>#005D64</item>
+        <item>#3F755D</item>
+        <item>#ABC351</item>
+        <item>#F2EB9A</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="starling">
+        <item>#E3A4D8</item>
+        <item>#AA6095</item>
+        <item>#5D114F</item>
+        <item>#1A011C</item>
+        <item>#431553</item>
+        <item>#573D84</item>
+        <item>#8090C9</item>
+        <item>#92BCD4</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="pagoda">
+        <item>@color/black</item>
+        <item>#C00800</item>
+        <item>#F29F5D</item>
+        <item>#EFDE8D</item>
+        <item>#FCF4CF</item>
+    </array>
+    
+    <array name="melted">
+        <item>#161A23</item>
+        <item>#546869</item>
+        <item>#AEB5B8</item>
+        <item>@color/white</item>
+        <item>#F5F0AB</item>
+        <item>#FCEE6B</item>
+        <item>#EAA519</item>
+        <item>#DD5E01</item>
+        <item>#B03800</item>
+    </array>
+
+    <array name="torus">
+        <item>#251738</item>
+        <item>#254A90</item>
+        <item>#007AB9</item>
+        <item>#0C9FD8</item>
+        <item>#87C9E9</item>
+        <item>#CDE5E7</item>
+        <item>#EDECCD</item>
+        <item>#F6DF93</item>
+        <item>#F2BF4A</item>
+        <item>#E08131</item>
+        <item>#B93C2F</item>
+        <item>#651F34</item>
+    </array>
+
+    <array name="ruby">
+        <item>#150201</item>
+        <item>#3F0E0A</item>
+        <item>#92202C</item>
+        <item>#E33746</item>
+        <item>#FF4B85</item>
+        <item>#FF7DD8</item>
+        <item>#FDAAE4</item>
+        <item>#FFE6F7</item>
+    </array>
+
+    <array name="sapphire">
+        <item>#000019</item>
+        <item>#060631</item>
+        <item>#14106D</item>
+        <item>#2C2FD0</item>
+        <item>#2280FF</item>
+        <item>#9AFAFB</item>
+        <item>#C8FBFB</item>
+    </array>
+
+    <array name="amethyst">
+        <item>#040207</item>
+        <item>#180229</item>
+        <item>#33004F</item>
+        <item>#6B0092</item>
+        <item>#FD73EA</item>
+        <item>#EAA7FF</item>
+        <item>#FBEBFF</item>
+    </array>
+
+    <array name="aztec">
+        <item>#CBFFDD</item>
+        <item>#71E590</item>
+        <item>#3AAB58</item>
+        <item>#04631C</item>
+        <item>#0F3518</item>
+        <item>#0C1E11</item>
+        <item>#060E08</item>
+        <item>@color/black</item>
+        <item>#3C2B0E</item>
+        <item>#C0991D</item>
+        <item>#EFCB50</item>
+        <item>#FFF69A</item>
+        <item>#FFFDE8</item>
+    </array>
+
+    <array name="neon">
+        <item>#FF2F77</item>
+        <item>#AA44FD</item>
+        <item>#36BDFD</item>
+        <item>#83E3D7</item>
+        <item>#FFEF3A</item>
+        <item>#EA7501</item>
+    </array>
+
+    <array name="dragon">
+        <item>@color/white</item>
+        <item>#DFADD2</item>
+        <item>#90587F</item>
+        <item>#5B3B53</item>
+        <item>#352933</item>
+        <item>@color/black</item>
+        <item>#721621</item>
+        <item>#FD011A</item>
+        <item>#FC8D58</item>
+        <item>#FFFF8D</item>
+        <item>#FFFFFE</item>
+    </array>
+
+    <array name="diamond">
+        <item>#14181E</item>
+        <item>#175678</item>
+        <item>#0682B6</item>
+        <item>#2FC9D7</item>
+        <item>#78EDEA</item>
+        <item>#B2EDED</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="coral">
+        <item>#350221</item>
+        <item>#7a0069</item>
+        <item>#fb00b2</item>
+        <item>#feb2fd</item>
+        <item>@color/white</item>
+        <item>#fffdc8</item>
+        <item>#FDE363</item>
+        <item>#F3FF4F</item>
+        <item>#00A093</item>
+        <item>#02feef</item>
+        <item>#008d8f</item>
+        <item>#002e3d</item>
+        <item>#001820</item>
+    </array>
+
+    <array name="cactus">
+        <item>#0b1004</item>
+        <item>#10200f</item>
+        <item>#102C0C</item>
+        <item>#1D3514</item>
+        <item>#2B4A20</item>
+        <item>#4A7619</item>
+        <item>#81A03A</item>
+        <item>#B9C35A</item>
+        <item>#fef6ae</item>
+        <item>#ffc959</item>
+        <item>#ff822d</item>
+        <item>#ff4142</item>
+        <item>#ff326d</item>
+        <item>#ff65c8</item>
+        <item>#FFBFF2</item>
+    </array>
+
+    <array name="aquamarine">
+        <item>#ccf6fe</item>
+        <item>#86e8fe</item>
+        <item>#08AFD8</item>
+        <item>#0178a4</item>
+        <item>#014262</item>
+        <item>#011d38</item>
+        <item>#00091d</item>
+        <item>@color/black</item>
+        <item>#021b26</item>
+        <item>#063640</item>
+        <item>#3f928d</item>
+        <item>#89c7ae</item>
+        <item>#dbf9e3</item>
+    </array>
+
+    <array name="parachute">
+        <item>#fffec2</item>
+        <item>#ffec1e</item>
+        <item>#ffb54d</item>
+        <item>#ff8d08</item>
+        <item>#ff5229</item>
+        <item>#ff2453</item>
+        <item>#9D328D</item>
+        <item>#513889</item>
+        <item>#2375A4</item>
+        <item>#3CCAD3</item>
+        <item>#82FFD7</item>
+    </array>
+
+    <array name="anubis">
+        <item>#ffffff</item>
+        <item>#00ebf6</item>
+        <item>#006da1</item>
+        <item>#0b1a6d</item>
+        <item>#43029E</item>
+        <item>#88008e</item>
+        <item>#2b1445</item>
+        <item>#1d0f1f</item>
+        <item>@color/black</item>
+        <item>#462f1a</item>
+        <item>#d39500</item>
+        <item>#fbf003</item>
+        <item>#fff788</item>
+        <item>#fefefe</item>
+    </array>
+
+    <array name="polyphonic">
+        <item>@color/black</item>
+        <item>#22114C</item>
+        <item>#581B7D</item>
+        <item>#B52884</item>
+        <item>#FF6BAB</item>
+        <item>#FFB2C4</item>
+        <item>@color/white</item>
+        <item>#7bf9af</item>
+        <item>#2DCFC9</item>
+        <item>#14585C</item>
+        <item>#003534</item>
+        <item>#001517</item>
+    </array>
+
+    <array name="anaglyph">
+        <item>#c7e0ff</item>
+        <item>#0c7581</item>
+        <item>#27041a</item>
+        <item>#aa0003</item>
+        <item>#ffd6d7</item>
+    </array>
+
+    <array name="catalyst">
+        <item>#FFBD4A</item>
+        <item>#f67e30</item>
+        <item>#d73b25</item>
+        <item>#871424</item>
+        <item>#562136</item>
+        <item>#196D66</item>
+        <item>#20bf96</item>
+        <item>#8cfada</item>
+        <item>@color/white</item>
+    </array>
+    
+    <array name="monster">
+        <item>#E7FFB8</item>
+        <item>#CCF682</item>
+        <item>#5A9EBC</item>
+        <item>#345084</item>
+        <item>#132661</item>
+        <item>#0B0119</item>
+        <item>#48164D</item>
+        <item>#7D2A3E</item>
+        <item>#B3633B</item>
+        <item>#EFC047</item>
+        <item>#FFE5AB</item>
+    </array>
+
+    <array name="carousel">
+        <item>#ff0204</item>
+        <item>#cbadf4</item>
+        <item>#EFE5FF</item>
+        <item>#4266c6</item>
+        <item>#082258</item>
+        <item>#38a2c9</item>
+        <item>#faf465</item>
+        <item>#fc8802</item>
+    </array>
+
 </resources>
