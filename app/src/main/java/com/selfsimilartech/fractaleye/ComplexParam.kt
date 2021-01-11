@@ -16,7 +16,7 @@ class ComplexParam (
         toRadians     : Boolean = false,
         goldFeature   : Boolean = false
 
-) : Param(nameId, u, uRange, uLocked, false, toRadians, goldFeature) {
+) : RealParam(nameId, u, uRange, uLocked, false, toRadians, goldFeature) {
 
     private val vInit = v
     private val vLockedInit = vLocked
@@ -64,7 +64,7 @@ class ComplexParam (
         )
 
     }
-    override fun setFrom(newParam: Param) {
+    override fun setFrom(newParam: RealParam) {
 
         super.setFrom(newParam)
 

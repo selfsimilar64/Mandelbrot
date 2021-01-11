@@ -13,12 +13,10 @@
 
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/headerImage"
         android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:padding="5dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/pro_header" />
+        android:padding="5dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -91,12 +89,11 @@
                         app:drawableStartCompat="@drawable/lightbulb" />
 
                     <ImageView
-                        android:id="@+id/imageView3"
+                        android:id="@+id/creativityImage"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:adjustViewBounds="true"
-                        app:srcCompat="@drawable/creativity_collage" />
+                        android:adjustViewBounds="false" />
 
                     <TextView
                         android:id="@+id/textView18"
@@ -164,12 +161,11 @@
                         app:drawableStartCompat="@drawable/parameter" />
 
                     <ImageView
-                        android:id="@+id/imageView2"
+                        android:id="@+id/customizationImage"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:adjustViewBounds="true"
-                        app:srcCompat="@drawable/customization_collage" />
+                        android:adjustViewBounds="false" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -261,8 +257,8 @@
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <ImageView
-                        android:id="@+id/imageView6"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/resolutionImage"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:adjustViewBounds="true"
@@ -270,8 +266,7 @@
                         android:padding="2dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textView14"
-                        app:srcCompat="@drawable/upgrade_resolution" />
+                        app:layout_constraintTop_toBottomOf="@+id/textView14" />
 
                     <com.selfsimilartech.fractaleye.GradientTextView
                         android:id="@+id/goldResolutionLabel"
@@ -284,7 +279,7 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="0.75"
                         app:layout_constraintStart_toStartOf="@+id/textView12"
-                        app:layout_constraintTop_toBottomOf="@+id/imageView6" />
+                        app:layout_constraintTop_toBottomOf="@+id/resolutionImage" />
 
                     <com.selfsimilartech.fractaleye.GradientTextView
                         android:id="@+id/goldResolutionDims"
@@ -307,7 +302,7 @@
                         app:layout_constraintEnd_toEndOf="@+id/textView12"
                         app:layout_constraintHorizontal_bias="0.25"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/imageView6" />
+                        app:layout_constraintTop_toBottomOf="@id/resolutionImage" />
 
                     <TextView
                         android:id="@+id/freeResolutionDims"
@@ -337,8 +332,8 @@
                         android:text="@string/upgrade_resolution_dscript"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/divider21"
-                        app:layout_constraintEnd_toEndOf="@+id/imageView6"
-                        app:layout_constraintStart_toStartOf="@+id/imageView6"
+                        app:layout_constraintEnd_toEndOf="@+id/resolutionImage"
+                        app:layout_constraintStart_toStartOf="@+id/resolutionImage"
                         android:layout_marginTop="10dp"/>
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

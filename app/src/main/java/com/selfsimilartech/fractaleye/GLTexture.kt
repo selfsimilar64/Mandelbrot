@@ -56,7 +56,7 @@ class GLTexture (
             GL_RG32UI -> "GL_RG32UI"
             else -> "not what u wanted"
         }
-        Log.d("RENDERER", "id: $id, res: (${res.size.x}, ${res.size.y}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.size.x*res.size.y*bytesPerTexel}")
+        Log.d("RENDERER", "id: $id, res: (${res.w}, ${res.h}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.w*res.h*bytesPerTexel}")
 
         // bind and set texture parameters
         glActiveTexture(GL_TEXTURE0 + index)
@@ -78,14 +78,14 @@ class GLTexture (
             else                  -> GL_RGBA
         }
 
-        byteBuffer = ByteBuffer.allocateDirect(res.size.x*res.size.y*bytesPerTexel).order(ByteOrder.nativeOrder())
+        byteBuffer = ByteBuffer.allocateDirect(res.w*res.h*bytesPerTexel).order(ByteOrder.nativeOrder())
         floatBuffer = byteBuffer?.asFloatBuffer()
         //Log.e("FSV", "buffer capacity: ${buffer.capacity()}")
         glTexImage2D(
                 GL_TEXTURE_2D,              // target
                 0,                          // mipmap level
                 internalFormat,             // internal format
-                res.size.x, res.size.y,               // texture resolution
+                res.w, res.h,               // texture resolution
                 0,                          // border
                 format,                     // internalFormat
                 type,                       // type
@@ -98,9 +98,9 @@ class GLTexture (
     }
 
 
-    fun get(i: Int, j: Int, k: Int) : Float = floatBuffer?.get(numComponents*(j*res.size.x + i) + k) ?: 0f
+    fun get(i: Int, j: Int, k: Int) : Float = floatBuffer?.get(numComponents*(j*res.w + i) + k) ?: 0f
     fun set(i: Int, j: Int, k: Int, value: Float) {
-        floatBuffer?.put(numComponents*(j*res.size.x + i) + k, value)
+        floatBuffer?.put(numComponents*(j*res.w + i) + k, value)
     }
     fun put(array: FloatArray) {
         floatBuffer?.put(array, 0, array.size)
@@ -118,7 +118,7 @@ class GLTexture (
                 GL_TEXTURE_2D,      // target
                 0,                  // mipmap level
                 internalFormat,     // internal format
-                res.size.x, res.size.y,       // texture resolution
+                res.w, res.h,       // texture resolution
                 0,                  // border
                 format,             // internalFormat
                 type,               // type

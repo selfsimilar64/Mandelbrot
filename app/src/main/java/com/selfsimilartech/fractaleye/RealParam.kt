@@ -4,7 +4,7 @@ import android.renderscript.Double2
 import android.util.Range
 import kotlin.math.roundToInt
 
-open class Param (
+open class RealParam (
 
         val nameId        : Int             = -1,
         u                 : Double          = 0.0,
@@ -15,7 +15,7 @@ open class Param (
         val goldFeature   : Boolean         = false,
         val isPrimary     : Boolean         = true,
         val isRateParam   : Boolean         = false,
-        val parent        : Param?          = null
+        val parent        : RealParam?          = null
 
 ) {
 
@@ -30,7 +30,7 @@ open class Param (
         set (value) { if (!uLocked) field = value }
     val sensitivity =
             if (isRateParam) null
-            else Param(
+            else RealParam(
                     R.string.sensitivity,
                     if (toRadians) 45.0 else 1.0,
                     if (toRadians) Range(0.001, 100.0) else Range(0.001, 15.0),
@@ -56,9 +56,9 @@ open class Param (
         uLocked = uLockedInit
         sensitivity?.reset()
     }
-    open fun clone() : Param {
+    open fun clone() : RealParam {
 
-        return Param(
+        return RealParam(
                 nameId,
                 uInit,
                 uRange,
@@ -68,7 +68,7 @@ open class Param (
         )
 
     }
-    open fun setFrom(newParam: Param) {
+    open fun setFrom(newParam: RealParam) {
 
         uLocked = newParam.uLockedInit
         u = newParam.uInit

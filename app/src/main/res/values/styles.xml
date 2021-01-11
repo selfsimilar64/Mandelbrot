@@ -239,4 +239,19 @@
         <item name="android:layout_width">50dp</item>
     </style>
 
+    <style name="AspectRatioButton">
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:tint">@color/unselectedTint</item>
+    </style>
+
+    <style name="AspectRatioButtonCard">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="cardBackgroundColor">@color/menuDark5</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="android:layout_marginStart">5dp</item>
+        <item name="android:layout_marginEnd">5dp</item>
+    </style>
+
 </resources>

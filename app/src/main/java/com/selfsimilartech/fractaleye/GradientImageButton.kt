@@ -29,9 +29,11 @@ open class GradientImageButton : AppCompatImageButton {
     private val goldColors = intArrayOf(
             R.color.gold1,
             R.color.gold1,
+            R.color.gold1,
             R.color.gold2,
             R.color.gold3,
             R.color.gold4,
+            R.color.gold5,
             R.color.gold5,
             R.color.gold5,
             R.color.gold5,

@@ -2,7 +2,6 @@ package com.selfsimilartech.fractaleye
 
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Point
 import android.util.Range
 import kotlin.math.sqrt
 
@@ -50,12 +49,12 @@ class Shape (
 
 
     class ParamList(
-            val list: List<Param> = listOf(),
+            val list: List<RealParam> = listOf(),
             val julia: ComplexParam = ComplexParam()
     ) {
 
         val size = list.size
-        var active : Param = julia
+        var active : RealParam = julia
 
         fun at(index: Int) = list[index]
         fun setFrom(newList: ParamList) {
@@ -180,7 +179,7 @@ class Shape (
                 loop = "clover(z1, c)",
                 positions = PositionList(Position(zoom = 2.0, rotation = 45.0.inRadians())),
                 seed = Complex.ONE,
-                params = ParamList(listOf(Param(R.string.power, 2.0, Range(2.0, 6.0), discrete = true)))
+                params = ParamList(listOf(RealParam(R.string.power, 2.0, Range(2.0, 6.0), discrete = true)))
         )
         val mandelbox = Shape(
                 R.string.mandelbox,
@@ -327,7 +326,7 @@ class Shape (
                 thumbnailId = R.drawable.newton1_icon,
                 loop = "necklace(z1, c)",
                 params = ParamList(
-                        listOf(Param(R.string.power, 4.0, Range(3.0, 6.0), discrete = true)),
+                        listOf(RealParam(R.string.power, 4.0, Range(3.0, 6.0), discrete = true)),
                         julia = ComplexParam(u = 1.0)
                 ),
                 juliaMode = true,
@@ -418,10 +417,10 @@ class Shape (
                 juliaSeed = true,
                 positions = PositionList(Position(zoom = 2e1)),
                 params = ParamList(listOf(
-                        Param(R.string.angle,  180.0, Range(0.0, 360.0), toRadians = true),
-                        Param(R.string.radius, 0.5,   Range(0.0, 1.0)),
-                        Param(R.string.scale,  2.0,   Range(0.0, 5.0)),
-                        Param(R.string.linear, 2.0,   Range(0.0, 5.0))
+                        RealParam(R.string.angle,  180.0, Range(0.0, 360.0), toRadians = true),
+                        RealParam(R.string.radius, 0.5,   Range(0.0, 1.0)),
+                        RealParam(R.string.scale,  2.0,   Range(0.0, 5.0)),
+                        RealParam(R.string.linear, 2.0,   Range(0.0, 5.0))
                 )),
                 goldFeature = true
         )
@@ -445,8 +444,8 @@ class Shape (
                 thumbnailId = R.drawable.sierpinskitri_icon,
                 loop = "sierpinski_tri(z1, c)",
                 params = ParamList(listOf(
-                        Param(R.string.scale, 1.0, Range(2.0/3.0, 2.0)),
-                        Param(R.string.rotate, 0.0, Range(0.0, 360.0), toRadians = true)
+                        RealParam(R.string.scale, 1.0, Range(2.0/3.0, 2.0)),
+                        RealParam(R.string.rotate, 0.0, Range(0.0, 360.0), toRadians = true)
                 )),
                 conditional = "escape_tri(z)",
                 juliaMode = true,
@@ -470,9 +469,9 @@ class Shape (
                 juliaMode = true,
                 positions = PositionList(julia = Position(rotation = Math.PI, zoom = 7.0)),
                 params = ParamList(listOf(
-                        Param(R.string.center, 0.0,         Range(0.0, 1.0)),
-                        Param(R.string.scale,  2.618033988, Range(0.0, 10.0)),
-                        Param(R.string.rotate, 0.0,         Range(0.0, 72.0), toRadians = true)
+                        RealParam(R.string.center, 0.0,         Range(0.0, 1.0)),
+                        RealParam(R.string.scale,  2.618033988, Range(0.0, 10.0)),
+                        RealParam(R.string.rotate, 0.0,         Range(0.0, 72.0), toRadians = true)
                 )),
                 conditional = "escape_pent(z)",
                 compatTextures = Texture.divergent.minus(Texture.absoluteDistance),
@@ -484,9 +483,9 @@ class Shape (
                 loop = "tsquare(z1, c)",
                 juliaMode = true,
                 params = ParamList(listOf(
-                        Param(R.string.shift,  0.5, Range(0.0, 5.0)),
-                        Param(R.string.scale,  2.0, Range(0.0, 5.0)),
-                        Param(R.string.rotate, 0.0, Range(0.0, 90.0), toRadians = true)
+                        RealParam(R.string.shift,  0.5, Range(0.0, 5.0)),
+                        RealParam(R.string.scale,  2.0, Range(0.0, 5.0)),
+                        RealParam(R.string.rotate, 0.0, Range(0.0, 90.0), toRadians = true)
                 )),
                 conditional = "escape_sqr(z)",
                 compatTextures = Texture.divergent.minus(Texture.absoluteDistance),
@@ -539,10 +538,18 @@ class Shape (
                 loop = "phoenix(z1, z2, c)",
                 params = ParamList(
                         listOf(
-                                Param(u = 2.0, uRange = Range(-6.0, 6.0), discrete = true),
-                                Param(u = 0.0, uRange = Range(-6.0, 6.0), discrete = true),
+                                RealParam(u = 2.0, uRange = Range(-6.0, 6.0), discrete = true),
+                                RealParam(u = 0.0, uRange = Range(-6.0, 6.0), discrete = true),
                                 ComplexParam(u = 1.0)
                         )
+                ),
+                goldFeature = true
+        )
+        val cubic = Shape(
+                nameId = R.string.catalyst,
+                loop = "cubic(z1, c)",
+                params = ParamList(
+                        listOf(ComplexParam(u = 1.0, v = 0.0))
                 ),
                 goldFeature = true
         )
@@ -561,7 +568,6 @@ class Shape (
                 collatz,
                 clover,
                 burningShip,
-                phoenix,
                 mandelbox,
                 cactus,
                 tsquare,
@@ -615,7 +621,7 @@ class Shape (
         }
     }
 
-    fun initialize(res: Resources, thumbRes: Point = Point(0, 0)) {
+    fun initialize(res: Resources) {
 
         when {
             nameId == -1 && name == "" -> {
@@ -631,7 +637,11 @@ class Shape (
         }
 
         if (hasCustomId) {
-            thumbnail = Bitmap.createBitmap(thumbRes.x, thumbRes.x, Bitmap.Config.ARGB_8888)
+            thumbnail = Bitmap.createBitmap(
+                    Resolution.THUMB.w,
+                    Resolution.THUMB.w,
+                    Bitmap.Config.RGB_565
+            )
         }
 
     }

@@ -36,6 +36,59 @@ class Fractal(
 
 //        val test = Fractal(shape = Shape.testshape)
         val mandelbrot = Fractal()
+//        val mGlitch1 = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = -0.7683483885236218,
+//                        y = -0.1165795261828601,
+//                        zoom = 6.24e-12
+//                )
+//        )
+//        val mVid1 = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = 0.3375567540479731,
+//                        y = -0.05267960943947526,
+//                        zoom = 5.72778e-11
+//                ),
+//                texture = Texture.curvatureAvg,
+//                palette = ColorPalette.torus
+//        )
+//        val mVid2 = Fractal(
+//                shape = Shape.mandelbrot,
+//                position = Position(
+//                        x = -0.7377039902090139,
+//                        y = 0.17448877577323915,
+//                        zoom = 5.79295e-11,
+//                        rotation = (91.3).inRadians()
+//                ),
+//                texture = Texture.umbrellaInverse  // freq = 2.059
+//
+//
+//        )
+//        val mVid3 = Fractal(
+//                shape = Shape.mandelbrotCubic,
+//                position = Position(
+//                        x = -0.00728939027348551,
+//                        y = 1.1169566784910356,
+//                        zoom = 7.6085e-11,
+//                        rotation = (33.8).inRadians()
+//                ),
+//                // texture = Texture.umbrellaInverse  // freq = 0.838
+//                // texture = Texture.stripeAvg  // freq = 3.032, width = 30
+//                texture = Texture.stripeAvg  // freq = 2, phase = -73.736, width = 30
+//        )
+
+        val mVid4 = Fractal(
+                shape = Shape.mandelbrot,
+                position = Position(
+                        x = -1.3814035645127223,
+                        y = 0.09698477331423325,
+                        zoom = 4.91586e-12,
+                        rotation = (4.0).inRadians()
+                )
+        )
+
 //        val mSeriesApproxTest1 = Fractal(
 //                shape = Shape.mandelbrot,
 //                position = Position(
@@ -156,8 +209,8 @@ class Fractal(
 //                position = Position(
 //                        x = 0.39019590054025366,
 //                        y = -0.26701156160039610,
-//                        xap = Apfloat(0.39019590054025366, AP_DIGITS),
-//                        yap = Apfloat(-0.26701156160039610, AP_DIGITS),
+//                        // xap = Apfloat(0.39019590054025366, AP_DIGITS),
+//                        // yap = Apfloat(-0.26701156160039610, AP_DIGITS),
 //                        zoom = 9.59743e-8,
 //                        rotation = 146.0.inRadians()
 //                ),
@@ -233,7 +286,7 @@ class Fractal(
 //                        zoom = 2.44931e-3,
 //                        rotation = (-39.9).inRadians()
 //                ),
-//                texture = Texture.testAvg,
+//                texture = Texture.escapeSmooth,
 //                palette = ColorPalette.starling
 //        )
 //        val m6 = Fractal(
@@ -309,46 +362,57 @@ class Fractal(
 //                phase = 0.52f
 //        )
 
+        val m12 = Fractal(
+                shape = Shape.mandelbrot,
+                position = Position(
+                        x = -0.03925566189175791,
+                        y = -0.6825971567614861,
+                        zoom = 4.23938e-9,
+                        rotation = (1.4).inRadians()
+                ),
+                texture = Texture.stripeAvg  // default -- width: 30, phase: 180
+        )
+
 //        val mandelbrotCubic = Fractal(shape = Shape.mandelbrotCubic)
 //        val mandelbrotQuartic = Fractal(shape = Shape.mandelbrotQuartic)
 
-        val mquad1 = Fractal(
-                shape = Shape.mandelbrotQuartic,
-                // julia : 0.59886693 + 1.03726528i
-                position = Position(
-                        x = -0.02953234124394922,
-                        y = -0.10532001011362754,
-                        zoom = 7.93786e-1,
-                        rotation = 27.4.inRadians()
-                ),
-                texture = Texture.escapeSmooth,
-                palette = ColorPalette.aquamarine,
-                frequency = 1.0201f,
-                phase = 0.354f
-        )
-        val mquad2 = Fractal(
-                shape = Shape.mandelbrotQuartic,
-                // julia : -1.17213209
-                position = Position(zoom = 3.5e-1),
-                texture = Texture.stripeAvg,
-                palette = ColorPalette.parachute
-        )
-        val mquad3 = Fractal(
-                shape = Shape.mandelbrotQuartic,
-                // julia : 0.64018818 + 0.10568383i
-                position = Position(zoom = 2.67959, rotation = 30.5.inRadians()),
-                texture = Texture.curvatureAvg,  // width : 6.441
-                palette = ColorPalette.parachute,
-                frequency = 1.51290f,
-                phase = 0.572f,
-                bailoutRadius = 1e8f
-        )
-
-        val mquint1 = Fractal(
-                shape = Shape.mandelbrotQuintic,
-                // julia : -0.6954005 + 0.23846631i
-                texture = Texture.escapeSmooth
-        )
+//        val mquad1 = Fractal(
+//                shape = Shape.mandelbrotQuartic,
+//                // julia : 0.59886693 + 1.03726528i
+//                position = Position(
+//                        x = -0.02953234124394922,
+//                        y = -0.10532001011362754,
+//                        zoom = 7.93786e-1,
+//                        rotation = 27.4.inRadians()
+//                ),
+//                texture = Texture.escapeSmooth,
+//                palette = ColorPalette.aquamarine,
+//                frequency = 1.0201f,
+//                phase = 0.354f
+//        )
+//        val mquad2 = Fractal(
+//                shape = Shape.mandelbrotQuartic,
+//                // julia : -1.17213209
+//                position = Position(zoom = 3.5e-1),
+//                texture = Texture.stripeAvg,
+//                palette = ColorPalette.parachute
+//        )
+//        val mquad3 = Fractal(
+//                shape = Shape.mandelbrotQuartic,
+//                // julia : 0.64018818 + 0.10568383i
+//                position = Position(zoom = 2.67959, rotation = 30.5.inRadians()),
+//                texture = Texture.curvatureAvg,  // width : 6.441
+//                palette = ColorPalette.parachute,
+//                frequency = 1.51290f,
+//                phase = 0.572f,
+//                bailoutRadius = 1e8f
+//        )
+//
+//        val mquint1 = Fractal(
+//                shape = Shape.mandelbrotQuintic,
+//                // julia : -0.6954005 + 0.23846631i
+//                texture = Texture.escapeSmooth
+//        )
 
 //        val mandelbrotAnyPower = Fractal(shape = Shape.mandelbrotPow)
 //        val nautilus = Fractal(
@@ -795,6 +859,21 @@ class Fractal(
         //      julia : -0.44554545 + 0.01983273i
         //      rotation : -90
         //      texture : Absolute Distance
+
+        // MAGNET
+        //
+        //      julia : -2.38768484 - 1.32304182i
+        //      param 1 : 1.10988652 + 1.27607142i
+        //      position
+        //          x : -1.9146739905393257
+        //          y : -0.3133017742571375
+        //          zoom : 1.52665
+        //          rotation : 180
+        //      texture : Stripe Average
+        //          frequency : 5
+        //          phase : 216
+        //          width : 30
+
 
     }
 

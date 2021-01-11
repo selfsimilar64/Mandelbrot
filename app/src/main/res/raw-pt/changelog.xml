@@ -1,15 +1,28 @@
 <changelog>
 
 
+    <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
+        <new type="summary">Adicionado (Imagem) -> (Proporção) para salvar imagens de tamanhos diferentes</new>
+        <new type="summary">Toque duas vezes no modo (Posição) para aumentar o zoom</new>
+        <new type="summary">Adicionado (Definições) -> (Usar Método de Divisão Alternativo) para corrigir o zoom em certos dispositivos</new>
+        <info>Menu de configurações movido</info>
+        <info>Bug corrigido de precisão dupla em certos dispositivos</info>
+        <info>Bug de exibição corrigido ao mudar de posição</info>
+        <info>Corrigida a falha de uso de memória ao mostrar a tela de atualização OURO</info>
+        <info>Falha corrigida ao criar paletas com mais de 8 cores</info>
+        <info>Erros corrigidos com texturas múltiplas em certos dispositivos</info>
+    </release>
+
+
     <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
-        <new type="summary">Adicionado atualização Ouro!</new>
-        <new type="summary">Adicionadas várias novas formas, texturas, paletas de cores e parâmetros</new>
-        <new type="summary">OURO: Adicionado formato personalizado e criação de paleta de cores personalizada</new>
-        <new type="summary">OURO: Adicionadas opções de resolução superior até 4K</new>
-        <new type="summary">Adicionada a capacidade de escolher favoritos nas listas de itens</new>
-        <new type="summary">Adicionada opção de TAXA a todos os parâmetros para ajustes mais controlados</new>
-        <new type="summary">Resolução escolhida automaticamente durante as mudanças de parâmetro</new>
-        <new type="summary">Melhor uso de memória</new>
+        <info>Adicionado atualização Ouro!</info>
+        <info>Adicionadas várias novas formas, texturas, paletas de cores e parâmetros</info>
+        <info>OURO: Adicionado formato personalizado e criação de paleta de cores personalizada</info>
+        <info>OURO: Adicionadas opções de resolução superior até 4K</info>
+        <info>Adicionada a capacidade de escolher favoritos nas listas de itens</info>
+        <info>Adicionada opção de TAXA a todos os parâmetros para ajustes mais controlados</info>
+        <info>Resolução escolhida automaticamente durante as mudanças de parâmetro</info>
+        <info>Melhor uso de memória</info>
     </release>
 
 

@@ -1,15 +1,28 @@
 <changelog>
 
 
+    <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
+        <new type="summary">(Bild) -> (Verhältnis) zum Speichern von Bildern unterschiedlicher Größe hinzugefügt</new>
+        <new type="summary">Tippen Sie im (Position)-Modus zweimal auf, um den Zoom zu erhöhen</new>
+        <new type="summary">(Einstellungen) -> (Alternative Split-Methode Verwenden) hinzugefügt, um das Zoomen auf bestimmten Geräten zu korrigieren</new>
+        <info>Verschobenes Einstellungsmenü</info>
+        <info>Fehler mit doppelter Genauigkeit auf bestimmten Geräten behoben</info>
+        <info>Anzeigefehler beim Positionswechsel behoben</info>
+        <info>Absturz der Speichernutzung beim Anzeigen des GOLD-Upgrade-Bildschirms behoben</info>
+        <info>Absturz beim Erstellen von Paletten mit mehr als 8 Farben behoben</info>
+        <info>Fehler mit mehreren Texturen auf bestimmten Geräten behoben</info>
+    </release>
+
+
     <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
-        <new type="summary">Gold Upgrade hinzugefügt!</new>
-        <new type="summary">Es wurden mehrere neue Formen, Texturen, Farbpaletten und Parameter hinzugefügt</new>
-        <new type="summary">GOLD: Benutzerdefinierte Form und benutzerdefinierte Farbpalettenerstellung hinzugefügt</new>
-        <new type="summary">GOLD: Optionen mit höherer Auflösung bis zu 4K hinzugefügt</new>
-        <new type="summary">Möglichkeit zur Auswahl von Favoriten in Artikellisten hinzugefügt</new>
-        <new type="summary">Allen Parametern wurde die Option RATE hinzugefügt, um kontrollierte Anpassungen zu ermöglichen</new>
-        <new type="summary">Die Auflösung wird bei Parameteränderungen automatisch gewählt</new>
-        <new type="summary">Verbesserte Speichernutzung</new>
+        <info>Gold Upgrade hinzugefügt!</info>
+        <info>Es wurden mehrere neue Formen, Texturen, Farbpaletten und Parameter hinzugefügt</info>
+        <info>GOLD: Benutzerdefinierte Form und benutzerdefinierte Farbpalettenerstellung hinzugefügt</info>
+        <info>GOLD: Optionen mit höherer Auflösung bis zu 4K hinzugefügt</info>
+        <info>Möglichkeit zur Auswahl von Favoriten in Artikellisten hinzugefügt</info>
+        <info>Allen Parametern wurde die Option RATE hinzugefügt, um kontrollierte Anpassungen zu ermöglichen</info>
+        <info>Die Auflösung wird bei Parameteränderungen automatisch gewählt</info>
+        <info>Verbesserte Speichernutzung</info>
     </release>
 
 

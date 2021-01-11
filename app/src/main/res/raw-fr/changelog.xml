@@ -1,15 +1,28 @@
 <changelog>
 
 
+    <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
+        <new type="summary">Ajout de (Image) -> (Rapport) pour enregistrer des images de différentes tailles</new>
+        <new type="summary">Appuyez deux fois en mode (Position) pour augmenter le zoom</new>
+        <new type="summary">Ajout de (Paramètres) -> (Utiliser Autre Méthode du Partage) pour corriger le zoom sur certains appareils</new>
+        <info>Menu des paramètres déplacé</info>
+        <info>Correction d'un bug de double précision sur certains appareils</info>
+        <info>Correction d'un bug d'affichage lors du changement de position</info>
+        <info>Correction d'un crash d'utilisation de la mémoire lors de l'affichage de l'écran de mise à niveau OR</info>
+        <info>Correction d'un crash lors de la création de palettes avec plus de 8 couleurs</info>
+        <info>Correction de bugs avec plusieurs textures sur certains appareils</info>
+    </release>
+
+
     <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
-        <new type="summary">Ajout de la mise à niveau Or!</new>
-        <new type="summary">Ajout de plusieurs nouvelles formes, textures, palettes de couleurs et paramètres</new>
-        <new type="summary">OR: Ajout d'une forme personnalisée et de la création d'une palette de couleurs personnalisée</new>
-        <new type="summary">OR: Ajout d'options de résolution plus élevées jusqu'à 4K</new>
-        <new type="summary">Ajout de la possibilité de choisir les favoris dans les listes d'articles</new>
-        <new type="summary">Ajout de l'option TAUX à tous les paramètres pour des ajustements plus contrôlés</new>
-        <new type="summary">Résolution automatiquement choisie lors des changements de paramètres</new>
-        <new type="summary">Utilisation de la mémoire améliorée</new>
+        <info>Ajout de la mise à niveau Or!</info>
+        <info>Ajout de plusieurs nouvelles formes, textures, palettes de couleurs et paramètres</info>
+        <info>OR: Ajout d'une forme personnalisée et de la création d'une palette de couleurs personnalisée</info>
+        <info>OR: Ajout d'options de résolution plus élevées jusqu'à 4K</info>
+        <info>Ajout de la possibilité de choisir les favoris dans les listes d'articles</info>
+        <info>Ajout de l'option TAUX à tous les paramètres pour des ajustements plus contrôlés</info>
+        <info>Résolution automatiquement choisie lors des changements de paramètres</info>
+        <info>Utilisation de la mémoire améliorée</info>
     </release>
 
 

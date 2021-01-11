@@ -1,15 +1,28 @@
 <changelog>
 
 
+    <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
+        <new type="summary">(Imagen) -> (Relación) agregada para guardar imágenes de diferentes tamaños</new>
+        <new type="summary">Toque dos veces en el modo (Posición) para aumentar el zoom</new>
+        <new type="summary">Se agregaron (Ajustes) -> (Usar Método de División Alternativo) para corregir el zoom en ciertos dispositivos</new>
+        <info>Menú de configuración movido</info>
+        <info>Se corrigió un error de precisión dual en ciertos dispositivos</info>
+        <info>Error de visualización fijo al cambiar de posición</info>
+        <info>Se corrigió el bloqueo del uso de la memoria al mostrar la pantalla de actualización ORO</info>
+        <info>Se corrigió el bloqueo al crear paletas con más de 8 colores.</info>
+        <info>Errores corregidos con múltiples texturas en ciertos dispositivos.</info>
+    </release>
+
+
     <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
-        <new type="summary">¡Mejora de Oro añadida!</new>
-        <new type="summary">Se agregaron varias formas, texturas, paletas de colores y parámetros nuevos</new>
-        <new type="summary">ORO: Se agregó una forma personalizada y creación de paleta de colores personalizada.</new>
-        <new type="summary">ORO: Se agregaron opciones de mayor resolución hasta 4K</new>
-        <new type="summary">Capacidad agregada para elegir favoritos en listas de artículos</new>
-        <new type="summary">Se agregó la opción TASA a todos los parámetros para ajustes más controlados</new>
-        <new type="summary">Resolución elegida automáticamente durante los cambios de parámetros</new>
-        <new type="summary">Uso de memoria mejorado</new>
+        <info>¡Mejora de Oro añadida!</info>
+        <info>Se agregaron varias formas, texturas, paletas de colores y parámetros nuevos</info>
+        <info>ORO: Se agregó una forma personalizada y creación de paleta de colores personalizada.</info>
+        <info>ORO: Se agregaron opciones de mayor resolución hasta 4K</info>
+        <info>Capacidad agregada para elegir favoritos en listas de artículos</info>
+        <info>Se agregó la opción TASA a todos los parámetros para ajustes más controlados</info>
+        <info>Resolución elegida automáticamente durante los cambios de parámetros</info>
+        <info>Uso de memoria mejorado</info>
     </release>
 
 

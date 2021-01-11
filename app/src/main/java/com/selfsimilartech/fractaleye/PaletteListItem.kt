@@ -6,6 +6,8 @@ import android.view.View
 import android.widget.*
 import android.widget.ToggleButton
 import androidx.cardview.widget.CardView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
 import com.tubb.smrv.SwipeHorizontalMenuLayout
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.IFlexible
@@ -138,6 +140,7 @@ class PaletteListItem (
             }
             if (layoutType == ListLayoutType.GRID) {
                 holder.previewImage?.setImageBitmap(palette.thumbnail)
+
                 holder.previewImage?.scaleType = ImageView.ScaleType.CENTER_CROP
             }
 

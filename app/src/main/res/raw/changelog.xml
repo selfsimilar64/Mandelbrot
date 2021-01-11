@@ -1,15 +1,28 @@
 <changelog>
 
 
+    <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
+        <new type="summary">Added (Image) -> (Ratio) for saving images of different sizes</new>
+        <new type="summary">Double-tap in (Position) mode to increase zoom</new>
+        <new type="summary">Added (Settings) -> (Use Alternate Split Method) to fix zooming on certain devices</new>
+        <info>Moved settings menu</info>
+        <info>Fixed dual-precision bug on certain devices</info>
+        <info>Fixed display bug when changing position</info>
+        <info>Fixed memory usage crash when showing GOLD upgrade screen</info>
+        <info>Fixed crash when creating palettes with more than 8 colors</info>
+        <info>Fixed bugs with multiple textures on certain devices</info>
+    </release>
+
+
     <release versionCode="27" versionName="v1.4.0" date="2020-12-12">
-        <new type="summary">Added Gold upgrade!</new>
-        <new type="summary">Added several new shapes, textures, color palettes, and parameters</new>
-        <new type="summary">GOLD: Added custom shape and custom color palette creation</new>
-        <new type="summary">GOLD: Added higher resolution options up to 4K</new>
-        <new type="summary">Added ability to choose favorites in item lists</new>
-        <new type="summary">Added RATE option to all parameters for more controlled adjustments</new>
-        <new type="summary">Resolution automatically chosen during parameter changes</new>
-        <new type="summary">Improved memory usage</new>
+        <info>Added Gold upgrade!</info>
+        <info>Added several new shapes, textures, color palettes, and parameters</info>
+        <info>GOLD: Added custom shape and custom color palette creation</info>
+        <info>GOLD: Added higher resolution options up to 4K</info>
+        <info>Added ability to choose favorites in item lists</info>
+        <info>Added RATE option to all parameters for more controlled adjustments</info>
+        <info>Resolution automatically chosen during parameter changes</info>
+        <info>Improved memory usage</info>
     </release>
 
 

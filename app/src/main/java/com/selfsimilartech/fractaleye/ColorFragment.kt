@@ -162,7 +162,7 @@ class ColorFragment : MenuFragment() {
 
 
 
-        val colorPreviewListWidth = fsv.r.screenRes.x -
+        val colorPreviewListWidth = Resolution.SCREEN.w -
                 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) -
                 resources.getDimension(R.dimen.colorPreviewListMarginEnd) -
                 resources.getDimension(R.dimen.navButtonSize)
@@ -193,7 +193,7 @@ class ColorFragment : MenuFragment() {
             customPaletteLayout.show()
             newCustomColorButton.show()
             loadNavButtons(customPaletteNavButtons)
-            fsv.r.renderProfile = RenderProfile.MANUAL
+            fsv.r.renderProfile = RenderProfile.DISCRETE
 
             f.palette = palette
             fsv.requestRender()
@@ -409,22 +409,8 @@ class ColorFragment : MenuFragment() {
 
         // HUE SELECTOR
         hueSelectorBackground.background = GradientDrawable(
-                GradientDrawable.Orientation.BOTTOM_TOP,
-                getColors(resources, listOf(
-                    R.color.hueslider1,
-                    R.color.hueslider2,
-                    R.color.hueslider3,
-                    R.color.hueslider4,
-                    R.color.hueslider5,
-                    R.color.hueslider6,
-                    R.color.hueslider7,
-                    R.color.hueslider8,
-                    R.color.hueslider9,
-                    R.color.hueslider10,
-                    R.color.hueslider11,
-                    R.color.hueslider12,
-                    R.color.hueslider1
-        )))
+                GradientDrawable.Orientation.BOTTOM_TOP, resources.getIntArray(R.array.hueslider)
+        )
         hueSelector.max = 359
         hueSelector.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -621,7 +607,7 @@ class ColorFragment : MenuFragment() {
                 colorNavBar.hide()
                 act.showCategoryButtons()
 
-                fsv.r.renderProfile = RenderProfile.MANUAL
+                fsv.r.renderProfile = RenderProfile.DISCRETE
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
@@ -637,7 +623,7 @@ class ColorFragment : MenuFragment() {
 
                     colorPreviewList.layoutManager = colorPreviewListLinearManager
 
-                    fsv.r.renderProfile = RenderProfile.MANUAL
+                    fsv.r.renderProfile = RenderProfile.DISCRETE
 
                 }
                 ListLayoutType.GRID -> {
@@ -664,7 +650,7 @@ class ColorFragment : MenuFragment() {
                     customPaletteLayout.show()
                     newCustomColorButton.show()
                     loadNavButtons(customPaletteNavButtons)
-                    fsv.r.renderProfile = RenderProfile.MANUAL
+                    fsv.r.renderProfile = RenderProfile.DISCRETE
 
                     customPalette = ColorPalette(
                             name = "%s %s %d".format(
@@ -673,7 +659,7 @@ class ColorFragment : MenuFragment() {
                                     ColorPalette.nextCustomPaletteNum
                             ),
                             colors = ColorPalette.generateHighlightColors(if (sc.goldEnabled) 5 else 3)
-                    ).apply { initialize(resources, Resolution.THUMB.size) }
+                    ).apply { initialize(resources) }
 
                     // ColorPalette.all.add(0, customPalette)
                     f.palette = customPalette

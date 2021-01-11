@@ -2,7 +2,6 @@ package com.selfsimilartech.fractaleye
 
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Point
 import android.util.Range
 
 class Texture (
@@ -15,8 +14,8 @@ class Texture (
         val isAverage       : Boolean = false,
         val usesFirstDelta  : Boolean = false,
         val usesSecondDelta : Boolean = false,
-        val params          : List<Param> = listOf(),
-        val bins            : Param = Param(nameId = R.string.bins, u = 20.0, uRange = Range(0.0, 20.0), goldFeature = true),
+        val params          : List<RealParam> = listOf(),
+        val bins            : RealParam = RealParam(nameId = R.string.bins, u = 20.0, uRange = Range(0.0, 20.0), goldFeature = true),
         val auto            : Boolean = false,
         val radius          : Float = 1e2f,
         val frequency       : Float? = null,
@@ -60,7 +59,7 @@ class Texture (
                 final = "dist_estim_abs_final(modsqrz, alpha)",
                 usesFirstDelta = true,
                 auto = true,
-                params = listOf(Param(R.string.size, 1.0, Range(0.000001, 3.0))),
+                params = listOf(RealParam(R.string.size, 1.0, Range(0.000001, 3.0))),
                 radius = 3e1f,
                 goldFeature = true
         )
@@ -98,8 +97,8 @@ class Texture (
                 loop = "curvature_avg_loop(sum, sum1, n, z, z1, z2);",
                 isAverage = true,
                 params = listOf(
-                        Param(R.string.width, 1.0, Range(0.075, 10.0), goldFeature = true),
-                        Param(R.string.bend, 0.0, Range(-5.0, 5.0), goldFeature = true)
+                        RealParam(R.string.width, 1.0, Range(0.075, 10.0), goldFeature = true),
+                        RealParam(R.string.bend, 0.0, Range(-5.0, 5.0), goldFeature = true)
                 ),
                 radius = 1e8f
         )
@@ -108,9 +107,9 @@ class Texture (
                 loop = "stripe_avg_loop(sum, sum1, z);",
                 isAverage = true,
                 params = listOf(
-                        Param(R.string.frequency,  1.0,  Range(1.0, 8.0),                     goldFeature = true),
-                        Param(R.string.phase,      0.0,  Range(0.0, 360.0), toRadians = true, goldFeature = true),
-                        Param(R.string.width,      1.0,  Range(0.075, 30.0),                  goldFeature = true)
+                        RealParam(R.string.frequency,  1.0,  Range(1.0, 8.0),                     goldFeature = true),
+                        RealParam(R.string.phase,      0.0,  Range(0.0, 360.0), toRadians = true, goldFeature = true),
+                        RealParam(R.string.width,      1.0,  Range(0.075, 30.0),                  goldFeature = true)
                 ),
                 radius = 1e6f
         )
@@ -120,8 +119,8 @@ class Texture (
                 loop = "orbit_trap_line_loop(z, minDist);",
                 final = "minDist",
                 params = listOf(
-                        Param(R.string.shift, 0.0, Range(-10.0, 10.0), goldFeature = true),
-                        Param(R.string.rotate, 0.0, Range(0.0, 180.0), toRadians = true, goldFeature = true)
+                        RealParam(R.string.shift, 0.0, Range(-10.0, 10.0), goldFeature = true),
+                        RealParam(R.string.rotate, 0.0, Range(0.0, 180.0), toRadians = true, goldFeature = true)
                 )
         )
         val orbitTrapCirc = Texture(
@@ -131,7 +130,7 @@ class Texture (
                 final = "minDist",
                 params = listOf(
                         ComplexParam(R.string.center),
-                        Param(R.string.size, 0.0, Range(0.0, 2.0))
+                        RealParam(R.string.size, 0.0, Range(0.0, 2.0))
                 ),
                 radius = 1e2f,
                 goldFeature = true
@@ -154,7 +153,7 @@ class Texture (
                 final = "angle",
                 params = listOf(
                         ComplexParam(R.string.center),
-                        Param(u = 1.0)
+                        RealParam(u = 1.0)
                 )
         )
         val overlayAvg = Texture(
@@ -162,7 +161,7 @@ class Texture (
                 loop = "overlay_avg_loop(sum, sum1, z);",
                 isAverage = true,
                 params = listOf(
-                        Param(R.string.sharpness, 0.45, Range(0.4, 0.5))
+                        RealParam(R.string.sharpness, 0.45, Range(0.4, 0.5))
                 ),
                 radius = 1e2f
         )
@@ -176,7 +175,7 @@ class Texture (
                 nameId = R.string.angular_momentum,
                 loop = "angular_momentum_loop(sum, sum1, z, z1, z2);",
                 isAverage = true,
-                params = listOf(Param(R.string.alpha, 0.0, Range(0.0, 2.0*Math.PI), goldFeature = true)),
+                params = listOf(RealParam(R.string.alpha, 0.0, Range(0.0, 2.0*Math.PI), goldFeature = true)),
                 radius = 1e10f,
                 goldFeature = true
         )
@@ -184,14 +183,14 @@ class Texture (
                 nameId = R.string.umbrella,
                 loop = "umbrella_loop(sum, sum1, z, z1);",
                 isAverage = true,
-                params = listOf(Param(R.string.frequency, 4.0, Range(1.0, 8.0))),
+                params = listOf(RealParam(R.string.frequency, 4.0, Range(1.0, 8.0))),
                 goldFeature = true
         )
         val umbrellaInverse = Texture(
                 nameId = R.string.inverse_umbrella,
                 loop = "umbrella_inverse_loop(sum, sum1, z, z1);",
                 isAverage = true,
-                params = listOf(Param(R.string.frequency, 4.0, Range(1.0, 5.0))),
+                params = listOf(RealParam(R.string.frequency, 4.0, Range(1.0, 5.0))),
                 goldFeature = true
         )
         val exitAngle = Texture(
@@ -199,6 +198,20 @@ class Texture (
                 loop = "exit_angle_loop(sum, sum1, z, z1);",
                 isAverage = true,
                 goldFeature = true
+        )
+        val angle = Texture(
+                nameId = R.string.angle,
+                final = "angle_final(c)",
+                params = listOf(ComplexParam(R.string.center)),
+                goldFeature = true
+        )
+        val precisionTest = Texture(
+                nameId = R.string.precision,
+                final = escapeSmooth.final,
+                params = listOf(
+                        RealParam(u = -45.0, uRange = Range(-45.0, -10.0)),  // psuedo-zero exponent
+                        RealParam(u = 13.0, uRange = Range(1.0, 15.0))       // split exponent
+                )
         )
 
 
@@ -251,7 +264,7 @@ class Texture (
         if (isAverage) this.final = "avg_final(sum, sum1, n, z, z1, textureIn)"
     }
 
-    fun initialize(res: Resources, thumbRes: Point) {
+    fun initialize(res: Resources) {
 
         when {
             nameId == -1 && name == "" -> {
@@ -266,11 +279,15 @@ class Texture (
             if (p.nameId != -1) p.name = res.getString(p.nameId)
         }
 
-        thumbnail = Bitmap.createBitmap(thumbRes.x, thumbRes.x, Bitmap.Config.ARGB_8888)
+        thumbnail = Bitmap.createBitmap(
+                Resolution.THUMB.w,
+                Resolution.THUMB.w,
+                Bitmap.Config.RGB_565
+        )
 
     }
 
-    var activeParam = if (params.isNotEmpty()) params[0] else Param(R.string.empty)
+    var activeParam = if (params.isNotEmpty()) params[0] else RealParam(R.string.empty)
 
     var thumbnail : Bitmap? = null
 
