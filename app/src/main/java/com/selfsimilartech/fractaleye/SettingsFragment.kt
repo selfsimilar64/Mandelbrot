@@ -1,23 +1,17 @@
 package com.selfsimilartech.fractaleye
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.SeekBar
-import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
+import com.jaredrummler.android.device.DeviceName
 import kotlinx.android.synthetic.main.settings_fragment.*
 
 
-class SettingsFragment : MenuFragment() {
+class SettingsFragment : Fragment(R.layout.settings_fragment) {
 
 //    private fun createNotificationChannel() {
 //        // Create the NotificationChannel, but only on API 26+ because
@@ -36,12 +30,6 @@ class SettingsFragment : MenuFragment() {
 //        }
 //    }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
-
-        return inflater.inflate(R.layout.settings_fragment, container, false)
-
-    }
-
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
         val act = activity as MainActivity
@@ -50,34 +38,33 @@ class SettingsFragment : MenuFragment() {
         val sc = act.sc
 
 
+        DeviceName.init(v.context)
+
+
 //        val dontShowAgainView = layoutInflater.inflate(R.layout.alert_dialog_custom, null)
 //        dontShowAgainView.dontShowCheckBox.setOnCheckedChangeListener { buttonView, isChecked ->
 //            sc.showSlowDualflotDialog = !isChecked
 //        }
 
 
-        upgradeButton.showGradient = true
-
-        if (!BuildConfig.DEV_VERSION) toggleGoldButton.hide()
-        toggleGoldButton.setOnClickListener {
-            sc.goldEnabled = !sc.goldEnabled
-            if (sc.goldEnabled) act.onGoldEnabled()
+//        upgradeButton.showGradient = true
+//
+//        if (!BuildConfig.DEV_VERSION) toggleGoldButton.hide()
+//        toggleGoldButton.setOnClickListener {
+//            sc.goldEnabled = !sc.goldEnabled
+//            if (sc.goldEnabled) act.onGoldEnabled()
 //            AlertDialog.Builder(act, R.style.AlertDialogCustom)
 //                    .setIcon(R.drawable.wow)
 //                    .setTitle(R.string.gold_enabled)
 //                    .setMessage(R.string.gold_enabled_dscript)
 //                    .setPositiveButton(android.R.string.ok, null)
 //                    .show()
-            AlertDialog.Builder(act, R.style.AlertDialogCustom)
-                    .setIcon(R.drawable.pending)
-                    .setTitle(R.string.gold_pending)
-                    .setMessage(R.string.gold_pending_dscript)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-        }
-        upgradeButton.setOnClickListener {
-            act.showUpgradeScreen()
-        }
+//        }
+//        upgradeButton.setOnClickListener {
+//            act.showUpgradeScreen()
+//        }
+
+
 //        consumePurchaseButton.setOnClickListener {
 //            act.consumePurchase()
 //        }
@@ -110,53 +97,6 @@ class SettingsFragment : MenuFragment() {
 
         }
 
-
-
-        resolutionBar.showGradient = true
-        resolutionBar.gradientStartProgress = Resolution.NUM_VALUES_FREE - 1
-        resolutionBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-
-            var prevProgress = 0
-
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                Log.e("SETTINGS", "progress: $progress")
-                val dimensions = Resolution.working[progress].size
-                resolutionDimensionsText.text = "${dimensions.x} x ${dimensions.y}"
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                prevProgress = resolutionBar.progress
-            }
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-
-                val newRes = Resolution.working[resolutionBar.progress]
-
-                if (sc.resolution != newRes) {
-
-                    if (resolutionBar.progress > resolutionBar.gradientStartProgress && !sc.goldEnabled) {
-                        resolutionBar.progress = prevProgress
-                        act.showUpgradeScreen()
-                    }
-                    else {
-
-                        sc.resolution = newRes
-                        if (fsv.r.isRendering) fsv.r.interruptRender = true
-                        fsv.r.fgResolutionChanged = true
-                        fsv.r.renderToTex = true
-                        fsv.requestRender()
-
-                    }
-
-                }
-
-            }
-
-        })
-        resolutionBar.max = Resolution.NUM_VALUES_WORKING() - 1
-        //Log.e("SETTINGS", "resolution ordinal: ${sc.resolution.ordinal}")
-        resolutionBar.progress = Resolution.working.indexOf(sc.resolution)
-        val dimensions = sc.resolution.size
-        resolutionDimensionsText.text = "${dimensions.x} x ${dimensions.y}"
 
 
         continuousRenderSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -196,14 +136,17 @@ class SettingsFragment : MenuFragment() {
         }
 
 
-        fitToViewportSwitch.isChecked = sc.fitToViewport
-        fitToViewportSwitch.setOnCheckedChangeListener { _, isChecked ->
+//        fitToViewportSwitch.isChecked = sc.fitToViewport
+//        fitToViewportSwitch.setOnCheckedChangeListener { _, isChecked ->
+//
+//            sc.fitToViewport = isChecked
+//            act.updateSurfaceViewLayout()
+//
+//        }
 
-            sc.fitToViewport = isChecked
-            act.updateSurfaceViewLayout()
-
+        settingsDoneButton.setOnClickListener {
+            act.closeSettingsMenu()
         }
-
 
 
 //        showHintsSwitch.isChecked = sc.showHints
@@ -215,34 +158,49 @@ class SettingsFragment : MenuFragment() {
 //        }
 
 
-        saveToFileButton.setOnClickListener {
-            if (fsv.r.isRendering) act.showMessage(resources.getString(R.string.msg_save_wait))
-            else {
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                    if (ContextCompat.checkSelfPermission(v.context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(
-                                act,
-                                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                                WRITE_STORAGE_REQUEST_CODE)
-                    } else {
-                        fsv.r.renderProfile = RenderProfile.SAVE
-                        fsv.requestRender()
-                    }
-                } else {
-                    fsv.r.renderProfile = RenderProfile.SAVE
-                    fsv.requestRender()
-                }
+        showChangelogLayout.setOnClickListener { act.showChangelog() }
 
+        upgradeToGoldLayout.setOnClickListener { act.showUpgradeScreen() }
+
+        aboutText1.text = resources.getString(R.string.about_info_1).format(BuildConfig.VERSION_NAME)
+
+        emailLayout.setOnClickListener {
+
+            var contentString = ""
+            contentString += "Android Version: ${android.os.Build.VERSION.RELEASE}\n"
+            contentString += "Device: ${DeviceName.getDeviceName() ?: android.os.Build.BRAND} (${android.os.Build.MODEL})\n"
+            contentString += "Fractal Eye Version: ${BuildConfig.VERSION_NAME}\n\n"
+            contentString += "Please describe your problem here and attach images/video of the problem occurring if possible:\n\n"
+
+            val emailIntent = Intent(Intent.ACTION_SENDTO)
+            emailIntent.apply {
+                type = "message/rfc822"
+                data = Uri.parse("mailto:")
+                putExtra(Intent.EXTRA_EMAIL, arrayOf("selfaffinetech@gmail.com"))
+                putExtra(Intent.EXTRA_SUBJECT, "Fractal Eye Help")
+                putExtra(Intent.EXTRA_TEXT, contentString)
+                if (emailIntent.resolveActivity(act.packageManager) != null) startActivity(emailIntent)
             }
+
         }
-//        renderButton.setOnClickListener {
-//            fsv.r.renderToTex = true
-//            fsv.requestRender()
-//        }
 
+        instagramLayout.setOnClickListener {
 
-        showChangelogButton.setOnClickListener { act.showChangelog() }
+            val uri = Uri.parse("http://instagram.com/_u/_selfsimilar")
+            val likeIng = Intent(Intent.ACTION_VIEW, uri)
+
+            likeIng.setPackage("com.instagram.android")
+
+            try {
+                startActivity(likeIng)
+            } catch (e: ActivityNotFoundException) {
+                startActivity(Intent(Intent.ACTION_VIEW,
+                        Uri.parse("http://instagram.com/_selfsimilar")))
+            }
+
+        }
+
 
         chunkProfileTabs.getTabAt(sc.chunkProfile.ordinal)?.apply {
             view.setBackgroundColor(resources.getColor(R.color.menuDark7, null))
@@ -270,38 +228,16 @@ class SettingsFragment : MenuFragment() {
         })
 
 
+        splitTypeSwitch.isChecked = sc.useAlternateSplit
+        splitTypeSwitch.setOnCheckedChangeListener { v, isChecked ->
 
+            sc.useAlternateSplit = isChecked
+            fsv.r.renderShaderChanged = true
+            fsv.r.renderToTex = true
+            fsv.requestRender()
 
-
-        val subMenuButtonListener = { layout: View, button: Button ->
-            View.OnClickListener {
-                if (layout == renderOptionsLayout || layout == displayOptionsLayout) {
-                    act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
-                }
-                else if (currentLayout == renderOptionsLayout || currentLayout == displayOptionsLayout) {
-                    act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
-                }
-                showLayout(layout)
-                alphaButton(button)
-            }
         }
 
-
-
-        resolutionButton.setOnClickListener(subMenuButtonListener(resolutionLayout, resolutionButton))
-        renderOptionsButton.setOnClickListener(subMenuButtonListener(renderOptionsLayout, renderOptionsButton))
-        displayOptionsButton.setOnClickListener(subMenuButtonListener(displayOptionsLayout, displayOptionsButton))
-
-
-
-        currentLayout = resolutionLayout
-        currentButton = resolutionButton
-        resolutionLayout.hide()
-        renderOptionsLayout.hide()
-        displayOptionsLayout.hide()
-
-
-        resolutionButton.performClick()
 
 
         if (sc.goldEnabled) onGoldEnabled()
@@ -311,9 +247,6 @@ class SettingsFragment : MenuFragment() {
     }
 
 
-    fun onGoldEnabled() {
-        upgradeButton.showGradient = false
-        resolutionBar.showGradient = false
-    }
+    fun onGoldEnabled() {}
 
 }
