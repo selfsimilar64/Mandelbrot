@@ -138,7 +138,7 @@ class PositionFragment : MenuFragment() {
 
                 })
         scaleLock.setOnClickListener {
-            f.position.scaleLocked = scaleLock.isChecked
+            f.position.zoomLocked = scaleLock.isChecked
         }
 
         rotationEdit.setOnEditorActionListener(
@@ -186,17 +186,19 @@ class PositionFragment : MenuFragment() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
 
                 val zoomFactor = 10f.pow(progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
-                fsv.r.zoom(zoomFactor/previousZoomFactor)
-                if (sc.continuousPosRender) prevZoom = f.position.zoom
-                f.position.zoom(zoomFactor/previousZoomFactor, doubleArrayOf(0.0, 0.0))
-                if (sc.continuousPosRender) fsv.r.checkThresholdCross(prevZoom)
+
+                if (sc.continuousPosRender) {
+                    f.position.zoom(zoomFactor/previousZoomFactor)
+                    if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) fsv.r.renderToTex = true
+                }
+                else fsv.r.zoom(zoomFactor/previousZoomFactor)
+                // if (sc.continuousPosRender) fsv.r.checkThresholdCross(prevZoom)
                 previousZoomFactor = zoomFactor
 
                 val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
                 scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
                 scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
 
-                if (sc.continuousPosRender) fsv.r.renderToTex = true
                 if (fsv.r.isRendering && zoomSeekBar.progress != zoomSeekBar.max/2) fsv.r.interruptRender = true
                 fsv.requestRender()
 
@@ -206,22 +208,24 @@ class PositionFragment : MenuFragment() {
                 //previousZoom = f.position.scale.toFloat()
                 if (sc.continuousPosRender) {
                     // fsv.r.beginContinuousRender = true
-                    fsv.r.renderContinuousTex = true
+                    fsv.r.renderProfile = RenderProfile.CONTINUOUS
                 }
                 previousZoomFactor = 1f
                 prevZoom = f.position.zoom
             }
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
 
                 if (sc.continuousPosRender) {
-                    fsv.r.renderContinuousTex = false
+                    fsv.r.renderProfile = RenderProfile.DISCRETE
                 }
                 else {
-                    fsv.r.checkThresholdCross(prevZoom)
-                    fsv.r.renderToTex = true
-                    fsv.requestRender()
+                    val zoomFactor = 10f.pow(seekBar.progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
+                    f.position.zoom(zoomFactor)
                 }
+                fsv.r.checkThresholdCross(prevZoom)
+                fsv.r.renderToTex = true
+                fsv.requestRender()
 
                 previousZoomFactor = 1f
                 zoomSeekBar.progress = zoomSeekBar.max/2
@@ -231,29 +235,43 @@ class PositionFragment : MenuFragment() {
         rotationButton.setOnClickListener(  subMenuButtonListener(rotationLayout,   rotationButton  ))
         rotationSeekBarListener = object : SeekBar.OnSeekBarChangeListener {
 
+            var prevTheta = 0.0
+
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
                 val newTheta = ((progress/(rotationSeekBar.max/2).toDouble() - 1.0)*180.0).inRadians()
                 rotationEdit.setText("%.1f".format(newTheta.inDegrees()))
-                fsv.r.rotate((f.position.rotation - newTheta).toFloat())
-                f.position.rotation = newTheta
-                if (sc.continuousPosRender) fsv.r.renderToTex = true
-                if (fsv.r.isRendering) fsv.r.interruptRender = true
+                if (sc.continuousPosRender) {
+                    f.position.rotation = newTheta
+                    if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) fsv.r.renderToTex = true
+                    if (fsv.r.isRendering) fsv.r.interruptRender = true
+                }
+                else {
+                    fsv.r.rotate((prevTheta - newTheta).toFloat())
+                    prevTheta = newTheta
+                }
                 fsv.requestRender()
+
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
 
                 if (sc.continuousPosRender) {
-                    // fsv.r.beginContinuousRender = true
-                    fsv.r.renderContinuousTex = true
+                    fsv.r.renderProfile = RenderProfile.CONTINUOUS
+                    prevTheta = f.position.rotation
                 }
 
             }
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                if (sc.continuousPosRender) fsv.r.renderContinuousTex = false
-                fsv.r.renderToTex = true
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+
+                if (sc.continuousPosRender) fsv.r.renderProfile = RenderProfile.DISCRETE
+                else {
+                    val newTheta = ((seekBar.progress/(rotationSeekBar.max/2).toDouble() - 1.0)*180.0).inRadians()
+                    f.position.rotation = newTheta
+                }
                 fsv.requestRender()
+
             }
 
         }
