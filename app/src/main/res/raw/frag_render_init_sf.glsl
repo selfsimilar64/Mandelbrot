@@ -1,4 +1,5 @@
-vec2 colorParams = vec2(0.0);
+float textureValue = 0.0;
+uint textureType = 0u;
 vec2 c = cmult(vec2(xScale.x, yScale.x)*viewPos.xy, vec2(cosRotate, sinRotate)) + vec2(xCoord.x, yCoord.x);
 vec2 z0 = vec2(x0, y0);
 vec2 z = z0;
