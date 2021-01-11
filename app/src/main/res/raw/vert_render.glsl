@@ -1,5 +1,8 @@
 #version 300 es
 
+precision highp float;
+precision highp int;
+
 uniform float bgScale;
 
 in vec4 viewCoords;

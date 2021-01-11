@@ -1,5 +1,8 @@
 #version 300 es
 
+precision highp float;
+precision highp int;
+
 uniform float yOrient;
 uniform float scale;
 uniform vec2 shift;
@@ -10,8 +13,7 @@ out vec2 texCoord;
 
 void main() {
 
-    texCoord = 0.5*(vec2(viewCoords.x, yOrient*viewCoords.y) + vec2(1.0));
-    texCoord = scale*texCoord + shift;
+    texCoord = scale*0.5*(vec2(viewCoords.x, yOrient*viewCoords.y) + vec2(1.0)) + shift;
     gl_Position = quadCoords;
 
 }
