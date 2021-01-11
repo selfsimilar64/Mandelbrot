@@ -2,14 +2,32 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/fractalLayout"
+    android:id="@+id/baseLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="@color/menuDark1"
+    android:background="@color/menuDark3"
     android:orientation="vertical"
     tools:context="com.selfsimilartech.fractaleye.MainActivity">
 
+    <FrameLayout
+        android:id="@+id/fractalLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:animateLayoutChanges="true">
+
+        <com.selfsimilartech.fractaleye.FractalSurfaceView
+            android:id="@+id/fractalSurfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </com.selfsimilartech.fractaleye.FractalSurfaceView>
+    </FrameLayout>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/settingsFragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/overlay"
@@ -20,6 +38,42 @@
         android:gravity="bottom"
         android:orientation="vertical">
 
+
+        <LinearLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/menuButtonHeight"
+            android:background="@color/menuDark1"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="end"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/saveImageButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/save" />
+
+            <ImageButton
+                android:id="@+id/settingsButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/settings" />
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/touchIcon"
@@ -32,7 +86,7 @@
             android:foregroundGravity="center"
             android:padding="10dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/header"
             app:srcCompat="@drawable/touch" />
 
         <LinearLayout
@@ -40,7 +94,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/display_params_bg_visible"
             android:orientation="vertical"
             android:paddingLeft="12dp"
@@ -48,7 +102,7 @@
             android:paddingRight="12dp"
             android:paddingBottom="8dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@+id/header">
 
             <LinearLayout
                 android:id="@+id/displayParamRow1"
@@ -204,11 +258,11 @@
                     app:tabTextAppearance="@style/TabText">
 
                     <com.google.android.material.tabs.TabItem
-                        android:id="@+id/settingsButton"
+                        android:id="@+id/imageButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="@string/settings"
-                        android:icon="@drawable/settings" />
+                        android:contentDescription="@string/texture"
+                        android:icon="@drawable/image2" />
 
                     <com.google.android.material.tabs.TabItem
                         android:id="@+id/textureButton"
