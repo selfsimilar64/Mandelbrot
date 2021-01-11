@@ -89,7 +89,7 @@
     <string name="burning_ship">Navire en Feu</string>
     <string name="app_name">Oeil Fractal</string>
     <string name="fe_abbrev">OF</string>
-    <string name="fit_viewport">Adapter Image à Fenêtre D\'Affichage</string>
+    <string name="fit_viewport">Adapter</string>
     <string name="msg_save_enabled">Enregistrement d\'image activé - cliquez à nouveau pour enregistrer</string>
     <string name="peacock">Paon</string>
     <string name="hide_nav_bar">Masquer Barre de Navigation</string>
@@ -225,4 +225,16 @@
     <string name="epilepsy_dscript">Cette application peut parfois produire des images clignotantes rapides qui peuvent être nocives pour les utilisateurs souffrant d\'épilepsie photosensible.</string>
     <string name="dont_show_again">Ne plus afficher ce message</string>
     <string name="upgrade_error">Une erreur s\'est produite. Veuillez vous assurer que vous êtes connecté à Internet.</string>
+    <string name="image">Image</string>
+    <string name="aspect_ratio">Rapport</string>
+    <string name="about">Propos</string>
+    <string name="about_info_1">Fractal Eye v%s © 2019 créé par Matt Kelley</string>
+    <string name="about_info_2">Vous rencontrez des problèmes? Merci de bien vouloir me contacter:</string>
+    <string name="show_changelog">Afficher Changelog</string>
+    <string name="upgrade_to">Passer à GOLD</string>
+    <string name="carousel">Carrousel</string>
+    <string name="slow_dualfloat_title">Adapter</string>
+    <string name="monster">Monstre</string>
+    <string name="split_type">Utiliser Autre Méthode du Partage</string>
+    <string name="split_type_hint">Modifiez ceci si vous ne pouvez pas zoomer au-delà de 1e-6 sur des formes comme Mandelbrot</string>
 </resources>

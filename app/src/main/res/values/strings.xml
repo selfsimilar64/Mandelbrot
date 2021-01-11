@@ -45,7 +45,12 @@
     <string name="gold_pending_dscript">Your purchase is still being processed. Please check back later.</string>
     <string name="epilepsy_title">Caution</string>
     <string name="epilepsy_dscript">This app can sometimes produce fast flashing images which may be harmful to users with photosensitive epilepsy.</string>
+    <string name="changelog_tag_gold_prefix">[font color=#ffe557]GOLD: [/font]</string>
 
+
+
+    <!-- VIDEO -->
+    <string name="rendering_video">Rendering Video</string>
 
 
     <!-- UPGRADE ACTIVITY -->
@@ -67,10 +72,23 @@
     <string name="upgrade_error">An error occurred. Please make sure you are connected to the internet.</string>
 
 
-    <!-- SETTINGS FRAGMENT -->
-    <string name="reload">reload</string>
+    <!-- IMAGE FRAGMENT -->
+    <string name="image">Image</string>
     <string name="resolution">Resolution</string>
     <string name="resolution_dims" translatable="false">width x height</string>
+    <string name="aspect_ratio">Ratio</string>
+    <string name="aspect_screen">Screen</string>
+    <string name="fit_viewport">Fit</string>
+
+
+    <!-- SETTINGS FRAGMENT -->
+    <string name="contact_email" translatable="false">selfaffinetech@gmail.com</string>
+    <string name="about">About</string>
+    <string name="about_info_1">Fractal Eye v%s © 2019 created by Matt Kelley</string>
+    <string name="about_info_2">Experiencing issues? Please contact me:</string>
+    <string name="show_changelog">Show Changelog</string>
+    <string name="upgrade_to">Upgrade To</string>
+    <string name="reload">reload</string>
     <string name="precision">Precision</string>
     <string name="hardware" translatable="false">hardware</string>
     <string name="render">render</string>
@@ -88,7 +106,6 @@
     <string name="display_params">Display Parameters</string>
     <string name="render_background">Render Background</string>
     <string name="hide_nav_bar">Hide Navigation Bar</string>
-    <string name="fit_viewport">Fit Image To Display Window</string>
     <string name="chunk_count">Chunks</string>
     <string name="show_hints" translatable="false">Show Hints</string>
     <string name="continuous_render_hint">Render the image during position changes</string>
@@ -104,6 +121,8 @@
     <string name="header_custom_descript">(swipe left to edit)</string>
     <string name="highres_render">High Resolution Render</string>
     <string name="dont_show_again">Don\'t show this message again</string>
+    <string name="split_type">Use Alternate Split Method</string>
+    <string name="split_type_hint">Change this if you cannot zoom further than 1e-6 on shapes like Mandelbrot</string>
 
 
     <!-- TEXTURE FRAGMENT -->
@@ -144,7 +163,7 @@
     <string name="slow_dualfloat_dscript1">Rendering this shape at deeper zooms uses calculations that are significantly slower and may even cause crashes on some devices</string>
     <string name="slow_dualfloat_dscript2">Switch to dual-float mode?</string>
     <string name="slow_dualfloat_choice">Remember my choice</string>
-    <string name="rendering_icons">Rendering Custom Icons …</string>
+    <string name="rendering_icons">Rendering Icons …</string>
 
 
     <!-- COLOR FRAGMENT -->
@@ -264,6 +283,8 @@
     <string name="polyphonic">Polyphonic</string>
     <string name="anaglyph">Anaglyph</string>
     <string name="catalyst">Catalyst</string>
+    <string name="carousel">Carousel</string>
+    <string name="monster">Monster</string>
 
 
     <!-- TEXTURE NAMES -->

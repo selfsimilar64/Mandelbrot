@@ -15,8 +15,12 @@ open class SeekBar2 : SeekBar {
 
     private var progressRect = Rect()
     private var gradientRect = Rect()
+    private var warningRect = Rect()
     private var paint = Paint()
     private var gradientPaint = Paint()
+    private var warningPaint = Paint().apply {
+        color = Color.HSVToColor(floatArrayOf(45f, 0.8f, 0.95f))
+    }
     private var seekbarHeight = 0
     private var thumbSize = 0f
 
@@ -34,6 +38,8 @@ open class SeekBar2 : SeekBar {
             invalidate()
         }
     var gradientStartProgress : Int = 0
+
+    var showWarning : Boolean = false
 
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
@@ -77,9 +83,17 @@ open class SeekBar2 : SeekBar {
         paint.color = Color.GRAY
         canvas.drawRect(progressRect, paint)
 
-        gradientRect.set(progressRect)
-        gradientRect.left = gradientStartProgress * gradientRect.width() / max + 2*thumbSize.toInt()
-        if (showGradient) canvas.drawRect(gradientRect, gradientPaint)
+        if (showGradient) {
+            gradientRect.set(progressRect)
+            gradientRect.left = gradientStartProgress * gradientRect.width() / max + 2*thumbSize.toInt()
+            canvas.drawRect(gradientRect, gradientPaint)
+        }
+
+        if (showWarning) {
+            warningRect.set(progressRect)
+            warningRect.left = (0.75 * progressRect.width() + 2*thumbSize.toInt()).toInt()
+            canvas.drawRect(warningRect, warningPaint)
+        }
 
         progressRect.set(
                 thumbOffset,

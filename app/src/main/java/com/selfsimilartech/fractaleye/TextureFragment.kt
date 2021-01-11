@@ -21,7 +21,6 @@ import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.SelectableAdapter
 import kotlinx.android.synthetic.main.complex_param.view.*
 import kotlinx.android.synthetic.main.real_param.view.*
-import kotlinx.android.synthetic.main.shape_fragment.*
 import kotlinx.android.synthetic.main.texture_fragment.*
 import java.lang.IndexOutOfBoundsException
 import java.util.*
@@ -106,7 +105,7 @@ class TextureFragment : MenuFragment() {
         }}
         val rateListener = View.OnClickListener {
             if (f.texture.activeParam.sensitivity != null) {
-                if (f.texture.activeParam is ComplexParam) showLayout(realShapeParam)
+                if (f.texture.activeParam is ComplexParam) showLayout(realTextureParam)
                 f.texture.activeParam = f.texture.activeParam.sensitivity!!
                 realTextureParam.realRateButton.apply {
                     setText(android.R.string.ok)
@@ -114,7 +113,7 @@ class TextureFragment : MenuFragment() {
                 }
             }
             else if (f.texture.activeParam.parent != null) {
-                if (f.texture.activeParam.parent is ComplexParam) showLayout(complexShapeParam)
+                if (f.texture.activeParam.parent is ComplexParam) showLayout(complexTextureParam)
                 f.texture.activeParam = f.texture.activeParam.parent!!
                 realTextureParam.realRateButton.apply {
                     setText(R.string.sensitivity)
@@ -138,7 +137,7 @@ class TextureFragment : MenuFragment() {
         )
 
 
-        val previewListWidth = fsv.r.screenRes.x - 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) - resources.getDimension(R.dimen.navButtonSize)
+        val previewListWidth = Resolution.SCREEN.w - 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) - resources.getDimension(R.dimen.navButtonSize)
         val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) + 2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
         //Log.e("COLOR FRAGMENT", "texturePreviewListWidth: $previewListWidth")
         //Log.e("COLOR FRAGMENT", "texturePreviewGridWidth: $previewGridWidth")
@@ -205,13 +204,13 @@ class TextureFragment : MenuFragment() {
 
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {
                     if (sc.continuousParamRender && f.texture.activeParam.isPrimary) {
-                        fsv.r.renderContinuousTex = true
+                        fsv.r.renderProfile = RenderProfile.CONTINUOUS
                         fsv.r.renderToTex = true
                     }
                 }
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
-                    if (sc.continuousParamRender) fsv.r.renderContinuousTex = false
+                    if (sc.continuousParamRender) fsv.r.renderProfile = RenderProfile.DISCRETE
                     updateEditTextAndParam()
 
                 }
@@ -337,7 +336,7 @@ class TextureFragment : MenuFragment() {
                         fsv.r.renderToTex = true
                         fsv.requestRender()
 
-                        act.updateTextureEditTexts()
+                        loadActiveParam()
                     }
 
                 }
@@ -423,7 +422,7 @@ class TextureFragment : MenuFragment() {
                     }
                     else {
                         f.bailoutRadius = result2
-                        if (fsv.r.renderContinuousTex) {
+                        if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
                             fsv.r.renderToTex = true
                             fsv.requestRender()
                         }
@@ -439,12 +438,12 @@ class TextureFragment : MenuFragment() {
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                if (sc.continuousParamRender) fsv.r.renderContinuousTex = true
+                if (sc.continuousParamRender) fsv.r.renderProfile = RenderProfile.CONTINUOUS
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
-                fsv.r.renderContinuousTex = false
+                fsv.r.renderProfile = RenderProfile.DISCRETE
                 fsv.r.renderToTex = true
                 fsv.requestRender()
 
@@ -468,7 +467,7 @@ class TextureFragment : MenuFragment() {
                     }
                     else {
                         f.bailoutRadius = result2
-                        if (fsv.r.renderContinuousTex) {
+                        if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
                             fsv.r.renderToTex = true
                             fsv.requestRender()
                         }
@@ -484,12 +483,12 @@ class TextureFragment : MenuFragment() {
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                if (sc.continuousParamRender) fsv.r.renderContinuousTex = true
+                if (sc.continuousParamRender) fsv.r.renderProfile = RenderProfile.CONTINUOUS
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
-                fsv.r.renderContinuousTex = false
+                fsv.r.renderProfile = RenderProfile.DISCRETE
                 fsv.r.renderToTex = true
                 fsv.requestRender()
 
@@ -561,9 +560,13 @@ class TextureFragment : MenuFragment() {
             handler.postDelayed({
 
                 if (sc.textureListViewType == ListLayoutType.GRID && !fsv.r.textureThumbsRendered) {
+
+                    act.showThumbnailDialog()
+
                     fsv.r.renderProfile = RenderProfile.TEXTURE_THUMB
                     fsv.r.renderThumbnails = true
                     fsv.requestRender()
+
                 }
 
             }, BUTTON_CLICK_DELAY_LONG)
@@ -628,7 +631,7 @@ class TextureFragment : MenuFragment() {
                 }
             }, 200L)
 
-            fsv.r.renderProfile = RenderProfile.MANUAL
+            fsv.r.renderProfile = RenderProfile.DISCRETE
 
         }
 

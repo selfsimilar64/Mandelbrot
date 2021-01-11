@@ -89,7 +89,7 @@
     <string name="burning_ship">Barco en Llamas</string>
     <string name="app_name">Ojo Fractal</string>
     <string name="fe_abbrev">OF</string>
-    <string name="fit_viewport">Caber Imagen a Ventana de Visualización</string>
+    <string name="fit_viewport">Caber</string>
     <string name="msg_save_enabled">Guardado de imágenes habilitado: haga clic nuevamente para guardar</string>
     <string name="peacock">Pavo Real</string>
     <string name="hide_nav_bar">Ocultar Barra de Navegación</string>
@@ -225,4 +225,16 @@
     <string name="epilepsy_dscript">Esta aplicación a veces puede producir imágenes que parpadean rápidamente, lo que puede ser perjudicial para los usuarios con epilepsia fotosensible.</string>
     <string name="dont_show_again">No volver a mostrar este mensaje</string>
     <string name="upgrade_error">Ocurrió un error. Asegúrese de estar conectado a Internet.</string>
+    <string name="image">Imagen</string>
+    <string name="aspect_ratio">Relación</string>
+    <string name="about">Acerca</string>
+    <string name="about_info_1">Fractal Eye v%s © 2019 creado por Matt Kelley</string>
+    <string name="about_info_2">¿Tiene problemas? Por favor póngase en contacto conmigo:</string>
+    <string name="show_changelog">Mostrar Changelog</string>
+    <string name="upgrade_to">Actualizar a ORO</string>
+    <string name="carousel">Carrusel</string>
+    <string name="slow_dualfloat_title">Caber</string>
+    <string name="monster">Monstruo</string>
+    <string name="split_type">Usar Método de División Alternativo</string>
+    <string name="split_type_hint">Cambie esto si no puede ampliar más de 1e-6 en formas como Mandelbrot</string>
 </resources>

@@ -25,6 +25,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.lang.IndexOutOfBoundsException
 import java.util.*
+import kotlin.math.ln
 import kotlin.math.log
 import kotlin.math.pow
 
@@ -36,8 +37,6 @@ class ShapeFragment : MenuFragment() {
     private lateinit var f : Fractal
     private lateinit var fsv : FractalSurfaceView
     private lateinit var sc : SettingsConfig
-
-    private lateinit var dialog : AlertDialog
 
     private var realParamSeekBarListener : SeekBar.OnSeekBarChangeListener? = null
     private lateinit var shapeListAdapter : ListAdapter<Shape>
@@ -192,8 +191,8 @@ class ShapeFragment : MenuFragment() {
 
             //customShape.katex = customShape.katex.replace(cursor, expr.katex)
             Log.e("SHAPE", "expr: ${expr.latex}")
-            shapeMathQuill.enterExpr(expr)
-            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+//            shapeMathQuill.enterExpr(expr)
+//            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
 
         }}
         val rateListener = View.OnClickListener {
@@ -229,17 +228,17 @@ class ShapeFragment : MenuFragment() {
 
 
 
-        shapeMathQuill.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            useWideViewPort = true
-            builtInZoomControls = true
-            displayZoomControls = false
-            setSupportZoom(true)
-            defaultTextEncodingName = "utf-8"
-        }
-        val mathQuillHtml = readHtml("mathquill.html")
-        shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", mathQuillHtml, "text/html", "UTF-8", null)
+//        shapeMathQuill.settings.apply {
+//            javaScriptEnabled = true
+//            domStorageEnabled = true
+//            useWideViewPort = true
+//            builtInZoomControls = true
+//            displayZoomControls = false
+//            setSupportZoom(true)
+//            defaultTextEncodingName = "utf-8"
+//        }
+//        val mathQuillHtml = readHtml("mathquill.html")
+//        shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", mathQuillHtml, "text/html", "UTF-8", null)
 
 
 
@@ -259,14 +258,14 @@ class ShapeFragment : MenuFragment() {
 
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {
                     if (sc.continuousParamRender && f.shape.params.active.isPrimary) {
-                        fsv.r.renderContinuousTex = true
+                        fsv.r.renderProfile = RenderProfile.CONTINUOUS
                         fsv.r.renderToTex = true
                         fsv.requestRender()
                     }
                 }
 
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                    if (sc.continuousParamRender) fsv.r.renderContinuousTex = false
+                    if (sc.continuousParamRender) fsv.r.renderProfile = RenderProfile.DISCRETE
                     if (f.shape.params.active.isPrimary) {
                         fsv.r.renderToTex = true
                         fsv.requestRender()
@@ -347,9 +346,10 @@ class ShapeFragment : MenuFragment() {
 
                 val p = seekBar.progress.toDouble() / maxIterBar.max
                 val iter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt()
+                if (iter > 5000) iterWarningIcon.show() else iterWarningIcon.hide()
                 f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
                 maxIterEdit.setText("%d".format(iter))
-                if (fsv.r.renderContinuousTex) {
+                if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
                     fsv.r.renderToTex = true
                     fsv.requestRender()
                 }
@@ -357,7 +357,7 @@ class ShapeFragment : MenuFragment() {
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {
 
-                fsv.r.renderContinuousTex = true
+                fsv.r.renderProfile = RenderProfile.CONTINUOUS
 
                 val p = seekBar.progress.toDouble() / maxIterBar.max
                 f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
@@ -366,7 +366,7 @@ class ShapeFragment : MenuFragment() {
             }
             override fun onStopTrackingTouch(seekBar: SeekBar) {
 
-                fsv.r.renderContinuousTex = false
+                fsv.r.renderProfile = RenderProfile.DISCRETE
                 fsv.r.renderToTex = true
                 fsv.requestRender()
 
@@ -391,6 +391,8 @@ class ShapeFragment : MenuFragment() {
             maxIterEdit.setText("%d".format(f.shape.maxIter))
             maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
         })
+        maxIterBar.showWarning = true
+        iterWarningIcon.hide()
 
 //        sensitivitySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 //
@@ -439,7 +441,7 @@ class ShapeFragment : MenuFragment() {
             shapePreviewListLayout.hide()
             customShapeLayout.show()
             loadNavButtons(customShapeNavButtons)
-            fsv.r.renderProfile = RenderProfile.MANUAL
+            fsv.r.renderProfile = RenderProfile.DISCRETE
             fsv.r.reaction = Reaction.COLOR
 
 
@@ -451,7 +453,7 @@ class ShapeFragment : MenuFragment() {
             fsv.r.checkThresholdCross(prevZoom)
 
             customShapeName.setText(customShape.name)
-            shapeMathQuill.setLatex(customShape.latex)
+//            shapeMathQuill.setLatex(customShape.latex)
 
             fsv.r.renderShaderChanged = true
             fsv.r.renderToTex = true
@@ -667,13 +669,7 @@ class ShapeFragment : MenuFragment() {
             if (shapeListAdapter.activatedPos == 0 && Shape.custom.isNotEmpty()) {
                 handler.postDelayed({
 
-                    dialog = AlertDialog.Builder(context, R.style.AlertDialogCustom)
-                            .setTitle(R.string.rendering_icons)
-                            .setView(R.layout.alert_dialog_progress)
-                            .setNegativeButton(android.R.string.cancel) { dialog, which ->
-                                fsv.r.interruptRender = true
-                            }
-                            .show()
+                    act.showThumbnailDialog()
 
                     // render custom shape thumbnails
                     fsv.r.renderProfile = RenderProfile.SHAPE_THUMB
@@ -794,7 +790,7 @@ class ShapeFragment : MenuFragment() {
                 customShapeLayout.show()
                 loadNavButtons(customShapeNavButtons)
                 fsv.r.reaction = Reaction.COLOR
-                fsv.r.renderProfile = RenderProfile.MANUAL
+                fsv.r.renderProfile = RenderProfile.DISCRETE
 
                 val postfix = infixToPostfix(parseEquation("z^2 + c")!!)
                 customShape = Shape(
@@ -812,7 +808,7 @@ class ShapeFragment : MenuFragment() {
                 )
 
                 customShapeName?.setText(customShape.name)
-                shapeMathQuill.setLatex(customShape.latex)
+//                shapeMathQuill.setLatex(customShape.latex)
 
                 prevSelectedShapeIndex = Shape.all.indexOf(f.shape)
                 f.shape = customShape
@@ -882,7 +878,7 @@ class ShapeFragment : MenuFragment() {
                             act.db.shapeDao().apply {
                                 customShape.customId = insert(customShape.toDatabaseEntity()).toInt()
                                 Log.e("SHAPE", "new custom id: ${customShape.customId}")
-                                customShape.initialize(resources, Resolution.THUMB.size)
+                                customShape.initialize(resources)
                                 fsv.r.renderProfile = RenderProfile.SHAPE_THUMB
                                 fsv.requestRender()
                             }
@@ -906,7 +902,7 @@ class ShapeFragment : MenuFragment() {
                     // update ui
                     handler.postDelayed({
 
-                        shapeMathQuill.getLatex { customShape.latex = it }
+//                        shapeMathQuill.getLatex { customShape.latex = it }
 
                         customShapeLayout.hide()
                         shapePreviewListLayout.show()
@@ -1006,11 +1002,11 @@ class ShapeFragment : MenuFragment() {
         decimalKey.setOnClickListener(keyListener(Expr.decimal))
         iKey.setOnClickListener(keyListener(Expr.i))
 
-        prevKey.setOnClickListener { shapeMathQuill.enterKeystroke("Left") }
-        nextKey.setOnClickListener { shapeMathQuill.enterKeystroke("Right") }
+//        prevKey.setOnClickListener { shapeMathQuill.enterKeystroke("Left") }
+//        nextKey.setOnClickListener { shapeMathQuill.enterKeystroke("Right") }
         deleteKey.setOnClickListener {
-            shapeMathQuill.enterKeystroke("Backspace")
-            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+//            shapeMathQuill.enterKeystroke("Backspace")
+//            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
         }
         parensKey.setOnClickListener(keyListener(Expr.parens))
 
@@ -1105,17 +1101,6 @@ class ShapeFragment : MenuFragment() {
                 realParamSeekBar.setOnSeekBarChangeListener(realParamSeekBarListener)
             }
         }
-    }
-
-    fun updateDialog(index: Int, total: Int) {
-        dialog.findViewById<ProgressBar>(R.id.alertProgress)?.apply {
-            max = total - 1
-            progress = index
-        }
-        dialog.findViewById<TextView>(R.id.alertProgressText).text = "${index + 1}/$total"
-    }
-    fun dismissDialog() {
-        dialog.dismiss()
     }
 
     private fun setCustomLoop(latex: String, shape: Shape) {

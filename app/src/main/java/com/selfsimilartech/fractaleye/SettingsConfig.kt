@@ -3,10 +3,12 @@ package com.selfsimilartech.fractaleye
 class SettingsConfig (
         var goldEnabled              : Boolean          = false,
         var resolution               : Resolution       = Resolution.R1440,
+        var aspectRatio              : AspectRatio      = AspectRatio.RATIO_SCREEN,
         var gpuPrecision             : GpuPrecision     = GpuPrecision.SINGLE,
         var cpuPrecision             : CpuPrecision     = CpuPrecision.DOUBLE,
         var perturbPrecision         : Long             = 64L,
         var hardwareProfile          : HardwareProfile  = HardwareProfile.GPU,
+        var useAlternateSplit        : Boolean          = false,
         var chunkProfile             : ChunkProfile     = ChunkProfile.MED,
         var autoPrecision            : Boolean          = true,
         var continuousPosRender      : Boolean          = false,
