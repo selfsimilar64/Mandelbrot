@@ -3,10 +3,10 @@
 precision highp float;
 precision highp int;
 
-const float SPLIT = 8193.0;
+const float _split = 8193.0;
 const float pi = 3.141592654;
 const float phi = 1.618033988;
-const float pz = 1e-45;
+const float _zero = 1e-45;
 const float Sn = 1e-8;
 const float Sp = 1e8;
 const float Sh = 1e4;
@@ -124,17 +124,23 @@ vec4 _double(vec2 z) { return vec4(z.x, 0.0, z.y, 0.0); }
 
 
 vec2 quickTwoSum(float a, float b) {
-    float s = a + b + pz;
+    float s = a + b + _zero;
     float v = s - a;
     float e = b - v;
     return vec2(s, e);
 }
 
 vec2 twoSum(float a, float b) {
-    float s = a + b + pz;
-    float v = s - a + pz;
+    float s = a + b + _zero;
+    float v = s - a + _zero;
     float e = (a - (s - v)) + (b - v);
     return vec2(s, e);
+}
+vec4 twoSumComp(vec2 a, vec2 b) {
+    vec2 s = a + b + _zero;
+    vec2 v = s - a + _zero;
+    vec2 e = (a - (s - v)) + (b - v);
+    return vec4(s.x, e.x, s.y, e.y);
 }
 
 vec3 threeSum(float a, float b, float c) {
@@ -167,13 +173,20 @@ vec3 threeSumTwo(float a, float b, float c) {
     return res;
 }
 
-vec2 split(float a) {
-    float t = a*SPLIT;
-    float q = t - a + pz;
+vec2 split1(float a) {
+    mediump float a_hi = a;
+    return vec2(a_hi, a - a_hi);
+}
+
+vec2 split2(float a) {
+    float t = a*_split;
+    float q = t - a + _zero;
     float a_hi = t - q;
     float a_lo = a - a_hi;
     return vec2(a_hi, a_lo);
 }
+
+// splitHandle
 
 vec2 twoProd(float a, float b) {
     float p = a*b;
@@ -207,15 +220,12 @@ vec2 add(float b, vec2 a) {
     return add(a, b);
 }
 vec2 add(vec2 a, vec2 b) {
-    vec2 s;
-    vec2 t;
-    s = twoSum(a.x, b.x);
-    t = twoSum(a.y, b.y);
-    s.y += t.x;
-    s = quickTwoSum(s.x, s.y);
-    s.y += t.y;
-    s = quickTwoSum(s.x, s.y);
-    return s;
+    vec4 st = twoSumComp(a, b);
+    st.y += st.z;
+    st.xy = quickTwoSum(st.x, st.y);
+    st.y += st.w;
+    st.xy = quickTwoSum(st.x, st.y);
+    return st.xy;
 }
 
 vec2 sub(vec2 a, float b) { return add(a, -b); }
@@ -225,8 +235,7 @@ vec2 sub(vec2 a, vec2 b) { return add(a, -b); }
 vec2 mult(vec2 a, vec2 b) {
     vec2 p;
     p = twoProd(a.x, b.x);
-    p.y += a.x * b.y;
-    p.y += a.y * b.x;
+    p.y += dot(a.xy, b.yx);
     p = quickTwoSum(p.x, p.y);
     return p;
 }
@@ -240,8 +249,7 @@ vec2 mult(float a, vec2 b) {
 vec2 mult(vec2 a, float b) { return mult(b, a); }
 
 vec2 sqr(vec2 a) {
-    vec2 p;
-    p = twoSqr(a.x);
+    vec2 p = twoSqr(a.x);
     p.y += 2.0*a.x*a.y;
     p = quickTwoSum(p.x, p.y);
     return p;
@@ -996,7 +1004,9 @@ vec2 powd(vec2 a, vec2 b) { return expd(mult(b, logd(a))); }
 
 bool isSpecial(float a) { return isinf(a) || isnan(a); }
 
-vec2 cadd(vec2 z, float a) { return vec2(z.x + a, z.y); }
+vec2 cadd(vec2 z, float a) {
+    return vec2(z.x + a, z.y);
+}
 vec2 cadd(vec2 z, vec2 w) {
     return z + w;
 }
@@ -1044,7 +1054,6 @@ vec2 cmult(vec2 z, vec2 w) {
     float k2 = z.x*(w.y - w.x);
     float k3 = z.y*(w.x + w.y);
     return vec2(k1 - k3, k1 + k2);
-    // return vec2(z.x*w.x - z.y*w.y, z.x*w.y + w.x*z.y);
 }
 vec4 cmult(float a, vec4 z) {
     vec2 b = vec2(a, 0.0);
@@ -1074,7 +1083,10 @@ float sqr(float a) {
     return a*a;
 }
 vec2 csqr(vec2 z) {
-    return vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y);
+    float k1 = z.x*(z.x + z.y);
+    float k2 = z.x*(z.y - z.x);
+    float k3 = z.y*(z.x + z.y);
+    return vec2(k1 - k3, k1 + k2);
 }
 vec4 csqr(vec4 z) {
     vec2 x = z.xy;
@@ -1196,11 +1208,11 @@ vec2 cmod(vec4 z) {
 }
 float cmod2(vec2 z) {
     float a = z.y/z.x;
-    return z.x*sqrt(1.0 + a*a);
+    return abs(z.x)*sqrt(1.0 + a*a);
 }
 vec2 cmod2(vec4 z) {
     vec2 a = div(z.zw, z.xy);
-    return mult(z.xy, sqrtd(ONE + sqr(a)));
+    return mult(absd(z.xy), sqrtd(ONE + sqr(a)));
 }
 
 vec2 cinv(vec2 w) {
@@ -2720,6 +2732,20 @@ vec2 phoenix(vec2 z1, vec2 z2, vec2 c) {
     return cpow(z1, int(p1.x)) + cmult(c, cpow(z1, int(p2.x))) + cmult(p3, z2);
 }
 
+vec2 cubic(vec2 z, vec2 c) {
+    return ccube(z) - 3.0*cmult(csqr(c), z) + p1;
+}
+vec4 cubic(vec4 z, vec4 c) {
+    return cadd(cadd(ccube(z), -cmult(3.0, cmult(csqr(c), z))), p1);
+}
+
+vec2 quartic(vec2 z, vec2 c) {
+    vec2 zsqr = csqr(z);
+    vec2 ab = cmult(p1, p2);
+    vec2 apb = p1 + p2;
+    return csqr(zsqr) + 2.0*cmult(ab - csqr(apb), zsqr) + 4.0*cmult(ab, cmult(apb, z)) + c;
+}
+
 // customShapeHandleSingle
 // customShapeHandleDual
 
@@ -3108,7 +3134,7 @@ void umbrella_loop(inout float sum, inout float sum1, vec2 z, vec2 z1) {
 
     sum1 = sum;
     vec2 w = cpow(cmult(z, conj(z1)), -q1.x);
-    float t = acos(w.x);
+    float t = acos(clamp(w.x, -1.0, 1.0));
     sum += 0.5*(t + 1.0);
 
 }
@@ -3116,7 +3142,7 @@ void umbrella_loop(inout vec2 sum, inout vec2 sum1, vec4 z, vec4 z1) {
 
     sum1 = sum;
     vec2 w = cpow(cmult(z.xz, conj(z1.xz)), -q1.x);
-    float t = acos(w.x);
+    float t = acos(clamp(w.x, -1.0, 1.0));
     sum.x += 0.5*(t + 1.0);
 
 }
@@ -3125,7 +3151,7 @@ void umbrella_inverse_loop(inout float sum, inout float sum1, vec2 z, vec2 z1) {
 
     sum1 = sum;
     vec2 w = cpow(cmult(z, conj(z1)), q1.x);
-    float t = acos(w.x);
+    float t = acos(clamp(w.x, -1.0, 1.0));
     sum += 0.5*(t + 1.0);
 
 }
@@ -3133,13 +3159,20 @@ void umbrella_inverse_loop(inout vec2 sum, inout vec2 sum1, vec4 z, vec4 z1) {
 
     sum1 = sum;
     vec2 w = cpow(cmult(z.xz, conj(z1.xz)), q1.x);
-    float t = acos(w.x);
+    float t = acos(clamp(w.x, -1.0, 1.0));
     sum.x += 0.5*(t + 1.0);
 
 }
 
 void exit_angle_loop(inout float sum, inout float sum1, vec2 z, vec2 z1) {
     if (z.x > 0.0 && z1.x < 0.0 || z.x < 0.0 && z1.x > 0.0) sum += 1.0;
+}
+
+float angle_final(vec2 c) {
+    return carg(c - vec2(xCoord.x, yCoord.x) - q1);
+}
+float angle_final(vec4 c) {
+    return carg(cadd(cadd(c, -vec4(xCoord, yCoord)), -q1)).x;
 }
 
 
@@ -3219,7 +3252,6 @@ bool escape_pent(vec4 z) {
 void main() {
 
     bool textureIn = false;
-    uint textureMask = 0u;
 
     // generalInit
     // seedInit
@@ -3232,9 +3264,8 @@ void main() {
 
         if (n == maxIter) {
             textureIn = true;
-            textureMask = 1u;
+            textureType = 1u;
             // textureFinal
-            colorParams.y = 1.0;
             break;
         }
 
@@ -3251,10 +3282,9 @@ void main() {
 
     }
 
-    if (isinf(colorParams.x) || isnan(colorParams.x)) colorParams.x = 0.0;
-    // fragmentColor = floatBitsToUint(colorParams);
-    // fragmentColor = (packHalf2x16(vec2(colorParams.x, 0.0)) & textureResetMask) | textureMask;
-    // fragmentColor = packHalf2x16(vec2(colorParams.x, 0.0));
-    fragmentColor = (floatBitsToUint(colorParams.x) & ~1u) | textureMask;
+    if (isinf(textureValue) || isnan(textureValue)) textureValue = 0.0;
+    uint textureValueInt = floatBitsToUint(textureValue);
+    textureValueInt = (textureValueInt/2u)*2u;
+    fragmentColor = textureValueInt + textureType;
 
 }
