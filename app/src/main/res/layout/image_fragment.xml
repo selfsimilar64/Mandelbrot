@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:background="@color/menuDark1"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/aspectRatioLayout"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="bottom"
+                android:orientation="horizontal"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/aspectDefaultCard"
+                    style="@style/AspectRatioButtonCard">
+
+                    <ImageButton
+                        android:id="@+id/aspectDefaultButton"
+                        style="@style/AspectRatioButton"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:padding="11dp"
+                        app:srcCompat="@drawable/aspect_default" />
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/aspect11Card"
+                    style="@style/AspectRatioButtonCard">
+
+                    <ImageButton
+                        android:id="@+id/aspect11Button"
+                        style="@style/AspectRatioButton"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:padding="11dp"
+                        app:srcCompat="@drawable/aspect_instagram_11" />
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/aspect45Card"
+                    style="@style/AspectRatioButtonCard">
+
+                    <com.selfsimilartech.fractaleye.GradientImageButton
+                        android:id="@+id/aspect45Button"
+                        style="@style/AspectRatioButton"
+                        android:layout_width="44dp"
+                        android:layout_height="55dp"
+                        android:padding="8dp"
+                        android:scaleType="centerInside"
+                        app:srcCompat="@drawable/aspect_instagram_45" />
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/aspect57Card"
+                    style="@style/AspectRatioButtonCard">
+
+                    <com.selfsimilartech.fractaleye.GradientImageButton
+                        android:id="@+id/aspect57Button"
+                        style="@style/AspectRatioButton"
+                        android:layout_width="42dp"
+                        android:layout_height="59dp"
+                        android:padding="7dp"
+                        android:scaleType="centerInside"
+                        app:srcCompat="@drawable/aspect_5_7" />
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/aspect23Card"
+                    style="@style/AspectRatioButtonCard">
+
+                    <com.selfsimilartech.fractaleye.GradientImageButton
+                        android:id="@+id/aspect23Button"
+                        style="@style/AspectRatioButton"
+                        android:layout_width="40dp"
+                        android:layout_height="61dp"
+                        android:padding="6dp"
+                        android:scaleType="centerInside"
+                        app:srcCompat="@drawable/aspect_2_3" />
+                </androidx.cardview.widget.CardView>
+
+<!--                <androidx.cardview.widget.CardView-->
+<!--                    android:id="@+id/aspect169Card"-->
+<!--                    style="@style/AspectRatioButtonCard">-->
+
+<!--                    <ImageButton-->
+<!--                        android:id="@+id/aspect169Button"-->
+<!--                        style="@style/AspectRatioButton"-->
+<!--                        android:layout_width="66dp"-->
+<!--                        android:layout_height="37dp"-->
+<!--                        android:padding="5dp"-->
+<!--                        android:scaleType="centerInside"-->
+<!--                        app:srcCompat="@drawable/aspect_youtube" />-->
+<!--                </androidx.cardview.widget.CardView>-->
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/aspect916Card"
+                    style="@style/AspectRatioButtonCard">
+
+                    <com.selfsimilartech.fractaleye.GradientImageButton
+                        android:id="@+id/aspect916Button"
+                        style="@style/AspectRatioButton"
+                        android:layout_width="37dp"
+                        android:layout_height="66dp"
+                        android:padding="5dp"
+                        android:scaleType="centerInside"
+                        app:srcCompat="@drawable/aspect_9_16" />
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/aspect12Card"
+                    style="@style/AspectRatioButtonCard">
+
+                    <com.selfsimilartech.fractaleye.GradientImageButton
+                        android:id="@+id/aspect12Button"
+                        style="@style/AspectRatioButton"
+                        android:layout_width="35dp"
+                        android:layout_height="70dp"
+                        android:padding="4dp"
+                        android:scaleType="centerInside"
+                        app:srcCompat="@drawable/aspect_1_2" />
+                </androidx.cardview.widget.CardView>
+
+<!--                <androidx.cardview.widget.CardView-->
+<!--                    android:id="@+id/aspect13Card"-->
+<!--                    style="@style/AspectRatioButtonCard">-->
+
+<!--                    <ImageButton-->
+<!--                        android:id="@+id/aspect13Button"-->
+<!--                        style="@style/AspectRatioButton"-->
+<!--                        android:layout_width="35dp"-->
+<!--                        android:layout_height="70dp"-->
+<!--                        android:padding="4dp"-->
+<!--                        android:scaleType="centerInside" />-->
+<!--                </androidx.cardview.widget.CardView>-->
+
+                <!--                <androidx.cardview.widget.CardView-->
+<!--                    android:id="@+id/aspect21Card"-->
+<!--                    style="@style/AspectRatioButtonCard">-->
+
+<!--                    <ImageButton-->
+<!--                        android:id="@+id/aspect21Button"-->
+<!--                        style="@style/AspectRatioButton"-->
+<!--                        android:layout_width="70dp"-->
+<!--                        android:layout_height="35dp"-->
+<!--                        android:scaleType="centerInside" />-->
+<!--                </androidx.cardview.widget.CardView>-->
+
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/resolutionLayout"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:backgroundTint="@color/menuDark5"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/TextDescriptionDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:text="@string/resolution_high"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@+id/resolutionBar"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            style="@style/TextDescriptionDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="4dp"
+            android:text="@string/resolution_low"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@id/resolutionBar"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/resolutionDimensionsText"
+            style="@style/TextDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="@string/resolution_dims"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.selfsimilartech.fractaleye.SeekBar2
+            android:id="@+id/resolutionBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:max="5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/resolutionDimensionsText" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!--
+    <Button
+        android:id="@+id/restartActivityButton"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="restart activity"
+        tools:visibility="gone" />
+
+    <Button
+        android:id="@+id/sendNotificationButton"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="send notification"
+        tools:visibility="gone" />
+        -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/menuButtonHeight"
+        android:orientation="horizontal">
+
+        <com.selfsimilartech.fractaleye.ToggleButton
+            android:id="@+id/fitToViewportButton"
+            style="@style/MenuNavToggleButton"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/fit_viewport_max"
+            android:text="@string/fit_viewport" />
+
+        <View
+            android:id="@+id/divider25"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#999" />
+
+        <HorizontalScrollView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/resolutionButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/resolution"
+                    android:text="@string/resolution" />
+
+                <Button
+                    android:id="@+id/aspectRatioButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/aspect_ratio"
+                    android:text="@string/aspect_ratio" />
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+</LinearLayout>
