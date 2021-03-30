@@ -1,10 +1,29 @@
 <changelog>
 
 
+    <release versionCode="33" versionName="v1.4.4" date="2021-03-25">
+        <new type="summary">Marque seus fractais! - Acesse os favoritos através de (Imagem) -> (Marcadores)</new>
+        <new type="summary">Adicionados 28 marcadores padrão</new>
+        <new type="summary">O parâmetro 1 da forma Kleinian agora pode criar espirais</new>
+        <new type="summary">Adicionadas 2 novas texturas: Imagem 1 e Imagem 2</new>
+        <new type="summary">Adicionada 1 nova forma: Angelbrot</new>
+        <new type="summary">Adicionado parâmetro Semente para a maioria das formas</new>
+        <new type="summary">Adicionado (Cor) -> (Acento)</new>
+        <new type="summary">Aplicar zoom além de 1e-6 em formas como Seno 1 agora está desativado por padrão ... Vá para (Definições) -> (Permitir a Renderização Lenta) para ativar</new>
+    </release>
+
+
+    <release versionCode="32" versionName="v1.4.3" date="2021-01-20">
+        <new type="summary">Adicionadas 5 novas texturas: Tempo de Convergência (Suave), Lente de Estrela, Lente de Disco, Lente Senoidal, Linhas de Campo</new>
+        <new type="summary">Adicionadas 2 novas paletas de cores: Fusão, Refração</new>
+        <info>Bug corrigido na calculadora de formato personalizado</info>
+    </release>
+
+
     <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
-        <new type="summary">Adicionado (Imagem) -> (Proporção) para salvar imagens de tamanhos diferentes</new>
-        <new type="summary">Toque duas vezes no modo (Posição) para aumentar o zoom</new>
-        <new type="summary">Adicionado (Definições) -> (Usar Método de Divisão Alternativo) para corrigir o zoom em certos dispositivos</new>
+        <info>Adicionado (Imagem) -> (Proporção) para salvar imagens de tamanhos diferentes</info>
+        <info>Toque duas vezes no modo (Posição) para aumentar o zoom</info>
+        <info>Adicionado (Definições) -> (Usar Método de Divisão Alternativo) para corrigir o zoom em certos dispositivos</info>
         <info>Menu de configurações movido</info>
         <info>Bug corrigido de precisão dupla em certos dispositivos</info>
         <info>Bug de exibição corrigido ao mudar de posição</info>

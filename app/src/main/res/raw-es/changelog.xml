@@ -1,10 +1,29 @@
 <changelog>
 
 
+    <release versionCode="33" versionName="v1.4.4" date="2021-03-25">
+        <new type="summary">¡Marque sus fractales! - Acceda a los marcadores a través de (Imagen) -> (Marcadores)</new>
+        <new type="summary">Se agregaron 28 marcadores predeterminados</new>
+        <new type="summary">El parámetro 1 de la forma Kleinian ahora puede crear espirales</new>
+        <new type="summary">Se agregaron 2 texturas nuevas: Imagen 1 e Imagen 2</new>
+        <new type="summary">Se agregó 1 nueva forma: Angelbrot</new>
+        <new type="summary">Se agregó el parámetro Semilla a la mayoría de las formas</new>
+        <new type="summary">Añadido (Color) -> (Acento)</new>
+        <new type="summary">Hacer zoom más allá de 1e-6 en formas como Sine 1 ahora está deshabilitado de forma predeterminada ... Vaya a (Ajustes) -> (Permitir Renders Lentos) para habilitar</new>
+    </release>
+
+
+    <release versionCode="32" versionName="v1.4.3" date="2021-01-20">
+        <new type="summary">Se agregaron 5 texturas nuevas: Tiempo de Convergencia (Suave), Lente Sinusoidal, Lente Estrelar, Lente de Disco, Líneas de Campo</new>
+        <new type="summary">Se agregaron 2 nuevas paletas de colores: Fusión, Refracción</new>
+        <info>Error de calculadora de forma personalizada fijo</info>
+    </release>
+
+
     <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
-        <new type="summary">(Imagen) -> (Relación) agregada para guardar imágenes de diferentes tamaños</new>
-        <new type="summary">Toque dos veces en el modo (Posición) para aumentar el zoom</new>
-        <new type="summary">Se agregaron (Ajustes) -> (Usar Método de División Alternativo) para corregir el zoom en ciertos dispositivos</new>
+        <info>(Imagen) -> (Relación) agregada para guardar imágenes de diferentes tamaños</info>
+        <info>Toque dos veces en el modo (Posición) para aumentar el zoom</info>
+        <info>Se agregaron (Ajustes) -> (Usar Método de División Alternativo) para corregir el zoom en ciertos dispositivos</info>
         <info>Menú de configuración movido</info>
         <info>Se corrigió un error de precisión dual en ciertos dispositivos</info>
         <info>Error de visualización fijo al cambiar de posición</info>

@@ -76,9 +76,9 @@ class FractalSurfaceView : GLSurfaceView {
 
     private val TAG = "SURFACE"
 
+    val f = Fractal.default
+    val sc = SettingsConfig
     lateinit var r : FractalRenderer
-    private lateinit var f : Fractal
-    private lateinit var sc : SettingsConfig
     private lateinit var act : MainActivity
 
     private var muxer : MediaMuxer? = null
@@ -101,11 +101,9 @@ class FractalSurfaceView : GLSurfaceView {
 
     }
 
-    fun initialize(r: FractalRenderer, f: Fractal, sc: SettingsConfig, act: MainActivity) {
+    fun initialize(r: FractalRenderer, act: MainActivity) {
 
         this.r = r
-        this.f = f
-        this.sc = sc
         this.act = act
 
         setRenderer(r)
@@ -142,12 +140,12 @@ class FractalSurfaceView : GLSurfaceView {
         Log.d(TAG, "screenPos: ${screenPos.x}, ${screenPos.y}")
 
         // continuous render
-        val xyEnd = f.position.xyOf(screenPos.x, screenPos.y)
+        val xyEnd = f.shape.position.xyOf(screenPos.x, screenPos.y)
         val newPos = Position(
                 xyEnd.first,
                 xyEnd.second,
-                f.position.zoom / 5.0,
-                f.position.rotation
+                f.shape.position.zoom / 5.0,
+                f.shape.position.rotation
         )
 
         r.isAnimating = true
@@ -158,14 +156,14 @@ class FractalSurfaceView : GLSurfaceView {
             r.hasZoomed = true
         }
 
-        val oldPos = f.position.clone()
+        val oldPos = f.shape.position.clone()
         val oldQuadScale = r.quadScale
         val oldQuadCoords = PointF(r.quadCoords[0], r.quadCoords[1])
         val newQuadScale = oldQuadScale * 5f
 
         val fps = if (sc.continuousPosRender) 30.0 else 45.0
         val totalFrames = (duration*fps).roundToInt()
-        val delta = f.position.delta(newPos, totalFrames)
+        val delta = f.shape.position.delta(newPos, totalFrames)
 
         Log.d(TAG, "delta: (${delta.x}, ${delta.y}, ${delta.zoom}, ${delta.rotation})")
 
@@ -195,7 +193,7 @@ class FractalSurfaceView : GLSurfaceView {
                                 r.renderFinishedListener = null
                             }
                         }
-                        f.position.setFrom(newPos)
+                        f.shape.position.setFrom(newPos)
                     }
                     r.hasTranslated = true
                     r.hasZoomed = true
@@ -209,10 +207,10 @@ class FractalSurfaceView : GLSurfaceView {
                 } else {
                     val q = interpolator.getInterpolation(t.toFloat())
                     if (sc.continuousPosRender) {
-                        f.position.x = (1.0 - q) * oldPos.x + q * newPos.x
-                        f.position.y = (1.0 - q) * oldPos.y + q * newPos.y
-                        f.position.zoom = (1.0 - q) * oldPos.zoom + q * newPos.zoom
-                        f.position.rotation += delta.rotation
+                        f.shape.position.x = (1.0 - q) * oldPos.x + q * newPos.x
+                        f.shape.position.y = (1.0 - q) * oldPos.y + q * newPos.y
+                        f.shape.position.zoom = (1.0 - q) * oldPos.zoom + q * newPos.zoom
+                        f.shape.position.rotation += delta.rotation
                     }
                     else {
                         r.quadScale = (1f - q)*oldQuadScale + q*newQuadScale
@@ -266,8 +264,8 @@ class FractalSurfaceView : GLSurfaceView {
 
         var t: Double
 
-        val startZoom = f.position.zoom
-        val startRotation = f.position.rotation
+        val startZoom = f.shape.position.zoom
+        val startRotation = f.shape.position.rotation
 
 
 
@@ -419,10 +417,10 @@ class FractalSurfaceView : GLSurfaceView {
 
                         val q = AccelerateDecelerateInterpolator().getInterpolation(t.toFloat())
 
-                        val lastZoom = f.position.zoom
-                        f.position.zoom = startZoom/zoomInc.pow(q.toDouble()*totalFrames)
+                        val lastZoom = f.shape.position.zoom
+                        f.shape.position.zoom = startZoom/zoomInc.pow(q.toDouble()*totalFrames)
                         r.checkThresholdCross(lastZoom)
-                        f.position.rotation = (1.0 - q)*startRotation + q*(startRotation + 0.5*Math.PI)
+                        f.shape.position.rotation = (1.0 - q)*startRotation + q*(startRotation + 0.5*Math.PI)
                         r.renderToTex = true
 
                         totalCodecTime += now() - startCodecTime
@@ -604,7 +602,7 @@ class FractalSurfaceView : GLSurfaceView {
                     doubleTapStartTime = 0L
 
                     if (reaction == Reaction.POSITION) {
-                        prevZoom = f.position.zoom
+                        prevZoom = f.shape.position.zoom
                         prevAngle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
                         if (!sc.continuousPosRender) setQuadFocus(focus)
                     }
@@ -633,12 +631,12 @@ class FractalSurfaceView : GLSurfaceView {
                     when (reaction) {
                         Reaction.POSITION -> {
 
-                            f.position.translate(dx / Resolution.SCREEN.w, dy / Resolution.SCREEN.w)
+                            f.shape.position.translate(dx / Resolution.SCREEN.w, dy / Resolution.SCREEN.w)
                             if (!sc.continuousPosRender) translate(floatArrayOf(dx, dy))
 
                             if (e.pointerCount > 1) {
 
-                                f.position.zoom(dFocalLen, doubleArrayOf(
+                                f.shape.position.zoom(dFocalLen, doubleArrayOf(
                                         focus[0].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5,
                                         -(focus[1].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5 * aspectRatio)
                                 ))
@@ -647,7 +645,7 @@ class FractalSurfaceView : GLSurfaceView {
 
                                 val angle = atan2(e.getY(0) - e.getY(1), e.getX(1) - e.getX(0))
                                 val dtheta = angle - prevAngle
-                                f.position.rotate(dtheta, doubleArrayOf(
+                                f.shape.position.rotate(dtheta, doubleArrayOf(
                                         focus[0].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5,
                                         -(focus[1].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5 * aspectRatio)
                                 ))
@@ -667,6 +665,7 @@ class FractalSurfaceView : GLSurfaceView {
                                     f.phase += dx / Resolution.SCREEN.w
                                 }
                                 2 -> {
+                                    if (f.frequency == 0f) f.frequency = 0.0001f
                                     f.frequency *= dFocalLen
                                     prevFocalLen = focalLen
                                 }

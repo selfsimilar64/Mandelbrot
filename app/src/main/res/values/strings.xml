@@ -46,6 +46,11 @@
     <string name="epilepsy_title">Caution</string>
     <string name="epilepsy_dscript">This app can sometimes produce fast flashing images which may be harmful to users with photosensitive epilepsy.</string>
     <string name="changelog_tag_gold_prefix">[font color=#ffe557]GOLD: [/font]</string>
+    <string name="bookmark">Bookmark</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="fractal">Fractal</string>
+    <string name="compiling">Compiling Shader …</string>
+    <string name="load_previous_fractal">Load fractal from previous session?</string>
 
 
 
@@ -101,7 +106,7 @@
     <string name="hardware_gpu" translatable="false">gpu</string>
     <string name="hardware_cpu" translatable="false">cpu</string>
     <string name="precision_auto">auto</string>
-    <string name="save">save</string>
+    <string name="save">Save</string>
     <string name="continuous_render">Continuous Render</string>
     <string name="display_params">Display Parameters</string>
     <string name="render_background">Render Background</string>
@@ -123,6 +128,8 @@
     <string name="dont_show_again">Don\'t show this message again</string>
     <string name="split_type">Use Alternate Split Method</string>
     <string name="split_type_hint">Change this if you cannot zoom further than 1e-6 on shapes like Mandelbrot</string>
+    <string name="allow_slow_renders">Allow Slow Renders</string>
+    <string name="allow_slow_renders_hint">Zoom past 1e-6 on shapes with certain equations like %s. This feature is experimental and may not work on all devices.</string>
 
 
     <!-- TEXTURE FRAGMENT -->
@@ -137,6 +144,7 @@
     <string name="texture_mode_both">both</string>
     <string name="bailout_hint" translatable="false">Determines how large the numbers can get during calcualtion before terminating</string>
     <string name="bins">Bins</string>
+    <string name="texture_image_choose_res">Choose a resolution for the image — Higher resolutions will cause image generation to be slower and will use more memory.</string>
 
 
     <!-- SHAPE FRAGMENT -->
@@ -159,11 +167,12 @@
     <string name="faster">Faster</string>
     <string name="more_detail">More detail</string>
     <string name="less_detail">Less detail</string>
-    <string name="slow_dualfloat_title">Slow Renders</string>
-    <string name="slow_dualfloat_dscript1">Rendering this shape at deeper zooms uses calculations that are significantly slower and may even cause crashes on some devices</string>
-    <string name="slow_dualfloat_dscript2">Switch to dual-float mode?</string>
-    <string name="slow_dualfloat_choice">Remember my choice</string>
     <string name="rendering_icons">Rendering Icons …</string>
+    <string name="delete_shape_bookmark_warning">Any bookmarks that use this shape will also be deleted (%d found)</string>
+    <string name="edit_shape_bookmark_warning">Any bookmarks that use this shape might not look the same after editing (%d found)</string>
+    <string name="delete_palette_bookmark_warning">Any bookmarks that use this palette will be changed to a default palette (%d found)</string>
+    <string name="edit_palette_bookmark_warning">Any bookmarks that use this palette might not look the same after editing (%d found)</string>
+    <string name="remove_texture_image_bookmark_warning">Any bookmarks that use this image will be changed to a default image (%d found)</string>
 
 
     <!-- COLOR FRAGMENT -->
@@ -176,9 +185,13 @@
     <string name="solid_fill_black">black</string>
     <string name="autofit">auto</string>
     <string name="add">add</string>
-    <string name="remove">remove</string>
+    <string name="remove">Remove</string>
     <string name="phase_hint" translatable="false">Determines the color offset. Swipe left or right with one finger to change.</string>
     <string name="freq_hint" translatable="false">Determines how frequently the colors change. Use pinch gestures to change.</string>
+    <string name="adjust">Adjust</string>
+    <string name="choose_color">Choose Color</string>
+    <string name="accent1">Accent 1</string>
+    <string name="accent2">Accent 2</string>
 
 
     <!-- POSITION FRAGMENT -->
@@ -188,6 +201,40 @@
     <string name="zoom" translatable="false">zoom</string>
     <string name="rotation">rotation</string>
     <string name="rotate">rotate</string>
+
+
+    <!-- PRESET NAMES -->
+    <string name="supernova" translatable="false">Supernova</string>
+    <string name="nautilus">Nautilus</string>
+    <string name="verbose">Verbose</string>
+    <string name="canopy">Canopy</string>
+    <string name="eukaryote">Eukaryote</string>
+    <string name="radio_tower">Radio Tower</string>
+    <string name="homeostasis">Homeostasis</string>
+    <string name="crown">Crown</string>
+    <string name="masquerade">Masquerade</string>
+    <string name="perpetual_light">Perpetual Light</string>
+    <string name="transformation">Transformation</string>
+    <string name="alignment">Alignment</string>
+    <string name="armada" translatable="false">Armada</string>
+    <string name="black_hole">Black Hole</string>
+    <string name="bloom">Bloom</string>
+    <string name="capillaries">Capillaries</string>
+    <string name="ephemeral">Ephemeral</string>
+    <string name="forgotten">Forgotten</string>
+    <string name="gravity_of_mind">Gravity of Mind</string>
+    <string name="hierarchy">Hierarchy</string>
+    <string name="metropolis">Metropolis</string>
+    <string name="numerical_culture">Numerical Culture</string>
+    <string name="peppermint">Peppermint</string>
+    <string name="pinwheel">Pinwheel</string>
+    <string name="plumage">Plumage</string>
+    <string name="porcelain">Porcelain</string>
+    <string name="reactor">Reactor</string>
+    <string name="synchronized_swimming">Synchronized Swimming</string>
+    <string name="thought_antannae">Thought Antannae</string>
+    <string name="tree_planet">Tree Planet</string>
+    <string name="watermelon">Watermelon</string>
 
 
     <!-- SHAPE NAMES -->
@@ -230,6 +277,8 @@
     <string name="necklace">Necklace</string>
     <string name="taurus">Taurus</string>
     <string name="ammonite">Ammonite</string>
+    <string name="angelbrot">Angelbrot</string>
+    <string name="mandelbox2">Mandelbox 2</string>
 
 
     <!-- PALETTE NAMES -->
@@ -285,15 +334,20 @@
     <string name="catalyst">Catalyst</string>
     <string name="carousel">Carousel</string>
     <string name="monster">Monster</string>
+    <string name="refraction">Refraction</string>
+    <string name="fusion">Fusion</string>
+    <string name="honor">Honor</string>
+    <string name="passionfruit">Passionfruit</string>
 
 
     <!-- TEXTURE NAMES -->
     <string name="escape">Escape Time</string>
     <string name="converge">Converge Time</string>
+    <string name="converge_smooth">Converge Time (Smooth)</string>
     <string name="escape_smooth">Escape Time (Smooth)</string>
     <string name="exponential_smooth">Exponential Smoothing</string>
     <string name="distance_est">Distance Estimation</string>
-    <string name="distance_est_abs">Absolute Distance</string>
+    <string name="distance_est_abs">Outline</string>
     <string name="triangle_ineq_avg">Triangle Inequality Average</string>
     <string name="triangle_ineq_avg_int" translatable="false">Triangle Inequality Average (Int)</string>
     <string name="triangle_ineq_avg_float" translatable="false">Triangle Inequality Average (Float)</string>
@@ -311,6 +365,15 @@
     <string name="angular_momentum">Angular Momentum</string>
     <string name="umbrella">Umbrella</string>
     <string name="inverse_umbrella">Inverse Umbrella</string>
+    <string name="star_lens">Star Lens</string>
+    <string name="disc_lens">Disc Lens</string>
+    <string name="sin_lens">Sine Lens</string>
+    <string name="field_lines">Field Lines</string>
+    <string name="field_lines2">Field Lines 2</string>
+    <string name="escape_with_distance">Escape Time and Outline</string>
+    <string name="image_over">Image 1</string>
+    <string name="image_under">Image 2</string>
+    <string name="binary">Binary</string>
 
 
 
@@ -326,6 +389,9 @@
     <string name="linear">Linear</string>
     <string name="center">Center</string>
     <string name="shift">Shift</string>
+    <string name="count">Count</string>
+    <string name="smooth">Smooth</string>
+    <string name="seed">Seed</string>
 
 
     <!-- MESSAGES -->
@@ -352,6 +418,8 @@
     <string name="msg_out_of_memory">Error - Not enough memory</string>
     <string name="msg_custom_name_duplicate">A %s with this name already exists - please choose a different name</string>
     <string name="msg_eqn_error">Please edit the equation until the error indicator is not showing</string>
+    <string name="msg_enable_autocolor">Please enable [Color] -> [Auto]</string>
+    <string name="msg_bookmark_created">Bookmark created!</string>
 
 
     <!-- UTILITY -->

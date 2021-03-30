@@ -1,10 +1,29 @@
 <changelog>
 
 
+    <release versionCode="33" versionName="v1.4.4" date="2021-03-25">
+        <new type="summary">Ajoutez vos fractales à vos favoris! - Accédez aux signets via (Image) -> (Signets)</new>
+        <new type="summary">Ajout de 28 signets par défaut</new>
+        <new type="summary">Le paramètre 1 de la forme Kleinian peut désormais créer des spirales</new>
+        <new type="summary">Ajout de 2 nouvelles textures: Image 1 et Image 2</new>
+        <new type="summary">Ajout d'une nouvelle forme: Angelbrot</new>
+        <new type="summary">Ajout du paramètre Germe à la plupart des formes</new>
+        <new type="summary">Ajouté (Couleur) -> (Accent)</new>
+        <new type="summary">Le zoom au-delà de 1e-6 sur des formes comme Sinus 1 est maintenant désactivé par défaut ... Allez dans (Paramètres) -> (Autoriser Les Rendus Lents) pour activer</new>
+    </release>
+
+
+    <release versionCode="32" versionName="v1.4.3" date="2021-01-20">
+        <new type="summary">Ajout de 5 nouvelles textures: Temps de Convergence (Lisse), Lentille à Disque, Lentille Etoile, Lentille Sinusoïdale, Lignes de Champ</new>
+        <new type="summary">Ajout de 2 nouvelles palettes de couleurs: Réfraction, Refraction</new>
+        <info>Correction d'un bug de la calculatrice de forme personnalisée</info>
+    </release>
+
+
     <release versionCode="30" versionName="v1.4.1" date="2021-01-10">
-        <new type="summary">Ajout de (Image) -> (Rapport) pour enregistrer des images de différentes tailles</new>
-        <new type="summary">Appuyez deux fois en mode (Position) pour augmenter le zoom</new>
-        <new type="summary">Ajout de (Paramètres) -> (Utiliser Autre Méthode du Partage) pour corriger le zoom sur certains appareils</new>
+        <info>Ajout de (Image) -> (Rapport) pour enregistrer des images de différentes tailles</info>
+        <info>Appuyez deux fois en mode (Position) pour augmenter le zoom</info>
+        <info>Ajout de (Paramètres) -> (Utiliser Autre Méthode du Partage) pour corriger le zoom sur certains appareils</info>
         <info>Menu des paramètres déplacé</info>
         <info>Correction d'un bug de double précision sur certains appareils</info>
         <info>Correction d'un bug d'affichage lors du changement de position</info>

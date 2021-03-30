@@ -13,11 +13,16 @@ open class RealParam (
         var discrete      : Boolean         = false,
         var toRadians     : Boolean         = false,
         val goldFeature   : Boolean         = false,
+        val devFeature    : Boolean         = false,
         val isPrimary     : Boolean         = true,
         val isRateParam   : Boolean         = false,
-        val parent        : RealParam?          = null
+        val parent        : RealParam?      = null
 
 ) {
+
+    constructor(data: Data) : this(u = data.u)
+
+    data class Data(val u: Double, val v: Double, val isComplex: Boolean)
 
     var name = ""
 
@@ -58,26 +63,21 @@ open class RealParam (
     }
     open fun clone() : RealParam {
 
-        return RealParam(
-                nameId,
-                uInit,
-                uRange,
-                uLockedInit,
-                toRadiansInit,
-                goldFeature
-        )
+        return RealParam(u = u)
 
     }
     open fun setFrom(newParam: RealParam) {
 
-        uLocked = newParam.uLockedInit
-        u = newParam.uInit
-        toRadians = newParam.toRadiansInit
+        uLocked = false
+        u = newParam.u
         newParam.sensitivity?.let { sensitivity?.setFrom(it) }
 
     }
     open fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), 0f)
     open fun toDouble2() : Double2 = Double2(u, 0.0)
+    open fun toData(index: Int) : Data {
+        return Data(u, 0.0, false)
+    }
 
     override fun toString(): String {
         return if (discrete) "%d".format(u.roundToInt()) else "%.3f".format(u)

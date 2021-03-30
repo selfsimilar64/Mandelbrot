@@ -5,6 +5,7 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 
+
 class Position(
 
         x: Double = 0.0,
@@ -20,6 +21,15 @@ class Position(
         rotationLocked: Boolean = false
 
 ) {
+
+    constructor(data: Data) : this(x = data.x, y = data.y, zoom = data.zoom, rotation = data.rotation)
+
+    data class Data(
+            val x: Double = 0.0,
+            val y: Double = 0.0,
+            val zoom: Double = 1.0,
+            val rotation: Double = 0.0
+    )
 
     private val xInit = x
     private val yInit = y
@@ -65,6 +75,9 @@ class Position(
 
     fun clone() : Position {
         return Position(x, y, zoom, rotation)
+    }
+    fun toData() : Data {
+        return Data(x, y, zoom, rotation)
     }
 
     fun xyOf(u: Float, v: Float) : Pair<Double, Double> {

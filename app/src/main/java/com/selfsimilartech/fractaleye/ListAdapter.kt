@@ -9,8 +9,8 @@ import eu.davidea.flexibleadapter.items.ISectionable
 class ListAdapter<T>(
 
         items: List<ListItem<T>>?,
-        val onEdit          : (a: ListAdapter<T>, t: T) -> Unit,
-        val onDelete        : (a: ListAdapter<T>, t: T) -> Unit,
+        val onEdit          : (a: ListAdapter<T>, ListItem<T>) -> Unit,
+        val onDelete        : (a: ListAdapter<T>, ListItem<T>) -> Unit,
         val emptyFavorite   : ListItem<T>,
         val emptyCustom     : ListItem<T>
 
@@ -139,6 +139,9 @@ class ListAdapter<T>(
     fun setActivatedPosition(position: Int) {
         activatedPos = position
         toggleSelection(position) //Important!
+    }
+    fun setActivatedPositionNoToggle(position: Int) {
+        activatedPos = position
     }
 
     fun updateLayoutType(newType: ListLayoutType) {

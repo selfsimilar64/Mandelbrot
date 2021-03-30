@@ -254,4 +254,19 @@
         <item name="android:layout_marginEnd">5dp</item>
     </style>
 
+    <style name="CustomColorItem">
+        <item name="android:layout_width">26dp</item>
+        <item name="android:layout_height">26dp</item>
+        <item name="android:background">@color/fractaleye1</item>
+        <item name="android:padding">2dp</item>
+    </style>
+
+    <style name="CustomColorContainer">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="cardCornerRadius">0dp</item>
+        <item name="cardBackgroundColor">@color/fractaleye1</item>
+        <item name="contentPadding">2dp</item>
+    </style>
+
 </resources>

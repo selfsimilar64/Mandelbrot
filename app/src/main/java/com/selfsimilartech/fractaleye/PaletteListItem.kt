@@ -1,13 +1,12 @@
 package com.selfsimilartech.fractaleye
 
 import android.app.AlertDialog
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.*
 import android.widget.ToggleButton
 import androidx.cardview.widget.CardView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DecodeFormat
 import com.tubb.smrv.SwipeHorizontalMenuLayout
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.IFlexible
@@ -16,13 +15,13 @@ import eu.davidea.viewholders.FlexibleViewHolder
 
 class PaletteListItem (
 
-        val palette: ColorPalette,
+        val palette: Palette,
         header: ListHeader,
         layoutType: ListLayoutType,
         isEmptyItem : Boolean = false,
         compliment : PaletteListItem? = null
 
-) : ListItem<ColorPalette>(palette, header, layoutType, false, isEmptyItem, compliment) {
+) : ListItem<Palette>(palette, header, layoutType, false, isEmptyItem, compliment) {
 
     /**
      * When an item is equals to another?
@@ -56,16 +55,16 @@ class PaletteListItem (
         return when (layoutType) {
             ListLayoutType.LINEAR -> {
                 when {
-                    palette == ColorPalette.emptyFavorite -> R.layout.list_item_linear_empty_favorite
-                    palette == ColorPalette.emptyCustom -> R.layout.list_item_linear_empty_custom
+                    palette == Palette.emptyFavorite -> R.layout.list_item_linear_empty_favorite
+                    palette == Palette.emptyCustom -> R.layout.list_item_linear_empty_custom
                     palette.hasCustomId -> R.layout.palette_list_item_linear_custom
                     else -> R.layout.palette_list_item_linear_default
                 }
             }
             ListLayoutType.GRID -> {
                 when {
-                    palette == ColorPalette.emptyFavorite -> R.layout.list_item_linear_empty_favorite
-                    palette == ColorPalette.emptyCustom -> R.layout.list_item_linear_empty_custom
+                    palette == Palette.emptyFavorite -> R.layout.list_item_linear_empty_favorite
+                    palette == Palette.emptyCustom -> R.layout.list_item_linear_empty_custom
                     palette.hasCustomId -> R.layout.palette_list_item_grid_custom
                     else -> R.layout.palette_list_item_grid_default
                 }
@@ -89,7 +88,7 @@ class PaletteListItem (
                                 position: Int,
                                 payloads: List<Any>) {
 
-        with (adapter as ListAdapter<ColorPalette>) {
+        with (adapter as ListAdapter<Palette>) {
 
             val vh = holder as PaletteViewHolder
 
@@ -119,28 +118,19 @@ class PaletteListItem (
                 holder.editButton?.setOnClickListener {
 
                     adapter.setActivatedPosition(position)
-                    onEdit(adapter, palette)
+                    holder.sml?.smoothCloseMenu()
+                    onEdit(adapter, this@PaletteListItem)
 
                 }
                 holder.deleteButton?.setOnClickListener {
 
-                    AlertDialog.Builder(holder.contentView.context, R.style.AlertDialogCustom)
-                            .setTitle("${holder.contentView.context.resources.getString(R.string.delete)} ${palette.name}?")
-                            .setIcon(R.drawable.warning)
-                            .setPositiveButton(android.R.string.ok) { dialog, whichButton ->
-                                holder.sml?.smoothCloseMenu()
-                                removeItemFromCustom(this@PaletteListItem)
-                                // removeItems(getAllPositionsOf(palette))
-                                onDelete(adapter, palette)
-                            }
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .show()
+                    holder.sml?.smoothCloseMenu()
+                    onDelete(adapter, this@PaletteListItem)
 
                 }
             }
             if (layoutType == ListLayoutType.GRID) {
                 holder.previewImage?.setImageBitmap(palette.thumbnail)
-
                 holder.previewImage?.scaleType = ImageView.ScaleType.CENTER_CROP
             }
 

@@ -94,23 +94,14 @@ class ShapeListItem (
                 holder.editButton?.setOnClickListener {
 
                     adapter.setActivatedPosition(position)
-                    onEdit(adapter, shape)
+                    onEdit(adapter, this@ShapeListItem)
                     holder.sml?.smoothCloseMenu()
 
                 }
                 holder.deleteButton?.setOnClickListener {
 
-                    AlertDialog.Builder(holder.contentView.context, R.style.AlertDialogCustom)
-                            .setTitle("${holder.contentView.context.resources.getString(R.string.delete)} ${shape.name}?")
-                            .setIcon(R.drawable.warning)
-                            .setPositiveButton(android.R.string.ok) { dialog, whichButton ->
-                                holder.sml?.smoothCloseMenu()
-                                //removeItems(getAllPositionsOf(shape))
-                                removeItemFromCustom(this@ShapeListItem)
-                                onDelete(adapter, shape)
-                            }
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .show()
+                    holder.sml?.smoothCloseMenu()
+                    onDelete(adapter, this@ShapeListItem)
 
                 }
                 holder.image?.setImageBitmap(shape.thumbnail)
@@ -119,8 +110,8 @@ class ShapeListItem (
                 holder.image?.setImageResource(shape.thumbnailId)
             }
 
-            holder.name?.showGradient = shape.goldFeature && !goldEnabled
-            holder.image?.showGradient = shape.goldFeature && !goldEnabled
+            holder.name?.showGradient = shape.goldFeature && !SettingsConfig.goldEnabled
+            holder.image?.showGradient = shape.goldFeature && !SettingsConfig.goldEnabled
             holder.image?.scaleType = ImageView.ScaleType.CENTER_CROP
 
         }

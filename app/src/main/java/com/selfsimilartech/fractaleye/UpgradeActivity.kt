@@ -4,13 +4,10 @@ import android.animation.LayoutTransition
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.res.ResourcesCompat
 import com.android.billingclient.api.*
 import com.bumptech.glide.Glide
-import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.request.RequestOptions
@@ -82,7 +79,7 @@ class UpgradeActivity : AppCompatActivity() {
         })
 
 
-        layout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        imageLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
 //        val timer = Timer()
 //
@@ -140,7 +137,7 @@ class UpgradeActivity : AppCompatActivity() {
                     else                    shape.params.list.filter { it.goldFeature }.size + 1
                 } + Texture.all.sumBy { texture ->
                     if (texture.goldFeature) texture.params.size
-                    else                     texture.params.filter { it.goldFeature }.size
+                    else                     texture.params.list.filter { it.goldFeature }.size
                 }
         )
 

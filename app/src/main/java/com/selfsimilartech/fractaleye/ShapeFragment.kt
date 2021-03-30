@@ -1,11 +1,11 @@
 package com.selfsimilartech.fractaleye
 
 import android.animation.LayoutTransition
-import android.app.AlertDialog
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +14,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.ToggleButton
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import eu.davidea.flexibleadapter.FlexibleAdapter
@@ -23,9 +24,10 @@ import kotlinx.android.synthetic.main.complex_param.view.*
 import kotlinx.android.synthetic.main.real_param.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.File
 import java.lang.IndexOutOfBoundsException
 import java.util.*
-import kotlin.math.ln
+import kotlin.math.floor
 import kotlin.math.log
 import kotlin.math.pow
 
@@ -33,10 +35,7 @@ import kotlin.math.pow
 
 class ShapeFragment : MenuFragment() {
 
-    private lateinit var act : MainActivity
-    private lateinit var f : Fractal
-    private lateinit var fsv : FractalSurfaceView
-    private lateinit var sc : SettingsConfig
+
 
     private var realParamSeekBarListener : SeekBar.OnSeekBarChangeListener? = null
     private lateinit var shapeListAdapter : ListAdapter<Shape>
@@ -59,10 +58,9 @@ class ShapeFragment : MenuFragment() {
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
-        act = activity as MainActivity
-        f = act.f
-        fsv = act.fsv
-        sc = act.sc
+        super.onViewCreated(v, savedInstanceState)
+
+
 
         var customShape = Shape(name = "q", latex = "$$")
         var prevSelectedShapeIndex = 0
@@ -85,7 +83,7 @@ class ShapeFragment : MenuFragment() {
                 R.layout.list_item_linear_empty_custom
         )
 
-        val handler = Handler()
+        val handler = Handler(Looper.getMainLooper())
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
             when (actionId) {
@@ -114,7 +112,7 @@ class ShapeFragment : MenuFragment() {
 
         }}
         val lockListener = { j: Int -> View.OnClickListener {
-            val lock = it as android.widget.ToggleButton
+            val lock = it as ToggleButton
             val param = f.shape.params.active
             if (j == 0) param.uLocked = lock.isChecked
             else if (j == 1 && param is ComplexParam) {
@@ -139,26 +137,21 @@ class ShapeFragment : MenuFragment() {
             if (f.shape != Shape.mandelbrot && !sc.goldEnabled) act.showUpgradeScreen()
             else {
 
-                val prevScale = f.position.zoom
+                val prevScale = f.shape.position.zoom
                 f.shape.juliaMode = juliaModeButton.isChecked
-                f.position = if (juliaModeButton.isChecked) f.shape.positions.julia else f.shape.positions.default
                 fsv.r.checkThresholdCross(prevScale)
 
                 if (f.shape.juliaMode) {
 
+                    seedParamButton.hide()
                     juliaParamButton.show()
                     juliaParamButton.performClick()
 
-                    // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("P${f.shape.numParamsInUse + 1}"))
-//                shapeParamButtons.addTab(shapeParamButtons.newTab().setText(resources.getString(R.string.julia)))
-//                shapeParamButtons.getTabAt(shapeParamButtons.tabCount - 1)?.select()
-//                handler.postDelayed({
-//                    shapeLayoutScroll.smoothScrollTo(0, shapeParamLayout.y.toInt())
-//                }, BUTTON_CLICK_DELAY_LONG)
                     if (f.shape.numParamsInUse == 1) {
                         fsv.r.reaction = Reaction.SHAPE
                         act.showTouchIcon()
                     }
+
                 } else {
 
                     if (currentButton == juliaParamButton) {
@@ -168,11 +161,8 @@ class ShapeFragment : MenuFragment() {
                             // shapeResetButton.hide()
                         }
                     }
+                    if (f.shape.juliaSeed) seedParamButton.hide() else seedParamButton.show()
                     juliaParamButton.hide()
-
-//                if (f.shape.numParamsInUse == 0) shapeParamLayout.visibility = ConstraintLayout.GONE
-//                // complexMapKatex.setDisplayText(resources.getString(f.shape.katex).format("c"))
-//                if (f.shape.numParamsInUse == 0) fsv.r.reaction = Reaction.NONE
 
                 }
 
@@ -191,8 +181,8 @@ class ShapeFragment : MenuFragment() {
 
             //customShape.katex = customShape.katex.replace(cursor, expr.katex)
             Log.e("SHAPE", "expr: ${expr.latex}")
-//            shapeMathQuill.enterExpr(expr)
-//            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+            shapeMathQuill.enterExpr(expr)
+            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
 
         }}
         val rateListener = View.OnClickListener {
@@ -228,17 +218,17 @@ class ShapeFragment : MenuFragment() {
 
 
 
-//        shapeMathQuill.settings.apply {
-//            javaScriptEnabled = true
-//            domStorageEnabled = true
-//            useWideViewPort = true
-//            builtInZoomControls = true
-//            displayZoomControls = false
-//            setSupportZoom(true)
-//            defaultTextEncodingName = "utf-8"
-//        }
-//        val mathQuillHtml = readHtml("mathquill.html")
-//        shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", mathQuillHtml, "text/html", "UTF-8", null)
+        shapeMathQuill.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            useWideViewPort = true
+            builtInZoomControls = true
+            displayZoomControls = false
+            setSupportZoom(true)
+            defaultTextEncodingName = "utf-8"
+        }
+        val mathQuillHtml = readHtml("mathquill.html")
+        shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", mathQuillHtml, "text/html", "UTF-8", null)
 
 
 
@@ -357,6 +347,8 @@ class ShapeFragment : MenuFragment() {
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {
 
+                if (fsv.r.isRendering) fsv.r.interruptRender = true
+
                 fsv.r.renderProfile = RenderProfile.CONTINUOUS
 
                 val p = seekBar.progress.toDouble() / maxIterBar.max
@@ -371,11 +363,15 @@ class ShapeFragment : MenuFragment() {
                 fsv.requestRender()
 
                 val p = seekBar.progress.toDouble() / maxIterBar.max
-                f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
+                val newIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
+
+                // save state on iteration increase
+                if (newIter > f.shape.maxIter) act.bookmarkAsPreviousFractal()
+
+                f.shape.maxIter = newIter
                 maxIterEdit.setText("%d".format(f.shape.maxIter))
 
-                Log.d("FRACTAL EDIT FRAGMENT", "maxIter: ${f.shape.maxIter}")
-                // f.shape.maxIter = ((2.0.pow(5) - 1)*(1.0f - p) + (2.0.pow(12) - 1)*p).toInt()
+                // Log.d("FRACTAL EDIT FRAGMENT", "maxIter: ${f.shape.maxIter}")
 
             }
 
@@ -394,25 +390,6 @@ class ShapeFragment : MenuFragment() {
         maxIterBar.showWarning = true
         iterWarningIcon.hide()
 
-//        sensitivitySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-//
-//            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-//
-//                val p = sensitivitySeekBar.progress.toDouble() / sensitivitySeekBar.max
-//                val sensitivity = p.pow(5)*50.0
-//                sensitivityEdit.setText("%.3f".format(sensitivity))
-//
-//            }
-//
-//            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-//
-//            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-//                val p = sensitivitySeekBar.progress.toDouble()/sensitivitySeekBar.max
-//                f.shape.params.active.sensitivity = p.pow(5)*50.0
-//            }
-//
-//        })
-
         customShapeName.setOnEditorActionListener(editListener(null) {
             customShape.name = customShapeName.text.toString()
         })
@@ -429,61 +406,96 @@ class ShapeFragment : MenuFragment() {
 
 
 
-        val spanCount = 3
+        val previewListWidth = Resolution.SCREEN.w - 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) - resources.getDimension(R.dimen.navButtonSize)
+        val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) + 2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
+        val spanCount = floor(previewListWidth.toDouble() / previewGridWidth).toInt()
         val shapePreviewListLinearManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         val shapePreviewListGridManager = GridLayoutManager(context, spanCount)
 
 
-        val onEditCustomShape = { adapter: ListAdapter<Shape>, shape: Shape ->
-
-            Log.e("SHAPE", "editing shape ${shape.name} with latex '${shape.latex}'")
+        val onEditConfirm = { adapter: ListAdapter<Shape>, item: ListItem<Shape> ->
 
             shapePreviewListLayout.hide()
             customShapeLayout.show()
+            eqnErrorIndicator.invisible()
             loadNavButtons(customShapeNavButtons)
             fsv.r.renderProfile = RenderProfile.DISCRETE
             fsv.r.reaction = Reaction.COLOR
 
 
-            customShape = shape
+            customShape = item.t
             f.shape = customShape
             f.texture = if (f.shape.isConvergent) Texture.converge else Texture.escapeSmooth
-            val prevZoom = f.shape.positions.default.zoom
+            val prevZoom = f.shape.position.zoom
             f.shape.reset()
             fsv.r.checkThresholdCross(prevZoom)
 
             customShapeName.setText(customShape.name)
-//            shapeMathQuill.setLatex(customShape.latex)
+            shapeMathQuill.setLatex(customShape.latex)
 
             fsv.r.renderShaderChanged = true
             fsv.r.renderToTex = true
             fsv.requestRender()
-
-            // load custom shape attributes here
 
         }
-        val onDeleteCustomShape = { adapter: ListAdapter<Shape>, shape: Shape ->
+        val onEditCustomShape = { adapter: ListAdapter<Shape>, item: ListItem<Shape> ->
 
-            val deleteId = shape.customId
-
-            GlobalScope.launch {
-                act.db.shapeDao().apply {
-                    delete(findById(deleteId))
-                }
+            if (Fractal.bookmarks.any { it.shape == item.t }) {
+                val dialog = AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
+                        .setIcon(R.drawable.warning)
+                        .setTitle("${resources.getString(R.string.edit)} ${item.t.name}?")
+                        .setMessage(resources.getString(R.string.edit_shape_bookmark_warning).format(
+                                Fractal.bookmarks.count { it.shape == item.t }
+                        ))
+                        .setPositiveButton(R.string.edit) { dialog, which -> onEditConfirm(adapter, item) }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
             }
+            else onEditConfirm(adapter, item)
 
-            adapter.apply {
-                setActivatedPosition(
-                        getGlobalPositionOf(getFavoriteItems().getOrNull(0) ?: getDefaultItems()[1])
-                )
-                f.shape = (getItem(activatedPos) as? ShapeListItem)!!.shape
-            }
-            Shape.all.remove(shape)
-            Shape.custom.remove(shape)
+        }
+        val onDeleteCustomShape = { adapter: ListAdapter<Shape>, item: ListItem<Shape> ->
 
-            fsv.r.renderShaderChanged = true
-            fsv.r.renderToTex = true
-            fsv.requestRender()
+            val dialog = AlertDialog.Builder(requireContext(), R.style.AlertDialogCustom)
+                    .setTitle("${resources.getString(R.string.delete)} ${item.t.name}?")
+                    .setMessage(resources.getString(R.string.delete_shape_bookmark_warning).format(
+                            Fractal.bookmarks.count { it.shape == item.t }
+                    ))
+                    .setIcon(R.drawable.warning)
+                    .setPositiveButton(R.string.delete) { dialog, whichButton ->
+
+                        adapter.removeItemFromCustom(item)
+                        Fractal.bookmarks.filter { it.shape == item.t }.forEach { bookmark ->
+                            File(requireContext().filesDir.path + bookmark.thumbnailPath).delete()
+                            act.db.fractalDao().apply {
+                                delete(findById(bookmark.customId))
+                            }
+                        }
+
+                        val deleteId = item.t.id
+
+                        GlobalScope.launch {
+                            act.db.shapeDao().apply {
+                                delete(findById(deleteId))
+                            }
+                        }
+
+                        adapter.apply {
+                            setActivatedPosition(
+                                    getGlobalPositionOf(getFavoriteItems().getOrNull(0) ?: getDefaultItems()[1])
+                            )
+                            f.shape = (getItem(activatedPos) as? ShapeListItem)!!.shape
+                        }
+                        Shape.all.remove(item.t)
+                        Shape.custom.remove(item.t)
+
+                        fsv.r.renderShaderChanged = true
+                        fsv.r.renderToTex = true
+                        fsv.requestRender()
+
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
 
         }
 
@@ -565,28 +577,13 @@ class ShapeFragment : MenuFragment() {
 
                         // reset texture if not compatible with new shape
                         if (!newShape.compatTextures.contains(f.texture)) {
-                            f.texture = if (newShape.isConvergent) Texture.converge else Texture.escapeSmooth
+                            f.texture = if (newShape == Shape.kleinian) Texture.escape else { if (newShape.isConvergent) Texture.converge else Texture.escapeSmooth }
+                            act.onTextureChanged()
                         }
 
-                        val prevScale = f.position.zoom
+                        val prevScale = f.shape.position.zoom
                         f.shape = newShape
-                        Log.d("SHAPE FRAGMENT", "shape is now ${f.shape.name}")
-
-                        if (f.shape.juliaModeInit) {
-                            juliaModeButton.hide()
-                            juliaDivider.hide()
-                        } else {
-                            juliaModeButton.show()
-                            juliaDivider.show()
-                        }
-
-                        if (f.shape != Shape.mandelbrot && !sc.goldEnabled) {
-                            juliaModeButton.showGradient = true
-                            juliaModeButton.alpha = 1f
-                        } else {
-                            juliaModeButton.showGradient = false
-                            juliaModeButton.alpha = 0.5f
-                        }
+                        // Log.d("SHAPE FRAGMENT", "shape is now ${f.shape.name}")
 
                         fsv.r.checkThresholdCross(prevScale)
 
@@ -690,8 +687,9 @@ class ShapeFragment : MenuFragment() {
                 shapeNavButtons.show()
                 loadNavButtons(previewListNavButtons)
                 shapeListAdapter.apply {
-                    if (selectedPositions.isEmpty()) {
-                        setActivatedPosition(getFirstPositionOf(f.shape))
+                    (if (selectedPositions.isEmpty()) getFirstPositionOf(f.shape) else activatedPos).let {
+                        setActivatedPosition(it)
+                        recyclerView?.scrollToPosition(it)
                     }
                 }
 
@@ -748,10 +746,6 @@ class ShapeFragment : MenuFragment() {
                 if (!act.uiIsClosed()) act.uiSetOpen() else MainActivity.Category.SHAPE.onMenuClosed(act)
 
 
-                //if (f.shape.hasCustomId)  shapePreviewImage.setImageBitmap(f.shape.thumbnail)
-                //else                      shapePreviewImage.setImageResource(f.shape.thumbnailId)
-                //shapePreviewText.text = f.shape.name
-
                 shapePreviewListLayout.hide()
                 //shapePreviewLayout.show()
                 shapeSubMenuButtons.show()
@@ -759,26 +753,7 @@ class ShapeFragment : MenuFragment() {
                 act.showCategoryButtons()
                 maxIterButton.performClick()
 
-                // update parameter display
-                shapeParamButtonList.forEach { it.hide() }
-                f.shape.params.list.forEachIndexed { index, param ->
-                    shapeParamButtonList[index].apply {
-                        text = if (param.name == "") "Param ${index + 1}" else param.name
-                        show()
-                        showGradient = param.goldFeature && !sc.goldEnabled
-                    }
-                }
-
-
-                // update juliaModeButton
-                juliaModeButton.apply {
-                    isChecked = f.shape.juliaMode
-                    if (isChecked) juliaParamButton.show() else juliaParamButton.hide()
-                }
-
-                maxIterEdit.setText("%d".format(f.shape.maxIter))
-                maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
-
+                updateLayout()
 
             }, BUTTON_CLICK_DELAY_SHORT)
         }
@@ -808,7 +783,7 @@ class ShapeFragment : MenuFragment() {
                 )
 
                 customShapeName?.setText(customShape.name)
-//                shapeMathQuill.setLatex(customShape.latex)
+                shapeMathQuill.setLatex(customShape.latex)
 
                 prevSelectedShapeIndex = Shape.all.indexOf(f.shape)
                 f.shape = customShape
@@ -843,7 +818,7 @@ class ShapeFragment : MenuFragment() {
 
                 if (Shape.all.any {
                             if (customShape.name == it.name) {
-                                if (customShape.hasCustomId) customShape.customId != it.customId
+                                if (customShape.hasCustomId) customShape.id != it.id
                                 else true
                             } else false
                         }) {
@@ -859,7 +834,7 @@ class ShapeFragment : MenuFragment() {
                             // update existing shape in database
                             act.db.shapeDao().apply {
                                 update(
-                                        customShape.customId,
+                                        customShape.id,
                                         customShape.name,
                                         customShape.latex,
                                         customShape.customLoopSF,
@@ -876,8 +851,9 @@ class ShapeFragment : MenuFragment() {
 
                             // add new shape to database
                             act.db.shapeDao().apply {
-                                customShape.customId = insert(customShape.toDatabaseEntity()).toInt()
-                                Log.e("SHAPE", "new custom id: ${customShape.customId}")
+                                customShape.id = insert(customShape.toDatabaseEntity()).toInt()
+                                customShape.hasCustomId = true
+                                Log.e("SHAPE", "new custom id: ${customShape.id}")
                                 customShape.initialize(resources)
                                 fsv.r.renderProfile = RenderProfile.SHAPE_THUMB
                                 fsv.requestRender()
@@ -902,7 +878,7 @@ class ShapeFragment : MenuFragment() {
                     // update ui
                     handler.postDelayed({
 
-//                        shapeMathQuill.getLatex { customShape.latex = it }
+                        shapeMathQuill.getLatex { customShape.latex = it }
 
                         customShapeLayout.hide()
                         shapePreviewListLayout.show()
@@ -1002,11 +978,11 @@ class ShapeFragment : MenuFragment() {
         decimalKey.setOnClickListener(keyListener(Expr.decimal))
         iKey.setOnClickListener(keyListener(Expr.i))
 
-//        prevKey.setOnClickListener { shapeMathQuill.enterKeystroke("Left") }
-//        nextKey.setOnClickListener { shapeMathQuill.enterKeystroke("Right") }
+        prevKey.setOnClickListener { shapeMathQuill.enterKeystroke("Left") }
+        nextKey.setOnClickListener { shapeMathQuill.enterKeystroke("Right") }
         deleteKey.setOnClickListener {
-//            shapeMathQuill.enterKeystroke("Backspace")
-//            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+            shapeMathQuill.enterKeystroke("Backspace")
+            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
         }
         parensKey.setOnClickListener(keyListener(Expr.parens))
 
@@ -1016,6 +992,15 @@ class ShapeFragment : MenuFragment() {
             alphaButton(juliaParamButton)
             // shapeResetButton.show()
             f.shape.params.active = f.shape.params.julia
+            fsv.r.reaction = Reaction.SHAPE
+            loadActiveParam()
+        }
+        seedParamButton.setOnClickListener {
+            act.showTouchIcon()
+            showLayout(complexShapeParam)
+            alphaButton(seedParamButton)
+            // shapeResetButton.show()
+            f.shape.params.active = f.shape.params.seed
             fsv.r.reaction = Reaction.SHAPE
             loadActiveParam()
         }
@@ -1057,17 +1042,63 @@ class ShapeFragment : MenuFragment() {
         showLayout(maxIterLayout)
         alphaButton(maxIterButton)
 
-
-        if (sc.goldEnabled) onGoldEnabled()
-
-        //act.updateShapeEditTexts()
-        super.onViewCreated(v, savedInstanceState)
+        // if (sc.goldEnabled) onGoldEnabled()
 
     }
 
 
+    override fun updateLayout() {
+
+        val shapeParamButtonList = listOf(
+                shapeParamButton1,
+                shapeParamButton2,
+                shapeParamButton3,
+                shapeParamButton4
+        )
+
+        // update parameter display
+        shapeParamButtonList.forEach { it.hide() }
+        f.shape.params.list.forEachIndexed { index, param ->
+            shapeParamButtonList[index].apply {
+                text = if (param.name == "") "Param ${index + 1}" else param.name
+                if (!param.devFeature || BuildConfig.DEV_VERSION) show()
+                showGradient = param.goldFeature && !sc.goldEnabled
+            }
+        }
+
+
+        // update juliaModeButton
+
+        if (f.shape.juliaModeInit) {
+            juliaModeButton.hide()
+            juliaDivider.hide()
+        } else {
+            juliaModeButton.show()
+            juliaDivider.show()
+        }
+
+        if (f.shape != Shape.mandelbrot && !sc.goldEnabled) {
+            juliaModeButton.showGradient = true
+            juliaModeButton.alpha = 1f
+        } else {
+            juliaModeButton.showGradient = false
+            juliaModeButton.alpha = 0.5f
+        }
+
+        juliaModeButton.apply {
+            isChecked = f.shape.juliaMode
+            if (isChecked) juliaParamButton.show() else juliaParamButton.hide()
+        }
+        if (f.shape.juliaMode || f.shape.juliaSeed) seedParamButton.hide() else seedParamButton.show()
+
+        maxIterEdit.setText("%d".format(f.shape.maxIter))
+        maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
+
+    }
+
     fun onGoldEnabled() {
-        shapeListAdapter.onGoldEnabled()
+        Log.d("SHAPE", "onGoldEnabled")
+        shapeListAdapter.notifyDataSetChanged()
         customShapeDoneButton.showGradient = false
         juliaModeButton.showGradient = false
         listOf(

@@ -1,18 +1,20 @@
 package com.selfsimilartech.fractaleye
 
-import androidx.annotation.ColorInt
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "shape")
 data class ShapeEntity (
+
         @PrimaryKey(autoGenerate = true) val id: Int = 0,
         val name            : String = "",
         val latex           : String = "",
         val loopSF          : String = "",
         val loopDF          : String = "",
         val conditional     : String = "",
+//        @Embedded(prefix = "pos_") val positionDefault : PositionData = PositionData(),
+//        @Embedded(prefix = "jpos_") val positionJulia : PositionData = PositionData(),
         val xPosDefault     : Double = 0.0,
         val yPosDefault     : Double = 0.0,
         val zoomDefault     : Double = 1.0,
@@ -30,4 +32,5 @@ data class ShapeEntity (
         val isConvergent    : Boolean = false,
         val hasDualFloat    : Boolean = true,
         val isFavorite      : Boolean = false
+
 )

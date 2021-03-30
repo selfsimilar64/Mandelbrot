@@ -1,7 +1,5 @@
 package com.selfsimilartech.fractaleye
 
-import android.graphics.BitmapFactory
-import android.graphics.Point
 import android.opengl.GLES30.*
 import android.util.Log
 import java.nio.ByteBuffer
@@ -14,7 +12,7 @@ class GLTexture (
         private val interpolation   : Int,
         private val internalFormat  : Int,
         val index                   : Int,
-        var chunks                  : Int = 5
+        var chunks                  : Int = 8
 ) {
 
     val id : Int
@@ -50,6 +48,7 @@ class GLTexture (
         }
         bytesPerTexel = numComponents*bytesPerComponent
         val internalFormatStr = when(internalFormat) {
+            GL_RGBA8 -> "GL_RGBA8"
             GL_R16UI -> "GL_R16UI"
             GL_R32UI -> "GL_R32UI"
             GL_RG16UI -> "GL_RG16UI"
@@ -73,6 +72,7 @@ class GLTexture (
             else -> 0
         }
         format = when(internalFormat) {
+            GL_RGBA8              -> GL_RGBA
             GL_RG16UI, GL_RG32UI  -> GL_RG_INTEGER
             GL_R16UI, GL_R32UI    -> GL_RED_INTEGER
             else                  -> GL_RGBA

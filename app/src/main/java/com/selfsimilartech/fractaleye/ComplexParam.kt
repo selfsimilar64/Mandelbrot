@@ -18,6 +18,9 @@ class ComplexParam (
 
 ) : RealParam(nameId, u, uRange, uLocked, false, toRadians, goldFeature) {
 
+    constructor(u: Double = 0.0, v: Double = 0.0) : this(-1, u, v)
+    constructor(data: Data) : this(u = data.u, v = data.v)
+
     private val vInit = v
     private val vLockedInit = vLocked
     private val linkedInit = linked
@@ -51,32 +54,23 @@ class ComplexParam (
     }
     override fun clone() : ComplexParam {
 
-        return ComplexParam(
-                nameId,
-                uInit,
-                vInit,
-                uLockedInit,
-                vLockedInit,
-                uRange,
-                vRange,
-                linkedInit,
-                toRadiansInit
-        )
+        return ComplexParam(u = u, v = v)
 
     }
     override fun setFrom(newParam: RealParam) {
 
         super.setFrom(newParam)
 
-        with (newParam as ComplexParam) {
-            v = newParam.vInit
-            vLocked = newParam.vLockedInit
-            vRange = newParam.vRange
-            toRadians = newParam.toRadiansInit
-        }
+        newParam as ComplexParam
+
+        uLocked = false
+        vLocked = false
+        u = newParam.u
+        v = newParam.v
 
     }
     override fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), v.toFloat())
-    override fun toDouble2(): Double2 = Double2(u, v)
+    override fun toDouble2() : Double2 = Double2(u, v)
+    override fun toData(index: Int) : Data = Data(u, v, true)
 
 }

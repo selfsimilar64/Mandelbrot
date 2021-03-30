@@ -3,7 +3,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/layout"
+    android:id="@+id/imageLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
@@ -256,6 +256,50 @@
                 android:background="@color/menuDark7" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/allowSlowRendersLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <Switch
+                    android:id="@+id/allowSlowRendersSwitch"
+                    style="@style/SwitchDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:showText="false"
+                    android:splitTrack="false"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textView14"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/allow_slow_renders"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/allowSlowRendersHint"
+                    style="@style/TextDescriptionDark"
+                    android:layout_height="wrap_content"
+                    android:text="@string/allow_slow_renders_hint"
+                    app:layout_constraintEnd_toStartOf="@+id/allowSlowRendersSwitch"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView14" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/menuDark7" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/splitTypeLayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -292,7 +336,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <View
-                android:id="@+id/divider3"
+                android:id="@+id/divider27"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
@@ -371,7 +415,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="@string/upgrade_to"
+                    android:text="@string/upgrade"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/imageView4"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -533,7 +577,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginBottom="0dp"
                         android:layout_weight="1"
-                        android:text="@_selfsimilar"
+                        android:text="@fractaleye.app"
                         android:textSize="15sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/aboutText1" />

@@ -12,6 +12,23 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/textureImageLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight"
+        android:orientation="horizontal"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/textureImageList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/texture_image_list_item" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/texturePreviewLayout"
         style="@style/ClickableFragmentItem"
         android:layout_width="match_parent"
@@ -77,7 +94,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <EditText
-                android:id="@+id/bailoutSignificandEdit"
+                android:id="@+id/radiusSignificandEdit"
                 style="@style/EditNumberDark"
                 android:layout_width="wrap_content"
                 android:imeOptions="actionNext"
@@ -91,14 +108,14 @@
                 android:text="@string/e" />
 
             <EditText
-                android:id="@+id/bailoutExponentEdit"
+                android:id="@+id/radiusExponentEdit"
                 style="@style/EditNumberDark"
                 android:layout_width="wrap_content"
                 android:imeOptions="actionDone" />
         </LinearLayout>
 
         <com.selfsimilartech.fractaleye.SeekBar2
-            android:id="@+id/bailoutExponentBar"
+            android:id="@+id/radiusExponentBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -106,15 +123,15 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/linearLayout5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/bailoutSignificandBar" />
+            app:layout_constraintTop_toBottomOf="@+id/radiusSignificandBar" />
 
         <com.selfsimilartech.fractaleye.SeekBar2
-            android:id="@+id/bailoutSignificandBar"
+            android:id="@+id/radiusSignificandBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:max="900"
-            app:layout_constraintBottom_toTopOf="@+id/bailoutExponentBar"
+            app:layout_constraintBottom_toTopOf="@+id/radiusExponentBar"
             app:layout_constraintEnd_toStartOf="@+id/linearLayout5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -144,6 +161,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            app:cardBackgroundColor="@color/transparent"
             app:cardCornerRadius="@dimen/fragmentItemCornerRadius">
 
             <androidx.recyclerview.widget.RecyclerView
@@ -178,7 +196,7 @@
             android:text="@string/view" />
 
         <Button
-            android:id="@+id/textureDoneButton"
+            android:id="@+id/textureListDoneButton"
             style="@style/MenuNavButton"
             android:layout_height="@dimen/navButtonSize"
             android:drawableTop="@drawable/done"
@@ -237,6 +255,13 @@
                     android:layout_height="wrap_content"
                     android:drawableTop="@drawable/radius"
                     android:text="@string/radius" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/textureImageButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:drawableTop="@drawable/image2"
+                    android:text="@string/image" />
 
                 <com.selfsimilartech.fractaleye.GradientButton
                     android:id="@+id/textureParamButton1"

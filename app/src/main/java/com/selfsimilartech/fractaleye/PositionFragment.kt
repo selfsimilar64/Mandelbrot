@@ -28,10 +28,7 @@ class PositionFragment : MenuFragment() {
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
-        val act = activity as MainActivity
-        val f = act.f
-        val fsv = act.fsv
-        val sc = act.sc
+        super.onViewCreated(v, savedInstanceState)
 
         val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
             -> TextView.OnEditorActionListener { editText, actionId, _ ->
@@ -64,21 +61,21 @@ class PositionFragment : MenuFragment() {
         xEdit.setOnEditorActionListener(editListener(yEdit) { w: TextView ->
             val result = w.text.toString().formatToDouble()
             if (result != null) {
-                f.position.x = result
+                f.shape.position.x = result
                 if (fsv.r.isRendering) fsv.r.interruptRender = true
                 fsv.r.renderToTex = true
             }
-            w.text = "%.17f".format(f.position.x)
+            w.text = "%.17f".format(f.shape.position.x)
 
         })
         yEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
             val result = w.text.toString().formatToDouble()
             if (result != null) {
-                f.position.y = result
+                f.shape.position.y = result
                 if (fsv.r.isRendering) fsv.r.interruptRender = true
                 fsv.r.renderToTex = true
             }
-            w.text = "%.17f".format(f.position.y)
+            w.text = "%.17f".format(f.shape.position.y)
         })
         // xLock.setOnClickListener {
         //     f.position.xLocked = xLock.isChecked
@@ -97,7 +94,7 @@ class PositionFragment : MenuFragment() {
                             act.showMessage(resources.getString(R.string.msg_num_out_range))
                         }
                         else {
-                            f.position.zoom = result3
+                            f.shape.position.zoom = result3
                             fsv.r.renderToTex = true
                             if (fsv.r.isRendering) fsv.r.interruptRender = true
                         }
@@ -105,14 +102,14 @@ class PositionFragment : MenuFragment() {
                     else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
-                    val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
+                    val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
                     w.text = "%.5f".format(scaleStrings[0].toFloat())
                     scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
                 })
         scaleExponentEdit.setOnEditorActionListener(
                 editListener(null) { w: TextView ->
 
-                    val prevScale = f.position.zoom
+                    val prevScale = f.shape.position.zoom
 
                     val result1 = scaleSignificandEdit.text.toString().formatToDouble(false)
                     val result2 = w.text.toString().formatToDouble(false)
@@ -122,7 +119,7 @@ class PositionFragment : MenuFragment() {
                             act.showMessage(resources.getString(R.string.msg_num_out_range))
                         }
                         else {
-                            f.position.zoom = result3
+                            f.shape.position.zoom = result3
                             if (fsv.r.isRendering) fsv.r.interruptRender = true
                             fsv.r.renderToTex = true
                         }
@@ -130,7 +127,7 @@ class PositionFragment : MenuFragment() {
                     else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
-                    val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
+                    val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
                     scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
                     w.text = "%d".format(scaleStrings[1].toInt())
 
@@ -138,28 +135,28 @@ class PositionFragment : MenuFragment() {
 
                 })
         scaleLock.setOnClickListener {
-            f.position.zoomLocked = scaleLock.isChecked
+            f.shape.position.zoomLocked = scaleLock.isChecked
         }
 
         rotationEdit.setOnEditorActionListener(
                 editListener(null) { w: TextView ->
                     val result = w.text.toString().formatToDouble()?.inRadians()
                     if (result != null) {
-                        f.position.rotation = result
+                        f.shape.position.rotation = result
                         fsv.r.renderToTex = true
                         if (fsv.r.isRendering) fsv.r.interruptRender = true
                     }
-                    w.text = "%.1f".format(f.position.rotation.inDegrees())
+                    w.text = "%.1f".format(f.shape.position.rotation.inDegrees())
                 })
         rotationLock.setOnClickListener {
-            f.position.rotationLocked = rotationLock.isChecked
+            f.shape.position.rotationLocked = rotationLock.isChecked
         }
 
 
         resetPositionButton.setOnClickListener {
 
-            val prevZoom = f.position.zoom
-            f.position.reset()
+            val prevZoom = f.shape.position.zoom
+            f.shape.position.reset()
             fsv.r.checkThresholdCross(prevZoom)
             act.updatePositionEditTexts()
             fsv.r.calcNewTextureSpan = true
@@ -188,14 +185,14 @@ class PositionFragment : MenuFragment() {
                 val zoomFactor = 10f.pow(progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
 
                 if (sc.continuousPosRender) {
-                    f.position.zoom(zoomFactor/previousZoomFactor)
+                    f.shape.position.zoom(zoomFactor/previousZoomFactor)
                     if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) fsv.r.renderToTex = true
                 }
                 else fsv.r.zoom(zoomFactor/previousZoomFactor)
                 // if (sc.continuousPosRender) fsv.r.checkThresholdCross(prevZoom)
                 previousZoomFactor = zoomFactor
 
-                val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
+                val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
                 scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
                 scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
 
@@ -211,7 +208,7 @@ class PositionFragment : MenuFragment() {
                     fsv.r.renderProfile = RenderProfile.CONTINUOUS
                 }
                 previousZoomFactor = 1f
-                prevZoom = f.position.zoom
+                prevZoom = f.shape.position.zoom
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
@@ -221,7 +218,7 @@ class PositionFragment : MenuFragment() {
                 }
                 else {
                     val zoomFactor = 10f.pow(seekBar.progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
-                    f.position.zoom(zoomFactor)
+                    f.shape.position.zoom(zoomFactor)
                 }
                 fsv.r.checkThresholdCross(prevZoom)
                 fsv.r.renderToTex = true
@@ -242,7 +239,7 @@ class PositionFragment : MenuFragment() {
                 val newTheta = ((progress/(rotationSeekBar.max/2).toDouble() - 1.0)*180.0).inRadians()
                 rotationEdit.setText("%.1f".format(newTheta.inDegrees()))
                 if (sc.continuousPosRender) {
-                    f.position.rotation = newTheta
+                    f.shape.position.rotation = newTheta
                     if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) fsv.r.renderToTex = true
                     if (fsv.r.isRendering) fsv.r.interruptRender = true
                 }
@@ -258,8 +255,8 @@ class PositionFragment : MenuFragment() {
 
                 if (sc.continuousPosRender) {
                     fsv.r.renderProfile = RenderProfile.CONTINUOUS
-                    prevTheta = f.position.rotation
                 }
+                prevTheta = f.shape.position.rotation
 
             }
 
@@ -268,8 +265,9 @@ class PositionFragment : MenuFragment() {
                 if (sc.continuousPosRender) fsv.r.renderProfile = RenderProfile.DISCRETE
                 else {
                     val newTheta = ((seekBar.progress/(rotationSeekBar.max/2).toDouble() - 1.0)*180.0).inRadians()
-                    f.position.rotation = newTheta
+                    f.shape.position.rotation = newTheta
                 }
+                fsv.r.renderToTex = true
                 fsv.requestRender()
 
             }
@@ -287,7 +285,6 @@ class PositionFragment : MenuFragment() {
 
 
         act.updatePositionEditTexts()
-        super.onViewCreated(v, savedInstanceState)
 
     }
 
@@ -295,9 +292,9 @@ class PositionFragment : MenuFragment() {
         val act = activity as? MainActivity
         if (act != null) {
             val f = act.f
-            rotationEdit.setText("%.1f".format(f.position.rotation.inDegrees()))
+            rotationEdit.setText("%.1f".format(f.shape.position.rotation.inDegrees()))
             rotationSeekBar.setOnSeekBarChangeListener(null)
-            rotationSeekBar.progress = (rotationSeekBar.max * (f.position.rotation.inDegrees() / 360.0 + 0.5)).toInt()
+            rotationSeekBar.progress = (rotationSeekBar.max * (f.shape.position.rotation.inDegrees() / 360.0 + 0.5)).toInt()
             rotationSeekBar.setOnSeekBarChangeListener(rotationSeekBarListener)
         }
     }

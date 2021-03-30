@@ -6,6 +6,8 @@ import android.util.Range
 
 class Texture (
 
+        var id              : Int = -1,
+        var hasCustomId     : Boolean = false,
         val nameId          : Int = -1,
         var name            : String = "",
         val init            : String = "",
@@ -14,19 +16,77 @@ class Texture (
         val isAverage       : Boolean = false,
         val usesFirstDelta  : Boolean = false,
         val usesSecondDelta : Boolean = false,
-        val params          : List<RealParam> = listOf(),
+        val params          : ParamList = ParamList(),
         val bins            : RealParam = RealParam(nameId = R.string.bins, u = 20.0, uRange = Range(0.0, 20.0), goldFeature = true),
         val auto            : Boolean = false,
         val radius          : Float = 1e2f,
         val frequency       : Float? = null,
-        val goldFeature      : Boolean = false,
+        val hasRawOutput    : Boolean = false,
+        val goldFeature     : Boolean = false,
         val displayName     : Int = nameId,
+        val usesAccent      : Boolean = false,
+        val usesDensity     : Boolean = false,
         var isFavorite      : Boolean = false
 
 ) {
 
 
+
+    class ParamListPreset(val list: List<RealParam?> = listOf()) {
+
+        constructor(vararg p: RealParam?) : this(p.toList())
+
+        override fun toString(): String {
+            return list.joinToString(separator = ", ") { "(u: ${it?.u})" }
+        }
+
+    }
+
+    class ParamList(val list: List<RealParam> = listOf()) {
+
+        constructor(vararg p: RealParam) : this(p.toList())
+
+        val size = list.size
+
+        fun setFrom(newList: ParamList) {
+            list.forEachIndexed { i, p ->
+                newList.list.find { it.nameId == p.nameId } ?.let { p.setFrom(it) }
+            }
+        }
+        fun setFrom(newParams: ParamListPreset) {
+
+            list.forEachIndexed { i, p ->
+                val newParam = newParams.list.getOrNull(i)
+                if (newParam != null) p.setFrom(newParam)
+            }
+
+        }
+
+        fun reset() {
+            list.forEach { it.reset() }
+        }
+
+        fun clone() : ParamListPreset {
+            return ParamListPreset(
+                    List(list.size) { i -> list[i].clone() }
+            )
+        }
+
+    }
+
+
     companion object {
+
+        var CUSTOM_IMAGE_COUNT = 0
+        val defaultImages = listOf(
+                R.drawable.flower,
+                R.drawable.pocketwatch,
+                R.drawable.snowflake
+        )
+        val customImages = mutableListOf<String>()
+
+        var nextId = 0
+            get() { return field++ }
 
         val emptyFavorite = Texture(name = "Empty Favorite")
         val emptyCustom = Texture(name = "Empty Custom")
@@ -34,44 +94,61 @@ class Texture (
                 R.string.empty
         )
         val escape = Texture(
-                R.string.escape,
-                final = "iteration_final(n)"
+                id = nextId,
+                nameId = R.string.escape,
+                final = "iteration_final(n)",
+                usesDensity = true
         )
         val converge = Texture(
-                R.string.converge,
+                id = nextId,
+                nameId = R.string.converge,
                 final = "iteration_final(n)",
                 radius = 1e-8f
         )
+        val convergeSmooth = Texture(
+                id = nextId,
+                nameId = R.string.converge_smooth,
+                loop = "converge_smooth_loop(sum, z, z1);",
+                final = "converge_smooth_final(sum, n)"
+        )
         val escapeSmooth = Texture(
-                R.string.escape_smooth,
+                id = nextId,
+                nameId = R.string.escape_smooth,
                 final = "escape_smooth_final(n, z, z1, textureIn)",
-                radius = 1e2f
+                radius = 1e2f,
+                usesDensity = true
         )
         val distanceEstimation = Texture(
-                R.string.distance_est,
+                id = nextId,
+                nameId = R.string.distance_est,
                 final = "dist_estim_final(modsqrz, alpha)",
                 usesFirstDelta = true,
                 auto = true,
-                radius = 1e2f
+                radius = 1e2f,
+                usesDensity = true
         )
         val absoluteDistance = Texture(
-                R.string.distance_est_abs,
+                id = nextId,
+                nameId = R.string.distance_est_abs,
                 final = "dist_estim_abs_final(modsqrz, alpha)",
                 usesFirstDelta = true,
+                usesAccent = true,
                 auto = true,
-                params = listOf(RealParam(R.string.size, 1.0, Range(0.000001, 3.0))),
+                params = ParamList(listOf(RealParam(R.string.size, 0.25, Range(0.000001, 3.0)))),
                 radius = 3e1f,
                 goldFeature = true
         )
         val normalMap1 = Texture(
-                R.string.normal1,
+                id = nextId,
+                nameId = R.string.normal1,
                 final = "normal_map1_final(z, alpha)",
                 usesFirstDelta = true,
                 radius = 1e1f,
                 frequency = 1f
         )
         val normalMap2 = Texture(
-                R.string.normal2,
+                id = nextId,
+                nameId = R.string.normal2,
                 final = "normal_map2_final(modsqrz, z, alpha, beta)",
                 usesFirstDelta = true,
                 usesSecondDelta = true,
@@ -79,13 +156,15 @@ class Texture (
                 frequency = 1f
         )
         val triangleIneqAvgInt = Texture(
-                R.string.triangle_ineq_avg_int,
+                id = nextId,
+                nameId = R.string.triangle_ineq_avg_int,
                 loop = "triangle_ineq_avg_int_loop(sum, sum1, n, modc, z1, z2);",
                 isAverage = true,
                 radius = 1e6f,
                 displayName = R.string.triangle_ineq_avg
         )
         val triangleIneqAvgFloat = Texture(
+                id = nextId,
                 nameId = R.string.triangle_ineq_avg_float,
                 loop = "triangle_ineq_avg_float_loop(sum, sum1, n, modc, z1, z2);",
                 isAverage = true,
@@ -93,57 +172,62 @@ class Texture (
                 displayName = R.string.triangle_ineq_avg
         )
         val curvatureAvg = Texture(
-                R.string.curvature_avg,
+                id = nextId,
+                nameId = R.string.curvature_avg,
                 loop = "curvature_avg_loop(sum, sum1, n, z, z1, z2);",
                 isAverage = true,
-                params = listOf(
+                params = ParamList(listOf(
                         RealParam(R.string.width, 1.0, Range(0.075, 10.0), goldFeature = true),
                         RealParam(R.string.bend, 0.0, Range(-5.0, 5.0), goldFeature = true)
-                ),
+                )),
                 radius = 1e8f
         )
         val stripeAvg = Texture(
-                R.string.stripe_avg,
+                id = nextId,
+                nameId = R.string.stripe_avg,
                 loop = "stripe_avg_loop(sum, sum1, z);",
                 isAverage = true,
-                params = listOf(
+                params = ParamList(listOf(
                         RealParam(R.string.frequency,  1.0,  Range(1.0, 8.0),                     goldFeature = true),
                         RealParam(R.string.phase,      0.0,  Range(0.0, 360.0), toRadians = true, goldFeature = true),
                         RealParam(R.string.width,      1.0,  Range(0.075, 30.0),                  goldFeature = true)
-                ),
+                )),
                 radius = 1e6f
         )
         val orbitTrapLine = Texture(
-                R.string.orbit_trap_line,
+                id = nextId,
+                nameId = R.string.orbit_trap_line,
                 init = "float minDist = R;",
                 loop = "orbit_trap_line_loop(z, minDist);",
                 final = "minDist",
-                params = listOf(
+                params = ParamList(listOf(
                         RealParam(R.string.shift, 0.0, Range(-10.0, 10.0), goldFeature = true),
                         RealParam(R.string.rotate, 0.0, Range(0.0, 180.0), toRadians = true, goldFeature = true)
-                )
+                ))
         )
         val orbitTrapCirc = Texture(
-                R.string.orbit_trap_circ,
+                id = nextId,
+                nameId = R.string.orbit_trap_circ,
                 init = "float minDist = R;",
                 loop = "orbit_trap_circ_loop(z, minDist);",
                 final = "minDist",
-                params = listOf(
+                params = ParamList(listOf(
                         ComplexParam(R.string.center),
                         RealParam(R.string.size, 0.0, Range(0.0, 2.0))
-                ),
+                )),
                 radius = 1e2f,
                 goldFeature = true
         )
         val orbitTrapBox = Texture(
-                R.string.orbit_trap_box,
+                id = nextId,
+                nameId = R.string.orbit_trap_box,
                 init = "float minDist = R;",
                 loop = "orbit_trap_box_loop(z, minDist);",
                 final = "minDist",
-                params = listOf(
+                params = ParamList(listOf(
                         ComplexParam(R.string.center),
                         ComplexParam(R.string.size, 1.0, 1.0)
-                ),
+                )),
                 goldFeature = true
         )
         val orbitTrapCircPuncture = Texture(
@@ -151,117 +235,271 @@ class Texture (
                 init = "float minDist = R; float angle = 0.0;",
                 loop = "orbit_trap_circ_puncture_loop(z, minDist, angle);",
                 final = "angle",
-                params = listOf(
+                params = ParamList(listOf(
                         ComplexParam(R.string.center),
                         RealParam(u = 1.0)
-                )
+                ))
         )
         val overlayAvg = Texture(
-                R.string.overlay_avg,
+                id = nextId,
+                nameId = R.string.overlay_avg,
                 loop = "overlay_avg_loop(sum, sum1, z);",
                 isAverage = true,
-                params = listOf(
+                params = ParamList(listOf(
                         RealParam(R.string.sharpness, 0.45, Range(0.4, 0.5))
-                ),
+                )),
                 radius = 1e2f
         )
         val exponentialSmoothing = Texture(
-                R.string.exponential_smooth,
+                id = nextId,
+                nameId = R.string.exponential_smooth,
                 loop = "exp_smoothing_loop(sum, modsqrz);",
                 final = "exp_smoothing_final(sum)",
-                radius = 1e2f
+                radius = 1e2f,
+                usesDensity = true
         )
         val angularMomentum = Texture(
+                id = nextId,
                 nameId = R.string.angular_momentum,
                 loop = "angular_momentum_loop(sum, sum1, z, z1, z2);",
                 isAverage = true,
-                params = listOf(RealParam(R.string.alpha, 0.0, Range(0.0, 2.0*Math.PI), goldFeature = true)),
                 radius = 1e10f,
                 goldFeature = true
         )
         val umbrella = Texture(
+                id = nextId,
                 nameId = R.string.umbrella,
                 loop = "umbrella_loop(sum, sum1, z, z1);",
                 isAverage = true,
-                params = listOf(RealParam(R.string.frequency, 4.0, Range(1.0, 8.0))),
+                params = ParamList(listOf(RealParam(R.string.frequency, 4.0, Range(1.0, 8.0)))),
                 goldFeature = true
         )
         val umbrellaInverse = Texture(
+                id = nextId,
                 nameId = R.string.inverse_umbrella,
                 loop = "umbrella_inverse_loop(sum, sum1, z, z1);",
                 isAverage = true,
-                params = listOf(RealParam(R.string.frequency, 4.0, Range(1.0, 5.0))),
+                params = ParamList(listOf(RealParam(R.string.frequency, 1.618, Range(1.0, 5.0)))),
                 goldFeature = true
         )
         val exitAngle = Texture(
-                nameId = R.string.texture_name,
-                loop = "exit_angle_loop(sum, sum1, z, z1);",
-                isAverage = true,
+                nameId = android.R.string.untitled,
+                // loop = "exit_angle_loop(sum, sum1, z, z1);",
+                final = "exit_angle_final(z, z1)",
+                params = ParamList(listOf(
+                        RealParam(R.string.power, u = 1.0, uRange = Range(0.0, 10.0))
+                )),
+                // isAverage = true,
                 goldFeature = true
         )
         val angle = Texture(
                 nameId = R.string.angle,
                 final = "angle_final(c)",
-                params = listOf(ComplexParam(R.string.center)),
+                params = ParamList(listOf(ComplexParam(R.string.center))),
                 goldFeature = true
+        )
+        val orbitTrapImageOver = Texture(
+                id = nextId,
+                nameId = R.string.image_over,
+                init = "vec4 color = vec4(0.0); ivec2 imageSize = textureSize(image, 0); float imageRatio = float(imageSize.y)/float(imageSize.x);",
+                loop = "orbit_trap_image_over_loop(z, color, imageRatio);",
+                final = "orbit_trap_image_over_final(color)",
+                params = ParamList(listOf(
+                        RealParam(R.string.size, 1.0, Range(0.0, 5.0), goldFeature = true),
+                        ComplexParam(R.string.center, u = -1.2, v = 1.2),
+                        RealParam(R.string.rotate, 0.0, Range(0.0, 360.0), toRadians = true, goldFeature = true)
+                )),
+                hasRawOutput = true
         )
         val precisionTest = Texture(
                 nameId = R.string.precision,
                 final = escapeSmooth.final,
-                params = listOf(
+                params = ParamList(listOf(
                         RealParam(u = -45.0, uRange = Range(-45.0, -10.0)),  // psuedo-zero exponent
                         RealParam(u = 13.0, uRange = Range(1.0, 15.0))       // split exponent
-                )
+                ))
+        )
+        val starLens = Texture(
+                id = nextId,
+                nameId = R.string.star_lens,
+                isAverage = true,
+                loop = "star_lens_loop(sum, sum1, z);",
+                params = ParamList(listOf(
+                        RealParam(R.string.scale, u = 0.5, uRange = Range(0.1, 5.0)),
+                        RealParam(R.string.rotate, u = 0.0, uRange = Range(0.0, 90.0), toRadians = true),
+                        ComplexParam(R.string.shift),
+                        RealParam(R.string.smooth, u = 4.0, uRange = Range(1.0, 8.0))
+                )),
+                goldFeature = true
+        )
+        val discLens = Texture(
+                id = nextId,
+                nameId = R.string.disc_lens,
+                isAverage = true,
+                loop = "disc_lens_loop(sum, sum1, z);",
+                params = ParamList(listOf(
+                        RealParam(R.string.scale, u = 1.0, uRange = Range(0.1, 5.0)),
+                        ComplexParam(R.string.shift, goldFeature = true),
+                        RealParam(R.string.smooth, u = 4.0, uRange = Range(1.0, 8.0), goldFeature = true)
+                ))
+        )
+        val sineLens = Texture(
+                id = nextId,
+                nameId = R.string.sin_lens,
+                isAverage = true,
+                loop = "sine_lens_loop(sum, sum1, z);",
+                params = ParamList(listOf(
+                        RealParam(R.string.scale, u = 1.0, uRange = Range(0.1, 5.0)),
+                        RealParam(R.string.rotate, u = 0.0, uRange = Range(0.0, 180.0), toRadians = true),
+                        ComplexParam(R.string.shift),
+                        RealParam(R.string.smooth, u = 4.0, uRange = Range(1.0, 8.0))
+                )),
+                goldFeature = true
+        )
+        val fieldLines = Texture(
+                id = nextId,
+                nameId = R.string.field_lines,
+                usesFirstDelta = true,
+                final = "field_lines_final(n, z, z1, alpha, textureIn)",
+                params = ParamList(listOf(
+                        RealParam(R.string.count, u = 11.0, uRange = Range(2.0, 15.0)),
+                        RealParam(R.string.size, u = 0.5, uRange = Range(0.1, 0.75)),
+                        RealParam(R.string.phase, u = 0.0, uRange = Range(0.0, 1.0))
+                )),
+                goldFeature = true
+        )
+        val fieldLines2 = Texture(
+                nameId = R.string.field_lines2,
+                final = "field_lines2_final(z, z1, textureIn)",
+                goldFeature = true
+        )
+        val escapeWithDistance = Texture(
+                id = nextId,
+                nameId = R.string.escape_with_distance,
+                usesFirstDelta = true,
+                final = "escape_smooth_dist_estim_final(n, z, z1, modsqrz, alpha, textureIn)",
+                params = ParamList(listOf(RealParam(R.string.size, 0.25, Range(0.00001, 3.0)))),
+                usesDensity = true,
+                usesAccent = true,
+                goldFeature = true
+        )
+        val orbitTrapImageUnder = Texture(
+                id = nextId,
+                nameId = R.string.image_under,
+                init = orbitTrapImageOver.init,
+                loop = "orbit_trap_image_under_loop(z, color, imageRatio);",
+                final = "orbit_trap_image_under_final(color)",
+                params = ParamList(listOf(
+                        RealParam(R.string.size, 1.0, Range(0.0, 5.0), goldFeature = true),
+                        ComplexParam(R.string.center, u = -1.2, v = 1.2),
+                        RealParam(R.string.rotate, 0.0, Range(0.0, 360.0), toRadians = true, goldFeature = true)
+                )),
+                hasRawOutput = true
+        )
+        val highlightIteration = Texture(
+                id = nextId,
+                nameId = R.string.texture_mode_out,
+                final = "highlight_iter_final(n)",
+                params = ParamList(listOf(
+                        RealParam(R.string.power, 255.0, Range(0.0, 500.0), discrete = true)
+                ))
+        )
+        val kleinianDistance = Texture(
+                id = nextId,
+                nameId = R.string.distance_est_abs,
+                usesFirstDelta = true,
+                final = "kleinian_dist_final(z, alpha, t)",
+                params = ParamList(listOf(RealParam(R.string.size, 0.75, Range(0.00001, 3.0)))),
+                usesAccent = true,
+                goldFeature = true
+        )
+        val kleinianAB = Texture(
+                id = nextId,
+                nameId = R.string.binary,
+                final = "kleinian_ab_final(z, t)"
+        )
+        val kleinianSwitch = Texture(
+                id = nextId,
+                nameId = R.string.fusion,
+                init = "bool underPrev = false; uint switchCount = 0u;",
+                loop = "kleinian_switch_loop(z, underPrev, switchCount, t, K, M, k);",
+                final = "kleinian_switch_final(switchCount)"
         )
 
 
 
         val all = mutableListOf(
-                umbrella,
-                umbrellaInverse,
-                angularMomentum,
                 escape,
                 escapeSmooth,
                 converge,
+                convergeSmooth,
                 exponentialSmoothing,
+                umbrella,
+                umbrellaInverse,
+                angularMomentum,
                 distanceEstimation,
-                absoluteDistance,
+                escapeWithDistance,
                 triangleIneqAvgInt,
                 triangleIneqAvgFloat,
                 curvatureAvg,
                 stripeAvg,
+                overlayAvg,
+                fieldLines,
+                discLens,
+                starLens,
+                sineLens,
                 orbitTrapLine,
                 orbitTrapCirc,
                 orbitTrapBox,
+                orbitTrapImageOver,
+                orbitTrapImageUnder,
                 normalMap1,
                 normalMap2,
-                overlayAvg
+                kleinianDistance,
+                kleinianAB
         )
 
-        val mandelbrot = all.minus(converge)
+        val mandelbrot = all.minus(listOf(
+                converge,
+                convergeSmooth,
+                kleinianDistance,
+                kleinianAB
+        ))
 
         val divergent = all.minus(listOf(
                 converge,
+                convergeSmooth,
                 triangleIneqAvgInt,
                 triangleIneqAvgFloat,
                 distanceEstimation,
                 normalMap1,
-                normalMap2
+                normalMap2,
+                kleinianDistance,
+                kleinianAB
         ))
 
         val convergent = mutableListOf(
                 converge,
+                convergeSmooth,
                 exponentialSmoothing,
                 orbitTrapLine,
                 orbitTrapCirc,
                 orbitTrapBox
         )
 
+        val kleinianCompat = listOf(
+                kleinianDistance,
+                kleinianAB
+        ).plus(divergent.minus(listOf(escapeSmooth, escapeWithDistance)))
+
+        val custom = listOf<Texture>()
+
     }
 
 
     init {
         if (isAverage) this.final = "avg_final(sum, sum1, n, z, z1, textureIn)"
+        if (!hasCustomId && id != -1) id = Integer.MAX_VALUE - id
     }
 
     fun initialize(res: Resources) {
@@ -275,7 +513,7 @@ class Texture (
             }
         }
 
-        params.forEach { p ->
+        params.list.forEach { p ->
             if (p.nameId != -1) p.name = res.getString(p.nameId)
         }
 
@@ -287,16 +525,20 @@ class Texture (
 
     }
 
-    var activeParam = if (params.isNotEmpty()) params[0] else RealParam(R.string.empty)
+    var activeParam = if (params.size != 0) params.list[0] else RealParam(R.string.empty)
 
     var thumbnail : Bitmap? = null
 
+    fun reset() {
+        params.reset()
+    }
+
     override fun equals(other: Any?): Boolean {
-        return other is Texture && nameId == other.nameId
+        return other is Texture && id == other.id
     }
 
     override fun hashCode(): Int {
-        return loop.hashCode()
+        return name.hashCode()
     }
 
 }

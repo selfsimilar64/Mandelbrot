@@ -10,14 +10,10 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.database.Cursor
-import android.graphics.Color
-import android.graphics.Point
-import android.graphics.PointF
+import android.graphics.*
+import android.graphics.drawable.ColorDrawable
 import android.opengl.GLSurfaceView
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Message
+import android.os.*
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -28,8 +24,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
-import androidx.fragment.app.*
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import androidx.room.migration.Migration
@@ -42,6 +41,7 @@ import com.michaelflisar.changelog.ChangelogSetup
 import com.michaelflisar.changelog.classes.ImportanceChangelogSorter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.color_fragment.*
+import kotlinx.android.synthetic.main.image_fragment.*
 import kotlinx.android.synthetic.main.position_fragment_old.*
 import kotlinx.android.synthetic.main.settings_fragment.*
 import kotlinx.android.synthetic.main.shape_fragment.*
@@ -52,9 +52,12 @@ import kotlinx.coroutines.launch
 import org.apfloat.Apcomplex
 import org.apfloat.Apfloat
 import org.apfloat.ApfloatMath
+import java.io.File
 import java.lang.ref.WeakReference
 import java.util.*
-import kotlin.math.*
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 const val MAX_SHAPE_PARAMS = 4
@@ -86,21 +89,30 @@ const val HIDE_NAV_BAR = "hideNavBar"
 const val COLOR_LIST_VIEW_TYPE = "colorListViewType"
 const val SHAPE_LIST_VIEW_TYPE = "shapeListViewType"
 const val TEXTURE_LIST_VIEW_TYPE = "textureListViewType"
+const val BOOKMARK_LIST_VIEW_TYPE = "bookmarkListViewType"
 const val AUTOFIT_COLOR_RANGE = "autofitColorRange"
 const val HARDWARE_PROFILE = "hardwareProfile"
 const val GPU_PRECISION = "gpuPrecision"
 const val CPU_PRECISION = "cpuPrecision"
+const val PREV_FRACTAL_CREATED = "previousFractalCreated"
+const val PREV_FRACTAL_ID = "previousFractalId"
+const val TEX_IMAGE_COUNT = "texImageCount"
 
 const val PALETTE = "palette"
-const val SOLID_FILL_COLOR = "solidFillColor"
+const val ACCENT_COLOR1 = "accentColor1"
+const val ACCENT_COLOR2 = "accentColor2"
 
 const val USE_ALTERNATE_SPLIT = "useAlternateSplit"
+const val ALLOW_SLOW_DUALFLOAT = "allowSlowDualfloat"
 const val CHUNK_PROFILE = "chunkProfile"
 const val VERSION_CODE_TAG = "versionCode"
 const val SHARED_PREFERENCES = "com.selfsimilartech.fractaleye.SETTINGS"
 
 const val PALETTE_TABLE_NAME = "palette"
 const val SHAPE_TABLE_NAME = "shape"
+const val FRACTAL_TABLE_NAME = "fractal"
+
+const val TEX_IM_PREFIX = "tex_im_"
 
 
 //const val PLUS_UNICODE = '\u002B'
@@ -150,6 +162,10 @@ infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     return sequence.asIterable()
 }
 fun now() = System.currentTimeMillis()
+
+fun View?.color() : Int {
+    return (this?.background as? ColorDrawable)?.color ?: Color.BLACK
+}
 
 
 fun View.show() { visibility = View.VISIBLE }
@@ -204,7 +220,13 @@ class PositionList(
         val default: Position = Position(),
         val julia: Position = Position(zoom = 3.5)
 ) {
+    
+    var active = default
 
+    fun setFrom(newPositions: PositionList) {
+        default.setFrom(newPositions.default)
+        julia.setFrom(newPositions.julia)
+    }
     fun clone() : PositionList {
         return PositionList(
                 default.clone(),
@@ -377,19 +399,16 @@ fun split(a: Float) : PointF {
 }
 
 
+
+
 class MainActivity : AppCompatActivity(), OnCompleteListener {
 
-
-//    private val hexArray = "0123456789abcdef".toCharArray()
-//    private lateinit var mTcpClient : TcpClient
-//    private lateinit var ftpclient : MyFTPClient
-//    private val handlerUi = Handler()
 
     var fragmentsCompleted = 0
 
     lateinit var db : AppDatabase
-    var f : Fractal = Fractal.mandelbrot
-    var sc : SettingsConfig = SettingsConfig()
+    val f = Fractal.default
+    var sc = SettingsConfig
     lateinit var fsv : FractalSurfaceView
     private var screenWidth = 0
     private var screenHeight = 0
@@ -400,16 +419,17 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     private var goldEnabledDialogShown = false
     private var goldPendingDialogShown = false
     private var showEpilepsyDialog = true
+    private var previousFractalCreated = false
     private var dialog : AlertDialog? = null
+    private var previousFractalId = -1
 
 
-    private lateinit var settingsFragment : Fragment
-    private lateinit var imageFragment : Fragment
-    private lateinit var textureFragment : Fragment
-    private lateinit var shapeFragment : Fragment
-    private lateinit var colorFragment : Fragment
-
-    private lateinit var positionFragment : Fragment
+    private lateinit var settingsFragment   : Fragment
+    private lateinit var imageFragment      : MenuFragment
+    private lateinit var textureFragment    : MenuFragment
+    private lateinit var shapeFragment      : MenuFragment
+    private lateinit var colorFragment      : MenuFragment
+    private lateinit var positionFragment   : MenuFragment
 
 
     private lateinit var billingClient : BillingClient
@@ -418,7 +438,10 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         override fun onBillingSetupFinished(billingResult: BillingResult) {
             when (billingResult.responseCode) {
                 BillingClient.BillingResponseCode.OK -> queryPurchases()
-                else -> Log.e("MAIN", "unknown billing response code")
+                else -> {
+                    if (BuildConfig.DEV_VERSION) queryPurchases()
+                    Log.e("MAIN", "unknown billing response code")
+                }
             }
         }
 
@@ -448,13 +471,15 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
-    class ActivityHandler(activity: MainActivity) : Handler() {
+    class ActivityHandler(activity: MainActivity) : Handler(Looper.getMainLooper()) {
 
         private val MSG_UPDATE_COLOR_THUMBNAILS = 0
         private val MSG_UPDATE_TEXTURE_THUMBNAILS = 1
         private val MSG_IMAGE_SAVED = 2
         private val MSG_ERROR = 3
         private val MSG_UPDATE_SHAPE_THUMBNAILS = 4
+        private val MSG_SHOW_BOOKMARK_DIALOG = 5
+        private val MSG_BOOKMARK_AS_PREVIOUS_FRACTAL = 6
 
 
         
@@ -478,6 +503,14 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         fun showErrorMessage() {
             sendMessage(obtainMessage(MSG_ERROR))
         }
+        fun showBookmarkDialog() {
+            sendMessage(obtainMessage(MSG_SHOW_BOOKMARK_DIALOG))
+        }
+        fun bookmarkAsPreviousFractal() {
+            sendMessage(obtainMessage(MSG_BOOKMARK_AS_PREVIOUS_FRACTAL))
+        }
+
+
 
         // runs on UI thread
         override fun handleMessage(msg: Message) {
@@ -499,6 +532,8 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 MSG_ERROR -> activity?.showMessage(
                         activity.resources.getString(R.string.msg_error)
                 )
+                MSG_SHOW_BOOKMARK_DIALOG -> activity?.showBookmarkDialog()
+                MSG_BOOKMARK_AS_PREVIOUS_FRACTAL -> activity?.bookmarkAsPreviousFractal()
                 else -> throw RuntimeException("unknown msg $what")
             }
         }
@@ -509,11 +544,13 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         IMAGE(R.string.image, R.drawable.image2) {
             override fun onOpenMenu(act: MainActivity) {
-                onCategorySelected(act)
+                act.apply {
+                    if (presetPreviewListLayout.isVisible) uiSetOpenTall() else uiSetOpen()
+                }
             }
             override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {
-                act.categoryButtons.getTabAt(POSITION).select()
+                if (!act.presetPreviewListLayout.isVisible) act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
                 //val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
@@ -540,6 +577,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             override fun onCategorySelected(act: MainActivity) {
 
                 if (!act.texturesDisabled) {
+                    if (act.f.texture.activeParam.nameId == R.string.density && !act.sc.autofitColorRange) act.textureModeButton.performClick()
                     if (act.realTextureParam.isVisible() or act.complexTextureParam.isVisible()) {
                         act.fsv.r.reaction = Reaction.TEXTURE
                         act.showTouchIcon()
@@ -604,17 +642,11 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             }
             override fun onMenuClosed(act: MainActivity) {}
             override fun onCategorySelected(act: MainActivity) {
-//                if (act.findViewById<LinearLayout>(R.id.colorPreviewListLayout).isVisible()) {
-//                    act.fsv.renderProfile = RenderProfile.MANUAL
-//                }
-//                else {
-//                    act.fsv.renderProfile = RenderProfile.COLOR_THUMB
-//                    act.fsv.r.renderToTex = true
-//                    act.fsv.r.renderThumbnails = true
-//                    act.fsv.requestRender()
-//                }
-                act.fsv.r.reaction = Reaction.COLOR
-                act.showTouchIcon()
+                act.apply {
+                    if (f.texture.usesDensity && sc.autofitColorRange) densityButton.show() else densityButton.hide()
+                    fsv.r.reaction = Reaction.COLOR
+                    showTouchIcon()
+                }
             }
             override fun onCategoryUnselected(act: MainActivity) {}
         },
@@ -663,18 +695,298 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 database.execSQL("ALTER TABLE palette ADD COLUMN c12 INTEGER DEFAULT 0 not null")
             }
         }
+        val migrate4to5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE fractal (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    isFavorite INTEGER NOT NULL,
+                    thumbnailPath TEXT NOT NULL,
+                    shapeId INTEGER NOT NULL,
+                    customShape INTEGER NOT NULL,
+                    juliaMode INTEGER NOT NULL,
+                    maxIter INTEGER NOT NULL,
+                    p1_id INTEGER,
+                    p1_u REAL,
+                    p1_v REAL,
+                    p1_isComplex INTEGER,
+                    p2_id INTEGER,
+                    p2_u REAL,
+                    p2_v REAL,
+                    p2_isComplex INTEGER,
+                    p3_id INTEGER,
+                    p3_u REAL,
+                    p3_v REAL,
+                    p3_isComplex INTEGER,
+                    p4_id INTEGER,
+                    p4_u REAL,
+                    p4_v REAL,
+                    p4_isComplex INTEGER,
+                    julia_id INTEGER,
+                    julia_u REAL,
+                    julia_v REAL,
+                    julia_isComplex INTEGER,
+                    seed_id INTEGER,
+                    seed_u REAL,
+                    seed_v REAL,
+                    seed_isComplex INTEGER,
+                    pos_x REAL,
+                    pos_y REAL,
+                    pos_zoom REAL,
+                    pos_rotation REAL,
+                    textureId INTEGER NOT NULL,
+                    customTexture INTEGER NOT NULL,
+                    textureMode INTEGER NOT NULL,
+                    radius REAL NOT NULL,
+                    q1_id INTEGER,
+                    q1_u REAL,
+                    q1_v REAL,
+                    q1_isComplex INTEGER,
+                    q2_id INTEGER,
+                    q2_u REAL,
+                    q2_v REAL,
+                    q2_isComplex INTEGER,
+                    q3_id INTEGER,
+                    q3_u REAL,
+                    q3_v REAL,
+                    q3_isComplex INTEGER,
+                    q4_id INTEGER,
+                    q4_u REAL,
+                    q4_v REAL,
+                    q4_isComplex INTEGER,
+                    paletteId INTEGER NOT NULL,
+                    customPalette INTEGER NOT NULL,
+                    frequency REAL NOT NULL,
+                    phase REAL NOT NULL,
+                    solidFillColor INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+        val migrate5to6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+
+                // create new table (remove parameter ids)
+                database.execSQL("""
+                    CREATE TABLE fractal_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    isFavorite INTEGER NOT NULL,
+                    thumbnailPath TEXT NOT NULL,
+                    shapeId INTEGER NOT NULL,
+                    customShape INTEGER NOT NULL,
+                    juliaMode INTEGER NOT NULL,
+                    maxIter INTEGER NOT NULL,
+                    p1_u REAL,
+                    p1_v REAL,
+                    p1_isComplex INTEGER,
+                    p2_u REAL,
+                    p2_v REAL,
+                    p2_isComplex INTEGER,
+                    p3_u REAL,
+                    p3_v REAL,
+                    p3_isComplex INTEGER,
+                    p4_u REAL,
+                    p4_v REAL,
+                    p4_isComplex INTEGER,
+                    julia_u REAL,
+                    julia_v REAL,
+                    julia_isComplex INTEGER,
+                    seed_u REAL,
+                    seed_v REAL,
+                    seed_isComplex INTEGER,
+                    pos_x REAL,
+                    pos_y REAL,
+                    pos_zoom REAL,
+                    pos_rotation REAL,
+                    textureId INTEGER NOT NULL,
+                    customTexture INTEGER NOT NULL,
+                    textureMode INTEGER NOT NULL,
+                    radius REAL NOT NULL,
+                    q1_u REAL,
+                    q1_v REAL,
+                    q1_isComplex INTEGER,
+                    q2_u REAL,
+                    q2_v REAL,
+                    q2_isComplex INTEGER,
+                    q3_u REAL,
+                    q3_v REAL,
+                    q3_isComplex INTEGER,
+                    q4_u REAL,
+                    q4_v REAL,
+                    q4_isComplex INTEGER,
+                    paletteId INTEGER NOT NULL,
+                    customPalette INTEGER NOT NULL,
+                    frequency REAL NOT NULL,
+                    phase REAL NOT NULL,
+                    solidFillColor INTEGER NOT NULL
+                    )
+                """.trimIndent())
+
+                // copy data into new table
+                database.execSQL("""
+                    INSERT INTO fractal_new (
+                    id,
+                    name,
+                    isFavorite,
+                    thumbnailPath,
+                    shapeId,
+                    customShape,
+                    juliaMode,
+                    maxIter,
+                    p1_u,
+                    p1_v,
+                    p1_isComplex,
+                    p2_u,
+                    p2_v,
+                    p2_isComplex,
+                    p3_u,
+                    p3_v,
+                    p3_isComplex,
+                    p4_u,
+                    p4_v,
+                    p4_isComplex,
+                    julia_u,
+                    julia_v,
+                    julia_isComplex,
+                    seed_u,
+                    seed_v,
+                    seed_isComplex,
+                    pos_x,
+                    pos_y,
+                    pos_zoom,
+                    pos_rotation,
+                    textureId,
+                    customTexture,
+                    textureMode,
+                    radius,
+                    q1_u,
+                    q1_v,
+                    q1_isComplex,
+                    q2_u,
+                    q2_v,
+                    q2_isComplex,
+                    q3_u,
+                    q3_v,
+                    q3_isComplex,
+                    q4_u,
+                    q4_v,
+                    q4_isComplex,
+                    paletteId,
+                    customPalette,
+                    frequency,
+                    phase,
+                    solidFillColor
+                    ) SELECT id,
+                    name,
+                    isFavorite,
+                    thumbnailPath,
+                    shapeId,
+                    customShape,
+                    juliaMode,
+                    maxIter,
+                    p1_u,
+                    p1_v,
+                    p1_isComplex,
+                    p2_u,
+                    p2_v,
+                    p2_isComplex,
+                    p3_u,
+                    p3_v,
+                    p3_isComplex,
+                    p4_u,
+                    p4_v,
+                    p4_isComplex,
+                    julia_u,
+                    julia_v,
+                    julia_isComplex,
+                    seed_u,
+                    seed_v,
+                    seed_isComplex,
+                    pos_x,
+                    pos_y,
+                    pos_zoom,
+                    pos_rotation,
+                    textureId,
+                    customTexture,
+                    textureMode,
+                    radius,
+                    q1_u,
+                    q1_v,
+                    q1_isComplex,
+                    q2_u,
+                    q2_v,
+                    q2_isComplex,
+                    q3_u,
+                    q3_v,
+                    q3_isComplex,
+                    q4_u,
+                    q4_v,
+                    q4_isComplex,
+                    paletteId,
+                    customPalette,
+                    frequency,
+                    phase,
+                    solidFillColor FROM fractal
+                """.trimIndent())
+
+                // remove old table
+                database.execSQL("DROP TABLE fractal")
+
+                // Change table name
+                database.execSQL("ALTER TABLE fractal_new RENAME TO fractal")
+
+            }
+        }
+        val migrate6to7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE fractal ADD COLUMN accent2 INTEGER DEFAULT 0 NOT NULL")
+            }
+        }
+        val migrate7to8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE fractal ADD COLUMN density REAL DEFAULT 0.0 NOT NULL")
+            }
+        }
+        val migrate8to9 = object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE fractal ADD COLUMN textureMin REAL DEFAULT 0.0 NOT NULL")
+                database.execSQL("ALTER TABLE fractal ADD COLUMN textureMax REAL DEFAULT 1.0 NOT NULL")
+            }
+        }
+        val migrate9to10 = object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE fractal ADD COLUMN imagePath TEXT DEFAULT '' NOT NULL")
+            }
+        }
+        val migrate10to11 = object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE fractal ADD COLUMN imageId INTEGER DEFAULT -1 NOT NULL")
+            }
+        }
+
         db = Room.databaseBuilder(
                 applicationContext,
                 AppDatabase::class.java,
                 "custom"
-        ).fallbackToDestructiveMigrationFrom(1).addMigrations(migrate2to3, migrate3to4).build()
-
+        ).fallbackToDestructiveMigrationFrom(1).addMigrations(
+                migrate2to3,
+                migrate3to4,
+                migrate4to5,
+                migrate5to6,
+                migrate6to7,
+                migrate7to8,
+                migrate8to9,
+                migrate9to10,
+                migrate10to11
+        ).build()
 
         billingClient = BillingClient.newBuilder(this)
                 .setListener(purchaseUpdateListener)
                 .enablePendingPurchases()
                 .build()
-        //billingClient.startConnection(billingClientStateListener)
+        billingClient.startConnection(billingClientStateListener)
 
 
         // establish screen dimensions
@@ -706,29 +1018,35 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         goldEnabledDialogShown = sp.getBoolean(GOLD_ENABLED_DIALOG_SHOWN, false)
         goldPendingDialogShown = sp.getBoolean(GOLD_PENDING_DIALOG_SHOWN, false)
-
         showEpilepsyDialog = sp.getBoolean(SHOW_EPILEPSY_DIALOG, true)
+        previousFractalCreated = sp.getBoolean(PREV_FRACTAL_CREATED, false)
+        previousFractalId = sp.getInt(PREV_FRACTAL_ID, -1)
+
+        Texture.CUSTOM_IMAGE_COUNT = sp.getInt(TEX_IMAGE_COUNT, 0)
 
         // val maxStartupRes = if (sc.goldEnabled) Resolution.SCREEN else Resolution.R1080
         val savedResolution = sp.getInt(RESOLUTION, Resolution.all.indexOf(Resolution.R1080))
         sc.resolution = Resolution.all.getOrNull(savedResolution) ?: Resolution.R720
-        val savedAspectRatio = sp.getInt(ASPECT_RATIO, 0)
-        sc.aspectRatio = AspectRatio.all.getOrNull(savedAspectRatio) ?: AspectRatio.RATIO_SCREEN
+        // val savedAspectRatio = sp.getInt(ASPECT_RATIO, 0)
+        // sc.aspectRatio = AspectRatio.all.getOrNull(savedAspectRatio) ?: AspectRatio.RATIO_SCREEN
         //sc.resolution = Resolution.FOURTH
         //sc.precision = Precision.values()[sp.getInt(PRECISION, Precision.SINGLE.ordinal)]
         //sc.autoPrecision = sp.getBoolean(AUTO_PRECISION, true)
         sc.continuousPosRender  = sp.getBoolean(CONTINUOUS_RENDER, false)
         sc.displayParams        = sp.getBoolean(DISPLAY_PARAMS, false)
         sc.renderBackground     = sp.getBoolean(RENDER_BACKGROUND, true)
-        sc.fitToViewport        = sp.getBoolean(FIT_TO_VIEWPORT, false)
+        // sc.fitToViewport        = sp.getBoolean(FIT_TO_VIEWPORT, false)
         sc.hideNavBar           = sp.getBoolean(HIDE_NAV_BAR, true)
-        sc.colorListViewType    = ListLayoutType.values()[sp.getInt(COLOR_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
-        sc.shapeListViewType    = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
-        sc.textureListViewType  = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
+        sc.colorListViewType    = ListLayoutType.values()[sp.getInt(COLOR_LIST_VIEW_TYPE,    ListLayoutType.GRID.ordinal)]
+        sc.shapeListViewType    = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE,    ListLayoutType.GRID.ordinal)]
+        sc.textureListViewType  = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE,  ListLayoutType.GRID.ordinal)]
+        sc.bookmarkListViewType = ListLayoutType.values()[sp.getInt(BOOKMARK_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
         sc.autofitColorRange    = sp.getBoolean(AUTOFIT_COLOR_RANGE, true)
         sc.useAlternateSplit    = sp.getBoolean(USE_ALTERNATE_SPLIT, false)
+        sc.allowSlowDualfloat   = sp.getBoolean(ALLOW_SLOW_DUALFLOAT, false)
         sc.chunkProfile         = ChunkProfile.values()[sp.getInt(CHUNK_PROFILE, 1)]
-        f.solidFillColor        = sp.getInt(SOLID_FILL_COLOR, Color.WHITE)
+        f.accent1               = sp.getInt(ACCENT_COLOR1, Color.WHITE)
+
 
 
 
@@ -742,7 +1060,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         // initialize default palettes and shapes
         val usResources = getLocalizedResources(applicationContext, Locale.US)
-        ColorPalette.default.forEach {
+        Palette.default.forEach {
             it.isFavorite = sp.getBoolean(
                     "Palette${usResources.getString(it.nameId).replace(" ", "")}Starred", false
             )
@@ -760,6 +1078,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                     "Texture${usResources.getString(it.nameId).replace(" ", "")}Starred", false
             )
         }
+        Fractal.all.forEach { it.initialize(resources) }
 
         ListHeader.all.forEach { it.initialize(resources) }
 
@@ -769,7 +1088,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
 
 
-        val r = FractalRenderer(f, sc, this, baseContext, ActivityHandler(this))
+        val r = FractalRenderer(this, baseContext, ActivityHandler(this))
         //fsv = FractalSurfaceView(baseContext, f, sc, this, r)
 
 
@@ -790,7 +1109,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         setContentView(R.layout.activity_main)
         // fractalLayout.addView(fsv)
         fsv = fractalSurfaceView!!
-        fsv.initialize(r, f, sc, this)
+        fsv.initialize(r, this)
         fsv.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight, Gravity.CENTER)
         fractalLayout.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight, Gravity.CENTER)
         baseLayout.setOnTouchListener { v, event -> fsv.onTouchEvent(event) }
@@ -831,6 +1150,15 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
 
 
+        newBookmarkButton.setOnClickListener {
+
+            Fractal.tempBookmark1 = f.bookmark(fsv)
+
+            fsv.r.renderProfile = RenderProfile.SAVE_THUMBNAIL
+            fsv.requestRender()
+
+        }
+
         settingsButton.setOnClickListener { openSettingsMenu() }
 
         saveImageButton.setOnClickListener {
@@ -849,6 +1177,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                         fsv.requestRender()
                     }
                 } else {
+                    bookmarkAsPreviousFractal()
                     fsv.r.renderProfile = RenderProfile.SAVE_IMAGE
                     fsv.requestRender()
                 }
@@ -856,6 +1185,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             }
 
         }
+
+
+
 
 
         categoryNameButton.setOnClickListener {
@@ -879,8 +1211,8 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         categoryButtons.setupWithViewPager(categoryPager)
         for (i in 0..4) {
-            val transparentIcon = resources.getDrawable(Category.values()[i].icon, null)
-            transparentIcon.alpha = 128
+            val transparentIcon = ResourcesCompat.getDrawable(resources, Category.values()[i].icon, null)
+            transparentIcon?.alpha = 128
             categoryButtons.getTabAt(i)?.apply {
                 contentDescription = resources.getString(Category.values()[i].displayName).toUpperCase(Locale.getDefault())
                 //text = resources.getString(Category.values()[i].displayName)
@@ -919,7 +1251,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         categoryButtons.getTabAt(Category.POSITION).select()
 
 
-        // load custom palettes and shapes
+        // load custom palettes, shapes, and bookmarks
         GlobalScope.launch {
 
             // this is great!! thank you aha!!
@@ -931,8 +1263,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                     val tableName = cursor.getString(cursor.getColumnIndex("name"))
                     val nextId = cursor.getString(cursor.getColumnIndex("seq"))
                     when (tableName) {
-                        PALETTE_TABLE_NAME -> ColorPalette.nextCustomPaletteNum = nextId.toInt() + 1
-                        SHAPE_TABLE_NAME -> Shape.nextCustomShapeNum = nextId.toInt() + 1
+                        PALETTE_TABLE_NAME -> Palette.nextCustomPaletteNum = nextId?.toInt() ?: 0 + 1
+                        SHAPE_TABLE_NAME -> Shape.nextCustomShapeNum = nextId?.toInt() ?: 0 + 1
+                        FRACTAL_TABLE_NAME -> Fractal.nextCustomFractalNum = nextId?.toInt() ?: 0 + 1
                     }
                 } while (cursor.moveToNext())
             }
@@ -941,31 +1274,33 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
             db.colorPaletteDao().apply {
                 getAll().forEach {
-                    ColorPalette.custom.add(0, ColorPalette(
+                    Palette.custom.add(0, Palette(
                             name = it.name,
+                            id = it.id,
+                            hasCustomId = true,
                             colors = ArrayList(arrayListOf(
-                                    it.c1,  it.c2,  it.c3,
-                                    it.c4,  it.c5,  it.c6,
-                                    it.c7,  it.c8,  it.c9,
+                                    it.c1, it.c2, it.c3,
+                                    it.c4, it.c5, it.c6,
+                                    it.c7, it.c8, it.c9,
                                     it.c10, it.c11, it.c12
                             ).slice(0 until it.size)),
-                            customId = it.id,
                             isFavorite = it.starred
                     ))
-                    ColorPalette.custom[0].initialize(resources)
-                    Log.d("MAIN", "custom palette ${ColorPalette.custom[0].name}, id: ${ColorPalette.custom[0].customId}")
+                    Palette.custom[0].initialize(resources)
+                    Log.d("MAIN", "custom palette ${Palette.custom[0].name}, id: ${Palette.custom[0].id}")
                 }
             }
 
-            ColorPalette.all.addAll(0, ColorPalette.custom)
-            f.palette = ColorPalette.all[sp.getInt(PALETTE, ColorPalette.all.indexOf(ColorPalette.night))]
+            Palette.all.addAll(0, Palette.custom)
+            Palette.all.find { it.id == sp.getInt(PALETTE, Palette.night.id) }?.let { f.palette = it }
 
 
             db.shapeDao().apply {
                 getAll().forEach {
                     Shape.custom.add(0, Shape(
                             name = it.name,
-                            customId = it.id,
+                            id = it.id,
+                            hasCustomId = true,
                             latex = it.latex,
                             loop = "customshape_loop(z1, c)",
                             conditional = it.conditional,
@@ -985,7 +1320,6 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                             ),
                             juliaMode = it.juliaMode,
                             juliaSeed = it.juliaSeed,
-                            seed = Complex(it.xSeed, it.ySeed),
                             maxIter = it.maxIter,
                             radius = it.bailoutRadius,
                             isConvergent = it.isConvergent,
@@ -995,12 +1329,95 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                             isFavorite = it.isFavorite
                     ))
                     Shape.custom[0].initialize(resources)
-                    Log.d("MAIN", "custom shape ${Shape.custom[0].name}, id: ${Shape.custom[0].customId}")
+                    Log.d("MAIN", "custom shape ${Shape.custom[0].name}, id: ${Shape.custom[0].id}")
                 }
             }
             Shape.all.addAll(0, Shape.custom)
 
+
+            db.fractalDao().apply {
+
+                if (!previousFractalCreated) {
+                    Fractal.previous.customId = insert(Fractal.previous.toEntity()).toInt()
+                    previousFractalId = Fractal.previous.customId
+                    val edit = sp.edit()
+                    edit.putInt(PREV_FRACTAL_ID, Fractal.previous.customId)
+                    edit.putBoolean(PREV_FRACTAL_CREATED, true)
+                    edit.apply()
+                }
+
+                getAll().forEach {
+
+                    val shapeParams = if (listOfNotNull(it.julia, it.seed, it.p1, it.p2, it.p3, it.p4).isNotEmpty()) Shape.ParamListPreset(
+                            listOfNotNull(it.p1, it.p2, it.p3, it.p4).map { p -> if (p.isComplex) ComplexParam(p) else RealParam(p) },
+                            julia = if (it.julia != null) ComplexParam(it.julia) else null,
+                            seed = if (it.seed != null) ComplexParam(it.seed) else null
+                    ) else null
+
+                    val textureParams = if (listOfNotNull(it.q1, it.q2, it.q3, it.q4).isNotEmpty()) Texture.ParamListPreset(
+                            listOf(it.q1, it.q2, it.q3, it.q4).map { q ->
+                                if (q != null) {
+                                    if (q.isComplex) ComplexParam(q) else RealParam(q)
+                                } else null
+                            }
+                    ) else null
+
+                    val thumbnail = try {
+                        val inputStream = openFileInput(it.thumbnailPath)
+                        BitmapFactory.decodeStream(inputStream, null, BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.RGB_565 }).let { bmp ->
+                            inputStream?.close()
+                            bmp
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MAIN", "thumnail path invalid")
+                        BitmapFactory.decodeResource(resources, R.drawable.mandelbrot_icon)
+                    }
+
+                    val newBookmark = Fractal(
+
+                                name = it.name,
+                                isFavorite = it.isFavorite,
+                                thumbnailPath = it.thumbnailPath,
+                                thumbnail = thumbnail,
+                                customId = it.id,
+                                goldFeature = false,
+
+                                shapeId = it.shapeId,
+                                juliaMode = it.juliaMode,
+                                maxIter = it.maxIter,
+                                shapeParams = shapeParams,
+                                position = if (it.position != null) Position(it.position) else null,
+
+                                textureId = it.textureId,
+                                textureMode = TextureMode.values()[it.textureMode],
+                                radius = it.radius,
+                                textureMin = it.textureMin,
+                                textureMax = it.textureMax,
+                                textureParams = textureParams,
+                                imagePath = it.imagePath,
+                                imageId = Texture.defaultImages.getOrNull(it.imageId) ?: -1,
+
+                                paletteId = it.paletteId,
+                                frequency = it.frequency,
+                                phase = it.phase,
+                                density = it.density,
+                                accent1 = it.solidFillColor,
+                                accent2 = it.accent2
+
+                    )
+                    if (it.id == previousFractalId) Fractal.previous = newBookmark else Fractal.bookmarks.add(0, newBookmark)
+                    Log.d("MAIN", "Bookmark -- id: ${newBookmark.customId}, name: ${newBookmark.name}, imagePath: ${it.imagePath}, imageId: ${it.imageId} thumbPath: ${it.thumbnailPath}, frequency: ${it.frequency}, phase: ${it.phase}")
+
+                }
+
+            }
+            Fractal.all.addAll(0, Fractal.bookmarks)
+
         }
+
+        // load custom texture images
+        // fileList().forEachIndexed { i, f -> Log.d("MAIN", "file #$i: $f") }
+        fileList().filter { it.startsWith(TEX_IM_PREFIX) }.let { Texture.customImages.addAll(it.reversed()) }
 
 
         overlay.bringToFront()
@@ -1029,13 +1446,13 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 if (sp.getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) showChangelog()
             }
         }
+        if (previousFractalCreated) showLoadPreviousFractalDialog()
 
     }
 
 
 
-
-    private fun uiSetClosed() {
+    fun uiSetClosed() {
         uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt())
     }
     fun uiSetOpen() {
@@ -1090,8 +1507,8 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         if (sc.fitToViewport && fractalLayout.layoutParams.height >= ui.top - header.bottom) {
             val scaleFactor = (ui.top - header.bottom) / fractalLayout.layoutParams.height.toFloat()
             fractalLayout.apply {
-                pivotX = (left + right)/2f
-                pivotY = (top + bottom)/2f
+//                pivotX = (left + right)/2f
+//                pivotY = (top + bottom)/2f
                 scaleX = scaleFactor
                 scaleY = scaleFactor
             }
@@ -1236,7 +1653,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
             // update text content
             when (fsv.r.reaction) {
-                Reaction.NONE-> {
+                Reaction.NONE -> {
 
                     w = (60f * density).toInt()
 
@@ -1247,10 +1664,10 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                     displayParamName2.text = resources.getString(R.string.y)
                     displayParamName3.text = resources.getString(R.string.zoom)
                     displayParamName4.text = resources.getString(R.string.rotation)
-                    displayParam1.text = "%.17f".format(f.position.x)
-                    displayParam2.text = "%.17f".format(f.position.y)
-                    displayParam3.text = "%e".format(f.position.zoom)
-                    displayParam4.text = "%.0f".format(f.position.rotation * 180.0 / Math.PI)
+                    displayParam1.text = "%.17f".format(f.shape.position.x)
+                    displayParam2.text = "%.17f".format(f.shape.position.y)
+                    displayParam3.text = "%e".format(f.shape.position.zoom)
+                    displayParam4.text = "%.0f".format(f.shape.position.rotation * 180.0 / Math.PI)
                     w = (60f * density).toInt()
 
                 }
@@ -1267,15 +1684,14 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
                     val param =
                             (if (fsv.r.reaction == Reaction.SHAPE) f.shape.params.active
-                             else                                  f.texture.activeParam)
-                            .run { if (isRateParam) parent!! else this }
+                            else f.texture.activeParam)
+                                    .run { if (isRateParam) parent!! else this }
                     displayParamName1.text = "u"
                     displayParam1.text = "%.8f".format((param.u))
                     if (param is ComplexParam) {
                         displayParamName2.text = "v"
                         displayParam2.text = "%.8f".format((param.v))
-                    }
-                    else {
+                    } else {
                         displayParamRow2.hide()
                     }
                     displayParamName3.text = resources.getString(R.string.sensitivity)
@@ -1364,20 +1780,22 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     fun updateColorEditTexts() {
 
         frequencyEdit?.setText("%.5f".format(f.frequency))
+        phaseEdit?.setText("%.5f".format(f.phase))
+        densityEdit?.setText("%.5f".format(f.density))
+
         with(colorFragment as ColorFragment) {
             updateFrequencyLayout()
             updatePhaseLayout()
+//            updateDensityLayout()
         }
-
-        phaseEdit?.setText("%.5f".format(f.phase))
 
     }
     fun updatePositionEditTexts() {
 
-        xEdit?.setText("%.17f".format(f.position.x))
-        yEdit?.setText("%.17f".format(f.position.y))
+        xEdit?.setText("%.17f".format(f.shape.position.x))
+        yEdit?.setText("%.17f".format(f.shape.position.y))
 
-        val scaleStrings = "%e".format(Locale.US, f.position.zoom).split("e")
+        val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
         scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
         scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
 
@@ -1400,6 +1818,15 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         )
         hints.forEach { it.visibility = if (sc.showHints) TextView.VISIBLE else TextView.GONE }
 
+    }
+    fun updateFragmentLayouts() {
+
+        listOf(textureFragment, shapeFragment, colorFragment, positionFragment).forEach { it.updateLayout() }
+
+    }
+
+    fun onTextureChanged() {
+        if (f.texture.usesAccent) accentColor2Button.show() else accentColor2Button.hide()
     }
 
     fun showThumbnailDialog() {
@@ -1425,10 +1852,113 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     fun dismissDialog() {
         dialog?.dismiss()
     }
+    fun showBookmarkDialog(item: ListItem<Fractal>? = null, edit: Boolean = false) {
+
+        val dialogView = layoutInflater.inflate(R.layout.alert_dialog_new_preset, null)
+        val newBookmarkName = dialogView?.findViewById<EditText>(R.id.name)
+        if (edit) newBookmarkName?.setText(Fractal.tempBookmark1.name)
+        else {
+            newBookmarkName?.setText("%s %s %d".format(
+                    resources.getString(R.string.header_custom),
+                    resources.getString(R.string.fractal),
+                    Fractal.nextCustomFractalNum
+            ))
+        }
+        val newBookmarkThumbnail = dialogView?.findViewById<ImageView>(R.id.thumbnail)
+        newBookmarkThumbnail?.setImageBitmap(Fractal.tempBookmark1.thumbnail)
+
+        val d = AlertDialog.Builder(this, R.style.AlertDialogCustom)
+                .setIcon(R.drawable.bookmark2)
+                .setTitle("${resources.getString(if (edit) R.string.edit else R.string.save)} ${resources.getString(R.string.bookmark)}")
+                .setView(dialogView)
+                .setPositiveButton(android.R.string.ok, null)
+                .setNegativeButton(android.R.string.cancel) { dialog, which ->
+
+                    if (!edit) File(filesDir.path + Fractal.tempBookmark1.thumbnailPath).delete()
+
+                }
+                .create()
+
+        d.setOnShowListener {
+            val b: Button = d.getButton(AlertDialog.BUTTON_POSITIVE)
+            b.setOnClickListener {
+
+                if (Fractal.all.find { it.name == newBookmarkName?.text?.toString() } != null) {
+                    showMessage(resources.getString(R.string.msg_custom_name_duplicate).format(
+                            resources.getString(R.string.bookmark)
+                    ))
+                } else {
+                    if (edit) {
+                        GlobalScope.launch {
+                            db.fractalDao().apply {
+                                newBookmarkName?.text?.toString()?.let { Fractal.tempBookmark1.name = it }
+                                update(Fractal.tempBookmark1.customId, Fractal.tempBookmark1.name)
+                            }
+                        }
+                        (imageFragment as ImageFragment).bookmarkListAdapter.apply {
+                            updateItem(item!!)
+                            clearSelection()
+                        }
+                    } else {
+
+                        GlobalScope.launch {
+                            db.fractalDao().apply {
+                                newBookmarkName?.text?.toString()?.let { Fractal.tempBookmark1.name = it }
+                                Fractal.bookmarks.add(Fractal.tempBookmark1)
+                                Log.d("MAIN", "new bookmark thumbnail path: ${Fractal.tempBookmark1.thumbnailPath}")
+                                Fractal.tempBookmark1.customId = insert(Fractal.tempBookmark1.toEntity()).toInt()
+                            }
+                            Fractal.tempBookmark1.goldFeature = false
+                            Fractal.bookmarks.add(0, Fractal.tempBookmark1)
+                            Fractal.all.add(0, Fractal.tempBookmark1)
+                            Fractal.nextCustomFractalNum++
+                        }
+
+                        (imageFragment as ImageFragment).bookmarkListAdapter.addItemToCustom(
+                                BookmarkListItem(Fractal.tempBookmark1, ListHeader.custom, sc.bookmarkListViewType), 0
+                        )
+
+                    }
+                    d.dismiss()
+                    if (!edit) showMessage(resources.getString(R.string.msg_bookmark_created))
+                }
+
+            }
+            d.show()
+        }
+        d.show()
+
+    }
+    fun showLoadPreviousFractalDialog() {
+        val dialog = AlertDialog.Builder(this, R.style.AlertDialogCustom)
+                .setTitle(R.string.load_previous_fractal)
+                .setIcon(R.drawable.edit)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    val prevZoom = f.shape.position.zoom
+                    Fractal.default.load(Fractal.previous, fsv)
+                    updateFragmentLayouts()
+                    fsv.r.checkThresholdCross(prevZoom)
+                    fsv.r.renderToTex = true
+                    fsv.r.renderShaderChanged = true
+                    fsv.requestRender()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+
+    }
+    fun bookmarkAsPreviousFractal() {
+        GlobalScope.launch {
+            db.fractalDao().apply {
+                Fractal.previous = Fractal.default.bookmark(fsv)
+                Fractal.previous.customId = previousFractalId
+                update(Fractal.previous.toEntity())
+            }
+        }
+    }
 
     fun updateColorThumbnails() {
 
-        (colorPreviewList?.adapter as? ListAdapter<ColorPalette>)?.notifyDataSetChanged()
+        (colorPreviewList?.adapter as? ListAdapter<Palette>)?.notifyDataSetChanged()
 
     }
     fun updateTextureThumbnail(layoutIndex: Int, n: Int) {
@@ -1463,12 +1993,14 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         // update any changes made to custom palettes
         GlobalScope.launch {
             db.colorPaletteDao().apply {
-                ColorPalette.custom.forEach {
+                Palette.custom.forEach {
                     Log.d("MAIN", "saving custom palette ${it.name}, starred= ${it.isFavorite}")
                     update(it.toDatabaseEntity())
                 }
             }
         }
+
+        bookmarkAsPreviousFractal()
 
         val sp = getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE)
         val edit = sp.edit()
@@ -1488,10 +2020,12 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         edit.putInt(COLOR_LIST_VIEW_TYPE, sc.colorListViewType.ordinal)
         edit.putInt(SHAPE_LIST_VIEW_TYPE, sc.shapeListViewType.ordinal)
         edit.putInt(TEXTURE_LIST_VIEW_TYPE, sc.textureListViewType.ordinal)
+        edit.putInt(BOOKMARK_LIST_VIEW_TYPE, sc.bookmarkListViewType.ordinal)
         edit.putBoolean(AUTOFIT_COLOR_RANGE, sc.autofitColorRange)
 
-        edit.putInt(PALETTE, max(ColorPalette.all.indexOf(f.palette), 0))
-        edit.putInt(SOLID_FILL_COLOR, f.solidFillColor)
+        edit.putInt(PALETTE, f.palette.id)
+        edit.putInt(ACCENT_COLOR1, f.accent1)
+        edit.putInt(ACCENT_COLOR2, f.accent2)
 
         /**
          *  Saved starred values of default ColorPalettes and Shapes
@@ -1499,7 +2033,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
          *  e.g. "YinYangStarred"
          */
         val usResources = getLocalizedResources(applicationContext, Locale.US)
-        ColorPalette.default.forEach { edit.putBoolean(
+        Palette.default.forEach { edit.putBoolean(
                 "Palette${usResources.getString(it.nameId).replace(" ", "")}Starred", it.isFavorite
         )}
         Shape.default.forEach { edit.putBoolean(
@@ -1511,6 +2045,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         edit.putInt(VERSION_CODE_TAG, BuildConfig.VERSION_CODE)
         edit.putBoolean(USE_ALTERNATE_SPLIT, sc.useAlternateSplit)
+        edit.putBoolean(ALLOW_SLOW_DUALFLOAT, sc.allowSlowDualfloat)
         edit.putInt(CHUNK_PROFILE, sc.chunkProfile.ordinal)
         edit.apply()
 
@@ -1570,9 +2105,6 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         // finally, show the dialog or the activity
         builder.buildAndShowDialog(this, false)
-
-    }
-    fun showSlowDualfloatDialog() {
 
     }
     fun getLocalizedResources(context: Context, desiredLocale: Locale?): Resources {
@@ -1672,8 +2204,14 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     }
     fun showUpgradeScreen() {
 
-        val myIntent = Intent(this, UpgradeActivity::class.java)
-        startActivity(myIntent)
+        // double check to avoid showing upgrade screen if not necessary
+        if (!billingClient.isReady) billingClient.startConnection(billingClientStateListener)
+        else queryPurchases()
+
+        if (!sc.goldEnabled) {
+            val myIntent = Intent(this, UpgradeActivity::class.java)
+            startActivity(myIntent)
+        }
 
     }
 

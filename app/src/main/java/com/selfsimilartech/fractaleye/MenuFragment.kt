@@ -18,6 +18,12 @@ open class MenuFragment : Fragment() {
 
     lateinit var onCompleteListener : OnCompleteListener
 
+    val f = Fractal.default
+    val sc = SettingsConfig
+
+    lateinit var act : MainActivity
+    lateinit var fsv : FractalSurfaceView
+
     val nf = NumberFormat.getInstance()
     fun String.formatToDouble(showMsg: Boolean = true) : Double? {
         var d : Double? = null
@@ -50,6 +56,11 @@ open class MenuFragment : Fragment() {
 
     }}
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        act = requireActivity() as MainActivity
+        fsv = act.fsv
+        super.onViewCreated(view, savedInstanceState)
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -76,5 +87,7 @@ open class MenuFragment : Fragment() {
         newButton.alpha = 1f
         currentButton = newButton
     }
+
+    open fun updateLayout() {}
 
 }

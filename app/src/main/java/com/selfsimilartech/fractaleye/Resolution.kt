@@ -13,7 +13,11 @@ fun Double.roundEven() : Int {
 
 class Resolution(width: Int, private val builders: List<Resolution>? = null) {
 
-    // R4320(4320), R5040(5040), R5760(5760),   // RG16F largeheap only
+    constructor(width: Int, height: Int) : this(width, null) {
+        h = height
+        n = width*height
+    }
+
 
     val w = width
     var h = 0
@@ -37,16 +41,15 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null) {
         val R1440  = Resolution(1440, listOf(R720))
         val R2160  = Resolution(2160, listOf(R720))
         val R2880  = Resolution(2880, listOf(R720))
-//        val R3600  = Resolution( 3600, listOf(R720)         )
-//        val R4320  = Resolution( 4320, listOf(R720, R1440)  )
-//        val R5040  = Resolution( 5040, listOf(R720)         )
-//        val R5760  = Resolution( 5760, listOf(R720, R1440)  )
+        val R3600  = Resolution( 3600, listOf(R720)         )
+        val R4320  = Resolution( 4320, listOf(R720, R1440)  )
+        val R5040  = Resolution( 5040, listOf(R720)         )
+        val R5760  = Resolution( 5760, listOf(R720, R1440)  )
 
-        val all = arrayListOf(
-                R45, R60, R90, R120, R180, R240, R360, R480, R720, R1080, R1440, R2160, R2880
-                //R3600
-                //R4320, R5040, R5760
-        )
+        val all = ArrayList(arrayListOf(
+                R45, R60, R90, R120, R180, R240, R360, R480, R720, R1080, R1440, R2160, R2880,
+                R3600, R4320, R5040, R5760
+        ).filter { BuildConfig.DEV_VERSION || it.w <= 2880 })
         val working = ArrayList(all.minus(listOf(R45, R60, R90)))
         val continuous = arrayListOf<Resolution>()
 
@@ -57,13 +60,18 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null) {
         fun initialize(screenRatio: Double) {
 
             all.forEach { res ->
-                res.h = (res.w.toDouble()*screenRatio).roundEven()
-                Log.e("RESOLUTION", "(${res.w}, ${res.w.toDouble()*screenRatio} -> ${res.h}")
+                res.h = when (res) {
+                    R1080 -> (R360.h*3.0).toInt()
+                    R1440 -> (R720.h*2.0).toInt()
+                    R2160 -> (R720.h*3.0).toInt()
+                    R2880 -> (R720.h*4.0).toInt()
+                    R3600 -> (R720.h*5.0).toInt()
+                    R4320 -> (R720.h*6.0).toInt()
+                    R5040 -> (R720.h*7.0).toInt()
+                    R5760 -> (R720.h*8.0).toInt()
+                    else -> (res.w.toDouble()*screenRatio).roundEven()
+                }
             }
-            R1080.h = (R360.h*3.0).toInt()
-            R1440.h = (R720.h*2.0).toInt()
-            R2160.h = (R720.h*3.0).toInt()
-            R2880.h = (R720.h*4.0).toInt()
 
             all.forEach { res -> res.n = res.w*res.h }
 
@@ -83,7 +91,7 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null) {
 
 
         val BG = R180
-        val THUMB = R240
+        val THUMB = R180
         var SCREEN = R1080
         val MAX_FREE = R1080
         var NUM_VALUES_GT_SCREEN_DIMS = 0

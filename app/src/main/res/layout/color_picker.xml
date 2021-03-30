@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/satValueSelectorLayoutHeight"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="5dp"
+    android:gravity="center_horizontal"
+    android:orientation="horizontal"
+    android:paddingStart="5dp"
+    android:paddingEnd="5dp"
+    tools:showIn="@layout/color_fragment">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="5dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/customColorComponent1"
+            style="@style/TextDark"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="H:" />
+
+        <TextView
+            android:id="@+id/customColorComponent2"
+            style="@style/TextDark"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="S:" />
+
+        <TextView
+            android:id="@+id/customColorComponent3"
+            style="@style/TextDark"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="V:" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="35dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:gravity="center_vertical|end"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/customColorHueEdit"
+            style="@style/EditNumberDark"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_weight="1"
+            android:imeOptions="actionNext">
+
+        </EditText>
+
+        <EditText
+            android:id="@+id/customColorSaturationEdit"
+            style="@style/EditNumberDark"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_weight="1"
+            android:imeOptions="actionNext">
+
+        </EditText>
+
+        <EditText
+            android:id="@+id/customColorValueEdit"
+            style="@style/EditNumberDark"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_weight="1"
+            android:imeOptions="actionDone">
+
+        </EditText>
+
+    </LinearLayout>
+
+    <include layout="@layout/color_picker2" />
+
+</LinearLayout>

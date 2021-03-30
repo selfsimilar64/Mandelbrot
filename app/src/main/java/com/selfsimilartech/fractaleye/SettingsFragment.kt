@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
@@ -33,9 +34,9 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
         val act = activity as MainActivity
-        val f = act.f
+        val f = Fractal.default
         val fsv = act.fsv
-        val sc = act.sc
+        val sc = SettingsConfig
 
 
         DeviceName.init(v.context)
@@ -187,7 +188,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 
         instagramLayout.setOnClickListener {
 
-            val uri = Uri.parse("http://instagram.com/_u/_selfsimilar")
+            val uri = Uri.parse("http://instagram.com/_u/fractaleye.app")
             val likeIng = Intent(Intent.ACTION_VIEW, uri)
 
             likeIng.setPackage("com.instagram.android")
@@ -196,7 +197,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
                 startActivity(likeIng)
             } catch (e: ActivityNotFoundException) {
                 startActivity(Intent(Intent.ACTION_VIEW,
-                        Uri.parse("http://instagram.com/_selfsimilar")))
+                        Uri.parse("http://instagram.com/fractaleye.app")))
             }
 
         }
@@ -237,6 +238,19 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
             fsv.requestRender()
 
         }
+
+
+        allowSlowRendersSwitch.isChecked = sc.allowSlowDualfloat
+        allowSlowRendersSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            sc.allowSlowDualfloat = isChecked
+            fsv.r.checkThresholdCross(f.shape.position.zoom)
+            if (f.shape.slowDualFloat && f.shape.position.zoom <= GpuPrecision.SINGLE.threshold) {
+                fsv.r.renderToTex = true
+                fsv.r.renderShaderChanged = true
+                fsv.requestRender()
+            }
+        }
+        allowSlowRendersHint.text = allowSlowRendersHint.text.toString().format(resources.getString(R.string.sine))
 
 
 

@@ -62,10 +62,13 @@ class SatValueSelectorView : View {
     fun value() : Float = 1f - (selectorPos.y / rect.height().toFloat())
     fun loadFrom(color: Int, invalidate: Boolean = false, update: Boolean = false) {
 
+        Log.d("SATVAL", "loading color: $color")
+
         selectorPos.set(
                 (color.sat()*rect.width()).toInt(),
                 ((1f - color.value())*rect.height()).toInt()
         )
+        Log.d("SATVAL", "selectorPos: (${selectorPos.x}, ${selectorPos.y})")
         selectorPaint4.color = color
         if (invalidate) invalidate()
         if (update) updateActiveColor()
@@ -107,7 +110,7 @@ class SatValueSelectorView : View {
     }
 
     override fun onDraw(canvas: Canvas) {
-        //Log.e("SATVAL SELECTOR", "drawing")
+        Log.e("SATVAL SELECTOR", "drawing")
         super.onDraw(canvas)
         canvas.apply {
             drawRect(rect, rectPaint)
@@ -140,7 +143,7 @@ class SatValueSelectorView : View {
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
-        //Log.e("SATVAL SELECTOR", "touching")
+        // Log.e("SATVAL SELECTOR", "touching")
 
         when (event?.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
@@ -149,6 +152,7 @@ class SatValueSelectorView : View {
                 val clippedX = min(max(event.x, 0f), rect.width().toFloat())
                 val clippedY = min(max(event.y, 0f), rect.height().toFloat())
                 selectorPos.set(clippedX.toInt(), clippedY.toInt())
+                Log.d("SATVAL", "selectorPos: (${selectorPos.x}, ${selectorPos.y})")
                 updateActiveColor()
 
             }

@@ -537,21 +537,6 @@
         <item>#fefefe</item>
     </array>
 
-    <array name="polyphonic">
-        <item>@color/black</item>
-        <item>#22114C</item>
-        <item>#581B7D</item>
-        <item>#B52884</item>
-        <item>#FF6BAB</item>
-        <item>#FFB2C4</item>
-        <item>@color/white</item>
-        <item>#7bf9af</item>
-        <item>#2DCFC9</item>
-        <item>#14585C</item>
-        <item>#003534</item>
-        <item>#001517</item>
-    </array>
-
     <array name="anaglyph">
         <item>#c7e0ff</item>
         <item>#0c7581</item>
@@ -595,6 +580,82 @@
         <item>#38a2c9</item>
         <item>#faf465</item>
         <item>#fc8802</item>
+    </array>
+
+    <array name="refraction">
+        <item>#f34958</item>
+        <item>#ff9271</item>
+        <item>#ffebab</item>
+        <item>#e9ffcc</item>
+        <item>#7efff7</item>
+        <item>#5abaec</item>
+        <item>#5454b2</item>
+        <item>#442078</item>
+        <item>#9c58aa</item>
+    </array>
+
+    <array name="refraction2">
+        <item>#430867</item>
+        <item>#6f0b87</item>
+        <item>#9c2da1</item>
+        <item>#ec134e</item>
+        <item>#f27765</item>
+        <item>#f9e6b5</item>
+        <item>#b6f9e7</item>
+        <item>#67d4eb</item>
+        <item>#5059c3</item>
+    </array>
+
+    <array name="polyphonic">
+        <item>#573189</item>
+        <item>#BC1DBA</item>
+        <item>#F478C1</item>
+        <item>#F3D1CB</item>
+        <item>#DFFDD1</item>
+        <item>#81F1BE</item>
+        <item>#68AAB5</item>
+        <item>#506199</item>
+    </array>
+
+    <array name="polyphonic2">
+        <item>#51037f</item>
+        <item>#f400cb</item>
+        <item>#fcafcc</item>
+        <item>#f1eddd</item>
+        <item>#dafcde</item>
+        <item>#00efc0</item>
+        <item>#2b7fb1</item>
+        <item>#393a92</item>
+    </array>
+
+    <array name="fusion">
+        <item>#D73B4F</item>
+        <item>#FFAE53</item>
+        <item>#FFF69A</item>
+        <item>#FFF6E2</item>
+        <item>#F2B4FF</item>
+        <item>#FD8BFF</item>
+        <item>#86195E</item>
+    </array>
+
+    <array name="p9">
+        <item>#a800af</item>
+        <item>#a05af9</item>
+        <item>#d9e5ff</item>
+        <item>#ffff85</item>
+        <item>#fe7201</item>
+        <item>#D0103F</item>
+    </array>
+
+    <array name="honor">
+        <item>#fffdff</item>
+        <item>#c56fd4</item>
+        <item>#682a75</item>
+        <item>#11011b</item>
+        <item>#51000f</item>
+        <item>#a26902</item>
+        <item>#ffdb15</item>
+        <item>#ffffff</item>
     </array>
 
 </resources>

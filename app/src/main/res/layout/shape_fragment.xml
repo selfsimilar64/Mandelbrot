@@ -956,21 +956,21 @@
 
             </LinearLayout>
 
-<!--            <com.selfsimilartech.fractaleye.MathQuillView-->
-<!--                android:id="@+id/shapeMathQuill"-->
-<!--                android:layout_width="0dp"-->
-<!--                android:layout_height="0dp"-->
-<!--                android:layout_marginStart="8dp"-->
-<!--                android:layout_marginEnd="8dp"-->
-<!--                android:layout_marginBottom="2dp"-->
-<!--                android:focusable="false"-->
-<!--                android:focusableInTouchMode="true"-->
-<!--                app:layout_constraintBottom_toTopOf="@+id/customShapeKeyboard"-->
-<!--                app:layout_constraintEnd_toStartOf="@+id/eqnErrorIndicator"-->
-<!--                app:layout_constraintStart_toStartOf="parent"-->
-<!--                app:layout_constraintTop_toTopOf="parent">-->
+            <com.selfsimilartech.fractaleye.MathQuillView
+                android:id="@+id/shapeMathQuill"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="2dp"
+                android:focusable="false"
+                android:focusableInTouchMode="true"
+                app:layout_constraintBottom_toTopOf="@+id/customShapeKeyboard"
+                app:layout_constraintEnd_toStartOf="@+id/eqnErrorIndicator"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-<!--            </com.selfsimilartech.fractaleye.MathQuillView>-->
+            </com.selfsimilartech.fractaleye.MathQuillView>
 
             <ImageView
                 android:id="@+id/eqnErrorIndicator"
@@ -1051,6 +1051,14 @@
                     android:background="?attr/selectableItemBackground"
                     android:drawableTop="@drawable/iterate"
                     android:text="@string/max_iter" />
+
+                <com.selfsimilartech.fractaleye.GradientButton
+                    android:id="@+id/seedParamButton"
+                    style="@style/MenuNavToggleButton"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableTop="@drawable/parameter"
+                    android:text="@string/seed" />
 
                 <com.selfsimilartech.fractaleye.GradientButton
                     android:id="@+id/juliaParamButton"
