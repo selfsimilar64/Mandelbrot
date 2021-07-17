@@ -8,13 +8,44 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorSurface">@color/colorPrimaryDark</item>
+        <item name="materialAlertDialogTheme">@style/MyThemeOverlayAlertDialog</item>
     </style>
 
     <style name="AlertDialogCustom" parent="Theme.MaterialComponents.Dialog">
-        <item name="android:textColor">@color/white</item>
-        <item name="android:headerDividersEnabled">true</item>
+        <item name="android:textColor">@color/highlight</item>
         <item name="android:typeface">normal</item>
-        <item name="android:background">@color/menuDark1</item>
+        <item name="android:textAlignment">viewStart</item>
+        <!--        <item name="android:windowBackground">@drawable/dialog_background</item>-->
+        <item name="android:background">@color/menuDarkTertiary</item>
+        <item name="android:windowFrame">@color/transparent</item>
+        <!--        <item name="android:textSize">10sp</item>-->
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowContentOverlay">@color/transparent</item>
+        <item name="dialogCornerRadius">24dp</item>
+        <!--        <item name="android:windowTitleStyle">@style/setwindowTitleStyle</item>-->
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:gravity">center_vertical|start</item>
+    </style>
+
+    <style name="MyThemeOverlayAlertDialog" parent="@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog.Rounded</item>
+        <item name="textAppearanceButton">@style/TextAppearance.MaterialComponents.Button</item>
+        <item name="android:background">@color/menuDarkTertiary</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialogTitleText</item>
+    </style>
+
+    <style name="MaterialAlertDialogTitleText">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/highlight</item>
+        <item name="android:layout_width">200dp</item>
+        <item name="android:layout_height">45dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.MyApp.Dialog.Rounded" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
     </style>
 
     <style name="AppTheme.Launcher">
@@ -56,10 +87,11 @@
         <item name="android:drawablePadding">5dp</item>
     </style>
 
-    <style name="TextDescriptionDark" parent="android:style/Widget.Material.TextView">
+    <style name="SettingsHint" parent="android:style/Widget.Material.TextView">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">start|center_vertical</item>
+        <item name="android:layout_marginEnd">8dp</item>
         <item name="android:textColor">@color/colorDescriptionDark</item>
         <item name="android:textSize">13sp</item>
         <item name="android:maxLines">3</item>
@@ -68,15 +100,15 @@
 
     <style name="EditNumberDark" parent="android:style/Widget.Material.TextView">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_height">24dp</item>
         <item name="android:textColor">@color/colorDarkText</item>
-        <item name="android:gravity">end</item>
-        <item name="android:textSize">17sp</item>
+        <item name="android:background">@color/transparent</item>
+        <item name="android:gravity">center_vertical|end</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:inputType">numberDecimal|numberSigned</item>
+        <item name="android:imeOptions">actionDone</item>
         <item name="android:digits">0123456789.,-</item>
         <item name="android:selectAllOnFocus">true</item>
-        <item name="android:layout_marginTop">-4dp</item>
-        <item name="android:layout_marginBottom">-4dp</item>
     </style>
 
     <style name="EditTextDark" parent="android:style/Widget.Material.TextView">
@@ -86,8 +118,7 @@
         <item name="android:textSize">15sp</item>
         <item name="android:inputType">text</item>
         <item name="android:selectAllOnFocus">true</item>
-        <item name="android:layout_marginTop">-4dp</item>
-        <item name="android:layout_marginBottom">-4dp</item>
+        <item name="android:background">@color/transparent</item>
     </style>
 
     <style name="SwitchDark" parent="@style/Widget.AppCompat.CompoundButton.Switch">
@@ -103,6 +134,8 @@
         <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
         <item name="android:thumb">@drawable/switch_thumb_custom</item>
         <item name="android:track">@drawable/switch_track_custom</item>
+        <item name="android:thumbTint">@color/highlight</item>
+        <item name="android:trackTint">@color/switchTrack</item>
     </style>
 
     <style name="SpinnerDark">
@@ -191,27 +224,59 @@
         <item name="android:background">?attr/selectableItemBackground</item>
     </style>
 
-    <style name="MenuNavButton">
+    <style name="UiComponent">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:padding">6dp</item>
+        <item name="android:background">@color/menuDarkPrimary</item>
+    </style>
+
+    <style name="UiComponentInnerShort" parent="UiComponent">
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:background">@drawable/ui_component_bg</item>
+    </style>
+
+    <style name="UiComponentShort" parent="UiComponent">
+        <item name="android:layout_height">@dimen/uiComponentHeightShort</item>
+    </style>
+
+    <style name="UiComponentMedium" parent="UiComponent">
+        <item name="android:layout_height">@dimen/uiComponentHeightMedium</item>
+    </style>
+
+    <style name="ListCategoryButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="SubMenuButton">
         <item name="android:layout_width">@dimen/menuButtonWidth</item>
         <item name="android:layout_height">@dimen/menuButtonHeight</item>
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:textSize">10sp</item>
-        <item name="android:paddingTop">3dp</item>
+        <item name="android:textColor">@color/toggleButtonSelected</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:drawablePadding">-2dp</item>
+        <item name="android:drawableTint">@color/toggleButtonSelected</item>
     </style>
 
     <style name="MenuNavToggleButton">
         <item name="android:layout_width">@dimen/menuButtonWidth</item>
         <item name="android:layout_height">@dimen/menuButtonHeight</item>
         <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:drawablePadding">-2dp</item>
+        <item name="android:drawableTint">@color/toggleButtonSelected</item>
         <item name="android:textSize">10sp</item>
-        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingTop">4dp</item>
         <item name="android:alpha">0.4</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/toggleButtonSelected</item>
     </style>
 
-    <style name="MenuNavListButton" parent="MenuNavButton">
-        <item name="android:layout_width">80dp</item>
-        <item name="android:drawableEnd">@drawable/arrow_up</item>
+    <style name="MenuNavListButton" parent="SubMenuButton">
+        <item name="android:layout_width">60dp</item>
     </style>
 
     <style name="CustomColorButton">
@@ -230,25 +295,30 @@
         <item name="android:layout_width">35dp</item>
         <item name="android:layout_height">35dp</item>
         <item name="android:padding">5dp</item>
-        <item name="android:layout_margin">2dp</item>
+        <item name="android:layout_marginTop">1dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+        <item name="android:layout_marginStart">1dp</item>
+        <item name="android:layout_marginEnd">2dp</item>
         <item name="android:background">@drawable/shape_key</item>
         <item name="android:scaleType">centerInside</item>
+        <item name="android:tint">@color/highlight</item>
     </style>
 
     <style name="KeyboardButtonRect" parent="KeyboardButtonSquare">
         <item name="android:layout_width">50dp</item>
+        <item name="android:layout_height">35dp</item>
     </style>
 
     <style name="AspectRatioButton">
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:scaleType">fitCenter</item>
-        <item name="android:tint">@color/unselectedTint</item>
+        <item name="android:tint">@color/colorDarkTextMuted</item>
     </style>
 
     <style name="AspectRatioButtonCard">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="cardBackgroundColor">@color/menuDark5</item>
+        <item name="cardBackgroundColor">@color/toggleButtonUnselected</item>
         <item name="cardCornerRadius">8dp</item>
         <item name="android:layout_marginStart">5dp</item>
         <item name="android:layout_marginEnd">5dp</item>
@@ -267,6 +337,27 @@
         <item name="cardCornerRadius">0dp</item>
         <item name="cardBackgroundColor">@color/fractaleye1</item>
         <item name="contentPadding">2dp</item>
+    </style>
+
+    <style name="NewNavButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">6dp</item>
+        <item name="android:layout_marginEnd">6dp</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:drawableTint">@color/toggleButtonSelected</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/toggleButtonSelected</item>
+    </style>
+
+    <style name="MenuNavButton">
+        <item name="android:layout_width">42dp</item>
+        <item name="android:layout_height">42dp</item>
+        <item name="android:layout_marginEnd">5dp</item>
+        <item name="android:background">@drawable/ui_component_bg</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:scaleType">centerInside</item>
     </style>
 
 </resources>

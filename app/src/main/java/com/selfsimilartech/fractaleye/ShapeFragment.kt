@@ -1,8 +1,9 @@
 package com.selfsimilartech.fractaleye
 
 import android.animation.LayoutTransition
-import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -10,24 +11,24 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.ToggleButton
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.SelectableAdapter
 import kotlinx.android.synthetic.main.shape_fragment.*
 import kotlinx.android.synthetic.main.complex_param.view.*
+import kotlinx.android.synthetic.main.continuous_sensitivity_layout.view.*
 import kotlinx.android.synthetic.main.real_param.view.*
+import kotlinx.android.synthetic.main.list_layout.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.lang.IndexOutOfBoundsException
 import java.util.*
-import kotlin.math.floor
 import kotlin.math.log
 import kotlin.math.pow
 
@@ -39,12 +40,13 @@ class ShapeFragment : MenuFragment() {
 
     private var realParamSeekBarListener : SeekBar.OnSeekBarChangeListener? = null
     private lateinit var shapeListAdapter : ListAdapter<Shape>
+    var onTutorialReqMet = {}
 
 
-    private fun loadNavButtons(buttons: List<Button>) {
+    private fun loadNavButtons(views: List<View>) {
 
-        shapeNavButtons.removeAllViews()
-        buttons.forEach { shapeNavButtons.addView(it) }
+        for (i in 0 until shapeNavButtons.childCount) shapeNavButtons.getChildAt(i).hide()
+        views.forEach { it.show() }
 
     }
 
@@ -63,13 +65,16 @@ class ShapeFragment : MenuFragment() {
 
 
         var customShape = Shape(name = "q", latex = "$$")
+        var savedCustomName = ""
+        var savedCustomLatex = ""
+        var savedCustomLoopSingle = ""
+        var savedCustomLoopDual = ""
         var prevSelectedShapeIndex = 0
 
         shapeLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-        shapePreviewListLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
         val previewListNavButtons = listOf(
-                shapeListViewTypeButton,
+                // shapeListViewTypeButton,
                 customShapeNewButton,
                 shapeListDoneButton
         )
@@ -84,33 +89,6 @@ class ShapeFragment : MenuFragment() {
         )
 
         val handler = Handler(Looper.getMainLooper())
-        val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
-            -> TextView.OnEditorActionListener { editText, actionId, _ ->
-            when (actionId) {
-                EditorInfo.IME_ACTION_NEXT -> {
-                    setValueAndFormat(editText as EditText)
-                    editText.clearFocus()
-                    editText.isSelected = false
-                    nextEditText?.requestFocus()
-                }
-                EditorInfo.IME_ACTION_DONE -> {
-                    setValueAndFormat(editText as EditText)
-                    val imm = v.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(v.windowToken, 0)
-                    editText.clearFocus()
-                    editText.isSelected = false
-                }
-                else -> {
-                    Log.d("SHAPE FRAGMENT", "some other action")
-                }
-            }
-
-            fsv.requestRender()
-            editText.clearFocus()
-            act.updateSystemUI()
-            true
-
-        }}
         val lockListener = { j: Int -> View.OnClickListener {
             val lock = it as ToggleButton
             val param = f.shape.params.active
@@ -137,9 +115,7 @@ class ShapeFragment : MenuFragment() {
             if (f.shape != Shape.mandelbrot && !sc.goldEnabled) act.showUpgradeScreen()
             else {
 
-                val prevScale = f.shape.position.zoom
-                f.shape.juliaMode = juliaModeButton.isChecked
-                fsv.r.checkThresholdCross(prevScale)
+                fsv.r.checkThresholdCross { f.shape.juliaMode = juliaModeButton.isChecked }
 
                 if (f.shape.juliaMode) {
 
@@ -149,7 +125,6 @@ class ShapeFragment : MenuFragment() {
 
                     if (f.shape.numParamsInUse == 1) {
                         fsv.r.reaction = Reaction.SHAPE
-                        act.showTouchIcon()
                     }
 
                 } else {
@@ -167,8 +142,7 @@ class ShapeFragment : MenuFragment() {
                 }
 
                 loadActiveParam()
-                act.updatePositionEditTexts()
-                act.updateDisplayParams(reactionChanged = true)
+                act.updatePositionLayout()
 
                 fsv.r.renderShaderChanged = true
                 fsv.r.renderToTex = true
@@ -185,28 +159,6 @@ class ShapeFragment : MenuFragment() {
             shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
 
         }}
-        val rateListener = View.OnClickListener {
-
-            if (f.shape.params.active.sensitivity != null) {
-                if (f.shape.params.active is ComplexParam) showLayout(realShapeParam)
-                f.shape.params.active = f.shape.params.active.sensitivity!!
-                realShapeParam.realRateButton.apply {
-                    setText(android.R.string.ok)
-                    setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.done, 0, 0)
-                }
-            }
-            else if (f.shape.params.active.parent != null) {
-                if (f.shape.params.active.parent is ComplexParam) showLayout(complexShapeParam)
-                f.shape.params.active = f.shape.params.active.parent!!
-                realShapeParam.realRateButton.apply {
-                    setText(R.string.sensitivity)
-                    setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.sensitivity, 0, 0)
-                }
-            }
-
-            loadActiveParam()
-
-        }
         val resetListener = View.OnClickListener {
 
             f.shape.params.active.reset()
@@ -229,78 +181,60 @@ class ShapeFragment : MenuFragment() {
         }
         val mathQuillHtml = readHtml("mathquill.html")
         shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", mathQuillHtml, "text/html", "UTF-8", null)
-
+        shapeMathQuill.setBackgroundColor(Color.TRANSPARENT)
+        // shapeMathQuill.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null)
 
 
         realShapeParam.apply {
 
-            realParamSeekBarListener = object : SeekBar.OnSeekBarChangeListener {
-
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    val param = f.shape.params.active
-                    param.u = (progress.toDouble()/realParamSeekBar.max)*(param.uRange.upper - param.uRange.lower) + param.uRange.lower
-                    uEdit2.setText("%.3f".format(param.u))
-                    if (sc.continuousParamRender && f.shape.params.active.isPrimary) {
-                        fsv.r.renderToTex = true
-                        fsv.requestRender()
-                    }
-                }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                    if (sc.continuousParamRender && f.shape.params.active.isPrimary) {
-                        fsv.r.renderProfile = RenderProfile.CONTINUOUS
-                        fsv.r.renderToTex = true
-                        fsv.requestRender()
-                    }
-                }
-
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                    if (sc.continuousParamRender) fsv.r.renderProfile = RenderProfile.DISCRETE
-                    if (f.shape.params.active.isPrimary) {
-                        fsv.r.renderToTex = true
-                        fsv.requestRender()
-                    }
-                }
-
-            }
-            realParamSeekBar.setOnSeekBarChangeListener(realParamSeekBarListener)
-            realRateButton.setOnClickListener(rateListener)
-            realResetButton.setOnClickListener(resetListener)
-            uEdit2.setOnEditorActionListener(editListener(null) { w: TextView ->
+            realParamResetButton.setOnClickListener(resetListener)
+            uValue2.setOnEditorActionListener(editListener(null) { w: TextView ->
                 val result = "${w.text}".formatToDouble()
                 val param = f.shape.params.active
                 if (result != null) {
-                    param.u = result
+                    param.u = if (sc.restrictParams) param.clamp(result) else result
                     fsv.r.renderToTex = true
                 }
-                w.text = "%.3f".format((f.shape.params.active.u))
-                if (param is ComplexParam && param.linked) {
-                    vEdit.setText("%.3f".format((param.v)))
-                }
-                realParamSeekBar.progress = (realParamSeekBar.max * (param.u - param.uRange.lower) / (param.uRange.upper - param.uRange.lower)).toInt()
+                w.text = param.u.format(REAL_PARAM_DIGITS)
             })
+            realParamSensitivity.sensitivityValue.setOnEditorActionListener(editListener(null) { w: TextView ->
+
+                val param = f.shape.params.active
+                val result = w.text.toString().formatToDouble()
+                if (result != null) param.sensitivity = result
+                w.text = "%d".format(param.sensitivity.toInt())
+
+            })
+            paramAdjustLeftButton.setOnClickListener(ParamChangeOnClickListener(fsv,
+                transformFractal = { f.shape.params.active.apply { u -= sensitivityFactor/RealParam.ADJUST_DISCRETE } },
+                updateLayout = { updateParamText() }
+            ))
+            paramAdjustLeftButton.setOnLongClickListener(ParamChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.params.active.apply { u -= sensitivityFactor/RealParam.ADJUST_CONTINUOUS } },
+                updateLayout = { updateParamText() }
+            ))
+            paramAdjustRightButton.setOnClickListener(ParamChangeOnClickListener(fsv,
+                transformFractal = { f.shape.params.active.apply { u += sensitivityFactor/RealParam.ADJUST_DISCRETE } },
+                updateLayout = { updateParamText() }
+            ))
+            paramAdjustRightButton.setOnLongClickListener(ParamChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.params.active.apply { u += sensitivityFactor/RealParam.ADJUST_CONTINUOUS } },
+                updateLayout = { updateParamText() }
+            ))
 
         }
         complexShapeParam.apply {
 
-            val activeParam = f.shape.params.active
-
-            uEdit.setText("%.8f".format(activeParam.u))
-            if (activeParam is ComplexParam) vEdit.setText("%.8f".format(activeParam.v))
-
-            uEdit.setOnEditorActionListener(editListener(vEdit) { w: TextView ->
+            uValue.setOnEditorActionListener(editListener(vValue) { w: TextView ->
                 val result = "${w.text}".formatToDouble()
                 val param = f.shape.params.active
                 if (result != null) {
                     param.u = result
                     fsv.r.renderToTex = true
                 }
-                w.text = "%.8f".format((f.shape.params.active.u))
-                if (param is ComplexParam && param.linked) {
-                    vEdit.setText("%.8f".format((param.v)))
-                }
+                w.text = param.u.format(COMPLEX_PARAM_DIGITS)
             })
-            vEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+            vValue.setOnEditorActionListener(editListener(null) { w: TextView ->
                 val result = "${w.text}".formatToDouble()
                 val param = f.shape.params.active
                 if (param is ComplexParam) {
@@ -308,41 +242,38 @@ class ShapeFragment : MenuFragment() {
                         param.v = result
                         fsv.r.renderToTex = true
                     }
-                    w.text = "%.8f".format((param.v))
+                    w.text = param.v.format(COMPLEX_PARAM_DIGITS)
                 }
             })
             uLock.setOnClickListener(lockListener(0))
             vLock.setOnClickListener(lockListener(1))
-            linkParamButton.setOnClickListener(linkListener)
-            complexResetButton.setOnClickListener(resetListener)
-            complexRateButton.setOnClickListener(rateListener)
+            complexParamResetButton.setOnClickListener(resetListener)
+            complexParamSensitivity.sensitivityValue.setOnEditorActionListener(editListener(null) { w: TextView ->
+
+                val param = f.shape.params.active
+                val result = w.text.toString().formatToDouble()
+                if (result != null) param.sensitivity = result
+                w.text = "%d".format(param.sensitivity.toInt())
+
+            })
 
         }
-
-
-        shapeButtonsScroll.setOnScrollChangeListener(scrollListener(
-                shapeButtonsScrollLayout,
-                shapeButtonsScroll,
-                shapeScrollArrowLeft,
-                shapeScrollArrowRight
-        ))
-        shapeScrollArrowLeft.invisible()
-        shapeScrollArrowRight.invisible()
 
 
         maxIterBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
 
-                val p = seekBar.progress.toDouble() / maxIterBar.max
+                val p = (seekBar.progress.toDouble() / maxIterBar.max).pow(0.75)
                 val iter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt()
-                if (iter > 5000) iterWarningIcon.show() else iterWarningIcon.hide()
+                // if (iter > 5000) iterWarningIcon.show() else iterWarningIcon.invisible()
                 f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
-                maxIterEdit.setText("%d".format(iter))
+                maxIterValue.setText("%d".format(iter))
                 if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
                     fsv.r.renderToTex = true
                     fsv.requestRender()
                 }
+                if (fsv.doingTutorial && f.shape.maxIter > 499) onTutorialReqMet()
 
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -351,9 +282,9 @@ class ShapeFragment : MenuFragment() {
 
                 fsv.r.renderProfile = RenderProfile.CONTINUOUS
 
-                val p = seekBar.progress.toDouble() / maxIterBar.max
+                val p = (seekBar.progress.toDouble() / maxIterBar.max).pow(0.75)
                 f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
-                maxIterEdit.setText("%d".format(f.shape.maxIter))
+                maxIterValue.setText("%d".format(f.shape.maxIter))
 
             }
             override fun onStopTrackingTouch(seekBar: SeekBar) {
@@ -362,33 +293,33 @@ class ShapeFragment : MenuFragment() {
                 fsv.r.renderToTex = true
                 fsv.requestRender()
 
-                val p = seekBar.progress.toDouble() / maxIterBar.max
+                val p = (seekBar.progress.toDouble() / maxIterBar.max).pow(0.75)
                 val newIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
 
                 // save state on iteration increase
                 if (newIter > f.shape.maxIter) act.bookmarkAsPreviousFractal()
 
                 f.shape.maxIter = newIter
-                maxIterEdit.setText("%d".format(f.shape.maxIter))
+                maxIterValue.setText("%d".format(f.shape.maxIter))
 
                 // Log.d("FRACTAL EDIT FRAGMENT", "maxIter: ${f.shape.maxIter}")
 
             }
 
         })
-        maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
-        maxIterEdit.setText("%d".format(f.shape.maxIter))
-        maxIterEdit.setOnEditorActionListener(editListener(null) {
+        maxIterBar.progress = (((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)).pow(4.0/3.0)*maxIterBar.max).toInt()
+        maxIterValue.setText("%d".format(f.shape.maxIter))
+        maxIterValue.setOnEditorActionListener(editListener(null) {
             val result = "${it.text}".formatToDouble()?.toInt()
             if (result != null) {
                 f.shape.maxIter = result
                 fsv.r.renderToTex = true
             }
-            maxIterEdit.setText("%d".format(f.shape.maxIter))
+            maxIterValue.setText("%d".format(f.shape.maxIter))
             maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
         })
         maxIterBar.showWarning = true
-        iterWarningIcon.hide()
+        // iterWarningIcon.invisible()
 
         customShapeName.setOnEditorActionListener(editListener(null) {
             customShape.name = customShapeName.text.toString()
@@ -403,35 +334,55 @@ class ShapeFragment : MenuFragment() {
 
         if (f.shape.juliaMode) juliaModeButton.isChecked = true
         juliaModeButton.setOnClickListener(juliaListener)
+        juliaModeButton.setOnLongClickListener {
+
+            if (f.shape.juliaMode) {
+
+                f.shape.positions.default.x = f.shape.params.julia.u
+                f.shape.positions.default.y = f.shape.params.julia.v
+
+            } else {
+
+                f.shape.params.julia.setFrom(ComplexParam(f.shape.position.x, f.shape.position.y))
+
+            }
+            juliaModeButton.performClick()
+
+        }
 
 
 
-        val previewListWidth = Resolution.SCREEN.w - 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) - resources.getDimension(R.dimen.navButtonSize)
-        val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) + 2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
-        val spanCount = floor(previewListWidth.toDouble() / previewGridWidth).toInt()
-        val shapePreviewListLinearManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        val shapePreviewListGridManager = GridLayoutManager(context, spanCount)
 
+        val shapeListLayoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
 
         val onEditConfirm = { adapter: ListAdapter<Shape>, item: ListItem<Shape> ->
 
-            shapePreviewListLayout.hide()
+            shapeListLayout.hide()
             customShapeLayout.show()
             eqnErrorIndicator.invisible()
             loadNavButtons(customShapeNavButtons)
+            act.uiSetHeight(UiLayoutHeight.TALLER)
             fsv.r.renderProfile = RenderProfile.DISCRETE
             fsv.r.reaction = Reaction.COLOR
 
+            // save values in case of cancel
+            item.t.apply {
+                savedCustomName = name
+                savedCustomLatex = latex
+                savedCustomLoopSingle = customLoopSingle
+                savedCustomLoopDual = customLoopDual
+            }
 
             customShape = item.t
-            f.shape = customShape
-            f.texture = if (f.shape.isConvergent) Texture.converge else Texture.escapeSmooth
-            val prevZoom = f.shape.position.zoom
-            f.shape.reset()
-            fsv.r.checkThresholdCross(prevZoom)
+            fsv.r.checkThresholdCross {
+                f.shape = customShape
+                f.texture = if (f.shape.isConvergent) Texture.converge else Texture.escapeSmooth
+                f.shape.reset()
+            }
 
             customShapeName.setText(customShape.name)
             shapeMathQuill.setLatex(customShape.latex)
+            setCustomLoop(customShape.latex, customShape)
 
             fsv.r.renderShaderChanged = true
             fsv.r.renderToTex = true
@@ -472,6 +423,7 @@ class ShapeFragment : MenuFragment() {
                             }
                         }
 
+                        item.t.release()
                         val deleteId = item.t.id
 
                         GlobalScope.launch {
@@ -484,7 +436,7 @@ class ShapeFragment : MenuFragment() {
                             setActivatedPosition(
                                     getGlobalPositionOf(getFavoriteItems().getOrNull(0) ?: getDefaultItems()[1])
                             )
-                            f.shape = (getItem(activatedPos) as? ShapeListItem)!!.shape
+                            f.shape = getItem(activatedPos)!!.t
                         }
                         Shape.all.remove(item.t)
                         Shape.custom.remove(item.t)
@@ -498,31 +450,57 @@ class ShapeFragment : MenuFragment() {
                     .show()
 
         }
+        val onDuplicateShape = { adapter: ListAdapter<Shape>, item: ListItem<Shape> ->
+
+            if (!sc.goldEnabled) act.showUpgradeScreen()
+            else {
+
+                act.uiSetHeight(UiLayoutHeight.TALLER)
+                shapeListLayout.hide()
+                customShapeLayout.show()
+                loadNavButtons(customShapeNavButtons)
+                fsv.r.reaction = Reaction.COLOR
+                fsv.r.renderProfile = RenderProfile.DISCRETE
+
+                customShape = item.t.clone(resources)
+
+                customShapeName?.setText(customShape.name)
+                shapeMathQuill.setLatex(customShape.latex)
+                setCustomLoop(customShape.latex, customShape)
+
+                prevSelectedShapeIndex = Shape.all.indexOf(f.shape)
+                f.shape = customShape
+                f.texture = Texture.escapeSmooth
+
+                fsv.r.renderShaderChanged = true
+                fsv.r.renderToTex = true
+                fsv.requestRender()
+
+            }
+
+        }
 
 
-        val emptyFavorite = ShapeListItem(Shape.emptyFavorite, ListHeader.favorites, sc.shapeListViewType)
-        val emptyCustom = ShapeListItem(Shape.emptyCustom, ListHeader.custom, sc.shapeListViewType)
-        val listItems = arrayListOf<ShapeListItem>()
+        val emptyFavorite = ListItem(Shape.emptyFavorite, ListHeader.FAVORITE, R.layout.list_item_linear_empty_favorite)
+        val emptyCustom = ListItem(Shape.emptyCustom, ListHeader.CUSTOM, R.layout.list_item_linear_empty_custom)
+        val listItems = arrayListOf<ListItem<Shape>>()
 
         
         
         Shape.all.forEach { listItems.add(
 
-                ShapeListItem(
+                ListItem(
                         it,
-                        if (it.hasCustomId || it == Shape.emptyCustom) ListHeader.custom else ListHeader.default,
-                        sc.shapeListViewType,
-                        sc.goldEnabled,
-                        it == Shape.emptyCustom
+                        if (it.hasCustomId || it == Shape.emptyCustom) ListHeader.CUSTOM else ListHeader.DEFAULT,
+                        R.layout.other_list_item
 
                 ).apply {
 
                     if (it.isFavorite) {
-                        val favorite = ShapeListItem(
+                        val favorite = ListItem(
                                 it,
-                                ListHeader.favorites,
-                                sc.shapeListViewType,
-                                sc.goldEnabled,
+                                ListHeader.FAVORITE,
+                                R.layout.other_list_item,
                                 compliment = this
                         )
                         compliment = favorite
@@ -542,12 +520,25 @@ class ShapeFragment : MenuFragment() {
                 listItems,
                 onEditCustomShape,
                 onDeleteCustomShape,
+                onDuplicateShape,
                 emptyFavorite,
                 emptyCustom
         )
-        shapePreviewList.adapter = shapeListAdapter
+        shapeListLayout.list.apply {
+            adapter = shapeListAdapter
+            setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+                val firstVisiblePos = shapeListLayoutManager.findFirstCompletelyVisibleItemPosition()
+                highlightListHeader(shapeListAdapter, when {
+                    firstVisiblePos < shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[1]) -> 0
+                    firstVisiblePos < shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[2]) -> 1
+                    else -> 2
+                })
+            }
+            layoutManager = shapeListLayoutManager
+        }
         shapeListAdapter.apply {
             //isLongPressDragEnabled = true
+
             mode = SelectableAdapter.Mode.SINGLE
             showAllHeaders()
             //setAnimationOnForwardScrolling(true)
@@ -556,6 +547,11 @@ class ShapeFragment : MenuFragment() {
         shapeListAdapter.mItemClickListener = FlexibleAdapter.OnItemClickListener { view, position ->
 
             if (shapeListAdapter.getItemViewType(position) !in nonClickableViewTypes) {
+
+                val firstVisiblePos = shapeListLayoutManager.findFirstCompletelyVisibleItemPosition()
+                val lastVisiblePos = shapeListLayoutManager.findLastCompletelyVisibleItemPosition()
+                if (position + 1 > lastVisiblePos) shapeListLayout.list.smoothSnapToPosition(position + 1, LinearSmoothScroller.SNAP_TO_END)
+                else if (position - 1 < firstVisiblePos) shapeListLayout.list.smoothSnapToPosition(position - 1)
 
                 val prevActivatedPosition = shapeListAdapter.activatedPos
                 if (position != shapeListAdapter.activatedPos) shapeListAdapter.setActivatedPosition(position)
@@ -581,18 +577,14 @@ class ShapeFragment : MenuFragment() {
                             act.onTextureChanged()
                         }
 
-                        val prevScale = f.shape.position.zoom
-                        f.shape = newShape
-                        // Log.d("SHAPE FRAGMENT", "shape is now ${f.shape.name}")
-
-                        fsv.r.checkThresholdCross(prevScale)
+                        fsv.r.checkThresholdCross { f.shape = newShape }
 
                         fsv.r.renderShaderChanged = true
                         fsv.r.renderToTex = true
                         fsv.requestRender()
 
                         act.updateTextureEditTexts()
-                        act.updatePositionEditTexts()
+                        act.updatePositionLayout()
 
                     }
 
@@ -603,18 +595,50 @@ class ShapeFragment : MenuFragment() {
             else false
 
         }
-        shapePreviewListGridManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+
+
+
+        val shapeKeyListLayoutManager = GridLayoutManager(context, 2, GridLayoutManager.HORIZONTAL, false)
+        val shapeKeyListItems = arrayListOf<ShapeKeyListItem>()
+
+        Expr.numbers.forEach    { expr -> shapeKeyListItems.add(ShapeKeyListItem(expr, ShapeKeyListHeader.numbers))      }
+        Expr.basic.forEach      { expr -> shapeKeyListItems.add(ShapeKeyListItem(expr, ShapeKeyListHeader.basic))        }
+        Expr.trig.forEach       { expr -> shapeKeyListItems.add(ShapeKeyListItem(expr, ShapeKeyListHeader.trigonometry)) }
+
+        val shapeKeyListAdapter = FlexibleAdapter(shapeKeyListItems)
+        shapeKeyList.apply {
+            adapter = shapeKeyListAdapter
+            setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+                val firstVisiblePos = shapeKeyListLayoutManager.findFirstCompletelyVisibleItemPosition()
+                shapeKeyListAdapter.let { adapter ->
+                    highlightKeyListHeader(adapter, adapter.headerItems.indexOf(adapter.getSectionHeader(firstVisiblePos)) ?: 0)
+                }
+            }
+            layoutManager = shapeKeyListLayoutManager
+        }
+        shapeKeyListAdapter.mItemClickListener = FlexibleAdapter.OnItemClickListener { _, position ->
+
+            val expr = shapeKeyListAdapter.getItem(position)?.expr ?: Expr.z
+            shapeMathQuill.enterExpr(expr)
+            shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+            true
+
+        }
+        shapeKeyListLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
-                return if (shapeListAdapter.getItemViewType(position) in nonClickableViewTypes) spanCount else 1
+                return if (shapeKeyListAdapter.getItemViewType(position) in nonClickableViewTypes) 2 else 1
             }
         }
-        shapePreviewList.layoutManager = when (sc.shapeListViewType) {
-            ListLayoutType.LINEAR -> shapePreviewListLinearManager
-            ListLayoutType.GRID -> shapePreviewListGridManager
-        }
-        
-        
+        shapeKeyListAdapter.showAllHeaders()
 
+        listOf(
+                // keyboardVariablesButton,
+                keyboardNumbersButton,
+                keyboardBasicButton,
+                keyboardTrigButton
+        ).forEachIndexed { i, b ->
+            b.setOnClickListener { shapeKeyList.smoothSnapToPosition(shapeKeyListAdapter.getGlobalPositionOf(shapeKeyListAdapter.headerItems[i])) }
+        }
 
 
         val shapeParamButtonList = listOf(
@@ -634,21 +658,11 @@ class ShapeFragment : MenuFragment() {
 
 
 
-
-        val subMenuButtonListener = { layout: View, button: Button ->
-            View.OnClickListener {
-                act.hideTouchIcon()
-                showLayout(layout)
-                alphaButton(button)
-                // shapeResetButton.hide()
-            }
-        }
         val shapeParamButtonListener = { button: GradientButton, paramIndex: Int ->
             View.OnClickListener {
 
                 if (button.showGradient && !sc.goldEnabled) act.showUpgradeScreen()
                 else {
-                    act.showTouchIcon()
                     fsv.r.reaction = Reaction.SHAPE
                     f.shape.params.active = f.shape.params.list[paramIndex]
                     showLayout(if (f.shape.params.list[paramIndex] is ComplexParam) complexShapeParam else realShapeParam)
@@ -662,11 +676,25 @@ class ShapeFragment : MenuFragment() {
 
 
         // CLICK LISTENERS
+
+        shapeListLayout.apply {
+            listFavoritesButton.setOnClickListener {
+                list.smoothSnapToPosition(shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[0]))
+            }
+            listCustomButton.setOnClickListener {
+                list.smoothSnapToPosition(shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[1]))
+            }
+            listDefaultButton.setOnClickListener {
+                list.smoothSnapToPosition(shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[2]))
+            }
+        }
+        
         shapeListButton.setOnClickListener {
+
             if (shapeListAdapter.activatedPos == 0 && Shape.custom.isNotEmpty()) {
                 handler.postDelayed({
 
-                    act.showThumbnailDialog()
+                    act.showThumbnailRenderDialog()
 
                     // render custom shape thumbnails
                     fsv.r.renderProfile = RenderProfile.SHAPE_THUMB
@@ -675,13 +703,14 @@ class ShapeFragment : MenuFragment() {
 
                 }, BUTTON_CLICK_DELAY_LONG)
             }
+
             handler.postDelayed({
 
-                act.hideTouchIcon()
-                showLayout(shapePreviewListLayout)
+                showLayout(shapeListLayout)
                 fsv.r.reaction = Reaction.NONE
 
                 shapeSubMenuButtons.hide()
+                act.hideMenuToggleButton()
                 act.hideCategoryButtons()
 
                 shapeNavButtons.show()
@@ -693,9 +722,10 @@ class ShapeFragment : MenuFragment() {
                     }
                 }
 
-                act.uiSetOpenTall()
+                act.uiSetHeight(UiLayoutHeight.TALL)
 
             }, BUTTON_CLICK_DELAY_SHORT)
+
         }
         shapePreviewLayout.setOnClickListener {
             handler.postDelayed({
@@ -705,52 +735,37 @@ class ShapeFragment : MenuFragment() {
                 act.hideCategoryButtons()
 
                 shapeNavButtons.show()
-                shapePreviewListLayout.show()
+                shapeListLayout.show()
 
                 loadNavButtons(previewListNavButtons)
 
-                act.uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
+                act.uiSetHeight(UiLayoutHeight.TALL)
 
 
             }, BUTTON_CLICK_DELAY_MED)
         }
 
-        maxIterButton.setOnClickListener(subMenuButtonListener(maxIterLayout, maxIterButton))
+        maxIterButton.setOnClickListener {
+            subMenuButtonListener(maxIterLayout, maxIterButton).onClick(it)
+            fsv.r.reaction = Reaction.NONE
+        }
+        // maxIterButton.setOnClickListener(subMenuButtonListener(maxIterLayout, maxIterButton))
         // sensitivityButton.setOnClickListener(subMenuButtonListener(sensitivityLayout, sensitivityButton))
 
-        shapeListViewTypeButton.setOnClickListener {
-
-            sc.shapeListViewType = ListLayoutType.values().run {
-                get((sc.shapeListViewType.ordinal + 1) % size)
-            }
-
-            shapeListAdapter.updateLayoutType(sc.shapeListViewType)
-
-            when (sc.shapeListViewType) {
-
-                ListLayoutType.LINEAR -> {
-                    shapePreviewList.layoutManager = shapePreviewListLinearManager
-                }
-                ListLayoutType.GRID -> {
-                    shapePreviewList.layoutManager = shapePreviewListGridManager
-                }
-
-            }
-
-        }
         shapeListDoneButton.setOnClickListener {
             handler.postDelayed({
 
                 if (fsv.r.isRendering) fsv.r.pauseRender = true
 
-                if (!act.uiIsClosed()) act.uiSetOpen() else MainActivity.Category.SHAPE.onMenuClosed(act)
+                if (!act.uiIsClosed()) act.uiSetHeight(UiLayoutHeight.SHORT) else MainActivity.EditMode.SHAPE.onMenuClosed(act)
 
+                shapeListButton.setImageBitmap(f.shape.thumbnail)
 
-                shapePreviewListLayout.hide()
-                //shapePreviewLayout.show()
+                shapeListLayout.hide()
                 shapeSubMenuButtons.show()
                 shapeNavButtons.hide()
                 act.showCategoryButtons()
+                act.showMenuToggleButton()
                 maxIterButton.performClick()
 
                 updateLayout()
@@ -761,26 +776,14 @@ class ShapeFragment : MenuFragment() {
         customShapeNewButton.setOnClickListener {
             handler.postDelayed({
 
-                shapePreviewListLayout.hide()
+                act.uiSetHeight(UiLayoutHeight.TALLER)
+                shapeListLayout.hide()
                 customShapeLayout.show()
                 loadNavButtons(customShapeNavButtons)
                 fsv.r.reaction = Reaction.COLOR
                 fsv.r.renderProfile = RenderProfile.DISCRETE
 
-                val postfix = infixToPostfix(parseEquation("z^2 + c")!!)
-                customShape = Shape(
-                        name = "%s %s %d".format(
-                                resources.getString(R.string.header_custom),
-                                resources.getString(R.string.shape),
-                                Shape.nextCustomShapeNum
-                        ),
-                        latex = "z^2 + c",
-                        loop = "customshape_loop(z1, c)",
-                        customLoopSF = "csqr(z) + c",
-                        customLoopDF = "cadd(csqr(z), c)",
-                        positions = PositionList(Position(zoom = 5e0)),
-                        hasDualFloat = true
-                )
+                customShape = Shape.createNewCustom(resources)
 
                 customShapeName?.setText(customShape.name)
                 shapeMathQuill.setLatex(customShape.latex)
@@ -797,19 +800,30 @@ class ShapeFragment : MenuFragment() {
         }
         customShapeCancelButton.setOnClickListener {
 
-            if (!customShape.hasCustomId) {
+            if (customShape.hasCustomId) {
+                // revert changes
+                customShape.apply {
+                    name = savedCustomName
+                    latex = savedCustomLatex
+                    customLoopSingle = savedCustomLoopSingle
+                    customLoopDual = savedCustomLoopDual
+                }
+            } else {
+                // select previous shape
+                customShape.release()
                 f.shape = Shape.all[prevSelectedShapeIndex]
-                fsv.r.reaction = Reaction.NONE
-                fsv.r.renderShaderChanged = true
-                fsv.r.renderToTex = true
-                fsv.requestRender()
             }
+            fsv.r.reaction = Reaction.NONE
+            fsv.r.renderShaderChanged = true
+            fsv.r.renderToTex = true
+            fsv.requestRender()
 
             customShapeLayout.hide()
-            shapePreviewListLayout.show()
+            shapeListLayout.show()
             loadNavButtons(previewListNavButtons)
+            act.uiSetHeight(UiLayoutHeight.TALL)
             //act.showCategoryButtons()
-            
+
         }
         customShapeDoneButton.setOnClickListener {
 
@@ -837,8 +851,8 @@ class ShapeFragment : MenuFragment() {
                                         customShape.id,
                                         customShape.name,
                                         customShape.latex,
-                                        customShape.customLoopSF,
-                                        customShape.customLoopDF
+                                        customShape.customLoopSingle,
+                                        customShape.customLoopDual
                                 )
                             }
 
@@ -861,7 +875,7 @@ class ShapeFragment : MenuFragment() {
 
                             // add item to list adapter and select
                             shapeListAdapter.apply {
-                                val item = ShapeListItem(customShape, ListHeader.custom, sc.shapeListViewType)
+                                val item = ListItem(customShape, ListHeader.CUSTOM, R.layout.other_list_item)
                                 setActivatedPosition(addItemToCustom(item, 0))
                             }
 
@@ -881,10 +895,11 @@ class ShapeFragment : MenuFragment() {
                         shapeMathQuill.getLatex { customShape.latex = it }
 
                         customShapeLayout.hide()
-                        shapePreviewListLayout.show()
+                        shapeListLayout.show()
                         loadNavButtons(previewListNavButtons)
+                        act.uiSetHeight(UiLayoutHeight.TALL)
 
-                        shapePreviewList.adapter?.notifyDataSetChanged()
+                        shapeListLayout.list.adapter?.notifyDataSetChanged()
 
                     }, BUTTON_CLICK_DELAY_SHORT)
                 }
@@ -894,109 +909,30 @@ class ShapeFragment : MenuFragment() {
         }
 
 
-
-
-
-        numpadButton.setOnClickListener {
-            operatorSpecialKeys.hide()
-            // constantKeys.hide()
-            numberKeys.show()
-        }
-        functionsButton.setOnClickListener {
-            operatorSpecialKeys.show()
-            // constantKeys.hide()
-            numberKeys.hide()
-        }
-
         zKey.setOnClickListener(keyListener(Expr.z))
         cKey.setOnClickListener(keyListener(Expr.c))
-        plusKey.setOnClickListener(keyListener(Expr.add))
-        minusKey.setOnClickListener(keyListener(Expr.sub))
-        timesKey.setOnClickListener(keyListener(Expr.mult))
-        divKey.setOnClickListener(keyListener(Expr.div))
-
-        powKey.setOnClickListener(keyListener(Expr.pow))
-        sqrKey.setOnClickListener(keyListener(Expr.sqr))
-        cubeKey.setOnClickListener(keyListener(Expr.cube))
-        quadKey.setOnClickListener(keyListener(Expr.quad))
-        inverseKey.setOnClickListener(keyListener(Expr.inv))
-        sqrtKey.setOnClickListener(keyListener(Expr.sqrt))
-        modulusKey.setOnClickListener(keyListener(Expr.mod))
-        conjKey.setOnClickListener(keyListener(Expr.conj))
-        argKey.setOnClickListener(keyListener(Expr.arg))
-        absKey.setOnClickListener(keyListener(Expr.abs))
-        rabsKey.setOnClickListener(keyListener(Expr.rabs))
-        iabsKey.setOnClickListener(keyListener(Expr.iabs))
-//        signKey.setOnClickListener(keyListener(Expr.sign))
-
-        sinKey.setOnClickListener(keyListener(Expr.sin))
-        cosKey.setOnClickListener(keyListener(Expr.cos))
-        tanKey.setOnClickListener(keyListener(Expr.tan))
-        cscKey.setOnClickListener(keyListener(Expr.csc))
-        secKey.setOnClickListener(keyListener(Expr.sec))
-        cotKey.setOnClickListener(keyListener(Expr.cot))
-
-        asinKey.setOnClickListener(keyListener(Expr.asin))
-        acosKey.setOnClickListener(keyListener(Expr.acos))
-        atanKey.setOnClickListener(keyListener(Expr.atan))
-        acscKey.setOnClickListener(keyListener(Expr.acsc))
-        asecKey.setOnClickListener(keyListener(Expr.asec))
-        acotKey.setOnClickListener(keyListener(Expr.acot))
-
-        sinhKey.setOnClickListener(keyListener(Expr.sinh))
-        coshKey.setOnClickListener(keyListener(Expr.cosh))
-        tanhKey.setOnClickListener(keyListener(Expr.tanh))
-        cschKey.setOnClickListener(keyListener(Expr.csch))
-        sechKey.setOnClickListener(keyListener(Expr.sech))
-        cothKey.setOnClickListener(keyListener(Expr.coth))
-
-        asinhKey.setOnClickListener(keyListener(Expr.asinh))
-        acoshKey.setOnClickListener(keyListener(Expr.acosh))
-        atanhKey.setOnClickListener(keyListener(Expr.atanh))
-        acschKey.setOnClickListener(keyListener(Expr.acsch))
-        asechKey.setOnClickListener(keyListener(Expr.asech))
-        acothKey.setOnClickListener(keyListener(Expr.acoth))
-
-//        lnKey.setOnClickListener(keyListener(Expr.ln))
-//        log2Key.setOnClickListener(keyListener(Expr.log2))
-//        log10Key.setOnClickListener(keyListener(Expr.log10))
-
-//        expKey.setOnClickListener(keyListener(Expr.exp))
-//        exp2Key.setOnClickListener(keyListener(Expr.exp2))
-//        exp10Key.setOnClickListener(keyListener(Expr.exp10))
-
-        zeroKey.setOnClickListener(keyListener(Expr.zero))
-        oneKey.setOnClickListener(keyListener(Expr.one))
-        twoKey.setOnClickListener(keyListener(Expr.two))
-        threeKey.setOnClickListener(keyListener(Expr.three))
-        fourKey.setOnClickListener(keyListener(Expr.four))
-        fiveKey.setOnClickListener(keyListener(Expr.five))
-        sixKey.setOnClickListener(keyListener(Expr.six))
-        sevenKey.setOnClickListener(keyListener(Expr.seven))
-        eightKey.setOnClickListener(keyListener(Expr.eight))
-        nineKey.setOnClickListener(keyListener(Expr.nine))
-        decimalKey.setOnClickListener(keyListener(Expr.decimal))
-        iKey.setOnClickListener(keyListener(Expr.i))
-
         prevKey.setOnClickListener { shapeMathQuill.enterKeystroke("Left") }
         nextKey.setOnClickListener { shapeMathQuill.enterKeystroke("Right") }
         deleteKey.setOnClickListener {
             shapeMathQuill.enterKeystroke("Backspace")
             shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
         }
-        parensKey.setOnClickListener(keyListener(Expr.parens))
+        leftParenKey.setOnClickListener(keyListener(Expr.leftParen))
+        rightParenKey.setOnClickListener(keyListener(Expr.rightParen))
+//        parensKey.setOnClickListener(keyListener(Expr.parens))
 
         juliaParamButton.setOnClickListener {
-            act.showTouchIcon()
             showLayout(complexShapeParam)
             alphaButton(juliaParamButton)
             // shapeResetButton.show()
             f.shape.params.active = f.shape.params.julia
             fsv.r.reaction = Reaction.SHAPE
             loadActiveParam()
+            val r = Rect()
+            juliaParamButton.getGlobalVisibleRect(r)
+            Log.e("SHAPE", "r: $r")
         }
         seedParamButton.setOnClickListener {
-            act.showTouchIcon()
             showLayout(complexShapeParam)
             alphaButton(seedParamButton)
             // shapeResetButton.show()
@@ -1016,25 +952,11 @@ class ShapeFragment : MenuFragment() {
         sensitivityLayout.hide()
         // shapeResetButton.hide()
         // sensitivityButton.hide()
-        operatorSpecialKeys.hide()
-
-        if (!BuildConfig.DEV_VERSION) {
-            listOf(
-                    asinKey, acosKey, atanKey, acscKey, asecKey, acotKey,
-                    asinhKey, acoshKey, atanhKey, acschKey, asechKey, acothKey
-            ).forEach { it.hide() }
-        }
 
 
-
-        shapePreviewListLayout.hide()
+        shapeListLayout.hide()
         customShapeLayout.hide()
         shapeNavButtons.hide()
-
-        p1Key.hide()
-        p2Key.hide()
-        constantsButton.hide()
-
 
 
         currentLayout = maxIterLayout
@@ -1056,6 +978,9 @@ class ShapeFragment : MenuFragment() {
                 shapeParamButton4
         )
 
+        if (f.shape.hasCustomId) shapeListButton.setImageBitmap(f.shape.thumbnail)
+        else                     shapeListButton.setImageResource(f.shape.thumbnailId)
+
         // update parameter display
         shapeParamButtonList.forEach { it.hide() }
         f.shape.params.list.forEachIndexed { index, param ->
@@ -1071,10 +996,10 @@ class ShapeFragment : MenuFragment() {
 
         if (f.shape.juliaModeInit) {
             juliaModeButton.hide()
-            juliaDivider.hide()
+            // juliaDivider.hide()
         } else {
             juliaModeButton.show()
-            juliaDivider.show()
+            // juliaDivider.show()
         }
 
         if (f.shape != Shape.mandelbrot && !sc.goldEnabled) {
@@ -1091,8 +1016,10 @@ class ShapeFragment : MenuFragment() {
         }
         if (f.shape.juliaMode || f.shape.juliaSeed) seedParamButton.hide() else seedParamButton.show()
 
-        maxIterEdit.setText("%d".format(f.shape.maxIter))
-        maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*maxIterBar.max).toInt()
+        maxIterValue.setText("%d".format(f.shape.maxIter))
+        maxIterBar.progress = (((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)).pow(4.0/3.0)*maxIterBar.max).toInt()
+
+        loadActiveParam()
 
     }
 
@@ -1109,27 +1036,60 @@ class ShapeFragment : MenuFragment() {
         ).forEach { it.showGradient = false }
     }
 
-    fun loadActiveParam() {
+    fun updateParamText() {
         val param = f.shape.params.active
         if (param is ComplexParam) {
             complexShapeParam.apply {
-                uEdit.setText("%.8f".format(param.u))
-                uLock.isChecked = param.uLocked
-                vEdit.setText("%.8f".format(param.v))
-                vLock.isChecked = param.vLocked
-                linkParamButton.isChecked = param.linked
-                linkParamButton.foregroundTintList = ColorStateList.valueOf(resources.getColor(
-                        if (linkParamButton.isChecked) R.color.white else R.color.colorDarkSelected, null
-                ))
+                uValue.setText(param.u.format(COMPLEX_PARAM_DIGITS))
+                vValue.setText(param.v.format(COMPLEX_PARAM_DIGITS))
             }
         }
         else {
             realShapeParam.apply {
-                uEdit2.setText("%.3f".format(param.u))
-                realParamSeekBar.setOnSeekBarChangeListener(null)
-                realParamSeekBar.max = if (param.discrete) (param.uRange.upper - param.uRange.lower).toInt() else 2000
-                realParamSeekBar.progress = (realParamSeekBar.max * (param.u - param.uRange.lower) / (param.uRange.upper - param.uRange.lower)).toInt()
-                realParamSeekBar.setOnSeekBarChangeListener(realParamSeekBarListener)
+                uValue2.setText(param.u.format(REAL_PARAM_DIGITS))
+            }
+        }
+    }
+    fun loadActiveParam() {
+        val param = f.shape.params.active
+        if (param is ComplexParam) {
+            complexShapeParam.apply {
+                uValue.setText(param.u.format(COMPLEX_PARAM_DIGITS))
+                uLock.isChecked = param.uLocked
+                vValue.setText(param.v.format(COMPLEX_PARAM_DIGITS))
+                vLock.isChecked = param.vLocked
+                complexParamSensitivity.sensitivityValue.setText("%d".format(param.sensitivity.toInt()))
+            }
+        }
+        else {
+            realShapeParam.apply {
+                uValue2.setText(param.u.format(REAL_PARAM_DIGITS))
+                realParamSensitivity.sensitivityValue.setText("%d".format(param.sensitivity.toInt()))
+            }
+        }
+    }
+
+    fun highlightListHeader(adapter: ListAdapter<Shape>, index: Int) {
+        adapter.apply {
+            listOf(
+                    shapeListLayout.listFavoritesButton,
+                    shapeListLayout.listCustomButton,
+                    shapeListLayout.listDefaultButton
+            ).forEachIndexed { i, b ->
+                b.setTextColor(resources.getColor(if (index == i) R.color.colorDarkText else R.color.colorDarkTextMuted, null))
+            }
+        }
+    }
+
+    fun highlightKeyListHeader(adapter: FlexibleAdapter<*>, index: Int) {
+        adapter.apply {
+            listOf(
+                    // keyboardVariablesButton,
+                    keyboardNumbersButton,
+                    keyboardBasicButton,
+                    keyboardTrigButton
+            ).forEachIndexed { i, b ->
+                b.setTextColor(resources.getColor(if (index == i) R.color.highlight else R.color.toggleButtonUnselected, null))
             }
         }
     }
@@ -1154,8 +1114,8 @@ class ShapeFragment : MenuFragment() {
             } else {
                 eqnErrorIndicator.invisible()
                 shape.latex = latex
-                shape.customLoopSF = sf
-                shape.customLoopDF = df
+                shape.customLoopSingle = sf
+                shape.customLoopDual = df
                 fsv.r.renderShaderChanged = true
                 fsv.r.renderToTex = true
                 fsv.requestRender()
@@ -1169,6 +1129,7 @@ class ShapeFragment : MenuFragment() {
         var str = input
 
 
+        // initial processing
         str = str.replace("\\\\", "")       // remove all \\
                 .replace("left|", "modulus(")
                 .replace("right|", ")")
@@ -1176,7 +1137,6 @@ class ShapeFragment : MenuFragment() {
                 .replace("right", "")     // remove all right
                 .replace(Regex("operatorname\\{[A-Za-z]+\\}")) { result -> result.value.substring(13 until result.value.length - 1) }
 
-        Log.e("SHAPE", "str: $str")
 
         // replace all \\frac{}{} with ({}/{})
         do {
@@ -1224,6 +1184,7 @@ class ShapeFragment : MenuFragment() {
             else break
         } while (str.contains("frac"))
 
+
         // replace all \\cdot with *
         while (true) {
             val start = str.indexOf("cdot")
@@ -1232,57 +1193,38 @@ class ShapeFragment : MenuFragment() {
             } else break
         }
 
-        str
+
+        str = str
                 .replace(" ", "")
-                .replace("^", " ^ ")
-                .replace("*", " * ")
-                .replace("/", " / ")
-                .replace("+", " + ")
-                .replace("-", " - ")
-                .replace("(", " ( ")
-                .replace(")", " ) ")
-                .replace("{", " ( ")
-                .replace("}", " ) ")
-                .replace("z", " z ")
-                .replace(Regex("(?<!arc)sin(?!h)"), " sin ")
-                .replace(Regex("(?<!arc)cos(?!h)"), " cos ")
-                .replace(Regex("(?<!arc)tan(?!h)"), " tan ")
-                .replace(Regex("(?<!arc)csc(?!h)"), " csc ")
-                .replace(Regex("(?<!arc)sec(?!h)"), " sec ")
-                .replace(Regex("(?<!arc)cot(?!h)"), " cot ")
-                .replace(Regex("arcsin(?!h)"), " arcsin ")
-                .replace(Regex("arccos(?!h)"), " arccos ")
-                .replace(Regex("arctan(?!h)"), " arctan ")
-                .replace(Regex("arccsc(?!h)"), " arccsc ")
-                .replace(Regex("arcsec(?!h)"), " arcsec ")
-                .replace(Regex("arccot(?!h)"), " arccot ")
-                .replace(Regex("(?<!arc)sinh"), " sinh ")
-                .replace(Regex("(?<!arc)cosh"), " cosh ")
-                .replace(Regex("(?<!arc)tanh"), " tanh ")
-                .replace(Regex("(?<!arc)csch"), " csch ")
-                .replace(Regex("(?<!arc)sech"), " sech ")
-                .replace(Regex("(?<!arc)coth"), " coth ")
-                .replace(Regex("arcsinh"), " arcsinh ")
-                .replace(Regex("arccosh"), " arccosh ")
-                .replace(Regex("arctanh"), " arctanh ")
-                .replace(Regex("arccsch"), " arccsch ")
-                .replace(Regex("arcsech"), " arcsech ")
-                .replace(Regex("arccoth"), " arccoth ")
-                // .replace("i", " i ")
-                // .replace(Regex("c(?![os])"), " c ")
-                .replace(Regex("(\\d*\\.)?\\d+"))  { result -> " ${result.value} "}
-                .replace("  ", " ")
-                .trim()
-                .split(" ")
-                .forEach {
-                    val expr = Expr.valueOf(it)
-                    if (expr != null) out.add(expr)
-                    else return null
+                .replace("{", "(")
+                .replace("}", ")")
+
+
+        // parse string into expressions
+        while (str.isNotEmpty()) {
+            var end = minOf(str.length, Expr.MAX_EXPR_LEN)
+            while (end > 0) {
+                val expr = Expr.valueOf(str.substring(0 until end))
+                if (expr != null) {
+                    // Log.e("SHAPE", "expr found: ${str.substring(0 until end)}")
+                    out.add(expr)
+                    str = str.removeRange(0 until end)
+                    break
                 }
+                else {
+                    if (end == 1) {
+                        Log.e("SHAPE", "no matching expression: $str")
+                        return null
+                    } else end--
+                }
+            }
+        }
+
 
         // implicit negative
         out.forEachIndexed { i, expr ->
             if (expr == Expr.sub && (i == 0 || out[i - 1] in listOf(Expr.add, Expr.sub, Expr.mult, Expr.div, Expr.leftParen))) {
+                // Log.d("SHAPE", "prev expr: ${out[i - 1]}")
                 out[i] = Expr.neg
             }
         }
@@ -1291,10 +1233,10 @@ class ShapeFragment : MenuFragment() {
         var i = 1
         var outSize = out.size
         while (i < outSize) {
-            if (out[i - 1] !is Operator && (out[i].str == "I" || !out[i].isConstant)) {
+            if (out[i - 1] !is Operator && (out[i] == Expr.i || !out[i].isConstant)) {
                 if (out[i] !is Operator || out[i].run { this is Operator && numArgs == 1 }) {
                     if (!(out[i - 1] == Expr.leftParen || out[i] == Expr.rightParen)) {
-                        Log.e("SHAPE", "implicit multiply: ${out[i - 1]} -> ${out[i]}")
+                        // Log.d("SHAPE", "implicit multiply: ${out[i - 1]} -> ${out[i]}")
                         out.add(i, Expr.mult)
                         outSize++
                     }
@@ -1303,7 +1245,7 @@ class ShapeFragment : MenuFragment() {
             i++
         }
 
-        Log.e("SHAPE", "parsed equation: ${out.joinToString(" ")}")
+        // Log.d("SHAPE", "parsed equation: ${out.joinToString(" ")}")
         // Log.e("SHAPE", "out size: ${out.size}")
         return out
 
@@ -1398,7 +1340,7 @@ class ShapeFragment : MenuFragment() {
 
         while (exprs.isNotEmpty()) {
 
-            Log.e("SHAPE", "stack: ${stack.joinToString("  ", transform = { expr -> "$expr(${expr.precision.name[0]})" })}")
+            // Log.d("SHAPE", "stack: ${stack.joinToString("  ", transform = { expr -> "$expr(${expr.precision.name[0]})" })}")
 
             when (val expr = exprs.removeAt(0)) {
                 is Operator -> {

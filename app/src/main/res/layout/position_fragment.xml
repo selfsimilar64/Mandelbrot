@@ -1,227 +1,472 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/positionLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@color/menuDark1"
-    android:orientation="vertical"
-    android:paddingTop="1dp">
+    android:orientation="vertical">
 
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/xyLayout"
-        style="@style/FragmentItem"
+    <LinearLayout
+        android:id="@+id/xLayout"
+        style="@style/UiComponentShort"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeight"
-        android:orientation="vertical"
-        android:paddingBottom="10dp">
-
-        <LinearLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/xLabel"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="24dp"
-                android:drawablePadding="20dp"
-                android:text="@string/x" />
-
-            <EditText
-                android:id="@+id/xEdit"
-                style="@style/EditNumberDark"
-                android:layout_width="wrap_content"
-                android:imeOptions="actionNext" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
-
-            <TextView
-                android:id="@+id/yLabel"
-                style="@style/TextDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="24dp"
-                android:drawablePadding="20dp"
-                android:text="@string/y" />
-
-            <EditText
-                android:id="@+id/yEdit"
-                style="@style/EditNumberDark"
-                android:layout_width="wrap_content"
-                android:imeOptions="actionDone" />
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/zoomLayout"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeight"
-        android:orientation="vertical">
-
-        <ToggleButton
-            android:id="@+id/scaleLock"
-            style="@style/LockDark"
-            android:layout_width="30dp"
-            android:layout_height="40dp"
-            app:layout_constraintBottom_toBottomOf="@+id/linearLayout"
-            app:layout_constraintStart_toEndOf="@+id/linearLayout"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <LinearLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <EditText
-                android:id="@+id/scaleSignificandEdit"
-                style="@style/EditNumberDark"
-                android:layout_width="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:imeOptions="actionNext"
-                android:selectAllOnFocus="true" />
-
-            <TextView
-                android:id="@+id/scaleDivider"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/e"
-                android:textSize="17sp" />
-
-            <EditText
-                android:id="@+id/scaleExponentEdit"
-                style="@style/EditNumberDark"
-                android:layout_width="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:imeOptions="actionDone" />
-
-        </LinearLayout>
-
-        <com.selfsimilartech.fractaleye.StartPointSeekBar
-            android:id="@+id/zoomSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginTop="8dp"
-            android:layout_weight="1"
-            android:max="500"
-            android:progress="250"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/rotationLayout"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeight"
+        android:layout_height="@dimen/uiComponentHeightShort"
+        android:background="@color/menuDarkPrimary"
         android:orientation="horizontal">
 
-        <com.selfsimilartech.fractaleye.StartPointSeekBar
-            android:id="@+id/rotationSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginTop="8dp"
+        <!--        <com.selfsimilartech.fractaleye.StartPointSeekBar-->
+        <!--            android:id="@+id/rotationSeekBar"-->
+        <!--            android:layout_width="0dp"-->
+        <!--            android:layout_height="18dp"-->
+        <!--            android:layout_gravity="center_vertical"-->
+        <!--            android:layout_weight="1"-->
+        <!--            android:max="500"-->
+        <!--            android:progress="250" />-->
+
+        <include
+            android:id="@+id/shiftHorizontalSensitivity"
+            layout="@layout/discrete_sensitivity_layout" />
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="0dp"
             android:layout_weight="1"
-            android:max="500"
-            android:progress="250"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rotationEdit" />
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/rotationEdit"
-            style="@style/EditNumberDark"
+            <EditText
+                android:id="@+id/xValue"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:gravity="center_vertical|end"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|numberDecimal"
+                android:singleLine="true"
+                android:text="-1.23456789123456789"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
             android:layout_width="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:imeOptions="actionDone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:orientation="horizontal">
 
-        <ToggleButton
-            android:id="@+id/rotationLock"
-            style="@style/LockDark"
-            android:layout_width="30dp"
-            android:layout_height="40dp"
-            app:layout_constraintBottom_toBottomOf="@+id/rotationEdit"
-            app:layout_constraintStart_toEndOf="@+id/rotationEdit"
-            app:layout_constraintTop_toTopOf="@+id/rotationEdit" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <ImageButton
+                android:id="@+id/shiftLeftButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/shift_left" />
+
+            <View
+                android:id="@+id/divider31"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <ImageButton
+                android:id="@+id/shiftRightButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/shift_right" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/yLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/uiComponentHeightShort"
+        android:background="@color/menuDarkPrimary"
+        android:orientation="horizontal">
+
+        <!--        <com.selfsimilartech.fractaleye.StartPointSeekBar-->
+        <!--            android:id="@+id/rotationSeekBar"-->
+        <!--            android:layout_width="0dp"-->
+        <!--            android:layout_height="18dp"-->
+        <!--            android:layout_gravity="center_vertical"-->
+        <!--            android:layout_weight="1"-->
+        <!--            android:max="500"-->
+        <!--            android:progress="250" />-->
+
+        <include
+            android:id="@+id/shiftVerticalSensitivity"
+            layout="@layout/discrete_sensitivity_layout" />
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/yValue"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:gravity="center_vertical|end"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|numberDecimal"
+                android:singleLine="true"
+                android:text="-1.23456789123456789" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/shiftUpButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/shift_up" />
+
+            <View
+                android:id="@+id/divider32"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <ImageButton
+                android:id="@+id/shiftDownButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/shift_down" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/zoomLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/uiComponentHeightShort"
+        android:background="@color/menuDarkPrimary"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!--        <LinearLayout-->
+        <!--            android:id="@+id/linearLayout"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="40dp"-->
+        <!--            android:gravity="center_horizontal"-->
+        <!--            android:orientation="horizontal"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toTopOf="parent">-->
+
+        <!--            <EditText-->
+        <!--                android:id="@+id/scaleSignificandEdit"-->
+        <!--                style="@style/EditNumberDark"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:layout_gravity="center_vertical"-->
+        <!--                android:imeOptions="actionNext"-->
+        <!--                android:selectAllOnFocus="true" />-->
+
+        <!--            <TextView-->
+        <!--                android:id="@+id/scaleDivider"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:layout_height="wrap_content"-->
+        <!--                android:layout_gravity="center_vertical"-->
+        <!--                android:text="@string/e"-->
+        <!--                android:textSize="17sp" />-->
+
+        <!--            <EditText-->
+        <!--                android:id="@+id/scaleExponentEdit"-->
+        <!--                style="@style/EditNumberDark"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:layout_gravity="center_vertical"-->
+        <!--                android:imeOptions="actionDone" />-->
+
+        <!--        </LinearLayout>-->
+
+        <include
+            android:id="@+id/zoomSensitivity"
+            layout="@layout/discrete_sensitivity_layout" />
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="4dp"
+            android:paddingBottom="6dp">
+
+            <EditText
+                android:id="@+id/zoomSignificandValue"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:gravity="center_vertical|end"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:text="3.54" />
+
+            <TextView
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:text="e" />
+
+            <EditText
+                android:id="@+id/zoomExponentValue"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_marginStart="1dp"
+                android:gravity="center_vertical"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|number"
+                android:text="-12" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/zoomOutButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/zoom_out" />
+
+            <View
+                android:id="@+id/divider4"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <ImageButton
+                android:id="@+id/zoomInButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/zoom_in" />
+        </LinearLayout>
+
+        <!--        <com.selfsimilartech.fractaleye.StartPointSeekBar-->
+        <!--            android:id="@+id/zoomSeekBar"-->
+        <!--            android:layout_width="0dp"-->
+        <!--            android:layout_height="18dp"-->
+        <!--            android:layout_weight="1"-->
+        <!--            android:max="500"-->
+        <!--            android:progress="250"-->
+        <!--            tools:visibility="gone" />-->
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/rotationLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/uiComponentHeightShort"
+        android:background="@color/menuDarkPrimary"
+        android:orientation="horizontal">
+
+        <!--        <com.selfsimilartech.fractaleye.StartPointSeekBar-->
+        <!--            android:id="@+id/rotationSeekBar"-->
+        <!--            android:layout_width="0dp"-->
+        <!--            android:layout_height="18dp"-->
+        <!--            android:layout_gravity="center_vertical"-->
+        <!--            android:layout_weight="1"-->
+        <!--            android:max="500"-->
+        <!--            android:progress="250" />-->
+
+        <include
+            android:id="@+id/rotationSensitivity"
+            layout="@layout/discrete_sensitivity_layout" />
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/rotationValue"
+                style="@style/EditNumberDark"
+                android:layout_width="45dp"
+                android:layout_height="24dp"
+                android:gravity="center_vertical|end"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|numberDecimal"
+                android:text="180.0" />
+
+            <ToggleButton
+                android:id="@+id/rotationLock"
+                style="@style/LockDark"
+                android:layout_width="30dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="3dp"
+                app:layout_constraintBottom_toBottomOf="@+id/rotationEdit"
+                app:layout_constraintStart_toEndOf="@+id/rotationEdit"
+                app:layout_constraintTop_toTopOf="@+id/rotationEdit" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/rotateLeftButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/rotate_left" />
+
+            <View
+                android:id="@+id/divider30"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <ImageButton
+                android:id="@+id/rotateRightButton"
+                style="@style/MenuImageButtonDark"
+                android:layout_width="45dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="0dp"
+                android:layout_weight="1"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/rotate_right" />
+        </LinearLayout>
+
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/menuButtonHeight"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/xyButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:drawableTop="@drawable/xy"
-            android:text="@string/xy" />
-
-        <Button
-            android:id="@+id/zoomButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:drawableTop="@drawable/zoom"
-            android:text="@string/zoom" />
-
-        <Button
-            android:id="@+id/rotationButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:drawableTop="@drawable/rotate"
-            android:text="@string/rotate" />
+        android:layout_height="match_parent"
+        android:animateLayoutChanges="true"
+        android:background="@color/menuDarkSecondary"
+        android:orientation="vertical">
 
         <View
-            android:id="@+id/divider5"
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/menuDark7" />
+            android:id="@+id/divider15"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider"
+            android:visibility="gone" />
 
-        <Button
-            android:id="@+id/resetPositionButton"
-            style="@style/MenuNavToggleButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:alpha="1.0"
-            android:background="?attr/selectableItemBackground"
-            android:drawableTop="@drawable/reset"
-            android:text="@string/reset" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/menuButtonHeight"
+            android:background="@color/menuDarkSecondary"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/zoomButton"
+                style="@style/MenuNavToggleButton"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackground"
+                android:drawableTop="@drawable/zoom"
+                android:text="@string/zoom" />
+
+            <Button
+                android:id="@+id/rotateButton"
+                style="@style/MenuNavToggleButton"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackground"
+                android:drawableTop="@drawable/rotate"
+                android:text="@string/rotate" />
+
+            <Button
+                android:id="@+id/shiftHorizontalButton"
+                style="@style/MenuNavToggleButton"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackground"
+                android:drawableTop="@drawable/shift_horizontal"
+                android:text="@string/shift" />
+
+            <Button
+                android:id="@+id/shiftVerticalButton"
+                style="@style/MenuNavToggleButton"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackground"
+                android:drawableTop="@drawable/shift_vertical"
+                android:text="@string/shift" />
+
+            <View
+                android:id="@+id/divider5"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp"
+                android:background="@color/menuDark7" />
+
+            <Button
+                android:id="@+id/resetPositionButton"
+                style="@style/MenuNavToggleButton"
+                android:layout_width="75dp"
+                android:alpha="1.0"
+                android:background="?attr/selectableItemBackground"
+                android:drawableTop="@drawable/reset"
+                android:text="@string/reset" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

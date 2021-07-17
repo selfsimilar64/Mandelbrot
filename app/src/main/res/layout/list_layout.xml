@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/listLayout"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/uiComponentHeightTall"
+    android:animateLayoutChanges="true"
+    android:background="@color/menuDarkSecondary"
+    android:orientation="vertical"
+    tools:showIn="@layout/color_fragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="@color/menuDarkPrimary"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/listFavoritesButton"
+            style="@style/ListCategoryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/header_favorites"
+            android:textColor="@color/colorDarkText"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/listCustomButton"
+            style="@style/ListCategoryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/header_custom"
+            android:textColor="@color/colorDarkText"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/listDefaultButton"
+            style="@style/ListCategoryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/header_default"
+            android:textColor="@color/colorDarkText"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="144dp"
+        android:orientation="horizontal"
+        android:scrollbarThumbHorizontal="@color/divider"
+        android:scrollbars="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:spanCount="3"
+        tools:itemCount="6"
+        tools:listitem="@layout/palette_list_item" />
+
+
+</LinearLayout>

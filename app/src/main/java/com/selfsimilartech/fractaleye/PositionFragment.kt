@@ -1,22 +1,17 @@
 package com.selfsimilartech.fractaleye
 
-import android.content.Context
+import android.animation.LayoutTransition
 import android.os.Bundle
-import android.util.Log
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import kotlinx.android.synthetic.main.position_fragment.*
+import kotlinx.android.synthetic.main.discrete_sensitivity_layout.view.*
 import java.util.*
-import kotlin.math.pow
 
 
 class PositionFragment : MenuFragment() {
-
-    private var rotationSeekBarListener : SeekBar.OnSeekBarChangeListener? = null
 
 
     // Inflate the view for the fragment based on layout XML
@@ -26,39 +21,39 @@ class PositionFragment : MenuFragment() {
 
     }
 
-    override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        super.onViewCreated(v, savedInstanceState)
+        super.onViewCreated(view, savedInstanceState)
 
-        val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
-            -> TextView.OnEditorActionListener { editText, actionId, _ ->
-            when (actionId) {
-                EditorInfo.IME_ACTION_NEXT -> {
-                    setValueAndFormat(editText as EditText)
-                    editText.clearFocus()
-                    editText.isSelected = false
-                    nextEditText?.requestFocus()
-                }
-                EditorInfo.IME_ACTION_DONE -> {
-                    setValueAndFormat(editText as EditText)
-                    val imm = v.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(v.windowToken, 0)
-                    editText.clearFocus()
-                    editText.isSelected = false
-                    fsv.requestRender()
-                }
-                else -> {
-                    Log.d("EQUATION FRAGMENT", "some other action")
-                }
-            }
+        positionLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
-            editText.clearFocus()
-            act.updateSystemUI()
-            true
+        resetPositionButton.setOnClickListener {
 
-        }}
+            fsv.r.checkThresholdCross { f.shape.position.reset() }
+            act.updatePositionLayout()
+            fsv.r.calcNewTextureSpan = true
+            fsv.r.renderToTex = true
+            if (fsv.r.isRendering) fsv.r.interruptRender = true
+            fsv.requestRender()
 
-        xEdit.setOnEditorActionListener(editListener(yEdit) { w: TextView ->
+        }
+
+        shiftHorizontalButton.setOnClickListener{
+            subMenuButtonListener(xLayout, shiftHorizontalButton).onClick(it)
+            shiftHorizontalSensitivity.sensitivityButton.setImageResource(sc.shiftSensitivity.iconId)
+        }
+        shiftVerticalButton.setOnClickListener {
+            subMenuButtonListener(yLayout, shiftVerticalButton).onClick(it)
+            shiftVerticalSensitivity.sensitivityButton.setImageResource(sc.shiftSensitivity.iconId)
+        }
+        zoomButton.setOnClickListener(      subMenuButtonListener(zoomLayout,       zoomButton      ))
+        rotateButton.setOnClickListener(  subMenuButtonListener(rotationLayout,   rotateButton  ))
+
+
+
+
+        // SHIFT HORIZONTAL LAYOUT
+        xValue.setOnEditorActionListener(editListener(yValue) { w: TextView ->
             val result = w.text.toString().formatToDouble()
             if (result != null) {
                 f.shape.position.x = result
@@ -68,7 +63,37 @@ class PositionFragment : MenuFragment() {
             w.text = "%.17f".format(f.shape.position.x)
 
         })
-        yEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
+        shiftHorizontalSensitivity.sensitivityButton.apply {
+            setOnClickListener {
+                sc.shiftSensitivity = sc.shiftSensitivity.next()
+                setImageResource(sc.shiftSensitivity.iconId)
+            }
+        }
+        shiftLeftButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal = { f.shape.position.translate(-sc.shiftSensitivity.shiftDiscrete, 0f) },
+                transformQuad = { fsv.r.translate(-2f*sc.shiftSensitivity.shiftDiscrete, 0f) },
+                updateLayout = { updateShiftLayouts() }
+        ))
+        shiftLeftButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.position.translate(-sc.shiftSensitivity.shiftContinuous, 0f) },
+                transformQuad = { fsv.r.translate(-2f*sc.shiftSensitivity.shiftContinuous, 0f) },
+                updateLayout = { updateShiftLayouts() }
+        ))
+        shiftRightButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal = { f.shape.position.translate(sc.shiftSensitivity.shiftDiscrete, 0f) },
+                transformQuad = { fsv.r.translate(2f*sc.shiftSensitivity.shiftDiscrete, 0f) },
+                updateLayout = { updateShiftLayouts() }
+        ))
+        shiftRightButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.position.translate(sc.shiftSensitivity.shiftContinuous, 0f) },
+                transformQuad = { fsv.r.translate(2f*sc.shiftSensitivity.shiftContinuous, 0f) },
+                updateLayout = { updateShiftLayouts() }
+        ))
+
+
+
+        // SHIFT VERTICAL LAYOUT
+        yValue.setOnEditorActionListener(editListener(null) { w: TextView ->
             val result = w.text.toString().formatToDouble()
             if (result != null) {
                 f.shape.position.y = result
@@ -77,18 +102,41 @@ class PositionFragment : MenuFragment() {
             }
             w.text = "%.17f".format(f.shape.position.y)
         })
-        // xLock.setOnClickListener {
-        //     f.position.xLocked = xLock.isChecked
-        // }
-        // yLock.setOnClickListener {
-        //     f.position.yLocked = yLock.isChecked
-        // }
+        shiftVerticalSensitivity.sensitivityButton.apply {
+            setOnClickListener {
+                sc.shiftSensitivity = sc.shiftSensitivity.next()
+                setImageResource(sc.shiftSensitivity.iconId)
+            }
+        }
+        shiftUpButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal = { f.shape.position.translate(0f, -sc.shiftSensitivity.shiftDiscrete) },
+                transformQuad = { fsv.r.translate(0f, 2f*sc.shiftSensitivity.shiftDiscrete) },
+                updateLayout = { updateShiftLayouts() }
+        ))
+        shiftUpButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.position.translate(0f, -sc.shiftSensitivity.shiftContinuous) },
+                transformQuad = { fsv.r.translate(0f, 2f*sc.shiftSensitivity.shiftContinuous) },
+                updateLayout = { updateShiftLayouts() }
+        ))
+        shiftDownButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal = { f.shape.position.translate(0f, sc.shiftSensitivity.shiftDiscrete) },
+                transformQuad = { fsv.r.translate(0f, -2f*sc.shiftSensitivity.shiftDiscrete) },
+                updateLayout = { updateShiftLayouts() }
+        ))
+        shiftDownButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.position.translate(0f, sc.shiftSensitivity.shiftContinuous) },
+                transformQuad = { fsv.r.translate(0f, -2f*sc.shiftSensitivity.shiftContinuous) },
+                updateLayout = { updateShiftLayouts() }
+        ))
 
-        scaleSignificandEdit.setOnEditorActionListener(
-                editListener(scaleExponentEdit) { w: TextView ->
+
+
+        // ZOOM LAYOUT
+        zoomSignificandValue.setOnEditorActionListener(
+                editListener(zoomExponentValue) { w: TextView ->
                     val result1 = w.text.toString().formatToDouble(false)
-                    val result2 = scaleExponentEdit.text.toString().formatToDouble(false)
-                    val result3 = "${w.text}e${scaleExponentEdit.text}".formatToDouble(false)
+                    val result2 = zoomExponentValue.text.toString().formatToDouble(false)
+                    val result3 = "${w.text}e${zoomExponentValue.text}".formatToDouble(false)
                     if (result1 != null && result2 != null && result3 != null) {
                         if (result3.isInfinite() || result3.isNaN()) {
                             act.showMessage(resources.getString(R.string.msg_num_out_range))
@@ -96,6 +144,7 @@ class PositionFragment : MenuFragment() {
                         else {
                             f.shape.position.zoom = result3
                             fsv.r.renderToTex = true
+                            fsv.r.calcNewTextureSpan = true
                             if (fsv.r.isRendering) fsv.r.interruptRender = true
                         }
                     }
@@ -103,42 +152,64 @@ class PositionFragment : MenuFragment() {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
                     val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
-                    w.text = "%.5f".format(scaleStrings[0].toFloat())
-                    scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
+                    w.text = "%.2f".format(scaleStrings[0].toFloat())
+                    zoomExponentValue.setText("%d".format(scaleStrings[1].toInt()))
                 })
-        scaleExponentEdit.setOnEditorActionListener(
+        zoomExponentValue.setOnEditorActionListener(
                 editListener(null) { w: TextView ->
 
-                    val prevScale = f.shape.position.zoom
-
-                    val result1 = scaleSignificandEdit.text.toString().formatToDouble(false)
+                    val result1 = zoomSignificandValue.text.toString().formatToDouble(false)
                     val result2 = w.text.toString().formatToDouble(false)
-                    val result3 = "${scaleSignificandEdit.text}e${w.text}".formatToDouble(false)
+                    val result3 = "${zoomSignificandValue.text}e${w.text}".formatToDouble(false)
                     if (result1 != null && result2 != null && result3 != null) {
                         if (result3.isInfinite() || result3.isNaN()) {
                             act.showMessage(resources.getString(R.string.msg_num_out_range))
                         }
                         else {
-                            f.shape.position.zoom = result3
+                            fsv.r.checkThresholdCross { f.shape.position.zoom = result3 }
                             if (fsv.r.isRendering) fsv.r.interruptRender = true
                             fsv.r.renderToTex = true
+                            fsv.r.calcNewTextureSpan = true
                         }
                     }
                     else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
                     val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
-                    scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
+                    zoomSignificandValue.setText("%.2f".format(scaleStrings[0].toFloat()))
                     w.text = "%d".format(scaleStrings[1].toInt())
 
-                    fsv.r.checkThresholdCross(prevScale)
-
                 })
-        scaleLock.setOnClickListener {
-            f.shape.position.zoomLocked = scaleLock.isChecked
+        zoomSensitivity.sensitivityButton.apply {
+            setOnClickListener {
+                sc.zoomSensitivity = sc.zoomSensitivity.next()
+                setImageResource(sc.zoomSensitivity.iconId)
+            }
         }
+        zoomInButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(sc.zoomSensitivity.zoomDiscrete) } },
+                transformQuad     = { fsv.r.zoom(sc.zoomSensitivity.zoomDiscrete) },
+                updateLayout      = { updateZoomLayout() }
+        ))
+        zoomInButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(sc.zoomSensitivity.zoomContinuous) } },
+                transformQuad     = { fsv.r.zoom(sc.zoomSensitivity.zoomContinuous) },
+                updateLayout      = { updateZoomLayout() }
+        ))
+        zoomOutButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(1f/sc.zoomSensitivity.zoomDiscrete) } },
+                transformQuad     = { fsv.r.zoom(1f/sc.zoomSensitivity.zoomDiscrete) },
+                updateLayout      = { updateZoomLayout() }
+        ))
+        zoomOutButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(1f/sc.zoomSensitivity.zoomContinuous) } },
+                transformQuad     = { fsv.r.zoom(1f/sc.zoomSensitivity.zoomContinuous) },
+                updateLayout      = { updateZoomLayout() }
+        ))
 
-        rotationEdit.setOnEditorActionListener(
+
+        // ROTATION LAYOUT
+        rotationValue.setOnEditorActionListener(
                 editListener(null) { w: TextView ->
                     val result = w.text.toString().formatToDouble()?.inRadians()
                     if (result != null) {
@@ -151,152 +222,66 @@ class PositionFragment : MenuFragment() {
         rotationLock.setOnClickListener {
             f.shape.position.rotationLocked = rotationLock.isChecked
         }
-
-
-        resetPositionButton.setOnClickListener {
-
-            val prevZoom = f.shape.position.zoom
-            f.shape.position.reset()
-            fsv.r.checkThresholdCross(prevZoom)
-            act.updatePositionEditTexts()
-            fsv.r.calcNewTextureSpan = true
-            fsv.r.renderToTex = true
-            if (fsv.r.isRendering) fsv.r.interruptRender = true
-            fsv.requestRender()
-
-        }
-
-        val subMenuButtonListener = { layout: View, button: Button ->
-            View.OnClickListener {
-                showLayout(layout)
-                alphaButton(button)
+        rotationSensitivity.sensitivityButton.apply {
+            setOnClickListener {
+                sc.rotationSensitivity = sc.rotationSensitivity.next()
+                setImageResource(sc.rotationSensitivity.iconId)
             }
         }
-
-        xyButton.setOnClickListener(        subMenuButtonListener(xyLayout,         xyButton        ))
-        zoomButton.setOnClickListener(      subMenuButtonListener(zoomLayout,       zoomButton      ))
-        zoomSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-
-            var prevZoom = 1.0
-            var previousZoomFactor = 1f
-
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-
-                val zoomFactor = 10f.pow(progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
-
-                if (sc.continuousPosRender) {
-                    f.shape.position.zoom(zoomFactor/previousZoomFactor)
-                    if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) fsv.r.renderToTex = true
-                }
-                else fsv.r.zoom(zoomFactor/previousZoomFactor)
-                // if (sc.continuousPosRender) fsv.r.checkThresholdCross(prevZoom)
-                previousZoomFactor = zoomFactor
-
-                val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
-                scaleSignificandEdit.setText("%.5f".format(scaleStrings[0].toFloat()))
-                scaleExponentEdit.setText("%d".format(scaleStrings[1].toInt()))
-
-                if (fsv.r.isRendering && zoomSeekBar.progress != zoomSeekBar.max/2) fsv.r.interruptRender = true
-                fsv.requestRender()
-
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                //previousZoom = f.position.scale.toFloat()
-                if (sc.continuousPosRender) {
-                    // fsv.r.beginContinuousRender = true
-                    fsv.r.renderProfile = RenderProfile.CONTINUOUS
-                }
-                previousZoomFactor = 1f
-                prevZoom = f.shape.position.zoom
-            }
-
-            override fun onStopTrackingTouch(seekBar: SeekBar) {
-
-                if (sc.continuousPosRender) {
-                    fsv.r.renderProfile = RenderProfile.DISCRETE
-                }
-                else {
-                    val zoomFactor = 10f.pow(seekBar.progress.toFloat()/(zoomSeekBar.max/2f) - 1f)
-                    f.shape.position.zoom(zoomFactor)
-                }
-                fsv.r.checkThresholdCross(prevZoom)
-                fsv.r.renderToTex = true
-                fsv.requestRender()
-
-                previousZoomFactor = 1f
-                zoomSeekBar.progress = zoomSeekBar.max/2
-            }
-
-        })
-        rotationButton.setOnClickListener(  subMenuButtonListener(rotationLayout,   rotationButton  ))
-        rotationSeekBarListener = object : SeekBar.OnSeekBarChangeListener {
-
-            var prevTheta = 0.0
-
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-
-                val newTheta = ((progress/(rotationSeekBar.max/2).toDouble() - 1.0)*180.0).inRadians()
-                rotationEdit.setText("%.1f".format(newTheta.inDegrees()))
-                if (sc.continuousPosRender) {
-                    f.shape.position.rotation = newTheta
-                    if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) fsv.r.renderToTex = true
-                    if (fsv.r.isRendering) fsv.r.interruptRender = true
-                }
-                else {
-                    fsv.r.rotate((prevTheta - newTheta).toFloat())
-                    prevTheta = newTheta
-                }
-                fsv.requestRender()
-
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-
-                if (sc.continuousPosRender) {
-                    fsv.r.renderProfile = RenderProfile.CONTINUOUS
-                }
-                prevTheta = f.shape.position.rotation
-
-            }
-
-            override fun onStopTrackingTouch(seekBar: SeekBar) {
-
-                if (sc.continuousPosRender) fsv.r.renderProfile = RenderProfile.DISCRETE
-                else {
-                    val newTheta = ((seekBar.progress/(rotationSeekBar.max/2).toDouble() - 1.0)*180.0).inRadians()
-                    f.shape.position.rotation = newTheta
-                }
-                fsv.r.renderToTex = true
-                fsv.requestRender()
-
-            }
-
-        }
-        rotationSeekBar.setOnSeekBarChangeListener(rotationSeekBarListener)
+        rotateLeftButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal = { f.shape.position.rotate(sc.rotationSensitivity.rotationDiscrete) },
+                transformQuad = { fsv.r.rotate(sc.rotationSensitivity.rotationDiscrete) },
+                updateLayout = { updateRotationLayout() }
+        ))
+        rotateLeftButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.position.rotate(sc.rotationSensitivity.rotationContinuous) },
+                transformQuad = { fsv.r.rotate(sc.rotationSensitivity.rotationContinuous) },
+                updateLayout = { updateRotationLayout() }
+        ))
+        rotateRightButton.setOnClickListener(PositionChangeOnClickListener(fsv,
+                transformFractal = { f.shape.position.rotate(-sc.rotationSensitivity.rotationDiscrete) },
+                transformQuad = { fsv.r.rotate(-sc.rotationSensitivity.rotationDiscrete) },
+                updateLayout = { updateRotationLayout() }
+        ))
+        rotateRightButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
+                transformFractal = { f.shape.position.rotate(-sc.rotationSensitivity.rotationContinuous) },
+                transformQuad = { fsv.r.rotate(-sc.rotationSensitivity.rotationContinuous) },
+                updateLayout = { updateRotationLayout() }
+        ))
 
 
-        xyLayout.hide()
+
+        xLayout.hide()
+        yLayout.hide()
         zoomLayout.hide()
         rotationLayout.hide()
-        currentLayout = xyLayout
-        currentButton = xyButton
-        xyButton.performClick()
+        currentLayout = zoomLayout
+        currentButton = zoomButton
+        alphaButton(zoomButton)
+        showLayout(zoomLayout)
+        // zoomButton.performClick()
 
 
-        act.updatePositionEditTexts()
+        act.updatePositionLayout()
 
     }
 
+    override fun updateLayout() {
+        updateShiftLayouts()
+        updateRotationLayout()
+        updateZoomLayout()
+    }
+    fun updateShiftLayouts() {
+        xValue?.setText("%.17f".format(f.shape.position.x))
+        yValue?.setText("%.17f".format(f.shape.position.y))
+    }
     fun updateRotationLayout() {
-        val act = activity as? MainActivity
-        if (act != null) {
-            val f = act.f
-            rotationEdit.setText("%.1f".format(f.shape.position.rotation.inDegrees()))
-            rotationSeekBar.setOnSeekBarChangeListener(null)
-            rotationSeekBar.progress = (rotationSeekBar.max * (f.shape.position.rotation.inDegrees() / 360.0 + 0.5)).toInt()
-            rotationSeekBar.setOnSeekBarChangeListener(rotationSeekBarListener)
-        }
+        rotationValue?.setText("%.1f".format(f.shape.position.rotation.inDegrees()))
+    }
+    fun updateZoomLayout() {
+        val zoomStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
+        zoomSignificandValue?.setText("%.2f".format(zoomStrings.getOrNull(0)?.toFloat() ?: 1f))
+        zoomExponentValue?.setText("%d".format(zoomStrings.getOrNull(1)?.toInt() ?: 2))
     }
 
 }

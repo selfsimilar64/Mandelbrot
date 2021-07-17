@@ -3,29 +3,27 @@ package com.selfsimilartech.fractaleye
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.Color
 import android.graphics.PointF
 import android.media.*
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.renderscript.Allocation
+import android.renderscript.Element
+import android.renderscript.Type
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.Surface
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import java.lang.NullPointerException
-import java.nio.ByteBuffer
 import java.util.*
 import javax.microedition.khronos.egl.*
-import kotlin.math.atan2
-import kotlin.math.pow
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 
 private const val EGL_CONTEXT_CLIENT_VERSION = 0x3098
@@ -63,10 +61,6 @@ private class CodecSurfaceFactory(val codecSurface: Surface) : GLSurfaceView.EGL
 
 }
 
-fun clamp(d: Int, low: Int, high: Int) : Int {
-    return maxOf(minOf(d, high), low)
-}
-
 
 
 class FractalSurfaceView : GLSurfaceView {
@@ -89,6 +83,17 @@ class FractalSurfaceView : GLSurfaceView {
     private var framesMuxed = 0
 
     private val FRAMERATE = 30
+    private var startZoom = 1.0
+    private var startRotation = 0.0
+    private var zoomInc = 1.0
+    private var rotationInc = 0.0
+    private var totalFrames = 0
+
+
+    var doingTutorial = false
+    var isRequirementSatisfied : () -> Boolean = { false }
+    var onRequirementSatisfied : () -> Unit = { }
+    var updateTutorialProgress : () -> Unit = { }
 
 
     init {
@@ -117,7 +122,8 @@ class FractalSurfaceView : GLSurfaceView {
     private val prevFocus = floatArrayOf(0f, 0f)
     private var prevZoom = 0.0
     private var prevAngle = 0f
-    private var prevFocalLen = 1.0f
+    private var prevFocalLen = 1f
+    private var initFocalLen = 1f
 
     private var tapCount = 0
     private var doubleTapStartTime = 0L
@@ -172,7 +178,6 @@ class FractalSurfaceView : GLSurfaceView {
         val timer = Timer()
         var frameCount = 0
         timer.scheduleAtFixedRate(object : TimerTask() {
-
             override fun run() {
                 val t = frameCount.toDouble() / totalFrames
                 if (frameCount == totalFrames) {
@@ -186,30 +191,31 @@ class FractalSurfaceView : GLSurfaceView {
                     }
                     else {
                         r.renderFinishedListener = object : RenderFinishedListener {
-                            override fun onRenderFinished(buffer: ByteBuffer?) {
-                                // Log.e(TAG, "onRenderFinished")
+                            override fun onRenderFinished(buffer: ByteArray?) {
                                 tapCount = 0
                                 doubleTapStartTime = 0L
                                 r.renderFinishedListener = null
                             }
                         }
-                        f.shape.position.setFrom(newPos)
+                        r.checkThresholdCross { f.shape.position.setFrom(newPos) }
                     }
                     r.hasTranslated = true
                     r.hasZoomed = true
 
-                    r.checkThresholdCross(oldPos.zoom)
-
                     r.renderProfile = RenderProfile.DISCRETE
                     r.renderToTex = true
                     requestRender()
+
+                    act.updatePositionLayout()
 
                 } else {
                     val q = interpolator.getInterpolation(t.toFloat())
                     if (sc.continuousPosRender) {
                         f.shape.position.x = (1.0 - q) * oldPos.x + q * newPos.x
                         f.shape.position.y = (1.0 - q) * oldPos.y + q * newPos.y
-                        f.shape.position.zoom = (1.0 - q) * oldPos.zoom + q * newPos.zoom
+                        r.checkThresholdCross {
+                            f.shape.position.zoom = (1.0 - q) * oldPos.zoom + q * newPos.zoom
+                        }
                         f.shape.position.rotation += delta.rotation
                     }
                     else {
@@ -225,14 +231,14 @@ class FractalSurfaceView : GLSurfaceView {
                     }
                     requestRender()
                     frameCount++
+
                 }
             }
-
         }, 0L, if (sc.continuousPosRender) 33L else 22L)
 
     }
     
-    fun saveVideo(duration: Double) {
+    fun saveVideo(duration: Double, zoomAmount: Double, rotationAmount: Double = 0.0) {
 
         val startTime = now()
         var startRenderTime = 0L
@@ -241,6 +247,11 @@ class FractalSurfaceView : GLSurfaceView {
         var totalCodecTime = 0L
         var startMuxTime = 0L
         var totalMuxTime = 0L
+
+
+        val outputResolution = sc.resolution
+        val renderResolution = outputResolution.videoCompanions!!.first
+
 
         val videoProgressDialog = AlertDialog.Builder(act, R.style.AlertDialogCustom)
                 .setView(R.layout.alert_dialog_progress)
@@ -256,30 +267,36 @@ class FractalSurfaceView : GLSurfaceView {
         val videoProgressText = videoProgressDialog.findViewById<TextView>(R.id.alertProgressText)
 
         val durationUs = duration*1000000.0
-        val totalFrames = (duration*FRAMERATE).toInt()
+        totalFrames = (duration*FRAMERATE).toInt()
         val bitrateMbps = 160
 
-        val zoomAmount = 11.0
-        val zoomInc = 10.0.pow(zoomAmount/totalFrames)
+        zoomInc = 10.0.pow(zoomAmount/totalFrames)
+        val maxRotation = (zoomInc - 1.0)/Resolution.SCREEN.run { h.toDouble()/w }
+        rotationInc = min(rotationAmount/totalFrames, maxRotation)
+        Log.e("SURFACE", "maxRotation: $maxRotation, rotationInc: $rotationInc")
 
         var t: Double
 
-        val startZoom = f.shape.position.zoom
-        val startRotation = f.shape.position.rotation
+        startZoom = f.shape.position.zoom
+        val endZoom = startZoom/zoomInc.pow(totalFrames)
+        Log.e("SURFACE", "endZoom: $endZoom")
+        startRotation = f.shape.position.rotation
 
+        var lastKeyframeZoom = startZoom
+        var lastKeyframeRotation = startRotation
 
 
 
 
         // get current date and time
-        val c = GregorianCalendar(TimeZone.getDefault())
+        val cal = GregorianCalendar(TimeZone.getDefault())
         // Log.d("RENDERER", "${c[Calendar.YEAR]}, ${c[Calendar.MONTH]}, ${c[Calendar.DAY_OF_MONTH]}")
-        val year = c[Calendar.YEAR]
-        val month = c[Calendar.MONTH]
-        val day = c[Calendar.DAY_OF_MONTH]
-        val hour = c[Calendar.HOUR_OF_DAY]
-        val minute = c[Calendar.MINUTE]
-        val second = c[Calendar.SECOND]
+        val year = cal[Calendar.YEAR]
+        val month = cal[Calendar.MONTH]
+        val day = cal[Calendar.DAY_OF_MONTH]
+        val hour = cal[Calendar.HOUR_OF_DAY]
+        val minute = cal[Calendar.MINUTE]
+        val second = cal[Calendar.SECOND]
 
         val appNameAbbrev = resources.getString(R.string.fe_abbrev)
         val subDirectory = Environment.DIRECTORY_MOVIES + "/" + resources.getString(R.string.app_name)
@@ -299,10 +316,10 @@ class FractalSurfaceView : GLSurfaceView {
         }
 
 
-        val height16x9 = sc.resolution.w*16/9
+        // val height16x9 = outputResolution.w*16/9
         val mimeType = MediaFormat.MIMETYPE_VIDEO_AVC
 
-        val format = MediaFormat.createVideoFormat(mimeType, sc.resolution.w, height16x9)
+        val format = MediaFormat.createVideoFormat(mimeType, outputResolution.w, outputResolution.h)
         format.apply {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
             setInteger(MediaFormat.KEY_BIT_RATE, bitrateMbps*1000000)
@@ -323,123 +340,171 @@ class FractalSurfaceView : GLSurfaceView {
         codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
         Log.d(TAG, "codec -- ${codec.name}")
 
-        r.renderProfile = RenderProfile.DISCRETE
-        sc.renderBackground = false
+
+        r.rgbAllocation = Allocation.createTyped(r.rs, Type.createXY(r.rs, Element.RGBA_8888(r.rs), outputResolution.w, outputResolution.h))
+        r.yuvAllocation = Allocation.createTyped(r.rs, Type.createX(r.rs, Element.U8(r.rs), outputResolution.n*3/2))
+
 
         r.renderFinishedListener = object : RenderFinishedListener {
-            override fun onRenderFinished(buffer: ByteBuffer?) {
+            override fun onRenderFinished(yuvFull: ByteArray?) {
 
-                totalRenderTime += now() - startRenderTime
+                if (r.isPreprocessingVideo) {
 
-                if (buffer == null) throw NullPointerException("buffer is null")
+                    r.videoTextureSpans?.get(framesRendered)?.apply {
+                        x = r.textureSpan.min()
+                        y = r.textureSpan.max()
+                    }
+                    framesRendered++
 
-                startMuxTime = now()
-                drainEncoder(codec)
-                totalMuxTime += now() - startMuxTime
-
-                val inputBufferIndex = codec.dequeueInputBuffer(10000L)
-                if (inputBufferIndex >= 0) {
-
-                    val inputBuffer = codec.getInputBuffer(inputBufferIndex)
+                    t = framesRendered.toDouble()/totalFrames
+                    setVideoPosition(t)
 
                     if (framesRendered == totalFrames) {
 
-                        inputBuffer?.clear()
-                        codec.queueInputBuffer(inputBufferIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                        // Log.d(TAG, "end of stream buffer sent!")
-                        drainEncoder(codec)
-                        r.isSavingVideo = false
-                        codec.stop()
-                        codec.release()
-                        muxer?.stop()
-                        muxer?.release()
-                        muxer = null
-                        fd?.close()
-
-                        val totalTime = now() - startTime
-                        Log.d(TAG, "video render took ${totalTime/1000.0} sec -- render: ${totalRenderTime/1000.0} sec (${100.0*totalRenderTime/totalTime}%), codec: ${totalCodecTime/1000.0} sec (${100.0*totalCodecTime/totalTime}%), muxer: ${totalMuxTime/1000.0} sec (${100.0*totalMuxTime/totalTime}%)")
-
-                        videoProgressDialog.dismiss()
-
-                    }
-                    else {
-
-                        startCodecTime = now()
-                        val totalPixels = sc.resolution.w*height16x9
-
-                        val yuv = ByteArray(totalPixels*3/2)
-                        var yIndex = 0
-//                        var uIndex = totalPixels
-//                        var vIndex = uIndex*5/4
-                        var uvIndex = totalPixels
-                        var k = 0
-                        val skipRows = (sc.resolution.h - height16x9)/2
-                        buffer.position(skipRows*sc.resolution.w*4)
-
-                        for (j in skipRows until sc.resolution.h - skipRows) {
-                            for (i in 0 until sc.resolution.w) {
-
-                                val p = buffer.int
-                                val y = Color.alpha(p)
-                                // if (i == sc.resolution.w/2) Log.e(TAG, "p: (${Color.red(p)}, ${Color.green(p)}, ${Color.blue(p)}, ${Color.alpha(p)})")
-                                // val y = Color.alpha(p)
-                                yuv[yIndex] = y.toByte()
-                                yIndex++
-                                if (j % 2 == 0 && k % 2 == 0) {
-                                    val u = Color.red(p)
-                                    val v = Color.green(p)
-                                    yuv[uvIndex] = u.toByte()
-                                    yuv[uvIndex + 1] = v.toByte()
-                                    uvIndex += 2
-//                                     yuv[uIndex] = u.toByte()
-//                                     yuv[vIndex] = v.toByte()
-//                                     uIndex++
-//                                     vIndex++
-                                }
-                                k++
-                            }
+                        framesRendered = 0
+                        r.checkThresholdCross(false) { f.shape.position.zoom = startZoom }
+                        r.videoTextureSpans?.let {
+                            r.setTextureSpan(it[0].x, it[0].y)
                         }
 
-                        inputBuffer?.clear()
-                        inputBuffer?.put(yuv)
-                        codec.queueInputBuffer(
-                                inputBufferIndex, 0,
-                                yuv.size,
-                                (framesRendered * 1e6 / FRAMERATE).toLong(),
-                                0
-                        )
-                        framesRendered++
-                        t = framesRendered.toDouble()/totalFrames
-
-                        videoProgress?.progress = (t*100).toInt()
-                        videoProgressText?.text = "${(t*100).toInt()}%"
-
-
-                        val q = AccelerateDecelerateInterpolator().getInterpolation(t.toFloat())
-
-                        val lastZoom = f.shape.position.zoom
-                        f.shape.position.zoom = startZoom/zoomInc.pow(q.toDouble()*totalFrames)
-                        r.checkThresholdCross(lastZoom)
-                        f.shape.position.rotation = (1.0 - q)*startRotation + q*(startRotation + 0.5*Math.PI)
-                        r.renderToTex = true
-
-                        totalCodecTime += now() - startCodecTime
-                        startRenderTime = now()
-                        requestRender()
+                        r.isPreprocessingVideo = false
+                        r.isRenderingVideo = true
+                        sc.resolution = renderResolution
+                        r.fgResolutionChanged = true
 
                     }
 
+                    r.renderToTex = true
+                    requestRender()
+
+                } else if (r.isRenderingVideo) {
+
+                    totalRenderTime += now() - startRenderTime
+
+                    if (yuvFull == null) throw NullPointerException("array is null")
+
+                    startMuxTime = now()
+                    drainEncoder(codec)
+                    Log.e("SURFACE", "encoder drained !!")
+                    totalMuxTime += now() - startMuxTime
+
+                    val inputBufferIndex = codec.dequeueInputBuffer(10000L)
+                    Log.e("SURFACE", "input buffer dequeued !!")
+                    if (inputBufferIndex >= 0) {
+
+                        val inputBuffer = codec.getInputBuffer(inputBufferIndex)
+                        Log.e("SURFACE", "input buffer gotten !!")
+
+                        if (framesRendered == totalFrames) {
+
+                            framesRendered = 0
+                            inputBuffer?.clear()
+                            codec.queueInputBuffer(inputBufferIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                            // Log.d(TAG, "end of stream buffer sent!")
+                            drainEncoder(codec)
+                            r.isRenderingVideo = false
+                            codec.stop()
+                            codec.release()
+                            muxer?.stop()
+                            muxer?.release()
+                            muxer = null
+                            muxerStarted = false
+                            fd?.close()
+
+                            val totalTime = now() - startTime
+                            Log.d(TAG, "video render took ${totalTime/1000.0} sec -- render: ${totalRenderTime/1000.0} sec (${100.0*totalRenderTime/totalTime}%), codec: ${totalCodecTime/1000.0} sec (${100.0*totalCodecTime/totalTime}%), muxer: ${totalMuxTime/1000.0} sec (${100.0*totalMuxTime/totalTime}%)")
+
+                            videoProgressDialog.dismiss()
+                            sc.resolution = outputResolution
+                            r.fgResolutionChanged = true
+
+                        }
+                        else {
+
+                            startCodecTime = now()
+
+                            val totalPixels = outputResolution.n
+                            val yuvCompact = ByteArray(totalPixels*3/2)
+
+                            r.rgbAllocation?.copyFrom(yuvFull)
+                            r.compactYUVScript.apply {
+                                _gOut = r.yuvAllocation
+                                _width = outputResolution.w
+                                _height = outputResolution.h
+                                // _frameSize = totalPixels
+                                forEach_compact(r.rgbAllocation)
+                            }
+                            r.yuvAllocation?.copyTo(yuvCompact)
+
+                            Log.e("SURFACE", "yuv conversion completed !!")
+
+                            inputBuffer?.clear()
+                            inputBuffer?.put(yuvCompact)
+                            codec.queueInputBuffer(
+                                    inputBufferIndex, 0,
+                                    yuvCompact.size,
+                                    (framesRendered * 1e6 / FRAMERATE).toLong(),
+                                    0
+                            )
+                            Log.e("SURFACE", "input buffer queued !!")
+                            framesRendered++
+                            t = framesRendered.toDouble()/totalFrames
+
+                            videoProgress?.progress = (t*100).toInt()
+                            videoProgressText?.text = "${(t*100).toInt()}%"
+
+                            setVideoPosition(t)
+                            r.videoTextureSpans?.let {
+                                r.setTextureSpan(it[framesRendered - 1].x, it[framesRendered - 1].y)
+                            }
+
+                            if (lastKeyframeZoom/f.shape.position.zoom < sqrt(Math.E)) {
+                                r.resetQuadParams()
+                                r.zoom((lastKeyframeZoom/f.shape.position.zoom).toFloat())
+                                r.rotate((f.shape.position.rotation - lastKeyframeRotation).toFloat())
+                            } else {
+                                lastKeyframeZoom = f.shape.position.zoom
+                                lastKeyframeRotation = f.shape.position.rotation
+                                r.resetQuadParams()
+                                r.renderToTex = true
+                            }
+
+                            totalCodecTime += now() - startCodecTime
+                            startRenderTime = now()
+                            requestRender()
+                            Log.e("SURFACE", "render requested !!")
+
+                        }
+
+                    }
+                    else Log.e(TAG, "!! input buffer index -1 !!")
+
                 }
-                else {
-                    Log.e(TAG, "!! input buffer index -1 !!")
-                }
+
             }
         }
 
-        r.isSavingVideo = true
+
+        if (sc.autofitColorRange) {
+
+            r.isPreprocessingVideo = true
+            r.videoTextureSpans = List(totalFrames) { PointF() }
+            sc.resolution = outputResolution.videoCompanions!!.second
+
+        } else {
+
+            sc.resolution = renderResolution
+            r.isRenderingVideo = true
+
+        }
+
+        r.fgResolutionChanged = true
+        r.renderProfile = RenderProfile.DISCRETE
+        sc.renderBackground = false
         codec.start()
 
         startRenderTime = now()
+        r.renderToTex = true
         requestRender()
 
     }
@@ -510,9 +575,36 @@ class FractalSurfaceView : GLSurfaceView {
 
     }
 
+    private fun setVideoPosition(t: Double) {
+
+        val c = 0.2
+        val q = when {
+            t < c -> 0.5*t*t
+            t >= c && t <= 1.0 - c -> c*(t - 0.5*c)
+            else -> t*(1.0 - 0.5*t) + c*(1.0 - c) - 0.5
+        } / (c*(1.0 - c))
+
+        r.checkThresholdCross(showMsg = false) {
+            f.shape.position.zoom = startZoom/zoomInc.pow(q*totalFrames)
+        }
+        f.shape.position.rotation = (1.0 - q)*startRotation + q*totalFrames*rotationInc
+        f.phase = (t*30.0).toFloat()
+
+    }
+
 
     @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(e: MotionEvent?): Boolean {
+    override fun onTouchEvent(e: MotionEvent?) : Boolean {
+
+
+        if (doingTutorial) {
+            if (isRequirementSatisfied()) {
+                onRequirementSatisfied()
+            }
+            else {
+                updateTutorialProgress()
+            }
+        }
 
 
 //        if (!isRendering) {
@@ -580,10 +672,8 @@ class FractalSurfaceView : GLSurfaceView {
                         Reaction.SHAPE, Reaction.TEXTURE -> {
                             // beginContinuousRender = true
                             val param = if (reaction == Reaction.SHAPE) f.shape.params.active else f.texture.activeParam
-                            if (!param.isRateParam) {
-                                renderProfile = RenderProfile.CONTINUOUS
-                                renderToTex = true
-                            }
+                            renderProfile = RenderProfile.CONTINUOUS
+                            renderToTex = true
                         }
                         Reaction.NONE -> {
                         }
@@ -610,6 +700,7 @@ class FractalSurfaceView : GLSurfaceView {
                     prevFocus[0] = focus[0]
                     prevFocus[1] = focus[1]
                     prevFocalLen = e.focalLength()
+                    initFocalLen = prevFocalLen
 
                     requestRender()
                     return true
@@ -636,10 +727,14 @@ class FractalSurfaceView : GLSurfaceView {
 
                             if (e.pointerCount > 1) {
 
-                                f.shape.position.zoom(dFocalLen, doubleArrayOf(
-                                        focus[0].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5,
-                                        -(focus[1].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5 * aspectRatio)
-                                ))
+                                checkThresholdCross {
+                                    f.shape.position.zoom(
+                                        dFocalLen, doubleArrayOf(
+                                            focus[0].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5,
+                                            -(focus[1].toDouble() / Resolution.SCREEN.w.toDouble() - 0.5 * aspectRatio)
+                                        )
+                                    )
+                                }
 
                                 if (!sc.continuousPosRender) zoom(dFocalLen)
 
@@ -654,8 +749,10 @@ class FractalSurfaceView : GLSurfaceView {
 
                             }
 
-                            if (sc.continuousPosRender) renderToTex = true
-                            act.updateDisplayParams()
+                            if (sc.continuousPosRender) {
+                                renderToTex = true
+                                act.updatePositionLayout()
+                            }
 
                         }
                         Reaction.COLOR -> {
@@ -670,7 +767,6 @@ class FractalSurfaceView : GLSurfaceView {
                                     prevFocalLen = focalLen
                                 }
                             }
-                            act.updateDisplayParams()
 
                         }
                         Reaction.SHAPE, Reaction.TEXTURE -> {
@@ -679,20 +775,23 @@ class FractalSurfaceView : GLSurfaceView {
 
                             when (e.pointerCount) {
                                 1 -> {
-                                    if (!param.isRateParam) {
-                                        param.u += param.sensitivity!!.u * dx / Resolution.SCREEN.w
-                                        if (param is ComplexParam) {
-                                            param.v -= param.sensitivity.u * dy / Resolution.SCREEN.h
-                                        }
-                                        renderToTex = true
+                                    if (param is ComplexParam) {
+                                        param.u += param.sensitivityFactor * dx / Resolution.SCREEN.w
+                                        param.v -= param.sensitivityFactor * dy / Resolution.SCREEN.h
+                                    } else {
+                                        param.u += param.sensitivityFactor * dx / Resolution.SCREEN.w
                                     }
+                                    renderToTex = true
+
                                 }
                                 2 -> {
-                                    if (!param.isRateParam) param.sensitivity!!.u *= dFocalLen
+                                    param.sensitivity += (dFocalLen - 1.0)*10.0
                                     prevFocalLen = focalLen
                                 }
                             }
-                            act.updateDisplayParams()
+
+                            if (reaction == Reaction.SHAPE) act.updateShapeEditTexts()
+                            else                            act.updateTextureEditTexts()
 
                         }
                         Reaction.NONE -> {
@@ -736,15 +835,10 @@ class FractalSurfaceView : GLSurfaceView {
 
                     when (reaction) {
                         Reaction.POSITION -> {
-                            if (tapCount == 2) {
-
-                                queueEvent { animate(PointF(e.x, e.y), 0.75) }
-
-                            } else {
-                                act.updatePositionEditTexts()
-                                act.updateDisplayParams()
+                            if (tapCount == 2) queueEvent { animate(PointF(e.x, e.y), 0.75) }
+                            else {
+                                act.updatePositionLayout()
                                 if (sc.continuousPosRender) renderProfile = RenderProfile.DISCRETE
-                                checkThresholdCross(prevZoom)
                                 renderToTex = true
                             }
                         }
@@ -758,12 +852,10 @@ class FractalSurfaceView : GLSurfaceView {
                             if (reaction == Reaction.SHAPE) act.updateShapeEditTexts()
                             else act.updateTextureEditTexts()
 
-                            act.updateDisplayParams()
                             val param = if (reaction == Reaction.SHAPE) f.shape.params.active else f.texture.activeParam
-                            if (!param.isRateParam) {
-                                renderProfile = RenderProfile.DISCRETE
-                                renderToTex = true
-                            }
+
+                            renderProfile = RenderProfile.DISCRETE
+                            renderToTex = true
 
                         }
                         Reaction.NONE -> {

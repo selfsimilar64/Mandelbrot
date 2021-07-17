@@ -9,7 +9,7 @@ class Texture (
         var id              : Int = -1,
         var hasCustomId     : Boolean = false,
         val nameId          : Int = -1,
-        var name            : String = "",
+        override var name            : String = "",
         val init            : String = "",
         var loop            : String = "",
         var final           : String = "",
@@ -22,13 +22,14 @@ class Texture (
         val radius          : Float = 1e2f,
         val frequency       : Float? = null,
         val hasRawOutput    : Boolean = false,
-        val goldFeature     : Boolean = false,
+        override val goldFeature     : Boolean = false,
+        val devFeature      : Boolean = false,
         val displayName     : Int = nameId,
         val usesAccent      : Boolean = false,
         val usesDensity     : Boolean = false,
-        var isFavorite      : Boolean = false
+        override var isFavorite      : Boolean = false
 
-) {
+) : Customizable {
 
 
 
@@ -114,7 +115,7 @@ class Texture (
         val escapeSmooth = Texture(
                 id = nextId,
                 nameId = R.string.escape_smooth,
-                final = "escape_smooth_final(n, z, z1, textureIn)",
+                final = "escape_smooth_final(n, z, z1, textureType)",
                 radius = 1e2f,
                 usesDensity = true
         )
@@ -127,16 +128,16 @@ class Texture (
                 radius = 1e2f,
                 usesDensity = true
         )
-        val absoluteDistance = Texture(
+        val outline = Texture(
                 id = nextId,
                 nameId = R.string.distance_est_abs,
-                final = "dist_estim_abs_final(modsqrz, alpha)",
+                final = "outline_final(modsqrz, alpha)",
                 usesFirstDelta = true,
                 usesAccent = true,
                 auto = true,
                 params = ParamList(listOf(RealParam(R.string.size, 0.25, Range(0.000001, 3.0)))),
                 radius = 3e1f,
-                goldFeature = true
+                devFeature = true
         )
         val normalMap1 = Texture(
                 id = nextId,
@@ -188,8 +189,8 @@ class Texture (
                 loop = "stripe_avg_loop(sum, sum1, z);",
                 isAverage = true,
                 params = ParamList(listOf(
-                        RealParam(R.string.frequency,  1.0,  Range(1.0, 8.0),                     goldFeature = true),
-                        RealParam(R.string.phase,      0.0,  Range(0.0, 360.0), toRadians = true, goldFeature = true),
+                        RealParam(R.string.frequency,  1.0,  Range(1.0, 8.0), goldFeature = true),
+                        RealParam(R.string.phase,      0.0,  Range(0.0, 360.0), toRadians = true),
                         RealParam(R.string.width,      1.0,  Range(0.075, 30.0),                  goldFeature = true)
                 )),
                 radius = 1e6f
@@ -271,7 +272,7 @@ class Texture (
                 nameId = R.string.umbrella,
                 loop = "umbrella_loop(sum, sum1, z, z1);",
                 isAverage = true,
-                params = ParamList(listOf(RealParam(R.string.frequency, 4.0, Range(1.0, 8.0)))),
+                params = ParamList(listOf(RealParam(R.string.frequency, 4.0, Range(0.5, 8.0)))),
                 goldFeature = true
         )
         val umbrellaInverse = Texture(
@@ -279,7 +280,7 @@ class Texture (
                 nameId = R.string.inverse_umbrella,
                 loop = "umbrella_inverse_loop(sum, sum1, z, z1);",
                 isAverage = true,
-                params = ParamList(listOf(RealParam(R.string.frequency, 1.618, Range(1.0, 5.0)))),
+                params = ParamList(listOf(RealParam(R.string.frequency, 1.618, Range(0.5, 5.0)))),
                 goldFeature = true
         )
         val exitAngle = Texture(
@@ -360,7 +361,7 @@ class Texture (
                 id = nextId,
                 nameId = R.string.field_lines,
                 usesFirstDelta = true,
-                final = "field_lines_final(n, z, z1, alpha, textureIn)",
+                final = "field_lines_final(n, z, z1, alpha, textureType)",
                 params = ParamList(listOf(
                         RealParam(R.string.count, u = 11.0, uRange = Range(2.0, 15.0)),
                         RealParam(R.string.size, u = 0.5, uRange = Range(0.1, 0.75)),
@@ -370,17 +371,18 @@ class Texture (
         )
         val fieldLines2 = Texture(
                 nameId = R.string.field_lines2,
-                final = "field_lines2_final(z, z1, textureIn)",
+                final = "field_lines2_final(z, z1, textureType)",
                 goldFeature = true
         )
         val escapeWithDistance = Texture(
                 id = nextId,
                 nameId = R.string.escape_with_distance,
                 usesFirstDelta = true,
-                final = "escape_smooth_dist_estim_final(n, z, z1, modsqrz, alpha, textureIn)",
+                final = "escape_smooth_dist_estim_final(n, z, z1, modsqrz, alpha, textureType)",
                 params = ParamList(listOf(RealParam(R.string.size, 0.25, Range(0.00001, 3.0)))),
                 usesDensity = true,
                 usesAccent = true,
+                auto = true,
                 goldFeature = true
         )
         val orbitTrapImageUnder = Texture(
@@ -413,22 +415,23 @@ class Texture (
                 usesAccent = true,
                 goldFeature = true
         )
-        val kleinianAB = Texture(
+        val kleinianBinary = Texture(
                 id = nextId,
                 nameId = R.string.binary,
                 final = "kleinian_ab_final(z, t)"
         )
-        val kleinianSwitch = Texture(
+        val harrissTest = Texture(
                 id = nextId,
-                nameId = R.string.fusion,
-                init = "bool underPrev = false; uint switchCount = 0u;",
-                loop = "kleinian_switch_loop(z, underPrev, switchCount, t, K, M, k);",
-                final = "kleinian_switch_final(switchCount)"
+                nameId = R.string.hardware_cpu,
+                final = "harriss_test_final(z, n)",
+                params = ParamList(listOf(RealParam(u = 0.5, uRange = Range(0.0, 5.0)))),
+                devFeature = true
         )
 
 
 
         val all = mutableListOf(
+                harrissTest,
                 escape,
                 escapeSmooth,
                 converge,
@@ -437,6 +440,7 @@ class Texture (
                 umbrella,
                 umbrellaInverse,
                 angularMomentum,
+                outline,
                 distanceEstimation,
                 escapeWithDistance,
                 triangleIneqAvgInt,
@@ -456,14 +460,14 @@ class Texture (
                 normalMap1,
                 normalMap2,
                 kleinianDistance,
-                kleinianAB
-        )
+                kleinianBinary
+        ).filter { BuildConfig.DEV_VERSION || !it.devFeature }
 
         val mandelbrot = all.minus(listOf(
                 converge,
                 convergeSmooth,
                 kleinianDistance,
-                kleinianAB
+                kleinianBinary
         ))
 
         val divergent = all.minus(listOf(
@@ -475,7 +479,7 @@ class Texture (
                 normalMap1,
                 normalMap2,
                 kleinianDistance,
-                kleinianAB
+                kleinianBinary
         ))
 
         val convergent = mutableListOf(
@@ -489,7 +493,7 @@ class Texture (
 
         val kleinianCompat = listOf(
                 kleinianDistance,
-                kleinianAB
+                kleinianBinary
         ).plus(divergent.minus(listOf(escapeSmooth, escapeWithDistance)))
 
         val custom = listOf<Texture>()
@@ -498,7 +502,7 @@ class Texture (
 
 
     init {
-        if (isAverage) this.final = "avg_final(sum, sum1, n, z, z1, textureIn)"
+        if (isAverage) this.final = "avg_final(sum, sum1, n, z, z1, textureType)"
         if (!hasCustomId && id != -1) id = Integer.MAX_VALUE - id
     }
 
@@ -527,7 +531,7 @@ class Texture (
 
     var activeParam = if (params.size != 0) params.list[0] else RealParam(R.string.empty)
 
-    var thumbnail : Bitmap? = null
+    override var thumbnail : Bitmap? = null
 
     fun reset() {
         params.reset()
@@ -540,5 +544,7 @@ class Texture (
     override fun hashCode(): Int {
         return name.hashCode()
     }
+
+    override fun isCustom() : Boolean = hasCustomId
 
 }

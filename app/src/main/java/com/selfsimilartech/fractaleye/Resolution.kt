@@ -11,7 +11,7 @@ fun Double.roundEven() : Int {
     return if (f % 2 == 0) f else f + 1
 }
 
-class Resolution(width: Int, private val builders: List<Resolution>? = null) {
+class Resolution(width: Int, private val builders: List<Resolution>? = null, var videoCompanions: Pair<Resolution, Resolution>? = null) {
 
     constructor(width: Int, height: Int) : this(width, null) {
         h = height
@@ -28,6 +28,11 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null) {
 
     companion object {
 
+        val R4     = Resolution(4)
+        val R1187  = Resolution(1187)
+        val R1781  = Resolution(1781)
+        val R2374  = Resolution(2374)
+
         val R45    = Resolution(45)
         val R60    = Resolution(60)
         val R90    = Resolution(90)
@@ -36,25 +41,27 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null) {
         val R240   = Resolution(240)
         val R360   = Resolution(360)
         val R480   = Resolution(480)
-        val R720   = Resolution(720)
-        val R1080  = Resolution(1080, listOf(R360))
-        val R1440  = Resolution(1440, listOf(R720))
+        val R720   = Resolution(720, videoCompanions = Pair(R1187, R4))
+        val R1080  = Resolution(1080, listOf(R360), videoCompanions = Pair(R1781, R4))
+        val R1440  = Resolution(1440, listOf(R720), videoCompanions = Pair(R2374, R4))
         val R2160  = Resolution(2160, listOf(R720))
         val R2880  = Resolution(2880, listOf(R720))
+
         val R3600  = Resolution( 3600, listOf(R720)         )
         val R4320  = Resolution( 4320, listOf(R720, R1440)  )
         val R5040  = Resolution( 5040, listOf(R720)         )
         val R5760  = Resolution( 5760, listOf(R720, R1440)  )
 
         val all = ArrayList(arrayListOf(
-                R45, R60, R90, R120, R180, R240, R360, R480, R720, R1080, R1440, R2160, R2880,
-                R3600, R4320, R5040, R5760
+                R4, R45, R60, R90, R120, R180, R240, R360, R480, R720, R1080, R1440, R2160, R2880,
+                // R3600, R4320, R5040, R5760,
+                R1187, R1781, R2374
         ).filter { BuildConfig.DEV_VERSION || it.w <= 2880 })
-        val working = ArrayList(all.minus(listOf(R45, R60, R90)))
+        val working = ArrayList(all.minus(listOf(R4, R45, R60, R90, R1187, R1781, R2374)))
         val continuous = arrayListOf<Resolution>()
 
         fun valueOf(width: Int) : Resolution? {
-            return all.first { it.w == width }
+            return working.first { it.w == width }
         }
 
         fun initialize(screenRatio: Double) {
@@ -75,10 +82,15 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null) {
 
             all.forEach { res -> res.n = res.w*res.h }
 
-            continuous.addAll(all.subList(0, all.indexOf(SCREEN) - 1))
+            continuous.addAll(all.subList(1, all.indexOf(SCREEN) - 1))
 
             NUM_VALUES_GT_SCREEN_DIMS = all.count { it.w > SCREEN.w }
             NUM_VALUES_FREE = working.indexOf(R1080) + 1
+
+
+            R1187.videoCompanions = Pair(R720, R4)
+            R1781.videoCompanions = Pair(R1080, R4)
+            R2374.videoCompanions = Pair(R1440, R4)
 
 
         }

@@ -14,6 +14,8 @@ open class GradientImageButton : AppCompatImageButton {
     constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
+    var viewWidth = 0
+    var viewHeight = 0
     var showGradient = false
         set(value) {
             field = value
@@ -21,11 +23,6 @@ open class GradientImageButton : AppCompatImageButton {
         }
 
     private val rectPaint = Paint()
-    private val rect = Rect(
-            0, 0,
-            resources.getDimension(R.dimen.menuButtonWidth).toInt(),
-            resources.getDimension(R.dimen.menuButtonHeight).toInt()
-    )
     private val goldColors = intArrayOf(
             R.color.gold1,
             R.color.gold1,
@@ -35,29 +32,48 @@ open class GradientImageButton : AppCompatImageButton {
             R.color.gold4,
             R.color.gold5,
             R.color.gold5,
-            R.color.gold5,
-            R.color.gold5,
             R.color.gold5
     ).map{ resources.getColor(it, null) }.toIntArray()
-    private val gradient = LinearGradient(
-            0f, 0f, rect.width().toFloat(), rect.height().toFloat(),
-            goldColors, null, Shader.TileMode.CLAMP
-    )
-    private val bmp = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
-    private val buffer = Canvas(bmp)
-    private val bmpShader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
 
-    init {
+    private lateinit var rect : Rect
+    private lateinit var gradient : LinearGradient
+    private lateinit var bmp : Bitmap
+    private lateinit var buffer : Canvas
+    private lateinit var bmpShader : BitmapShader
 
+    override fun onSizeChanged(xNew: Int, yNew: Int, xOld: Int, yOld: Int) {
+        super.onSizeChanged(xNew, yNew, xOld, yOld)
+
+        viewWidth = xNew
+        viewHeight = yNew
+
+        rect = Rect(
+                0, 0,
+                viewWidth,
+                viewHeight
+        )
+
+        // assuming width >= height
+        gradient = LinearGradient(
+                0f,
+                0f,
+                viewWidth.toFloat(),
+                viewHeight.toFloat(),
+                goldColors, null, Shader.TileMode.CLAMP
+        )
+        bmp = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
+        buffer = Canvas(bmp)
+        bmpShader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
         rectPaint.shader = ComposeShader(gradient, bmpShader, PorterDuff.Mode.MULTIPLY)
+//        rectPaint.shader = gradient
 
     }
 
     override fun onDraw(canvas: Canvas?) {
         if (showGradient) {
+            buffer.drawColor(Color.BLACK, PorterDuff.Mode.MULTIPLY)
             super.onDraw(buffer)
             canvas?.apply {
-                // drawColor(Color.TRANSPARENT)
                 drawRect(rect, rectPaint)
             }
         }

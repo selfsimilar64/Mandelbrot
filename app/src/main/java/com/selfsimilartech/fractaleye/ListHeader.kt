@@ -3,7 +3,6 @@ package com.selfsimilartech.fractaleye
 import android.content.res.Resources
 import android.view.View
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractHeaderItem
@@ -23,14 +22,14 @@ class ListHeader(
 
     companion object {
 
-        val favorites = ListHeader(R.string.header_favorites, 0)
-        val custom = ListHeader(R.string.header_custom, 1, R.string.header_custom_descript)
-        val default = ListHeader(R.string.header_default, 2)
+        val FAVORITE = ListHeader(R.string.header_favorites, 0)
+        val CUSTOM = ListHeader(R.string.header_custom, 1, R.string.header_custom_descript)
+        val DEFAULT = ListHeader(R.string.header_default, 2)
 
         val all = arrayListOf(
-                favorites,
-                custom,
-                default
+                FAVORITE,
+                CUSTOM,
+                DEFAULT
         )
 
     }
@@ -41,14 +40,12 @@ class ListHeader(
     }
 
     override fun bindViewHolder(adapter: FlexibleAdapter<IFlexible<RecyclerView.ViewHolder>>?, holder: HeaderViewHolder, position: Int, payloads: MutableList<Any>?) {
-        holder.title.text = name
         holder.icon.setImageResource(when (type) {
             0 -> R.drawable.starred_no_color
             1 -> R.drawable.custom
             2 -> R.drawable.list_view
             else -> R.drawable.cancel
         })
-        holder.description.text = description
     }
 
     override fun equals(other: Any?): Boolean {
@@ -69,9 +66,7 @@ class ListHeader(
 
     inner class HeaderViewHolder(view: View, adapter: FlexibleAdapter<*>?) : FlexibleViewHolder(view, adapter) {
 
-        var title       : TextView  = view.findViewById(R.id.headerTitle)
         var icon        : ImageView = view.findViewById(R.id.headerIcon)
-        var description : TextView  = view.findViewById(R.id.headerDescription)
 
     }
 

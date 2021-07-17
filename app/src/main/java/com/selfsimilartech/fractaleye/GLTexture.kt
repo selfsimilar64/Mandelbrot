@@ -55,7 +55,7 @@ class GLTexture (
             GL_RG32UI -> "GL_RG32UI"
             else -> "not what u wanted"
         }
-        Log.d("RENDERER", "id: $id, res: (${res.w}, ${res.h}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.w*res.h*bytesPerTexel}")
+        Log.d("RENDERER", "id: $id, res: (${res.w}, ${res.h}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.w*res.h*bytesPerTexel}, chunks: $chunks")
 
         // bind and set texture parameters
         glActiveTexture(GL_TEXTURE0 + index)

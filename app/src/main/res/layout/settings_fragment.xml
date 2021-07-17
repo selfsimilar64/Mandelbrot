@@ -53,7 +53,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -79,7 +79,7 @@
 
                 <TextView
                     android:id="@+id/continuousRenderHint"
-                    style="@style/TextDescriptionDark"
+                    style="@style/SettingsHint"
                     android:layout_height="wrap_content"
                     android:text="@string/continuous_render_hint"
                     app:layout_constraintEnd_toStartOf="@+id/continuousRenderSwitch"
@@ -93,7 +93,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/renderBackgroundLayout"
@@ -121,93 +121,15 @@
 
                 <TextView
                     android:id="@+id/renderBackgroundHint"
-                    style="@style/TextDescriptionDark"
+                    style="@style/SettingsHint"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
                     android:text="@string/render_background_hint"
                     app:layout_constraintEnd_toStartOf="@+id/renderBackgroundSwitch"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textView6" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <View
-                android:id="@+id/divider7"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:id="@+id/textView7"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/display_params"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/displayParamsHint"
-                    style="@style/TextDescriptionDark"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:text="@string/display_params_hint"
-                    app:layout_constraintEnd_toStartOf="@+id/displayParamsSwitch"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView7" />
-
-                <Switch
-                    android:id="@+id/displayParamsSwitch"
-                    style="@style/SwitchDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/textView7" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <View
-                android:id="@+id/divider2"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:id="@+id/textView8"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/hide_nav_bar"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <Switch
-                    android:id="@+id/hideNavBarSwtich"
-                    style="@style/SwitchDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:showText="false"
-                    android:splitTrack="false"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--            <View-->
+            <!--            <View-->
 <!--                android:id="@+id/divider3"-->
 <!--                android:layout_width="match_parent"-->
 <!--                android:layout_height="1dp"-->
@@ -253,7 +175,51 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/allowOutOfRangeValuesLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <Switch
+                    android:id="@+id/unrestrictedParamsSwitch"
+                    style="@style/SwitchDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:showText="false"
+                    android:splitTrack="false"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textView65"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unrestricted_params"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/unrestrictedParamsHint"
+                    style="@style/SettingsHint"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unrestricted_params_hint"
+                    app:layout_constraintEnd_toStartOf="@+id/unrestrictedParamsSwitch"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView65" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <View
+                android:id="@+id/divider34"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/allowSlowRendersLayout"
@@ -282,7 +248,7 @@
 
                 <TextView
                     android:id="@+id/allowSlowRendersHint"
-                    style="@style/TextDescriptionDark"
+                    style="@style/SettingsHint"
                     android:layout_height="wrap_content"
                     android:text="@string/allow_slow_renders_hint"
                     app:layout_constraintEnd_toStartOf="@+id/allowSlowRendersSwitch"
@@ -297,7 +263,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/splitTypeLayout"
@@ -326,7 +292,7 @@
 
                 <TextView
                     android:id="@+id/splitTypeHint"
-                    style="@style/TextDescriptionDark"
+                    style="@style/SettingsHint"
                     android:layout_height="wrap_content"
                     android:text="@string/split_type_hint"
                     app:layout_constraintEnd_toStartOf="@+id/splitTypeSwitch"
@@ -341,7 +307,7 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/chunkProfileLayout"
@@ -359,9 +325,10 @@
 
                 <TextView
                     android:id="@+id/chunkCountHint"
-                    style="@style/TextDescriptionDark"
+                    style="@style/SettingsHint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="0dp"
                     android:text="@string/chunk_count_hint"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -372,7 +339,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:layout_marginTop="8dp"
-                    android:background="@color/menuDark5"
+                    android:background="@color/menuDarkPrimary"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/chunkCountHint"
@@ -381,17 +348,17 @@
                     <com.google.android.material.tabs.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="LOW" />
+                        android:text="@string/resolution_low" />
 
                     <com.google.android.material.tabs.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="MED" />
+                        android:text="@string/medium" />
 
                     <com.google.android.material.tabs.TabItem
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="HIGH" />
+                        android:text="@string/resolution_high" />
                 </com.google.android.material.tabs.TabLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -401,7 +368,41 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/textView8"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hide_nav_bar"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Switch
+                    android:id="@+id/hideNavBarSwtich"
+                    style="@style/SwitchDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:showText="false"
+                    android:splitTrack="false"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/upgradeToGoldLayout"
@@ -414,7 +415,7 @@
                     style="@style/TextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="12dp"
                     android:text="@string/upgrade"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/imageView4"
@@ -427,7 +428,8 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/upgrade" />
+                    app:srcCompat="@drawable/upgrade"
+                    app:tint="@color/highlight"/>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <View
@@ -436,7 +438,37 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
+
+            <LinearLayout
+                android:id="@+id/startTutorialSettingLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/imageView17"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    app:srcCompat="@drawable/tutorial"
+                    app:tint="@color/highlight" />
+
+                <TextView
+                    android:id="@+id/textView3"
+                    style="@style/TextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/tutorial" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider24"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/showChangelogLayout"
@@ -449,7 +481,7 @@
                     style="@style/TextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="12dp"
                     android:text="@string/show_changelog"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/imageView"
@@ -462,16 +494,17 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/changelog" />
+                    app:srcCompat="@drawable/changelog"
+                    app:tint="@color/highlight"/>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <View
-                android:id="@+id/divider24"
+                android:id="@+id/divider8"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:background="@color/menuDark7" />
+                android:background="@color/divider" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/aboutLayout"
@@ -484,7 +517,7 @@
                     style="@style/TextDark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="12dp"
                     android:text="@string/about"
                     app:layout_constraintBottom_toBottomOf="@+id/imageView5"
                     app:layout_constraintStart_toEndOf="@+id/imageView5"
@@ -492,7 +525,7 @@
 
                 <TextView
                     android:id="@+id/aboutText1"
-                    style="@style/TextDescriptionDark"
+                    style="@style/SettingsHint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -503,7 +536,7 @@
 
                 <TextView
                     android:id="@+id/aboutText2"
-                    style="@style/TextDescriptionDark"
+                    style="@style/SettingsHint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
@@ -518,7 +551,8 @@
                     android:layout_height="30dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/info2" />
+                    app:srcCompat="@drawable/info2"
+                    app:tint="@color/highlight"/>
 
                 <LinearLayout
                     android:id="@+id/emailLayout"
@@ -536,11 +570,12 @@
                         android:id="@+id/imageView6"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:srcCompat="@drawable/email" />
+                        app:srcCompat="@drawable/email"
+                        app:tint="@color/highlight"/>
 
                     <TextView
                         android:id="@+id/emailText"
-                        style="@style/TextDescriptionDark"
+                        style="@style/SettingsHint"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
@@ -567,11 +602,12 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        app:srcCompat="@drawable/instagram" />
+                        app:srcCompat="@drawable/instagram"
+                        app:tint="@color/highlight"/>
 
                     <TextView
                         android:id="@+id/instagramText"
-                        style="@style/TextDescriptionDark"
+                        style="@style/SettingsHint"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"

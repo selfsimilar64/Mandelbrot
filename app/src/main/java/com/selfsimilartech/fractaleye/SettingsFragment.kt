@@ -4,7 +4,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
@@ -108,21 +107,12 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
                 fsv.r.renderBackgroundChanged = true
             }
             renderBackgroundSwitch.isClickable = !sc.continuousPosRender
-            renderBackgroundLayout.alpha = if (sc.continuousPosRender) 0.3f else 1f
+            renderBackgroundLayout.alpha = if (sc.continuousPosRender) 0.35f else 1f
             if (sc.continuousPosRender) fsv.requestRender()
         }
         continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
                         ?: sc.continuousPosRender
-
-
-        displayParamsSwitch.isChecked =
-                savedInstanceState?.getBoolean("displayParams")
-                        ?: sc.displayParams
-        displayParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            sc.displayParams = isChecked
-            act.updateDisplayParams(settingsChanged = true)
-        }
 
 
         renderBackgroundSwitch.isChecked = sc.renderBackground
@@ -134,6 +124,11 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
             fsv.r.renderToTex = isChecked
             fsv.requestRender()
 
+        }
+
+
+        unrestrictedParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sc.restrictParams = !isChecked
         }
 
 
@@ -160,9 +155,14 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 
 
 
-        showChangelogLayout.setOnClickListener { act.showChangelog() }
+        showChangelogLayout.setOnClickListener { act.queryChangelog(fromSettings = true) }
 
-        upgradeToGoldLayout.setOnClickListener { act.showUpgradeScreen() }
+        upgradeToGoldLayout.setOnClickListener { act.showUpgradeScreen(true) }
+
+        startTutorialSettingLayout.setOnClickListener {
+            settingsDoneButton.performClick()
+            act.startTutorial(fromSettings = true)
+        }
 
         aboutText1.text = resources.getString(R.string.about_info_1).format(BuildConfig.VERSION_NAME)
 
@@ -204,7 +204,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 
 
         chunkProfileTabs.getTabAt(sc.chunkProfile.ordinal)?.apply {
-            view.setBackgroundColor(resources.getColor(R.color.menuDark7, null))
+            view.setBackgroundColor(resources.getColor(R.color.divider, null))
             select()
         }
         chunkProfileTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -213,13 +213,13 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {
 
-                tab?.view?.setBackgroundColor(resources.getColor(R.color.menuDark5, null))
+                tab?.view?.setBackgroundColor(resources.getColor(R.color.menuDarkPrimary, null))
 
             }
 
             override fun onTabSelected(tab: TabLayout.Tab?) {
 
-                tab?.view?.setBackgroundColor(resources.getColor(R.color.menuDark7, null))
+                tab?.view?.setBackgroundColor(resources.getColor(R.color.divider, null))
 
                 sc.chunkProfile = ChunkProfile.values()[tab?.position ?: 0]
                 fsv.r.onChunkProfileChanged()
@@ -243,7 +243,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
         allowSlowRendersSwitch.isChecked = sc.allowSlowDualfloat
         allowSlowRendersSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
             sc.allowSlowDualfloat = isChecked
-            fsv.r.checkThresholdCross(f.shape.position.zoom)
+            fsv.r.checkThresholdCross(showMsg = false)
             if (f.shape.slowDualFloat && f.shape.position.zoom <= GpuPrecision.SINGLE.threshold) {
                 fsv.r.renderToTex = true
                 fsv.r.renderShaderChanged = true

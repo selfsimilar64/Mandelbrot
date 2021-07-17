@@ -157,8 +157,12 @@ class Position(
             yLocked = false
 
             // calculate scaling variables
-            val qx = prop[0] * zoom
-            val qy = prop[1] * zoom
+            var qx = prop[0] * zoom
+            var qy = prop[1] * zoom
+            if (xLockedTemp && yLockedTemp) {
+                qx = 0.0
+                qy = 0.0
+            }
             val sinTheta = sin(rotation)
             val cosTheta = cos(rotation)
             val fx = x + qx * cosTheta - qy * sinTheta
@@ -187,7 +191,7 @@ class Position(
         }
 
     }
-    fun rotate(dTheta: Float, prop: DoubleArray) {
+    fun rotate(dTheta: Float, prop: DoubleArray = doubleArrayOf(0.0, 0.0)) {
 
         if (!rotationLocked) {
 

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="@color/menuDark3"
+    android:background="@color/black"
     android:orientation="vertical"
     tools:context="com.selfsimilartech.fractaleye.MainActivity">
 
@@ -38,15 +38,33 @@
         android:gravity="bottom"
         android:orientation="vertical">
 
+        <View
+            android:id="@+id/divider33"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/menuDark1"
+            app:layout_constraintBottom_toTopOf="@+id/ui"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:background="#c000"
+            android:progressBackgroundTint="@color/transparent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/header" />
+
+        <LinearLayout
             android:id="@+id/header"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/menuButtonHeight"
-            android:background="@color/menuDark1"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="end"
+            android:layout_height="@dimen/categoryButtonHeight"
+            android:background="@color/menuDarkPrimary"
+            android:gravity="center|end"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -55,261 +73,134 @@
                 android:id="@+id/newBookmarkButton"
                 style="@style/MenuImageButtonDark"
                 android:layout_width="50dp"
-                android:layout_height="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="0"
                 android:scaleType="centerInside"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/new_bookmark" />
+
+            <View
+                android:id="@+id/divider29"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:background="?android:attr/listDivider" />
 
             <ImageButton
                 android:id="@+id/saveImageButton"
                 style="@style/MenuImageButtonDark"
                 android:layout_width="50dp"
-                android:layout_height="0dp"
-                android:layout_marginEnd="5dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="0dp"
+                android:layout_weight="0"
                 android:scaleType="centerInside"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/settingsButton"
-                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/save" />
+
+            <View
+                android:id="@+id/divider28"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:background="?android:attr/listDivider" />
 
             <ImageButton
                 android:id="@+id/settingsButton"
                 style="@style/MenuImageButtonDark"
                 android:layout_width="50dp"
-                android:layout_height="0dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="0"
                 android:scaleType="centerInside"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/settings" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <ImageView
-            android:id="@+id/touchIcon"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/display_params_bg_visible"
-            android:contentDescription="touch icon"
-            android:foregroundGravity="center"
-            android:padding="10dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/header"
-            app:srcCompat="@drawable/touch" />
-
-        <LinearLayout
-            android:id="@+id/displayParams"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/display_params_bg_visible"
-            android:orientation="vertical"
-            android:paddingLeft="12dp"
-            android:paddingTop="8dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/header">
-
-            <LinearLayout
-                android:id="@+id/displayParamRow1"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/displayParamName1"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/display_param1"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/displayParam1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/displayParamRow2"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/displayParamName2"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/display_param2"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/displayParam2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/displayParamRow3"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/displayParamName3"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/display_param3"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/displayParam3"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/displayParamRow4"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/displayParamName4"
-                    style="@style/TextDark"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/display_param4"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/displayParam4"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </LinearLayout>
 
         </LinearLayout>
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="5dp"
-            android:background="@color/halfTransparentBlack"
-            android:progressBackgroundTint="@color/transparent"
-            app:layout_constraintBottom_toTopOf="@id/ui"
+        <ImageButton
+            android:id="@+id/menuToggleButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/ui_component_bg"
+            app:layout_constraintBottom_toTopOf="@+id/ui"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:srcCompat="@drawable/arrow_up" />
 
 
         <LinearLayout
             android:id="@+id/ui"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:layout_height="@dimen/uiLayoutHeightShort"
             android:animateLayoutChanges="true"
-            android:background="@color/menuDark1"
-            android:clickable="true"
-            android:focusableInTouchMode="true"
+            android:background="@color/menuDarkPrimary"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
-
-            <Button
-                android:id="@+id/categoryNameButton"
+            <com.selfsimilartech.fractaleye.NoScrollViewPager
+                android:id="@+id/categoryPager"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/categoryNameButtonHeight"
-                android:background="?attr/selectableItemBackground"
-                android:drawableEnd="@drawable/expand"
-                android:drawablePadding="3dp"
-                android:gravity="start|center_vertical"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:text="@string/category"
-                android:textAllCaps="true"
-                android:textAppearance="@style/TextDark"
-                android:textStyle="bold" />
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:animateLayoutChanges="true">
 
-            <LinearLayout
-                android:id="@+id/uiInnerLayout"
+            </com.selfsimilartech.fractaleye.NoScrollViewPager>
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/editModeButtons"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/uiLayoutHeight"
-                android:animateLayoutChanges="true"
-                android:orientation="vertical">
+                android:layout_height="@dimen/categoryButtonHeight"
+                android:layout_marginStart="3dp"
+                android:layout_marginEnd="3dp"
+                app:tabIndicator="@null"
+                app:tabTextAppearance="@style/TabText">
 
-                <com.selfsimilartech.fractaleye.NoScrollViewPager
-                    android:id="@+id/categoryPager"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_marginStart="@dimen/categoryPagerMarginHorizontal"
-                    android:layout_marginEnd="@dimen/categoryPagerMarginHorizontal"
-                    android:layout_weight="1"
-                    android:animateLayoutChanges="true" />
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/imageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/texture"
+                    android:icon="@drawable/image2" />
 
-                <com.google.android.material.tabs.TabLayout
-                    android:id="@+id/categoryButtons"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/menuButtonHeight"
-                    android:layout_marginStart="5dp"
-                    android:layout_marginEnd="5dp"
-                    app:tabIndicatorColor="#0000"
-                    app:tabTextAppearance="@style/TabText">
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/textureButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/texture"
+                    android:icon="@drawable/texture" />
 
-                    <com.google.android.material.tabs.TabItem
-                        android:id="@+id/imageButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/texture"
-                        android:icon="@drawable/image2" />
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/shapeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/shape"
+                    android:icon="@drawable/shape" />
 
-                    <com.google.android.material.tabs.TabItem
-                        android:id="@+id/textureButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/texture"
-                        android:icon="@drawable/texture" />
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/colorButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/color"
+                    android:icon="@drawable/color" />
 
-                    <com.google.android.material.tabs.TabItem
-                        android:id="@+id/shapeButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/shape"
-                        android:icon="@drawable/shape" />
-
-                    <com.google.android.material.tabs.TabItem
-                        android:id="@+id/colorButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/color"
-                        android:icon="@drawable/color" />
-
-                    <com.google.android.material.tabs.TabItem
-                        android:id="@+id/positionButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/position"
-                        android:icon="@drawable/position" />
-                </com.google.android.material.tabs.TabLayout>
-            </LinearLayout>
-
-
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/positionButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/position"
+                    android:icon="@drawable/position" />
+            </com.google.android.material.tabs.TabLayout>
         </LinearLayout>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.selfsimilartech.fractaleye.HighlightWindow
+        android:id="@+id/highlightWindow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 
 </FrameLayout>

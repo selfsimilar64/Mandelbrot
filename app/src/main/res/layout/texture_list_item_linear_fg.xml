@@ -10,7 +10,7 @@
     android:paddingBottom="15dp">
 
     <com.selfsimilartech.fractaleye.GradientTextView
-        android:id="@+id/previewText"
+        android:id="@+id/shapeItemName"
         style="@style/TextDark"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

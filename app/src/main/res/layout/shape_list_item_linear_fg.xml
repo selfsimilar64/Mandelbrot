@@ -17,7 +17,7 @@
         app:cardCornerRadius="10dp">
 
         <com.selfsimilartech.fractaleye.GradientImageView
-            android:id="@+id/previewImage"
+            android:id="@+id/shapeItemImage"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@color/black"
@@ -35,7 +35,7 @@
         android:paddingEnd="10dp">
 
         <com.selfsimilartech.fractaleye.GradientTextView
-            android:id="@+id/previewText"
+            android:id="@+id/shapeItemName"
             style="@style/TextDark"
             android:layout_width="wrap_content"
             android:layout_height="30dp"

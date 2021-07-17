@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tutorialLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+
+    <com.selfsimilartech.fractaleye.GestureAnimation
+        android:id="@+id/gestureAnimation"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/tutorialSubLayout"
+        app:layout_constraintTop_toBottomOf="@+id/tutExitButton"
+        tools:layout_editor_absoluteX="57dp">
+
+    </com.selfsimilartech.fractaleye.GestureAnimation>
+
+    <Button
+        android:id="@+id/tutExitButton"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="10dp"
+        android:background="@color/transparent"
+        android:drawableEnd="@drawable/cancel"
+        android:drawableTint="@color/white"
+        android:text="@string/tutorial_exit"
+        android:textAllCaps="false"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/tutorialSubLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+
+        <ProgressBar
+            android:id="@+id/tutProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="8dp"
+            android:progressBackgroundTint="@color/toggleButtonUnselected"
+            android:progressBackgroundTintMode="src_over"
+            android:progressTint="@color/highlight" />
+
+        <TextView
+            android:id="@+id/tutText1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:gravity="center"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:text="@string/tutorial_1_1"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/tutText2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:gravity="center"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:text="@string/tutorial_great"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/tutNextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/next_button"
+            android:drawableEnd="@drawable/key_next"
+            android:drawablePadding="12dp"
+            android:minHeight="40dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:text="@string/tutorial_next"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/tutFinishButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/next_button"
+            android:drawableEnd="@drawable/done"
+            android:minHeight="40dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:text="@string/tutorial_finish"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

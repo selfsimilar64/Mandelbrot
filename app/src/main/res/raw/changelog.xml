@@ -1,15 +1,25 @@
 <changelog>
 
 
+    <release versionCode="37" versionName="v1.5.0" date="2021-07-15">
+        <new type="summary">Improved user interface - smaller, new adjust buttons, and more!</new>
+        <new type="summary">Added tutorial! Accessible by going to (Settings) -> (Tutorial)</new>
+        <new type="summary">GOLD: Make copies of palettes and shapes! (Long click an item and press the copy button)</new>
+        <new type="summary">GOLD: Added inverse trigonometry functions to the custom shape creator!</new>
+        <new type="summary">Added (Settings) -> (Unrestricted Parameters)</new>
+        <new type="summary">Added 2 new palettes: Eye, Who</new>
+    </release>
+
+
     <release versionCode="33" versionName="v1.4.4" date="2021-03-25">
-        <new type="summary">Bookmark your fractals! -- Access bookmarks through (Image) -> (Bookmarks)</new>
-        <new type="summary">Added 28 default bookmarks</new>
-        <new type="summary">Param 1 of the Kleinian shape can now create spirals</new>
-        <new type="summary">Added 2 new textures: Image 1 and Image 2</new>
-        <new type="summary">Added 1 new shape: Angelbrot</new>
-        <new type="summary">Added Seed parameter to most shapes</new>
-        <new type="summary">Added (Color) -> (Accent)</new>
-        <new type="summary">Zooming past 1e-6 on shapes like Sine 1 is now disabled by default... Go to (Settings) -> (Allow Slow Renders) to enable</new>
+        <info>Bookmark your fractals! -- Access bookmarks through (Image) -> (Bookmarks)</info>
+        <info>Added 28 default bookmarks</info>
+        <info>Param 1 of the Kleinian shape can now create spirals</info>
+        <info>Added 2 new textures: Image 1 and Image 2</info>
+        <info>Added 1 new shape: Angelbrot</info>
+        <info>Added Seed parameter to most shapes</info>
+        <info>Added (Color) -> (Accent)</info>
+        <info>Zooming past 1e-6 on shapes like Sine 1 is now disabled by default... Go to (Settings) -> (Allow Slow Renders) to enable</info>
     </release>
 
 

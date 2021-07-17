@@ -10,7 +10,7 @@
 
     <Button
         android:id="@+id/button3"
-        style="@style/MenuNavButton"
+        style="@style/SubMenuButton"
         android:drawableTop="@drawable/done"
         android:text="@android:string/ok"
         app:layout_constraintBottom_toBottomOf="parent"

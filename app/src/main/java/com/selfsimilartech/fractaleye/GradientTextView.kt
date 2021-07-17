@@ -7,8 +7,8 @@ import android.util.AttributeSet
 open class GradientTextView : androidx.appcompat.widget.AppCompatTextView {
 
     constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
 
     private var viewWidth : Int = 0
     private var viewHeight : Int = 0

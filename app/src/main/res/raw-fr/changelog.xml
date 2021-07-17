@@ -1,21 +1,31 @@
 <changelog>
 
 
+    <release versionCode="37" versionName="v1.5.0" date="2021-07-15">
+        <new type="summary">Interface utilisateur améliorée - plus petits, nouveaux boutons de réglage, et plus encore!</new>
+        <new type="summary">Tutoriel ajouté ! Accessible en allant dans (Configuration) -> (Tutoriel)</new>
+        <new type="summary">OR: Faites des copies de palettes et de formes ! (Cliquez longuement sur un élément et appuyez sur le bouton Copier)</new>
+        <new type="summary">OR: Ajout de fonctions de trigonométrie inverse au créateur de formes personnalisées!</new>
+        <new type="summary">Ajouté (Configuration) -> (Paramètres Non Restreints)</new>
+        <new type="summary">Ajout de 2 nouvelles palettes : Œil, Qui</new>
+    </release>
+
+
     <release versionCode="33" versionName="v1.4.4" date="2021-03-25">
-        <new type="summary">Ajoutez vos fractales à vos favoris! - Accédez aux signets via (Image) -> (Signets)</new>
-        <new type="summary">Ajout de 28 signets par défaut</new>
-        <new type="summary">Le paramètre 1 de la forme Kleinian peut désormais créer des spirales</new>
-        <new type="summary">Ajout de 2 nouvelles textures: Image 1 et Image 2</new>
-        <new type="summary">Ajout d'une nouvelle forme: Angelbrot</new>
-        <new type="summary">Ajout du paramètre Germe à la plupart des formes</new>
-        <new type="summary">Ajouté (Couleur) -> (Accent)</new>
-        <new type="summary">Le zoom au-delà de 1e-6 sur des formes comme Sinus 1 est maintenant désactivé par défaut ... Allez dans (Paramètres) -> (Autoriser Les Rendus Lents) pour activer</new>
+        <info>Ajoutez vos fractales à vos favoris! - Accédez aux signets via (Image) -> (Signets)</info>
+        <info>Ajout de 28 signets par défaut</info>
+        <info>Le paramètre 1 de la forme Kleinian peut désormais créer des spirales</info>
+        <info>Ajout de 2 nouvelles textures: Image 1 et Image 2</info>
+        <info>Ajout d'une nouvelle forme: Angelbrot</info>
+        <info>Ajout du paramètre Germe à la plupart des formes</info>
+        <info>Ajouté (Couleur) -> (Accent)</info>
+        <info>Le zoom au-delà de 1e-6 sur des formes comme Sinus 1 est maintenant désactivé par défaut ... Allez dans (Paramètres) -> (Autoriser Les Rendus Lents) pour activer</info>
     </release>
 
 
     <release versionCode="32" versionName="v1.4.3" date="2021-01-20">
-        <new type="summary">Ajout de 5 nouvelles textures: Temps de Convergence (Lisse), Lentille à Disque, Lentille Etoile, Lentille Sinusoïdale, Lignes de Champ</new>
-        <new type="summary">Ajout de 2 nouvelles palettes de couleurs: Réfraction, Refraction</new>
+        <info>Ajout de 5 nouvelles textures: Temps de Convergence (Lisse), Lentille à Disque, Lentille Etoile, Lentille Sinusoïdale, Lignes de Champ</info>
+        <info>Ajout de 2 nouvelles palettes de couleurs: Réfraction, Refraction</info>
         <info>Correction d'un bug de la calculatrice de forme personnalisée</info>
     </release>
 

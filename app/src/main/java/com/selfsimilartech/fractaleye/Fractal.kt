@@ -11,17 +11,17 @@ import kotlin.math.min
 class Fractal(
 
         val nameId              : Int                           = -1,
-        var name                : String                        = "",
+        override var name                : String                        = "",
         val thumbnailId         : Int                           = -1,
         var thumbnailPath       : String                        = "",
-        var thumbnail           : Bitmap?                       = null,
+        override var thumbnail           : Bitmap?                       = null,
 
         shape                   : Shape                         = Shape.mandelbrot,
         val shapeId             : Int?                          = null,
         val shapeParams         : Shape.ParamListPreset?        = null,
         val juliaMode           : Boolean?                      = null,
         val position            : Position?                     = null,
-        var maxIter             : Int?                          = null,
+        private var maxIter     : Int?                          = null,
 
         texture                 : Texture                       = if (shape.isConvergent) Texture.converge else Texture.escapeSmooth,
         val textureId           : Int?                          = null,
@@ -34,7 +34,7 @@ class Fractal(
         var imageId             : Int                           = R.drawable.flower,
 
 
-        var palette             : Palette                       = Palette.night,
+        var palette             : Palette                       = Palette.torus,
         var paletteId           : Int?                          = null,
         var frequency           : Float                         = 1f,
         phase                   : Float                         = 0.65f,
@@ -43,10 +43,10 @@ class Fractal(
         var accent2             : Int                           = Color.BLACK,
 
         var customId            : Int                           = -1,
-        var isFavorite          : Boolean                       = false,
+        override var isFavorite          : Boolean                       = false,
         goldFeature             : Boolean?                      = null
 
-) {
+) : Customizable {
 
 
         companion object {
@@ -55,10 +55,22 @@ class Fractal(
                 val emptyCustom = Fractal(name = "Empty Custom")
 
                 val default = Fractal()
-                var previous = Fractal(name = "LoadPrevious")
+                var previous = Fractal(name = "Load Previous")
                 var tempBookmark1 = default
                 var tempBookmark2 = default
                 var tempBookmark3 = default
+
+                val tutorial1 = Fractal(
+                        name = "tut1",
+                        shape = Shape.mandelbrot,
+                        maxIter = 256,
+                        texture = Texture.escapeSmooth,
+                        palette = Palette.eye,
+                        frequency = 0.538f,
+                        phase = 0.746f,
+                        accent1 = Color.BLACK,
+                        juliaMode = false
+                )
 
 
 //        val mDensityTest1 = Fractal(
@@ -1163,7 +1175,7 @@ class Fractal(
                         palette = Palette.p9
                 )
 
-                val all = arrayListOf(
+                val defaultList = arrayListOf(
                         bf1, bf2, bf3,
                         k1,
                         mbx2, mbx6, mbx7,
@@ -1174,6 +1186,7 @@ class Fractal(
                         mquad1,
                         nautilus
                 )
+                val all = ArrayList<Fractal>(defaultList)
 
                 val bookmarks = arrayListOf<Fractal>()
 
@@ -1212,7 +1225,7 @@ class Fractal(
         }
 
         var loadError = false
-        var goldFeature = goldFeature ?:
+        override var goldFeature = goldFeature ?:
                 (shape.goldFeature ||
                 shape.params.list.let {
                         var hasGoldParam = false
@@ -1434,8 +1447,8 @@ class Fractal(
 
                 val rawFreq : Float
                 val rawPhase : Float
-                val M = fsv.r.textureMaxs.average().toFloat()
-                val m = fsv.r.textureMins.average().toFloat()
+                val M = fsv.r.textureSpan.max()
+                val m = fsv.r.textureSpan.min()
                 val L = M - m
 
 
@@ -1489,6 +1502,8 @@ class Fractal(
         override fun equals(other: Any?): Boolean {
                 return other is Fractal && other.name == name
         }
+
+        override fun isCustom() : Boolean = hasCustomId
 
 
 }

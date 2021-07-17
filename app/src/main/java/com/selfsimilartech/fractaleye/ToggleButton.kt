@@ -12,7 +12,7 @@ class ToggleButton : GradientButton {
     var isChecked = false
         set(value) {
             field = value
-            alpha = if (isChecked || showGradient) 1f else 0.5f
+            alpha = if (isChecked || showGradient) 1f else 0.4f
         }
 
     override fun performClick(): Boolean {

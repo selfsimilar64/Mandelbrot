@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.util.Log
 import java.lang.Math.random
 import kotlin.math.floor
 
@@ -53,15 +54,17 @@ fun Int.value() : Float {
 }
 
 class Palette (
+
         var id                  : Int = -1,
         var hasCustomId         : Boolean = false,
         val nameId              : Int = -1,
-        var name                : String = "",
+        override var name       : String = "",
         private val arrayId     : Int = -1,
         var colors              : ArrayList<Int> = arrayListOf(),
         oscillate               : Boolean = true,
-        var isFavorite          : Boolean = false
-) {
+        override var isFavorite : Boolean = false
+
+) : Customizable {
 
 
     companion object {
@@ -128,16 +131,23 @@ class Palette (
         val fusion          = Palette( id = 52, nameId = R.string.fusion,           arrayId = R.array.fusion,           oscillate = false   )
         val honor           = Palette( id = 53, nameId = R.string.honor,            arrayId = R.array.honor                                 )
         val p9              = Palette( id = 54, nameId = R.string.p9,               arrayId = R.array.p9,               oscillate = false   )
+        val sphere          = Palette( id = 56, nameId = R.string.sphere,           arrayId = R.array.sphere                                )
+        val who             = Palette( id = 57, nameId = R.string.who,              arrayId = R.array.who,              oscillate = false   )
+        val void            = Palette( id = 58, nameId = R.string.string_void,             arrayId = R.array.array_void                            )
+        val eye             = Palette( id = 59, nameId = R.string.eye,             arrayId = R.array.eye                            )
 
 
 
         var nextCustomPaletteNum = 0
         val custom = arrayListOf<Palette>()
         val default = arrayListOf(
+                eye,
                 yinyang,
+                who,
                 parachute,
                 night,
                 torus,
+                sphere,
                 time,
                 polyphonic,
                 carousel,
@@ -215,6 +225,8 @@ class Palette (
     }
 
 
+    override val goldFeature: Boolean = false
+
     val size : Int
         get() = if (oscillate) 2*colors.size - 1 else colors.size + 1
         // 2*ids.size - 1
@@ -224,7 +236,7 @@ class Palette (
 
     var oscillate = oscillateInit
 
-    var thumbnail : Bitmap? = null
+    override var thumbnail : Bitmap? = null
 
     val gradientDrawable : GradientDrawable
         get() = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors.toIntArray())
@@ -236,7 +248,8 @@ class Palette (
             0f -> colors.first()
             1f -> colors.last()
             else -> {
-                val n = floor(t * (colors.size) - 1).toInt()
+                val n = floor(t * (colors.size - 1)).toInt()
+                Log.d("PALETTE", "getting color at t= $t, n= $n, size= ${colors.size}")
                 val m = t * (colors.size - 1) % 1f
                 val c1 = colorToRGB(colors[n])
                 val c2 = colorToRGB(colors[n + 1])
@@ -247,7 +260,11 @@ class Palette (
                 )
             }
         }
-
+    }
+    fun getColors(n: Int) : ArrayList<Int> {
+        val list = arrayListOf<Int>()
+        for (i in 0 until n) list.add(getColor(i.toFloat()/(n - 1)))
+        return list
     }
 
     fun initialize(res: Resources) {
@@ -279,6 +296,11 @@ class Palette (
         updateFlatPalette()
 
     }
+    fun release() {
+        thumbnail?.recycle()
+        thumbnail = null
+    }
+
     fun reset() {
         oscillate = oscillateInit
     }
@@ -320,5 +342,15 @@ class Palette (
         return other is Palette && other.id == id
     }
     override fun hashCode(): Int { return name.hashCode() }
+
+    override fun isCustom() : Boolean = hasCustomId
+
+    fun clone(res: Resources) : Palette {
+        return Palette(
+                name = name + " " + res.getString(R.string.copy),
+                arrayId = arrayId,
+                colors = if (hasCustomId || colors.size <= MAX_CUSTOM_COLORS_GOLD) ArrayList(colors) else getColors(MAX_CUSTOM_COLORS_GOLD)
+        ).also { it.initialize(res) }
+    }
 
 }

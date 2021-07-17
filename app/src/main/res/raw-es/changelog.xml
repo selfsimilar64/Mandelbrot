@@ -1,21 +1,31 @@
 <changelog>
 
 
+    <release versionCode="37" versionName="v1.5.0" date="2021-07-15">
+        <new type="summary">Interfaz de usuario mejorada: nuevos botones de ajuste más pequeños y mucho más.</new>
+        <new type="summary">¡Tutorial añadido! Accesible yendo a (Configuración) -> (Tutorial)</new>
+        <new type="summary">ORO: ¡Haz copias de paletas y formas! (Haga clic largo en un elemento y presione el botón copiar)</new>
+        <new type="summary">ORO: ¡Se agregaron funciones de trigonometría inversa al creador de formas personalizadas!</new>
+        <new type="summary">Agregado (Configuración) -> (Parámetros Irrestrictos)</new>
+        <new type="summary">Se agregaron 2 paletas nuevas: Ojo, Quién</new>
+    </release>
+
+
     <release versionCode="33" versionName="v1.4.4" date="2021-03-25">
-        <new type="summary">¡Marque sus fractales! - Acceda a los marcadores a través de (Imagen) -> (Marcadores)</new>
-        <new type="summary">Se agregaron 28 marcadores predeterminados</new>
-        <new type="summary">El parámetro 1 de la forma Kleinian ahora puede crear espirales</new>
-        <new type="summary">Se agregaron 2 texturas nuevas: Imagen 1 e Imagen 2</new>
-        <new type="summary">Se agregó 1 nueva forma: Angelbrot</new>
-        <new type="summary">Se agregó el parámetro Semilla a la mayoría de las formas</new>
-        <new type="summary">Añadido (Color) -> (Acento)</new>
-        <new type="summary">Hacer zoom más allá de 1e-6 en formas como Sine 1 ahora está deshabilitado de forma predeterminada ... Vaya a (Ajustes) -> (Permitir Renders Lentos) para habilitar</new>
+        <info>¡Marque sus fractales! - Acceda a los marcadores a través de (Imagen) -> (Marcadores)</info>
+        <info>Se agregaron 28 marcadores predeterminados</info>
+        <info>El parámetro 1 de la forma Kleinian ahora puede crear espirales</info>
+        <info>Se agregaron 2 texturas nuevas: Imagen 1 e Imagen 2</info>
+        <info>Se agregó 1 nueva forma: Angelbrot</info>
+        <info>Se agregó el parámetro Semilla a la mayoría de las formas</info>
+        <info>Añadido (Color) -> (Acento)</info>
+        <info>Hacer zoom más allá de 1e-6 en formas como Sine 1 ahora está deshabilitado de forma predeterminada ... Vaya a (Ajustes) -> (Permitir Renders Lentos) para habilitar</info>
     </release>
 
 
     <release versionCode="32" versionName="v1.4.3" date="2021-01-20">
-        <new type="summary">Se agregaron 5 texturas nuevas: Tiempo de Convergencia (Suave), Lente Sinusoidal, Lente Estrelar, Lente de Disco, Líneas de Campo</new>
-        <new type="summary">Se agregaron 2 nuevas paletas de colores: Fusión, Refracción</new>
+        <info>Se agregaron 5 texturas nuevas: Tiempo de Convergencia (Suave), Lente Sinusoidal, Lente Estrelar, Lente de Disco, Líneas de Campo</info>
+        <info>Se agregaron 2 nuevas paletas de colores: Fusión, Refracción</info>
         <info>Error de calculadora de forma personalizada fijo</info>
     </release>
 

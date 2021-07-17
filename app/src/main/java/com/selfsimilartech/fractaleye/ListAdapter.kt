@@ -1,16 +1,16 @@
 package com.selfsimilartech.fractaleye
 
-import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.IHeader
 import eu.davidea.flexibleadapter.items.ISectionable
 
-class ListAdapter<T>(
+class ListAdapter< T : Customizable >(
 
         items: List<ListItem<T>>?,
         val onEdit          : (a: ListAdapter<T>, ListItem<T>) -> Unit,
         val onDelete        : (a: ListAdapter<T>, ListItem<T>) -> Unit,
+        val onDuplicate     : (a: ListAdapter<T>, ListItem<T>) -> Unit,
         val emptyFavorite   : ListItem<T>,
         val emptyCustom     : ListItem<T>
 
@@ -49,10 +49,10 @@ class ListAdapter<T>(
         return getGlobalPositionOf(emptyFavorite)
     }
     fun getFavoriteItems(): MutableList<ISectionable<RecyclerView.ViewHolder, IHeader<*>>> {
-        return getSectionItems(ListHeader.favorites)
+        return getSectionItems(ListHeader.FAVORITE)
     }
     fun getPositionInFavorites(listItem: ListItem<T>) : Int {
-        getSectionItems(ListHeader.favorites).forEach { item ->
+        getSectionItems(ListHeader.FAVORITE).forEach { item ->
             if ((item as ListItem<T>).t == listItem.t) return getGlobalPositionOf(item)
         }
         return -1
@@ -62,7 +62,7 @@ class ListAdapter<T>(
         item.compliment = nonFavorite
         val pos = emptyFavoritePosition()
         if (pos != -1) removeItem(pos)
-        return getItem(addItemToSection(item, ListHeader.favorites, index))
+        return getItem(addItemToSection(item, ListHeader.FAVORITE, index))
     }
     fun removeItemFromFavorites(item: ListItem<T>, favorite: Boolean) {
 
@@ -79,7 +79,7 @@ class ListAdapter<T>(
             item.compliment?.run { removeItem(getGlobalPositionOf(this)) }
         }
         item.compliment = null
-        if (getFavoriteItems().isEmpty()) addItemToSection(emptyFavorite, ListHeader.favorites, 0)
+        if (getFavoriteItems().isEmpty()) addItemToSection(emptyFavorite, ListHeader.FAVORITE, 0)
     }
 
 
@@ -87,12 +87,12 @@ class ListAdapter<T>(
         return getGlobalPositionOf(emptyCustom)
     }
     fun getCustomItems(): MutableList<ISectionable<RecyclerView.ViewHolder, IHeader<*>>> {
-        return getSectionItems(ListHeader.custom)
+        return getSectionItems(ListHeader.CUSTOM)
     }
     fun addItemToCustom(item: ListItem<T>, index: Int) : Int {
         val pos = emptyCustomPosition()
         if (pos != -1) removeItem(pos)
-        return addItemToSection(item, ListHeader.custom, index)
+        return addItemToSection(item, ListHeader.CUSTOM, index)
     }
     fun removeItemFromCustom(item: ListItem<T>) {
         val itemPos = getGlobalPositionOf(item)
@@ -101,11 +101,12 @@ class ListAdapter<T>(
         item.compliment?.run {
             removeItem(getGlobalPositionOf(this))
         }
-        if (getCustomItems().isEmpty()) addItemToSection(emptyCustom, ListHeader.custom, 0)
+        if (getCustomItems().isEmpty()) addItemToSection(emptyCustom, ListHeader.CUSTOM, 0)
+        if (getFavoriteItems().isEmpty()) addItemToSection(emptyFavorite, ListHeader.FAVORITE, 0)
     }
 
     fun getDefaultItems(): MutableList<ISectionable<RecyclerView.ViewHolder, IHeader<*>>> {
-        return getSectionItems(ListHeader.default)
+        return getSectionItems(ListHeader.DEFAULT)
     }
 
     fun getFirstPositionOf(t: T) : Int {
@@ -144,26 +145,8 @@ class ListAdapter<T>(
         activatedPos = position
     }
 
-    fun updateLayoutType(newType: ListLayoutType) {
-
-        ListHeader.all.forEach { header ->
-            getSectionItems(header).forEach {
-                Log.e("ADAPTER", "view type: ${it.itemViewType}")
-                (it as ListItem<T>).layoutType = newType
-            }
-        }
-
-    }
-
     fun onGoldEnabled() {
-
-        ListHeader.all.forEach { header ->
-            getSectionItems(header).forEach {
-                (it as ListItem<T>).goldEnabled = true
-            }
-        }
         notifyDataSetChanged()
-
     }
 
     fun updateItems(t: T) {

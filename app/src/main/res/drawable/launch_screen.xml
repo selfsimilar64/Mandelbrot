@@ -4,38 +4,74 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android" android:opacity="opaque">
 
     <!-- The background color, preferably the same as your normal theme -->
-    <item android:drawable="@android:color/white"/>
+<!--    <item android:drawable="@android:color/white"/>-->
+    <item android:drawable="@color/launchBackground"/>
 
-    <item android:gravity="center" android:width="36dp" android:height="256dp">
+    <item android:gravity="center" android:width="256dp" android:height="256dp">
         <shape android:shape="rectangle">
-            <gradient
-                android:startColor="@color/fractaleye2"
-                android:centerColor="@color/fractaleye3"
-                android:endColor="@color/fractaleye4"
-                android:angle="0" />
+            <solid android:color="@color/highlight"/>
         </shape>
     </item>
 
-    <item android:gravity="center" android:width="100dp" android:height="256dp" android:start="-135dp">
-        <shape android:shape="rectangle">
-            <gradient
-                android:startColor="@color/fractaleye1"
-                android:centerColor="@color/fractaleye1"
-                android:endColor="@color/fractaleye2"
-                android:angle="0" />
-        </shape>
-    </item>
-    <item android:gravity="center" android:width="100dp" android:height="256dp" android:start="135dp">
-        <shape android:shape="rectangle">
-            <gradient
-                android:startColor="@color/fractaleye4"
-                android:centerColor="@color/fractaleye5"
-                android:endColor="@color/fractaleye5"
-                android:angle="0" />
-        </shape>
-    </item>
+
+<!--    <item android:gravity="center" android:width="82dp" android:height="256dp">-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <gradient-->
+<!--                android:startColor="@color/fractaleye5halves"-->
+<!--                android:centerColor="@color/fractaleye3"-->
+<!--                android:endColor="@color/fractaleye7halves"-->
+<!--                android:angle="0" />-->
+<!--        </shape>-->
+<!--    </item>-->
+<!--    <item android:gravity="center" android:width="64dp" android:height="256dp" android:start="-144dp">-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <gradient-->
+<!--                android:startColor="@color/fractaleye0"-->
+<!--                android:centerColor="@color/fractaleye2"-->
+<!--                android:endColor="@color/fractaleye5halves"-->
+<!--                android:angle="0" />-->
+<!--        </shape>-->
+<!--    </item>-->
+<!--    <item android:gravity="center" android:width="64dp" android:height="256dp" android:start="144dp">-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <gradient-->
+<!--                android:startColor="@color/fractaleye7halves"-->
+<!--                android:centerColor="@color/fractaleye4"-->
+<!--                android:endColor="@color/fractaleye6"-->
+<!--                android:angle="0" />-->
+<!--        </shape>-->
+<!--    </item>-->
+
+<!--    <item android:gravity="center" android:width="82dp" android:height="256dp">-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <gradient-->
+<!--                android:startColor="@color/logo3"-->
+<!--                android:centerColor="@color/logo4"-->
+<!--                android:endColor="@color/logo5"-->
+<!--                android:angle="0" />-->
+<!--        </shape>-->
+<!--    </item>-->
+<!--    <item android:gravity="center" android:width="64dp" android:height="256dp" android:start="-144dp">-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <gradient-->
+<!--                android:startColor="@color/logo1"-->
+<!--                android:centerColor="@color/logo2"-->
+<!--                android:endColor="@color/logo3"-->
+<!--                android:angle="0" />-->
+<!--        </shape>-->
+<!--    </item>-->
+<!--    <item android:gravity="center" android:width="64dp" android:height="256dp" android:start="144dp">-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <gradient-->
+<!--                android:startColor="@color/logo5"-->
+<!--                android:centerColor="@color/logo6"-->
+<!--                android:endColor="@color/logo7"-->
+<!--                android:angle="0" />-->
+<!--        </shape>-->
+<!--    </item>-->
+
 
     <!-- Your product logo - 144dp color version of your app icon -->
-    <item android:drawable="@drawable/fe_icon_mask" android:gravity="center"/>
+    <item android:drawable="@drawable/launch_screen_icon_mask" android:gravity="center"/>
 
 </layer-list>

@@ -13,17 +13,19 @@ object SettingsConfig {
         var autoPrecision               = true
         var continuousPosRender         = false
         var continuousParamRender       = true
-        var displayParams               = false
         var showProgress                = true
         var sampleOnStrictTranslate     = true
         var renderBackground            = true
         var allowSlowDualfloat          = false
         var fitToViewport               = false
         var hideNavBar                  = true
-        var showHints                   = true
+        var restrictParams              = true
         var colorListViewType           = ListLayoutType.GRID
         var shapeListViewType           = ListLayoutType.GRID
         var textureListViewType         = ListLayoutType.GRID
         var bookmarkListViewType        = ListLayoutType.GRID
         var autofitColorRange           = false
+        var zoomSensitivity             = Sensitivity.MED
+        var rotationSensitivity         = Sensitivity.MED
+        var shiftSensitivity            = Sensitivity.MED
 }

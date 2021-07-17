@@ -6,6 +6,7 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.SeekBar
+import kotlin.math.abs
 
 @SuppressLint("AppCompatCustomView")
 open class SeekBar2 : SeekBar {
@@ -102,7 +103,7 @@ open class SeekBar2 : SeekBar {
                 height/2 + seekbarHeight/2
         )
 
-        paint.color = Color.WHITE
+        paint.color = resources.getColor(R.color.highlight, null)
         canvas.drawRect(progressRect, paint)
         canvas.drawCircle(
                 progress.toFloat()/max*(width - 4f*thumbSize) + 2f*thumbSize,

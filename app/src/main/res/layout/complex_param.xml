@@ -1,113 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/complexParamLayout"
+    style="@style/UiComponentShort"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/fragmentItemHeight"
     android:visibility="visible">
 
-    <LinearLayout
-        android:id="@+id/linearLayout3"
-        android:layout_width="190dp"
-        android:layout_height="35dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toStartOf="@+id/complexResetButton"
-        app:layout_constraintStart_toEndOf="@+id/complexRateButton"
-        app:layout_constraintTop_toTopOf="parent">
+    <include
+        android:id="@+id/complexParamSensitivity"
+        layout="@layout/continuous_sensitivity_layout" />
 
-        <TextView
-            android:id="@+id/uLabel"
-            style="@style/TextDark"
-            android:layout_width="10dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="48dp"
-            android:gravity="center_vertical"
-            android:text="@string/u" />
+    <LinearLayout
+        android:id="@+id/uLayout"
+        style="@style/UiComponentInnerShort"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/ui_component_bg"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imageView7"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/ui_component_bg"
+            android:backgroundTint="@color/menuDark6"
+            android:scaleType="centerInside"
+            android:visibility="gone"
+            app:srcCompat="@drawable/u" />
 
         <EditText
-            android:id="@+id/uEdit"
+            android:id="@+id/uValue"
             style="@style/EditNumberDark"
-            android:layout_width="wrap_content"
-            android:imeOptions="actionNext" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:imeOptions="actionNext"
+            android:singleLine="true"
+            android:text="-0.123456" />
 
         <ToggleButton
             android:id="@+id/uLock"
             style="@style/LockDark"
-            android:layout_width="30dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="10dp" />
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="2dp" />
+
+        <!--            <EditText-->
+        <!--                android:id="@+id/xEdit"-->
+        <!--                style="@style/EditNumberDark"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:imeOptions="actionNext" />-->
+
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout4"
-        android:layout_width="190dp"
-        android:layout_height="35dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toStartOf="@+id/complexResetButton"
-        app:layout_constraintStart_toEndOf="@+id/complexRateButton"
-        app:layout_constraintTop_toBottomOf="@id/linearLayout3">
+        android:id="@+id/vLayout"
+        style="@style/UiComponentInnerShort"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/ui_component_bg"
+        android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/vLabel"
-            style="@style/TextDark"
-            android:layout_width="10dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="48dp"
-            android:gravity="center_vertical"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
-            android:text="@string/v" />
+        <ImageView
+            android:id="@+id/imageView8"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/ui_component_bg"
+            android:backgroundTint="@color/menuDark6"
+            android:scaleType="centerInside"
+            android:visibility="gone"
+            app:srcCompat="@drawable/v" />
 
         <EditText
-            android:id="@+id/vEdit"
+            android:id="@+id/vValue"
             style="@style/EditNumberDark"
-            android:layout_width="wrap_content"
-            android:imeOptions="actionDone" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            android:text="0.34283" />
 
         <ToggleButton
             android:id="@+id/vLock"
             style="@style/LockDark"
-            android:layout_width="30dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="10dp" />
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="2dp" />
+
+
+        <!--            <EditText-->
+        <!--                android:id="@+id/yEdit"-->
+        <!--                style="@style/EditNumberDark"-->
+        <!--                android:layout_width="wrap_content"-->
+        <!--                android:imeOptions="actionDone" />-->
+
     </LinearLayout>
 
-    <ToggleButton
-        android:id="@+id/linkParamButton"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="20dp"
-        android:background="@color/transparent"
-        android:foreground="@drawable/link"
-        android:foregroundTint="@color/colorDarkSelected"
-        android:textOff="@string/empty"
-        android:textOn="@string/empty"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/linearLayout3"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/complexResetButton"
-        style="@style/MenuNavButton"
-        android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
-        android:drawableTop="@drawable/reset"
-        android:text="@string/reset"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/complexRateButton"
-        style="@style/MenuNavButton"
-        android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
-        android:drawableTop="@drawable/sensitivity"
-        android:text="@string/sensitivity"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <ImageButton
+        android:id="@+id/complexParamResetButton"
+        android:layout_width="64dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/ui_component_bg"
+        android:padding="2dp"
+        android:scaleType="center"
+        app:srcCompat="@drawable/reset" />
+</LinearLayout>

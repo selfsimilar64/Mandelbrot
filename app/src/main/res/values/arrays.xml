@@ -658,4 +658,76 @@
         <item>#ffffff</item>
     </array>
 
+    <array name="sphere">
+        <item>#ebe5ff</item>
+        <item>#6695cc</item>
+        <item>#0b3e4f</item>
+        <item>#930762</item>
+        <item>#ff695e</item>
+        <item>#ffe66d</item>
+        <item>@color/white</item>
+    </array>
+
+    <array name="who">
+        <item>#effdfe</item>
+        <item>#d0e1a2</item>
+        <item>#71a848</item>
+        <item>#01523e</item>
+        <item>#1a6e6b</item>
+        <item>#8b8cb3</item>
+        <item>#eba6fb</item>
+        <item>#faeef5</item>
+    </array>
+
+    <array name="when">
+        <item>#fdbf56</item>
+        <item>#fd813f</item>
+        <item>#f0a173</item>
+        <item>#d9cdbd</item>
+        <item>#bde4e4</item>
+        <item>#49799D</item>
+        <item>#33295d</item>
+        <item>#2d0339</item>
+        <item>#51000E</item>
+        <item>#C7230E</item>
+        <item>#ed9221</item>
+        <item>#ffe368</item>
+    </array>
+
+    <array name="what">
+        <item>#010271</item>
+        <item>#61007b</item>
+        <item>#f5026e</item>
+        <item>#ff5a3e</item>
+        <item>#fcec01</item>
+        <item>#cefd02</item>
+        <item>#40fb06</item>
+        <item>#00DDFF</item>
+        <item>#00FFFF</item>
+    </array>
+
+    <array name="array_void">
+        <item>#010271</item>
+        <item>#61007b</item>
+        <item>#f5026e</item>
+        <item>#AA00FF</item>
+        <item>#FFF4C4</item>
+        <item>#FFFF00</item>
+        <item>#8FFFA5</item>
+        <item>#00DDFF</item>
+        <item>#00FFFF</item>
+    </array>
+
+    <array name="eye">
+        <item>@color/fe0</item>
+        <item>@color/fe1</item>
+        <item>@color/fe2</item>
+        <item>@color/fe3</item>
+        <item>@color/fe4</item>
+        <item>@color/fe5</item>
+        <item>@color/fe6</item>
+        <item>@color/fe7</item>
+        <item>@color/fe8</item>
+    </array>
+
 </resources>

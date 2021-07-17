@@ -29,9 +29,7 @@ class MathQuillView : WebView {
     }
 
     fun enterKeystroke(ks: String) {
-
         evaluateJavascript("javascript:mathField.keystroke('$ks')", null)
-
     }
 
     fun getLatex(onValueReceived: (String) -> Unit) {

@@ -2911,13 +2911,84 @@ vec4 ballfold1(vec4 z, vec4 c) {
     return cadd(ballfold(cadd(csqr(z), p1)), c);
 }
 
+vec2 harriss(vec2 z, vec2 c) {
+
+    vec2 w = z;
+
+    float ratio = 40.0/53.0;
+    float a = ratio/(1.0 + ratio);
+    float b = 1.0 - ratio*ratio;
+    float s1 = p1.x;
+    float s2 = s1*ratio;
+    float width = s1/a;
+    float height = width*ratio;
+
+    if (z.x >= 0.0 && z.x <= width && z.y >= 0.0 && z.y <= height) {
+        if (z.x > s1) {
+            w -= vec2(s1, s1);
+            w = cmult(w, _i);
+            w += vec2(s2, 0.0);
+            w /= ratio;
+            w += c;
+        }
+        else if (z.y > s1) {
+            w -= vec2(0.0, s1);
+            w /= a;
+            w += c;
+        }
+    }
+
+    return w;
+
+}
+
+vec2 tree(vec2 z, vec2 c) {
+
+    vec2 t1 = p1;
+    float r1 = p2.x;
+    float s1 = p2.y;
+
+    vec2 t2 = p3;
+    float r2 = p4.x;
+    float s2 = p4.y;
+
+    float argz = carg(z);
+    float theta1 = carg(t1);
+    float theta2 = carg(t2);
+
+    if (abs(argz - theta1) < abs(argz - theta2)) return rotate(z - t1, -r1)/s1 + c;
+    else return rotate(z - t2, -r2)/s2 + c;
+
+}
+
+vec2 tree2(vec2 z, vec2 c) {
+
+    if (abs(z.x) < R && abs(z.y) < R) return z;
+
+    vec2 t1 = p1;
+    float r1 = p2.x*pi;
+    float s1 = p2.y;
+
+    vec2 t2 = p3;
+    float r2 = p4.x*pi;
+    float s2 = p4.y;
+
+    float argz = carg(z);
+    float theta1 = carg(t1);
+    float theta2 = carg(t2);
+
+    if (abs(argz - theta1) < abs(argz - theta2)) return rotate(z - t1, -r1)/s1 + c;
+    else return rotate(z - t2, -r2)/s2 + c;
+
+}
+
 // customShapeHandleSingle
 // customShapeHandleDual
 
 
 
 
-float divergence(vec2 z, vec2 z1, out float modz1, bool textureIn) {
+float divergence(vec2 z, vec2 z1, out float modz1, uint textureType) {
 
     float modz = cmod2(z);
     modz1 = cmod2(z1);
@@ -2926,13 +2997,13 @@ float divergence(vec2 z, vec2 z1, out float modz1, bool textureIn) {
 
     if (isSpecial(z.x) || isSpecial(z.y))   div = log(1e38)/log(modz1);
     else if (isSpecial(modz))               div = 0.5*log(1e38)/log(modz1);
-    else if (textureIn)                     div = power;
+    else if (textureType == 1u)             div = power;
     else                                    div = log(modz)/log(modz1);
 
     return div;
 
 }
-float divergence(vec4 z, vec4 z1, out vec2 modz1, bool textureIn) {
+float divergence(vec4 z, vec4 z1, out vec2 modz1, uint textureType) {
 
     vec2 modz = cmod(z);
     modz1 = cmod(z1);
@@ -2941,7 +3012,7 @@ float divergence(vec4 z, vec4 z1, out vec2 modz1, bool textureIn) {
 
     if (isSpecial(z.x) || isSpecial(z.z))   div = log(1e38)/log(modz1.x);
     else if (isSpecial(modz.x))             div = 0.5*log(1e38)/log(modz1.x);
-    else if (textureIn)                     div = power;
+    else if (textureType == 1u)             div = power;
     else                                    div = log(modz.x)/log(modz1.x);
 
     return div;
@@ -2966,17 +3037,19 @@ float exp_smoothing_final(vec2 sum) {
     return exp_smoothing_final(sum.x);
 }
 
-float escape_smooth_final(uint n, vec2 z, vec2 z1, bool textureIn) {
+float escape_smooth_final(uint n, vec2 z, vec2 z1, uint textureType) {
     float modz1;
-    float div = divergence(z, z1, modz1, textureIn);
+    float div = divergence(z, z1, modz1, textureType);
     float i = float(n) - log(log(modz1)/log(R))/log(div);
     return i/75.0;
+    // return i;
 }
-float escape_smooth_final(uint n, vec4 z, vec4 z1, bool textureIn) {
+float escape_smooth_final(uint n, vec4 z, vec4 z1, uint textureType) {
     vec2 modz1;
-    float div = divergence(z, z1, modz1, textureIn);
+    float div = divergence(z, z1, modz1, textureType);
     float i = float(n) - log(log(modz1.x)/log(R))/log(div);
     return i/75.0;
+    // return i;
 }
 
 void converge_smooth_loop(inout float sum, vec2 z, vec2 z1) {
@@ -2999,13 +3072,15 @@ float dist_estim_final(vec2 modsqrz, vec2 alpha) {
     return dist_estim_final(modsqrz.x, alpha);
 }
 
-float dist_estim_abs_final(float modsqrz, vec2 alpha) {
+float outline_final(float modsqrz, vec2 alpha) {
     float d = sqrt(modsqrz)*0.5*log(modsqrz)/cmod(alpha);
-    if (d*200.0/xScale.x > log(q1.x + 1.0)) return 1.5;
+    if (d*200.0/xScale.x < log(q1.x + 1.0)) return specialValue;
     else return 0.0;
+//    float t = (d*200.0/xScale.x)/log(q1.x + 1.0);
+//    if (t < 1.0) return t; else return 1.0;
 }
-float dist_estim_abs_final(vec2 modsqrz, vec2 alpha) {
-    return dist_estim_abs_final(modsqrz.x, alpha);
+float outline_final(vec2 modsqrz, vec2 alpha) {
+    return outline_final(modsqrz.x, alpha);
 }
 
 void orbit_trap_minx_loop(inout float minx, vec2 z) {
@@ -3101,26 +3176,26 @@ float normal_map2_final(vec2 modsqrz, vec4 z, vec2 alpha, vec2 beta) {
     return normal_map2_final(modsqrz.x, z.xz, alpha, beta);
 }
 
-float avg_final(float sum, float sum1, uint n, vec2 z, vec2 z1, bool textureIn) {
+float avg_final(float sum, float sum1, uint n, vec2 z, vec2 z1, uint textureType) {
 
     sum /= float(n + 1u);
     sum1 /= float(n);
 
     float modz1;
-    float div = divergence(z, z1, modz1, textureIn);
+    float div = divergence(z, z1, modz1, textureType);
 
     float r = -log(log(modz1)/log(R))/log(div);
     float s = (1.0 - r)*sum1 + r*sum;
     return s;
 
 }
-float avg_final(vec2 sum, vec2 sum1, uint n, vec4 z, vec4 z1, bool textureIn) {
+float avg_final(vec2 sum, vec2 sum1, uint n, vec4 z, vec4 z1, uint textureType) {
 
     sum.x /= float(n + 1u);
     sum1.x /= float(n);
 
     vec2 modz1;
-    float div = divergence(z, z1, modz1, textureIn);
+    float div = divergence(z, z1, modz1, textureType);
 
     float r = -log(log(modz1.x)/log(R))/log(div);
     float s = (1.0 - r)*sum1.x + r*sum.x;
@@ -3348,7 +3423,7 @@ void exit_angle_loop(inout float sum, inout float sum1, vec2 z, vec2 z1) {
 float exit_angle_final(vec2 z, vec2 z1) {
 
     float modz1;
-    float div = divergence(z, z1, modz1, false);
+    float div = divergence(z, z1, modz1, 0u);
     float t = -log(log(modz1)/log(R))/log(div);
     float s = (1.0 - t)*carg(z1) + t*carg(z);
 
@@ -3389,9 +3464,9 @@ void sine_lens_loop(inout vec2 sum, inout vec2 sum1, vec4 z) {
     sine_lens_loop(sum.x, sum1.x, z.xz);
 }
 
-float field_lines_final(uint n, vec2 z, vec2 z1, vec2 alpha, bool textureIn) {
+float field_lines_final(uint n, vec2 z, vec2 z1, vec2 alpha, uint textureType) {
 
-    // float m = escape_smooth_final(n, z, z1, textureIn);
+    // float m = escape_smooth_final(n, z, z1, textureType);
      float w = 0.5*(carg(cdiv(z, alpha))/pi + 1.0);
      float u = mod(w + q3.x/q1.x, 1.0/q1.x) - 0.5/q1.x;
 
@@ -3403,13 +3478,13 @@ float field_lines_final(uint n, vec2 z, vec2 z1, vec2 alpha, bool textureIn) {
      if (abs(u) < 0.5*q2.x/q1.x) return abs(u); else return 0.0;
 
 }
-float field_lines_final(uint n, vec4 z, vec4 z1, vec2 alpha, bool textureIn) {
-    return field_lines_final(n, z.xz, z1.xz, alpha, textureIn);
+float field_lines_final(uint n, vec4 z, vec4 z1, vec2 alpha, uint textureType) {
+    return field_lines_final(n, z.xz, z1.xz, alpha, textureType);
 }
 
-float field_lines2_final(vec2 z, vec2 z1, bool textureIn) {
+float field_lines2_final(vec2 z, vec2 z1, uint textureType) {
 //    float modz1;
-//    float div = divergence(z, z1, modz1, textureIn);
+//    float div = divergence(z, z1, modz1, textureType);
 //    float t = -log(log(modz1)/log(R))/log(div);
 //    return (1.0 - t)*carg(z1) + t*carg(z);
     if (z.x > 0.0) return 1.0; else return 0.0;
@@ -3446,13 +3521,20 @@ uint orbit_trap_image_under_final(vec4 color) {
     return orbit_trap_image_over_final(color);
 }
 
-float escape_smooth_dist_estim_final(uint n, vec2 z, vec2 z1, float modsqrz, vec2 alpha, bool textureIn) {
-    float dist = dist_estim_abs_final(modsqrz, alpha);
-    if (dist == 0.0) return specialValue;
-    else return escape_smooth_final(n, z, z1, textureIn);
+float escape_smooth_dist_estim_final(uint n, vec2 z, vec2 z1, float modsqrz, vec2 alpha, inout uint textureType) {
+    float d = sqrt(modsqrz)*0.5*log(modsqrz)/cmod(alpha);
+    float t = (d*200.0/xScale.x)/log(q1.x + 1.0);
+    float s = escape_smooth_final(n, z, z1, textureType);
+    if (t < 1.0)  return specialValue;
+    else          return s;
+//    if (t < 1.0) {
+//        textureType += 2u;
+//        s = uintBitsToFloat(packHalf2x16(vec2(s, t)));
+//    }
+//    return s;
 }
-float escape_smooth_dist_estim_final(uint n, vec4 z, vec4 z1, vec2 modsqrz, vec2 alpha, bool textureIn) {
-    return escape_smooth_dist_estim_final(n, z.xz, z1.xz, modsqrz.x, alpha, textureIn);
+float escape_smooth_dist_estim_final(uint n, vec4 z, vec4 z1, vec2 modsqrz, vec2 alpha, inout uint textureType) {
+    return escape_smooth_dist_estim_final(n, z.xz, z1.xz, modsqrz.x, alpha, textureType);
 }
 
 float highlight_iter_final(uint n) {
@@ -3490,6 +3572,17 @@ void kleinian_switch_loop(vec2 z, bool underPrev, inout uint switchCount, vec2 t
 
 float kleinian_switch_final(uint switchCount) {
     return float(switchCount);
+}
+
+float harriss_test_final(vec2 z, uint n) {
+    float ratio = 40.0/53.0;
+    //float a = 0.5*(1.0 - ratio*ratio);
+    float h2 = (1.0 + 2.0*ratio)/(2.0 + 2.0*ratio);
+    float d1 = abs(cmod(z - vec2(1.5, 0.5)) - 0.5*sqrt(2.0));
+    float d2 = abs(cmod(z - vec2(h2, 2.0 - h2)) - 0.5*sqrt(2.0)*(1.0/(1.0 + ratio)));
+    float d;
+    if (d1 < d2) d = d1; else d = d2;
+    if (d < q1.x) return specialValue; else return 0.0;
 }
 
 
@@ -3534,6 +3627,14 @@ bool converge(inout float eps, vec4 z, vec4 z1) {
     return false;
 }
 
+bool converge_sqr(vec2 z) {
+    return z.x < R && z.y < R;
+}
+
+bool converge_sqr2(vec2 z) {
+    return abs(z.x) < R && abs(z.y) < R;
+}
+
 bool escape_tri(vec2 z) {
     return z.y > sqrt(3.0)*z.x + R || z.y > -sqrt(3.0)*z.x + R || z.y < -R;
 }
@@ -3568,7 +3669,6 @@ bool escape_pent(vec4 z) {
 
 void main() {
 
-    bool textureIn = false;
     float textureValue = 0.0;
     uint textureValueInt = 0u;
     uint textureType = 0u;
@@ -3588,7 +3688,6 @@ void main() {
     for (uint n = 0u; n <= maxIter; n++) {
 
         if (n == maxIter) {
-            textureIn = true;
             textureType = 1u;
             // textureFinal
             break;

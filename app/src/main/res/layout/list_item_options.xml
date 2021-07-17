@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/listItemOptionsLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#d000"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dp"
+        android:orientation="horizontal">
+
+        <ToggleButton
+            android:id="@+id/favoriteButton"
+            android:layout_width="0dp"
+            android:layout_height="35dp"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:foreground="@drawable/starred_state_selector"
+            android:foregroundGravity="center"
+            android:textOff="@string/empty"
+            android:textOn="@string/empty" />
+
+        <com.selfsimilartech.fractaleye.GradientImageButton
+            android:id="@+id/copyButton"
+            style="@style/MenuImageButtonDark"
+            android:layout_width="0dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/copy" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dp"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/deleteButton"
+            style="@style/MenuImageButtonDark"
+            android:layout_width="0dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/delete" />
+
+        <ImageButton
+            android:id="@+id/editButton"
+            style="@style/MenuImageButtonDark"
+            android:layout_width="0dp"
+            android:layout_height="35dp"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/edit" />
+
+    </LinearLayout>
+</LinearLayout>

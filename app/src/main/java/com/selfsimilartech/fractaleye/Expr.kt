@@ -11,6 +11,7 @@ open class Expr(
         val type            : ExprType   = ExprType.NONE,
         precision           : Precision  = Precision.SINGLE,
         str                 : String     = "",
+        val imgId           : Int        = -1,
         val isCmd           : Boolean    = false,
         val insertParens    : Boolean    = false,
         val leftAfter       : Boolean    = false,
@@ -24,6 +25,7 @@ open class Expr(
             other.type,
             other.precision,
             other.str,
+            other.imgId,
             other.isCmd,
             other.insertParens,
             other.leftAfter,
@@ -36,40 +38,40 @@ open class Expr(
 
         val leftParen = Expr("(")
         val rightParen = Expr(")")
-        val parens = Expr("", insertParens = true, leftAfter = true)
+        val parens = Expr("", imgId = R.drawable.key_parens, insertParens = true, leftAfter = true)
 
-        val zero    = Expr("0")
-        val one     = Expr("1")
-        val two     = Expr("2")
-        val three   = Expr("3")
-        val four    = Expr("4")
-        val five    = Expr("5")
-        val six     = Expr("6")
-        val seven   = Expr("7")
-        val eight   = Expr("8")
-        val nine    = Expr("9")
-        val decimal = Expr(".")
+        val zero    = Expr("0", imgId = R.drawable.key_0)
+        val one     = Expr("1", imgId = R.drawable.key_1)
+        val two     = Expr("2", imgId = R.drawable.key_2)
+        val three   = Expr("3", imgId = R.drawable.key_3)
+        val four    = Expr("4", imgId = R.drawable.key_4)
+        val five    = Expr("5", imgId = R.drawable.key_5)
+        val six     = Expr("6", imgId = R.drawable.key_6)
+        val seven   = Expr("7", imgId = R.drawable.key_7)
+        val eight   = Expr("8", imgId = R.drawable.key_8)
+        val nine    = Expr("9", imgId = R.drawable.key_9)
+        val decimal = Expr(".", imgId = R.drawable.key_decimal)
 
-        val z = Expr("z", ExprType.COMPLEX, Precision.SINGLE)
-        val c = Expr("c", ExprType.COMPLEX, Precision.SINGLE)
-        val i = Expr("i", ExprType.COMPLEX, Precision.SINGLE)
+        val z = Expr("z", ExprType.COMPLEX, Precision.SINGLE, imgId = R.drawable.key_z)
+        val c = Expr("c", ExprType.COMPLEX, Precision.SINGLE, imgId = R.drawable.key_c)
+        val i = Expr("i", ExprType.COMPLEX, Precision.SINGLE, "_i", imgId = R.drawable.key_i, isConstant = true)
 
 
         val neg   = Operator("neg",        0,  1) { args ->
             Expr("-${args[0]}", args[0].type, args[0].precision)
         }
-        val conj  = Operator("overline",   0,  1, isCmd = true) { args ->
+        val conj  = Operator("overline",   0,  1, imgId = R.drawable.key_conj, isCmd = true) { args ->
             val glsl = if (args[0].isReal) args[0].str else "conj(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val mod   = Operator("||",         0,  1, "modulus", leftAfter = true) { args ->
+        val mod   = Operator("||",         0,  1, imgId = R.drawable.key_modulus, str = "modulus", leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "abs(${args[0]})" else "absd(${args[0]})"
             }
             else "cmod(${args[0]})"
             Expr(glsl, ExprType.REAL, args[0].precision)
         }
-        val abs   = Operator("abs",        0,  1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val abs   = Operator("abs",        0,  1, imgId = R.drawable.key_abs, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "abs(${args[0]})"
                 else                  "absd(${args[0]})"
@@ -79,7 +81,7 @@ open class Expr(
             val newPrecision = args[0].precision
             Expr(glsl, newType, newPrecision)
         }
-        val rabs  = Operator("rabs",       0,  1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val rabs  = Operator("rabs",       0,  1, imgId = R.drawable.key_rabs, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "abs(${args[0]})"
                 else                  "absd(${args[0]})"
@@ -89,33 +91,33 @@ open class Expr(
             val newPrecision = args[0].precision
             Expr(glsl, newType, newPrecision)
         }
-        val iabs  = Operator("iabs",       0,  1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val iabs  = Operator("iabs",       0,  1, imgId = R.drawable.key_iabs, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) args[0].str
             else                           "cabsi(${args[0]})"
             val newType = args[0].type
             val newPrecision = args[0].precision
             Expr(glsl, newType, newPrecision)
         }
-        val sign  = Operator("sign",       0,  1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sign  = Operator("sign",       0,  1, imgId = R.drawable.key_sign, isCmd = true, insertParens = true, leftAfter = true) { args ->
             if (args[0].isReal) {
                 if (args[0].isSingle) Expr("sign(${args[0]})",   ExprType.REAL, Precision.SINGLE)
                 else                  Expr("sign(${args[0]}.x)", ExprType.REAL, Precision.SINGLE)
             }
             else Expr("csign(${args[0]})", ExprType.COMPLEX, args[0].precision)
         }
-        val arg   = Operator("arg",        0,  1, insertParens = true, leftAfter = true) { args ->
+        val arg   = Operator("arg",        0,  1, imgId = R.drawable.key_arg, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) "arg(${args[0]})" else "carg(${args[0]})"
             Expr(glsl, ExprType.REAL, args[0].precision)
         }
-        val sqr   = Operator("^2",         1,  1, rightAfter = true) { args ->
+        val sqr   = Operator("^2",         1,  1, imgId = R.drawable.key_sqr, rightAfter = true) { args ->
             val glsl = if (args[0].isReal) "sqr(${args[0]})" else "csqr(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val cube  = Operator("^3",         1,  1, rightAfter = true) { args ->
+        val cube  = Operator("^3",         1,  1, imgId = R.drawable.key_cube, rightAfter = true) { args ->
             val glsl = if (args[0].isReal) "cube(${args[0]})" else "ccube(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val quad  = Operator("^4",         1,  1, rightAfter = true) { args ->
+        val quad  = Operator("^4",         1,  1, imgId = R.drawable.key_quad, rightAfter = true) { args ->
             val glsl = if (args[0].isReal) "quad(${args[0]})" else "cquad(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
@@ -127,7 +129,7 @@ open class Expr(
             val glsl = if (args[0].isReal) "sext(${args[0]})" else "csext(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val pow   = Operator("^",          1,  2) { args ->
+        val pow   = Operator("^",          1,  2, imgId = R.drawable.key_pow) { args ->
 
             // Log.e("EXPR", "POW -- arg1: ${args[0]}(${args[0].precision.name[0]}), arg2: ${args[1]}(${args[1].precision.name[0]})")
             when {
@@ -154,21 +156,21 @@ open class Expr(
                 else -> Expr("cpow(${args[0]}, ${args[1]})", ExprType.COMPLEX, args[0].precision)
             }
         }
-        val inv   = Operator("^-1",        1,  1, rightAfter = true) { args ->
+        val inv   = Operator("^-1",        1,  1, imgId = R.drawable.key_inverse, rightAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "(1.0/${args[0]})" else "inv(${args[0]})"
             }
             else "cinv(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val sqrt  = Operator("sqrt",       1,  1, isCmd = true) { args ->
+        val sqrt  = Operator("sqrt",       1,  1, imgId = R.drawable.key_sqrt, isCmd = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sqrt(${args[0]})" else "sqrtd(${args[0]})"
             }
             else "csqrt(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val mult  = Operator("cdot",       2,  2, "*", isCmd = true) { args ->
+        val mult  = Operator("cdot",       2,  2, imgId = R.drawable.key_times, str = "*", isCmd = true) { args ->
             // Log.e("EXPR", "MULT -- arg1: ${args[0]}(${args[0].precision.name[0]}), arg2: ${args[1]}(${args[1].precision.name[0]})")
             if (args[0] == args[1]) sqr.of(listOf(args[0]))
 
@@ -190,7 +192,7 @@ open class Expr(
             Expr(glsl, newType, newPrecision)
 
         }
-        val div   = Operator("/",          2,  2)  { args ->
+        val div   = Operator("/",          2,  2, imgId = R.drawable.key_div)  { args ->
 
             if (args[0] == args[1]) Expr("1.0", ExprType.REAL, Precision.SINGLE)
 
@@ -212,7 +214,7 @@ open class Expr(
             Expr(glsl, newType, newPrecision)
 
         }
-        val add   = Operator("+",          3,  2) { args ->
+        val add   = Operator("+",          3,  2, imgId = R.drawable.key_plus) { args ->
 
             // Log.e("EXPR", "ADD -- arg1: ${args[0]}(${args[0].precision.name[0]}), arg2: ${args[1]}(${args[1].precision.name[0]})")
             val glsl = when {
@@ -239,7 +241,7 @@ open class Expr(
             Expr(glsl, newType, newPrecision)
 
         }
-        val sub   = Operator("-",          3,  2) { args ->
+        val sub   = Operator("-",          3,  2, imgId = R.drawable.key_minus) { args ->
 
             val glsl = when {
                 args[0].isReal && args[1].isReal -> {
@@ -268,42 +270,42 @@ open class Expr(
 
 
 
-        val sin = Operator("sin", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sin = Operator("sin", 0, 1, imgId = R.drawable.key_sin, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sin(${args[0]})" else "sind(${args[0]})"
             }
             else "csin(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val cos = Operator("cos", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val cos = Operator("cos", 0, 1, imgId = R.drawable.key_cos, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "cos(${args[0]})" else "cosd(${args[0]})"
             }
             else "ccos(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val tan = Operator("tan", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val tan = Operator("tan", 0, 1, imgId = R.drawable.key_tan, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "tan(${args[0]})" else "tand(${args[0]})"
             }
             else "ctan(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val csc = Operator("csc", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val csc = Operator("csc", 0, 1, imgId = R.drawable.key_csc, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "csc(${args[0]})" else "cscd(${args[0]})"
             }
             else "ccsc(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val sec = Operator("sec", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sec = Operator("sec", 0, 1, imgId = R.drawable.key_sec, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sec(${args[0]})" else "secd(${args[0]})"
             }
             else "csec(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val cot = Operator("cot", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val cot = Operator("cot", 0, 1, imgId = R.drawable.key_cot, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "cot(${args[0]})" else "cotd(${args[0]})"
             }
@@ -311,42 +313,42 @@ open class Expr(
             Expr(glsl, args[0].type, args[0].precision)
         }
 
-        val asin = Operator("arcsin", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asin = Operator("arcsin", 0, 1, imgId = R.drawable.key_arcsin, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asin(${args[0]})" else "asind(${args[0]})"
             }
             else "casin(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acos = Operator("arccos", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acos = Operator("arccos", 0, 1, imgId = R.drawable.key_arccos, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acos(${args[0]})" else "acosd(${args[0]})"
             }
             else "cacos(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val atan = Operator("arctan", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val atan = Operator("arctan", 0, 1, imgId = R.drawable.key_arctan, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "atan(${args[0]})" else "atand(${args[0]})"
             }
             else "catan(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acsc = Operator("arccsc", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acsc = Operator("arccsc", 0, 1, imgId = R.drawable.key_arccsc, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acsc(${args[0]})" else "acscd(${args[0]})"
             }
             else "cacsc(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val asec = Operator("arcsec", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asec = Operator("arcsec", 0, 1, imgId = R.drawable.key_arcsec, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asec(${args[0]})" else "asecd(${args[0]})"
             }
             else "casec(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acot = Operator("arccot", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acot = Operator("arccot", 0, 1, imgId = R.drawable.key_arccot, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acot(${args[0]})" else "acotd(${args[0]})"
             }
@@ -356,42 +358,42 @@ open class Expr(
 
 
 
-        val sinh = Operator("sinh", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sinh = Operator("sinh", 0, 1, imgId = R.drawable.key_sinh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sinh(${args[0]})" else "sinhd(${args[0]})"
             }
             else "csinh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val cosh = Operator("cosh", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val cosh = Operator("cosh", 0, 1, imgId = R.drawable.key_cosh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "cosh(${args[0]})" else "coshd(${args[0]})"
             }
             else "ccosh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val tanh = Operator("tanh", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val tanh = Operator("tanh", 0, 1, imgId = R.drawable.key_tanh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "tanh(${args[0]})" else "tanhd(${args[0]})"
             }
             else "ctanh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val csch = Operator("csch", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val csch = Operator("csch", 0, 1, imgId = R.drawable.key_csch, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "csch(${args[0]})" else "cschd(${args[0]})"
             }
             else "ccsch(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val sech = Operator("sech", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sech = Operator("sech", 0, 1, imgId = R.drawable.key_sech, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sech(${args[0]})" else "sechd(${args[0]})"
             }
             else "csech(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val coth = Operator("coth", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val coth = Operator("coth", 0, 1, imgId = R.drawable.key_coth, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "coth(${args[0]})" else "cothd(${args[0]})"
             }
@@ -399,42 +401,42 @@ open class Expr(
             Expr(glsl, args[0].type, args[0].precision)
         }
 
-        val asinh = Operator("arcsinh", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asinh = Operator("arcsinh", 0, 1, imgId = R.drawable.key_arcsinh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asinh(${args[0]})" else "asinhd(${args[0]})"
             }
             else "casinh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acosh = Operator("arccosh", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acosh = Operator("arccosh", 0, 1, imgId = R.drawable.key_arccosh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acosh(${args[0]})" else "acoshd(${args[0]})"
             }
             else "cacosh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val atanh = Operator("arctanh", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val atanh = Operator("arctanh", 0, 1, imgId = R.drawable.key_arctanh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "atanh(${args[0]})" else "atanhd(${args[0]})"
             }
             else "catanh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acsch = Operator("arccsch", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acsch = Operator("arccsch", 0, 1, imgId = R.drawable.key_arccsch, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acsch(${args[0]})" else "acschd(${args[0]})"
             }
             else "cacsch(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val asech = Operator("arcsech", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asech = Operator("arcsech", 0, 1, imgId = R.drawable.key_arcsech, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asech(${args[0]})" else "asechd(${args[0]})"
             }
             else "casech(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acoth = Operator("arccoth", 0, 1, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acoth = Operator("arccoth", 0, 1, imgId = R.drawable.key_arccoth, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acoth(${args[0]})" else "acothd(${args[0]})"
             }
@@ -475,9 +477,13 @@ open class Expr(
         }
 
 
+        val variables = listOf(
+                z,
+                c,
+                parens
+        )
 
         val numbers = listOf(
-                zero,
                 one,
                 two,
                 three,
@@ -486,7 +492,56 @@ open class Expr(
                 six,
                 seven,
                 eight,
-                nine
+                nine,
+                zero,
+                decimal,
+                i
+        )
+
+        val basic = listOf(
+                add,
+                sub,
+                mult,
+                div,
+                sqr,
+                cube,
+                quad,
+                inv,
+                sqrt,
+                pow,
+                abs,
+                rabs,
+                iabs,
+                conj,
+                mod,
+                arg
+        )
+
+        val trig = listOf(
+                sin,
+                cos,
+                tan,
+                csc,
+                sec,
+                cot,
+                asin,
+                acos,
+                atan,
+                acsc,
+                asec,
+                acot,
+                sinh,
+                cosh,
+                tanh,
+                csch,
+                sech,
+                coth,
+                asinh,
+                acosh,
+                atanh,
+                acsch,
+                asech,
+                acoth
         )
 
         val all = listOf(
@@ -520,20 +575,19 @@ open class Expr(
                 exp, exp2, exp10
         )
 
+        val MAX_EXPR_LEN = all.maxOf { it.str.length }
+
+        val map = HashMap<String, Expr>().also { m ->
+            all.forEach { expr -> m[expr.str] = expr }
+            m["i"] = i
+        }
+
         fun valueOf(str: String) : Expr? {
-            //Log.e("EXPR", "looking for $str")
-            all.forEach {
-                //Log.e("EXPR", "is it ${it.str} ??")
-                if (it.str == str) return it }
             return when {
-                str == "i" -> Expr("I", ExprType.COMPLEX, Precision.SINGLE, isConstant = true)
-                str.matches(Regex("^-?\\d+$"))            -> Expr("$str.0", ExprType.REAL, Precision.SINGLE, isConstant = true)  // integer :  1234
-                str.matches(Regex("^-?\\.\\d+$"))         -> Expr("0$str",  ExprType.REAL, Precision.SINGLE, isConstant = true)  // float   :  .1234
-                str.matches(Regex("^-?(\\d*\\.)?\\d+$"))  -> Expr(str,      ExprType.REAL, Precision.SINGLE, isConstant = true)  // float   :  0.1234
-                else -> {
-                    Log.e("EXPR", "couldn't find expr with str: $str")
-                    null
-                }
+                str.matches(Regex("^\\d+$"))            -> Expr("$str.0", ExprType.REAL, Precision.SINGLE, isConstant = true)  // integer :  1234
+                str.matches(Regex("^\\.\\d+$"))         -> Expr("0$str",  ExprType.REAL, Precision.SINGLE, isConstant = true)  // float   :  .1234
+                str.matches(Regex("^(\\d*\\.)?\\d+$"))  -> Expr(str,      ExprType.REAL, Precision.SINGLE, isConstant = true)  // float   :  0.1234
+                else -> map[str]
             }
         }
 
@@ -577,10 +631,11 @@ class Operator(
         val order: Int,
         val numArgs: Int,
         str: String = "",
+        imgId: Int = -1,
         isCmd: Boolean = false,
         insertParens: Boolean = false,
         leftAfter: Boolean = false,
         rightAfter: Boolean = false,
         val of: (args: List<Expr>) -> Expr
 
-) : Expr(latex, ExprType.NONE, Precision.NONE, str, isCmd, insertParens, leftAfter, rightAfter)
+) : Expr(latex, ExprType.NONE, Precision.NONE, str, imgId, isCmd, insertParens, leftAfter, rightAfter)

@@ -49,7 +49,7 @@ open class GradientButton : AppCompatButton {
 
     override fun onDraw(canvas: Canvas?) {
         if (showGradient) {
-            buffer.drawColor(Color.BLACK)
+            buffer.drawColor(Color.BLACK, PorterDuff.Mode.MULTIPLY)
             super.onDraw(buffer)
             canvas?.apply {
                 // drawColor(Color.TRANSPARENT)

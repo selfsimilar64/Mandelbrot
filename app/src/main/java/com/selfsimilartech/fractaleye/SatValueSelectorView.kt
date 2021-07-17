@@ -110,7 +110,6 @@ class SatValueSelectorView : View {
     }
 
     override fun onDraw(canvas: Canvas) {
-        Log.e("SATVAL SELECTOR", "drawing")
         super.onDraw(canvas)
         canvas.apply {
             drawRect(rect, rectPaint)

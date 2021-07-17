@@ -1,51 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/realParamLayout"
-    style="@style/FragmentItem"
+    style="@style/UiComponentShort"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/fragmentItemHeight"
     android:visibility="visible">
 
-    <Button
-        android:id="@+id/realRateButton"
-        style="@style/MenuNavButton"
-        android:drawableTop="@drawable/sensitivity"
-        android:text="@string/sensitivity"
-        app:layout_constraintBottom_toTopOf="@+id/realParamSeekBar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+<!--    <Button-->
+<!--        android:id="@+id/realResetButton"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:drawableTop="@drawable/reset"-->
+<!--        android:text="@string/reset" />-->
 
-    <Button
-        android:id="@+id/realResetButton"
-        style="@style/MenuNavButton"
-        android:layout_height="wrap_content"
-        android:drawableTop="@drawable/reset"
-        android:text="@string/reset"
-        app:layout_constraintBottom_toTopOf="@+id/realParamSeekBar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <include
+        android:id="@+id/realParamSensitivity"
+        layout="@layout/continuous_sensitivity_layout" />
 
-    <com.selfsimilartech.fractaleye.SeekBar2
-        android:id="@+id/realParamSeekBar"
+    <LinearLayout
+        style="@style/UiComponentInnerShort"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:max="500"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/uEdit2" />
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
 
-    <EditText
-        android:id="@+id/uEdit2"
-        style="@style/EditNumberDark"
+        <EditText
+            android:id="@+id/uValue2"
+            style="@style/EditNumberDark"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:gravity="center"
+            android:text="30.125" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/UiComponentInnerShort"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:imeOptions="actionDone"
-        app:layout_constraintEnd_toEndOf="@+id/realParamSeekBar"
-        app:layout_constraintStart_toStartOf="@+id/realParamSeekBar"
-        app:layout_constraintTop_toTopOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="match_parent"
+        android:layout_marginBottom="0dp"
+        android:layout_weight="0"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/paramAdjustLeftButton"
+            style="@style/MenuImageButtonDark"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/scroll_indicator_left" />
+
+        <View
+            android:id="@+id/divider31"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="?android:attr/listDivider" />
+
+        <ImageButton
+            android:id="@+id/paramAdjustRightButton"
+            style="@style/MenuImageButtonDark"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/scroll_indicator_right" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/realParamResetButton"
+        android:layout_width="64dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/ui_component_bg"
+        android:padding="2dp"
+        android:scaleType="center"
+        app:srcCompat="@drawable/reset" />
+
+</LinearLayout>

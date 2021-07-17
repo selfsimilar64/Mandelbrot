@@ -2,11 +2,13 @@ package com.selfsimilartech.fractaleye
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.HorizontalScrollView
-import android.widget.LinearLayout
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import androidx.fragment.app.Fragment
+import com.google.android.material.tabs.TabLayout
 import java.text.NumberFormat
 import java.text.ParseException
 
@@ -37,24 +39,37 @@ open class MenuFragment : Fragment() {
         return d
     }
 
-    lateinit var currentLayout : View
-    lateinit var currentButton : Button
+    val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
+        -> TextView.OnEditorActionListener { editText, actionId, _ ->
 
-    val scrollListener = { layout: LinearLayout, scroll: HorizontalScrollView, leftArrow: View, rightArrow: View -> View.OnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
-
-        val minScroll = 5
-        val maxScroll = layout.width - scroll.width - 5
-
-        leftArrow.apply {
-            if      (minScroll in scrollX until oldScrollX) invisible()
-            else if (minScroll in oldScrollX until scrollX) show()
+        when (actionId) {
+            EditorInfo.IME_ACTION_NEXT -> {
+                setValueAndFormat(editText as EditText)
+                editText.clearFocus()
+                editText.isSelected = false
+                nextEditText?.requestFocus()
+            }
+            EditorInfo.IME_ACTION_DONE -> {
+                setValueAndFormat(editText as EditText)
+                val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(view?.windowToken, 0)
+                editText.clearFocus()
+                editText.isSelected = false
+                fsv.requestRender()
+            }
+            else -> {
+                Log.d("EQUATION FRAGMENT", "some other action")
+            }
         }
-        rightArrow.apply {
-            if      (maxScroll in oldScrollX until scrollX) invisible()
-            else if (maxScroll in scrollX until oldScrollX) show()
-        }
+
+        editText.clearFocus()
+        act.updateSystemUI()
+        true
 
     }}
+
+    lateinit var currentLayout : View
+    lateinit var currentButton : Button
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         act = requireActivity() as MainActivity
@@ -82,10 +97,19 @@ open class MenuFragment : Fragment() {
         newLayout.show()
         currentLayout = newLayout
     }
+
     fun alphaButton(newButton: Button) {
         currentButton.alpha = 0.5f
         newButton.alpha = 1f
         currentButton = newButton
+    }
+
+    fun subMenuButtonListener(layout: View, button: Button, uiLayoutHeight: UiLayoutHeight = UiLayoutHeight.SHORT) : View.OnClickListener {
+        return View.OnClickListener {
+            act.uiSetHeight(uiLayoutHeight)
+            showLayout(layout)
+            alphaButton(button)
+        }
     }
 
     open fun updateLayout() {}

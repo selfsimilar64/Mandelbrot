@@ -6,6 +6,7 @@ precision highp int;
 const float specialValue = -1.23456788063;
 
 uniform highp usampler2D tex;
+uniform int colorMode;
 uniform int numColors;
 uniform vec3 palette[30];
 uniform vec3 accent1;
@@ -19,6 +20,8 @@ uniform float textureMax;
 uniform int convertYUV;
 uniform int convert565;
 uniform int imageTexture;
+uniform int adjustWithZoom;
+uniform float zoom;
 
 in vec2 texCoord;
 out vec4 fragmentColor;
@@ -29,12 +32,23 @@ void main() {
     vec4 color = vec4(accent1, 0.0);
     uint textureValueInt = texture(tex, texCoord).x;
 
-    uint textureType = textureValueInt & 1u;   // convergent or divergent
+    uint textureType = textureValueInt & 1u;
 
     float textureValue = uintBitsToFloat((textureValueInt >> 1) << 1);
 
 
-    if (textureMode == 2u || textureMode == textureType) {
+    // video/developer only
+//    if (adjustWithZoom == 1) {
+//        if ((textureType & 2u) == 2u) {
+//            vec2 st = unpackHalf2x16(textureValueInt);
+//            if (st.y < 1.0/zoom) textureValue = specialValue;
+//            else textureValue = st.x;
+//        }
+        // textureValue *= zoom;
+//    }
+
+
+    if (textureMode == 2u || textureMode == (textureType & 1u)) {
 
         if (textureValue == specialValue) {
 

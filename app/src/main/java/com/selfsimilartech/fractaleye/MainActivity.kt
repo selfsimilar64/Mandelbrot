@@ -15,20 +15,24 @@ import android.graphics.drawable.ColorDrawable
 import android.opengl.GLSurfaceView
 import android.os.*
 import android.util.AttributeSet
+import android.util.DisplayMetrics
 import android.util.Log
+import android.util.Range
 import android.view.*
-import android.view.animation.AlphaAnimation
+import android.view.LayoutInflater
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import androidx.room.migration.Migration
@@ -37,15 +41,19 @@ import androidx.viewpager.widget.ViewPager
 import com.android.billingclient.api.*
 import com.google.android.material.tabs.TabLayout
 import com.michaelflisar.changelog.ChangelogBuilder
-import com.michaelflisar.changelog.ChangelogSetup
 import com.michaelflisar.changelog.classes.ImportanceChangelogSorter
+import com.michaelflisar.changelog.internal.ChangelogDialogFragment
+import eu.davidea.flexibleadapter.FlexibleAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.color_fragment.*
 import kotlinx.android.synthetic.main.image_fragment.*
-import kotlinx.android.synthetic.main.position_fragment_old.*
+import kotlinx.android.synthetic.main.list_layout.view.*
+import kotlinx.android.synthetic.main.position_fragment.*
 import kotlinx.android.synthetic.main.settings_fragment.*
 import kotlinx.android.synthetic.main.shape_fragment.*
 import kotlinx.android.synthetic.main.texture_fragment.*
+import kotlinx.android.synthetic.main.tutorial.*
+import kotlinx.android.synthetic.main.tutorial_welcome.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -55,9 +63,7 @@ import org.apfloat.ApfloatMath
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.*
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 
 const val MAX_SHAPE_PARAMS = 4
@@ -71,11 +77,12 @@ const val BUTTON_CLICK_DELAY_LONG = 400L
 const val PAGER_ANIM_DURATION = 200L
 const val STATUS_BAR_HEIGHT = 24
 const val NAV_BAR_HEIGHT = 48
-
+const val COMPLEX_PARAM_DIGITS = 7
+const val REAL_PARAM_DIGITS = 5
 const val GOLD_ENABLED_DIALOG_SHOWN = "goldEnabledDialogShown"
 const val GOLD_PENDING_DIALOG_SHOWN = "goldPendingDialogShown"
 const val SHOW_EPILEPSY_DIALOG = "showEpilepsyDialog"
-
+const val SHOW_TUTORIAL_OPTION = "showTutorialOption"
 const val RESOLUTION = "resolution"
 const val ASPECT_RATIO = "aspectRatio"
 //const val PRECISION = "precision"
@@ -97,22 +104,22 @@ const val CPU_PRECISION = "cpuPrecision"
 const val PREV_FRACTAL_CREATED = "previousFractalCreated"
 const val PREV_FRACTAL_ID = "previousFractalId"
 const val TEX_IMAGE_COUNT = "texImageCount"
-
 const val PALETTE = "palette"
 const val ACCENT_COLOR1 = "accentColor1"
 const val ACCENT_COLOR2 = "accentColor2"
-
 const val USE_ALTERNATE_SPLIT = "useAlternateSplit"
+const val RESTRICT_PARAMS = "restrictParams"
 const val ALLOW_SLOW_DUALFLOAT = "allowSlowDualfloat"
 const val CHUNK_PROFILE = "chunkProfile"
 const val VERSION_CODE_TAG = "versionCode"
 const val SHARED_PREFERENCES = "com.selfsimilartech.fractaleye.SETTINGS"
-
 const val PALETTE_TABLE_NAME = "palette"
 const val SHAPE_TABLE_NAME = "shape"
 const val FRACTAL_TABLE_NAME = "fractal"
-
 const val TEX_IM_PREFIX = "tex_im_"
+
+const val AP_DIGITS = 64L
+
 
 
 //const val PLUS_UNICODE = '\u002B'
@@ -120,13 +127,18 @@ const val TEX_IM_PREFIX = "tex_im_"
 
 
 
+
+
+
+/* EXTENSION FUNCTIONS */
+
 operator fun Double.times(w: Complex) : Complex {
     return Complex(this * w.x, this * w.y)
 }
 fun TabLayout.getCurrentTab() : TabLayout.Tab = getTabAt(selectedTabPosition) as TabLayout.Tab
-fun TabLayout.getCategory(index: Int) : MainActivity.Category = MainActivity.Category.values()[index]
-fun TabLayout.getCurrentCategory() : MainActivity.Category = MainActivity.Category.values()[selectedTabPosition]
-fun TabLayout.getTabAt(category: MainActivity.Category) : TabLayout.Tab = getTabAt(category.ordinal) as TabLayout.Tab
+fun TabLayout.getCategory(index: Int) : MainActivity.EditMode = MainActivity.EditMode.values()[index]
+fun TabLayout.currentEditMode() : MainActivity.EditMode = MainActivity.EditMode.values()[selectedTabPosition]
+fun TabLayout.getTabAt(editMode: MainActivity.EditMode) : TabLayout.Tab = getTabAt(editMode.ordinal) as TabLayout.Tab
 fun List<Texture>.replace(old: Texture, new: Texture) : List<Texture> {
 
     val newList = this.toMutableList()
@@ -162,38 +174,86 @@ infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     return sequence.asIterable()
 }
 fun now() = System.currentTimeMillis()
-
+fun TextView?.showAndSetText(id: Int) {
+    if (this != null) {
+        show()
+        setText(id)
+    }
+}
+fun Double.format(sigDigits: Int) : String {
+    val trunc = abs(this).toInt().toString()
+    var freeDigits = sigDigits - trunc.length
+    if (this < 0.0) freeDigits--
+    return "%.${freeDigits}f".format(this)
+}
+fun Range<Double>.size() : Double { return upper - lower }
 fun View?.color() : Int {
     return (this?.background as? ColorDrawable)?.color ?: Color.BLACK
 }
-
-
 fun View.show() { visibility = View.VISIBLE }
 fun View.hide() { visibility = View.GONE }
 fun View.invisible() { visibility = View.INVISIBLE }
 fun View.isVisible() : Boolean { return visibility == View.VISIBLE}
 fun View.isInvisible() : Boolean { return visibility == View.INVISIBLE }
 fun View.isHidden() : Boolean { return visibility == View.GONE}
-
-fun Button.disable() {
+fun ImageButton.disable() {
     foregroundTintList = ColorStateList.valueOf(Color.GRAY)
     isClickable = false
     isFocusable = false
 }
-fun Button.enable() {
+fun ImageButton.enable() {
     foregroundTintList = null
     isClickable = true
     isFocusable = true
 }
+fun Button.disable() {
+    foreground = ColorDrawable(resources.getColor(R.color.halfTransparentBlack, null))
+    isClickable = false
+    isFocusable = false
+}
+fun Button.enable() {
+    foreground = null
+    isClickable = true
+    isFocusable = true
+}
+fun RecyclerView.smoothSnapToPosition(targetPos: Int, snapMode: Int = LinearSmoothScroller.SNAP_TO_START) {
 
+    val smoothScroller = object : LinearSmoothScroller(this.context) {
+        override fun calculateSpeedPerPixel(displayMetrics: DisplayMetrics?): Float {
+            return super.calculateSpeedPerPixel(displayMetrics)
+        }
+        override fun getVerticalSnapPreference() : Int = snapMode
+        override fun getHorizontalSnapPreference() : Int = snapMode
+    }
 
+    val firstVisiblePos = (layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+    (adapter as FlexibleAdapter<*>).apply {
+        val distance = targetPos - firstVisiblePos
+        if (abs(distance) > 12) {
+            scrollToPosition(targetPos - sign(distance.toDouble()).toInt() * 12)
+        }
+    }
+    smoothScroller.targetPosition = targetPos
+    layoutManager?.startSmoothScroll(smoothScroller)
+
+}
 fun Apfloat.sqr() : Apfloat = this.multiply(this)
 fun Apcomplex.sqr() : Apcomplex = this.multiply(this)
 fun Apcomplex.cube() : Apcomplex = this.multiply(this).multiply(this)
 fun Apcomplex.mod() : Apfloat = ApfloatMath.sqrt(this.real().sqr().add(this.imag().sqr()))
 fun Apcomplex.modSqr() : Apfloat = this.real().sqr().add(this.imag().sqr())
-const val AP_DIGITS = 64L
 
+
+interface Customizable {
+
+    var name : String
+    var thumbnail : Bitmap?
+    var isFavorite : Boolean
+    val goldFeature : Boolean
+
+    fun isCustom() : Boolean
+
+}
 
 enum class GpuPrecision(val bits: Int, val threshold: Double) {
     SINGLE(23, 5e-4), DUAL(46, 1e-12)
@@ -212,7 +272,45 @@ enum class ChunkProfile(val fgSingle: Int, val bgSingle: Int, val fgDual: Int, v
 }
 enum class TextureMode { OUT, IN, BOTH }
 enum class ListLayoutType { GRID, LINEAR }
+enum class Sensitivity(
 
+        val iconId: Int,
+        val zoomDiscrete: Float,
+        val zoomContinuous: Float,
+        val rotationDiscrete: Float,
+        val rotationContinuous: Float,
+        val shiftDiscrete: Float,
+        val shiftContinuous: Float,
+        val param: Float
+
+) {
+    LOW(R.drawable.sensitivity_low, 1.01f, 1.0065f, Math.PI.toFloat() / 256f, Math.PI.toFloat() / 512f, 1 / 256f, 1 / 512f, 0.01f),
+    MED(R.drawable.sensitivity_med, 1.1f, 1.035f, Math.PI.toFloat() / 16f, Math.PI.toFloat() / 128f, 1 / 32f, 1 / 128f, 2f),
+    HIGH(R.drawable.sensitivity_high, 1.35f, 1.125f, Math.PI.toFloat() / 2f, Math.PI.toFloat() / 64f, 1 / 4f, 1 / 32f, 10f);
+
+    fun next() : Sensitivity = when (this) {
+        LOW -> MED
+        MED -> HIGH
+        HIGH -> LOW
+    }
+
+}
+enum class UiLayoutHeight(val dimenId: Int, val closed: Boolean = false) {
+
+    CLOSED_SHORT(R.dimen.uiLayoutHeightClosedShort, true),
+    CLOSED_MED(R.dimen.uiLayoutHeightClosedMedium, true),
+    SHORT(R.dimen.uiLayoutHeightShort),
+    MED(R.dimen.uiLayoutHeightMedium),
+    TALL(R.dimen.uiLayoutHeightTall),
+    TALLER(R.dimen.uiLayoutHeightTaller);
+
+    var dimen: Float = 0f
+
+    fun initialize(res: Resources) {
+        dimen = res.getDimension(dimenId)
+    }
+
+}
 
 
 
@@ -398,6 +496,16 @@ fun split(a: Float) : PointF {
     return PointF(hi, lo)
 }
 
+fun clamp(d: Int, low: Int, high: Int) : Int {
+    return maxOf(minOf(d, high), low)
+}
+fun clamp(d: Float, low: Float, high: Float) : Float {
+    return maxOf(minOf(d, high), low)
+}
+fun clamp(d: Double, low: Double, high: Double) : Double {
+    return maxOf(minOf(d, high), low)
+}
+
 
 
 
@@ -410,6 +518,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     val f = Fractal.default
     var sc = SettingsConfig
     lateinit var fsv : FractalSurfaceView
+    var uiLayoutHeight = UiLayoutHeight.CLOSED_SHORT
     private var screenWidth = 0
     private var screenHeight = 0
     private var navBarHeight = 0
@@ -419,17 +528,19 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
     private var goldEnabledDialogShown = false
     private var goldPendingDialogShown = false
     private var showEpilepsyDialog = true
+    private var showTutorialOption = true
+    private var tutorialFromSettings = false
     private var previousFractalCreated = false
     private var dialog : AlertDialog? = null
     private var previousFractalId = -1
 
 
-    private lateinit var settingsFragment   : Fragment
-    private lateinit var imageFragment      : MenuFragment
-    private lateinit var textureFragment    : MenuFragment
-    private lateinit var shapeFragment      : MenuFragment
-    private lateinit var colorFragment      : MenuFragment
-    private lateinit var positionFragment   : MenuFragment
+    private var settingsFragment   : Fragment?      = null
+    private var imageFragment      : MenuFragment?  = null
+    private var textureFragment    : MenuFragment?  = null
+    private var shapeFragment      : MenuFragment?  = null
+    private var colorFragment      : MenuFragment?  = null
+    private var positionFragment   : MenuFragment?  = null
 
 
     private lateinit var billingClient : BillingClient
@@ -466,8 +577,6 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                     }
                 }
             }
-
-
 
     // private var orientation = Configuration.ORIENTATION_UNDEFINED
 
@@ -539,85 +648,63 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         }
     }
 
-
-    enum class Category(val displayName: Int, val icon: Int) {
+    enum class EditMode(val displayName: Int, val icon: Int) {
 
         IMAGE(R.string.image, R.drawable.image2) {
-            override fun onOpenMenu(act: MainActivity) {
+            override fun onDetermineMenuHeightOpen(act: MainActivity) {
                 act.apply {
-                    if (presetPreviewListLayout.isVisible) uiSetOpenTall() else uiSetOpen()
+                    uiSetHeight(if (aspectRatioLayout.isVisible()) UiLayoutHeight.MED else UiLayoutHeight.SHORT)
                 }
             }
-            override fun onCloseMenu(act: MainActivity) {}
+            override fun onDetermineMenuHeightClosed(act: MainActivity) {
+                act.apply {
+                    uiSetHeight(if (aspectRatioLayout.isVisible()) UiLayoutHeight.CLOSED_MED else UiLayoutHeight.CLOSED_SHORT)
+                }
+            }
             override fun onMenuClosed(act: MainActivity) {
-                if (!act.presetPreviewListLayout.isVisible) act.categoryButtons.getTabAt(POSITION).select()
+                // if (!act.bookmarkListLayout.isVisible) act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
-                //val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
-                //act.fsv.renderProfile = RenderProfile.MANUAL
-                act.apply {
-                    fsv.r.reaction = Reaction.NONE
-                    hideTouchIcon()
-                    if (uiIsClosed()) uiSetOpen()
-                }
+                super.onCategorySelected(act)
+                act.fsv.r.reaction = Reaction.NONE
             }
             override fun onCategoryUnselected(act: MainActivity) {}
         },
         TEXTURE(R.string.texture, R.drawable.texture) {
-            override fun onOpenMenu(act: MainActivity) {
+            override fun onDetermineMenuHeightOpen(act: MainActivity) {
                 act.apply {
-                    if (texturePreviewListLayout.isVisible()) uiSetOpenTall()
-                    else uiSetOpen()
+                    uiSetHeight(if (textureImageLayout.isVisible()) UiLayoutHeight.MED else UiLayoutHeight.SHORT)
                 }
             }
-            override fun onCloseMenu(act: MainActivity) {}
+            override fun onDetermineMenuHeightClosed(act: MainActivity) {
+                act.apply {
+                    uiSetHeight(if (textureImageLayout.isVisible()) UiLayoutHeight.CLOSED_MED else UiLayoutHeight.CLOSED_SHORT)
+                }
+            }
             override fun onMenuClosed(act: MainActivity) {
-                if (act.fsv.r.reaction == Reaction.NONE && !act.texturePreviewListLayout.isVisible()) act.categoryButtons.getTabAt(POSITION).select()
+                // if (act.fsv.r.reaction == Reaction.NONE && !act.textureListLayout.isVisible()) act.categoryButtons.getTabAt(POSITION).select()
             }
             override fun onCategorySelected(act: MainActivity) {
-
-                if (!act.texturesDisabled) {
-                    if (act.f.texture.activeParam.nameId == R.string.density && !act.sc.autofitColorRange) act.textureModeButton.performClick()
-                    if (act.realTextureParam.isVisible() or act.complexTextureParam.isVisible()) {
-                        act.fsv.r.reaction = Reaction.TEXTURE
-                        act.showTouchIcon()
-                    } else {
-                        val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
-                        act.fsv.r.reaction = Reaction.NONE
-                        act.hideTouchIcon()
-                        if (act.uiIsClosed()) categoryNameButton.performClick()
-                    }
+                super.onCategorySelected(act)
+                act.apply {
+                    fsv.r.reaction = if (realTextureParam.isVisible() || complexTextureParam.isVisible()) Reaction.TEXTURE else Reaction.NONE
                 }
-
             }
             override fun onCategoryUnselected(act: MainActivity) {
                 // onMenuClosed(act)
             }
         },
         SHAPE(R.string.shape, R.drawable.shape) {
-            override fun onOpenMenu(act: MainActivity) {
-                act.apply {
-                    if (shapePreviewListLayout.isVisible() || customShapeLayout.isVisible()) uiSetOpenTall()
-                    else uiSetOpen()
-                }
-            }
-            override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {
-                act.apply {
-                    if (fsv.r.reaction == Reaction.NONE && !(shapePreviewListLayout.isVisible() || customShapeLayout.isVisible())) categoryButtons.getTabAt(POSITION).select()
-                }
+//                act.apply {
+//                    if (fsv.r.reaction == Reaction.NONE && !(shapeListLayout.isVisible() || customShapeLayout.isVisible())) categoryButtons.getTabAt(POSITION).select()
+//                }
             }
             override fun onCategorySelected(act: MainActivity) {
-                //act.fsv.renderProfile = RenderProfile.MANUAL
-                if (act.realShapeParam.isVisible() or act.complexShapeParam.isVisible()) {
-                    act.fsv.r.reaction = Reaction.SHAPE
-                    act.showTouchIcon()
-                }
-                else {
-                    val categoryNameButton = act.findViewById<Button>(R.id.categoryNameButton)
-                    act.fsv.r.reaction = Reaction.NONE
-                    act.hideTouchIcon()
-                    if (act.uiIsClosed()) categoryNameButton.performClick()
+                super.onCategorySelected(act)
+                act.apply {
+                    fsv.r.reaction = if (realShapeParam.isVisible() or complexShapeParam.isVisible()) Reaction.SHAPE
+                    else Reaction.NONE
                 }
             }
             override fun onCategoryUnselected(act: MainActivity) {
@@ -625,54 +712,52 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             }
         },
         COLOR(R.string.color, R.drawable.color) {
-            override fun onOpenMenu(act: MainActivity) {
-                act.apply {
-                    if (colorPreviewListLayout.isVisible() || customPaletteLayout.isVisible()) uiSetOpenTall()
-                    else uiSetOpen()
-                }
+            override fun onDetermineMenuHeightOpen(act: MainActivity) {
+                act.apply { uiSetHeight(if (miniColorPickerLayout.isVisible()) UiLayoutHeight.MED else UiLayoutHeight.SHORT) }
             }
-            override fun onCloseMenu(act: MainActivity) {
-//                with(act) {
-//                    when {
-//                        colorPreviewListLayout.isVisible() -> colorPreviewListDoneButton.performClick()
-//                        customPaletteLayout.isVisible() -> customPaletteDoneButton.performClick()
-//                        else -> {}
-//                    }
-//                }
+            override fun onDetermineMenuHeightClosed(act: MainActivity) {
+                act.apply { uiSetHeight(if (miniColorPickerLayout.isVisible()) UiLayoutHeight.CLOSED_MED else UiLayoutHeight.CLOSED_SHORT) }
             }
             override fun onMenuClosed(act: MainActivity) {}
             override fun onCategorySelected(act: MainActivity) {
                 act.apply {
+                    super.onCategorySelected(act)
                     if (f.texture.usesDensity && sc.autofitColorRange) densityButton.show() else densityButton.hide()
                     fsv.r.reaction = Reaction.COLOR
-                    showTouchIcon()
+                    // showTouchIcon()
                 }
             }
             override fun onCategoryUnselected(act: MainActivity) {}
         },
         POSITION(R.string.position, R.drawable.position) {
-            override fun onOpenMenu(act: MainActivity) {
-                act.apply {
-                    uiSetOpen()
-                }
-            }
-            override fun onCloseMenu(act: MainActivity) {}
             override fun onMenuClosed(act: MainActivity) {}
             override fun onCategorySelected(act: MainActivity) {
-                // act.fsv.r.renderProfile = RenderProfile.MANUAL
+                super.onCategorySelected(act)
                 act.fsv.r.reaction = Reaction.POSITION
-                act.showTouchIcon()
+                // showTouchIcon()
             }
             override fun onCategoryUnselected(act: MainActivity) {
 
             }
         };
 
-        abstract fun onOpenMenu(act: MainActivity)
-        abstract fun onCloseMenu(act: MainActivity)
+        open fun onOpenMenu(act: MainActivity) {
+            onDetermineMenuHeightOpen(act)
+        }
+        open fun onCloseMenu(act: MainActivity) {
+            onDetermineMenuHeightClosed(act)
+        }
         abstract fun onMenuClosed(act: MainActivity)
-        abstract fun onCategorySelected(act: MainActivity)
+        open fun onCategorySelected(act: MainActivity) {
+            act.apply { if (uiLayoutHeight.closed) onDetermineMenuHeightClosed(act) else onDetermineMenuHeightOpen(act) }
+        }
         abstract fun onCategoryUnselected(act: MainActivity)
+        open fun onDetermineMenuHeightOpen(act: MainActivity) {
+            act.uiSetHeight(UiLayoutHeight.SHORT)
+        }
+        open fun onDetermineMenuHeightClosed(act: MainActivity) {
+            act.uiSetHeight(UiLayoutHeight.CLOSED_SHORT)
+        }
 
     }
 
@@ -1004,10 +1089,12 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         // Log.d("MAIN ACTIVITY", "status bar height : $statusBarHeight")
         Log.d("MAIN ACTIVITY", "screen resolution : ($screenWidth, $screenHeight), ratio : $screenRatio")
 
+        UiLayoutHeight.values().forEach { it.initialize(resources) }
+
 
         // set screen resolution
         // create and insert new resolution if different from preloaded resolutions
-        if (Resolution.all.none { it.w == screenWidth }) Resolution.addResolution(screenWidth)
+        if (Resolution.working.none { it.w == screenWidth }) Resolution.addResolution(screenWidth)
         Resolution.SCREEN = Resolution.valueOf(screenWidth) ?: Resolution.R1080
         Resolution.initialize(screenRatio)
         AspectRatio.initialize()
@@ -1019,27 +1106,29 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         goldEnabledDialogShown = sp.getBoolean(GOLD_ENABLED_DIALOG_SHOWN, false)
         goldPendingDialogShown = sp.getBoolean(GOLD_PENDING_DIALOG_SHOWN, false)
         showEpilepsyDialog = sp.getBoolean(SHOW_EPILEPSY_DIALOG, true)
+        showTutorialOption = sp.getBoolean(SHOW_TUTORIAL_OPTION, true)
         previousFractalCreated = sp.getBoolean(PREV_FRACTAL_CREATED, false)
         previousFractalId = sp.getInt(PREV_FRACTAL_ID, -1)
+        Log.e("MAIN", "previousFractalCreated: $previousFractalCreated, id: ${previousFractalId}")
 
         Texture.CUSTOM_IMAGE_COUNT = sp.getInt(TEX_IMAGE_COUNT, 0)
 
         // val maxStartupRes = if (sc.goldEnabled) Resolution.SCREEN else Resolution.R1080
-        val savedResolution = sp.getInt(RESOLUTION, Resolution.all.indexOf(Resolution.R1080))
-        sc.resolution = Resolution.all.getOrNull(savedResolution) ?: Resolution.R720
+        val savedResolution = sp.getInt(RESOLUTION, Resolution.working.indexOf(Resolution.R1080))
+        sc.resolution = Resolution.working.getOrNull(savedResolution) ?: Resolution.R720
         // val savedAspectRatio = sp.getInt(ASPECT_RATIO, 0)
         // sc.aspectRatio = AspectRatio.all.getOrNull(savedAspectRatio) ?: AspectRatio.RATIO_SCREEN
         //sc.resolution = Resolution.FOURTH
         //sc.precision = Precision.values()[sp.getInt(PRECISION, Precision.SINGLE.ordinal)]
         //sc.autoPrecision = sp.getBoolean(AUTO_PRECISION, true)
         sc.continuousPosRender  = sp.getBoolean(CONTINUOUS_RENDER, false)
-        sc.displayParams        = sp.getBoolean(DISPLAY_PARAMS, false)
         sc.renderBackground     = sp.getBoolean(RENDER_BACKGROUND, true)
+        sc.restrictParams       = sp.getBoolean(RESTRICT_PARAMS, true)
         // sc.fitToViewport        = sp.getBoolean(FIT_TO_VIEWPORT, false)
         sc.hideNavBar           = sp.getBoolean(HIDE_NAV_BAR, true)
-        sc.colorListViewType    = ListLayoutType.values()[sp.getInt(COLOR_LIST_VIEW_TYPE,    ListLayoutType.GRID.ordinal)]
-        sc.shapeListViewType    = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE,    ListLayoutType.GRID.ordinal)]
-        sc.textureListViewType  = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE,  ListLayoutType.GRID.ordinal)]
+        sc.colorListViewType    = ListLayoutType.values()[sp.getInt(COLOR_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
+        sc.shapeListViewType    = ListLayoutType.values()[sp.getInt(SHAPE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
+        sc.textureListViewType  = ListLayoutType.values()[sp.getInt(TEXTURE_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
         sc.bookmarkListViewType = ListLayoutType.values()[sp.getInt(BOOKMARK_LIST_VIEW_TYPE, ListLayoutType.GRID.ordinal)]
         sc.autofitColorRange    = sp.getBoolean(AUTOFIT_COLOR_RANGE, true)
         sc.useAlternateSplit    = sp.getBoolean(USE_ALTERNATE_SPLIT, false)
@@ -1052,9 +1141,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         val categoryLayoutHeight = resources.getDimension(R.dimen.uiLayoutHeight).toInt()
         val categoryPagerHeight = resources.getDimension(R.dimen.categoryPagerHeight).toInt()
-        val categoryNameButtonHeight = resources.getDimension(R.dimen.categoryNameButtonHeight).toInt()
+        val menuToggleButtonHeight = resources.getDimension(R.dimen.categoryNameButtonHeight).toInt()
         val categoryButtonsHeight = resources.getDimension(R.dimen.menuButtonHeight).toInt()
-        val uiHeightOpen = categoryLayoutHeight + categoryNameButtonHeight
+        val uiHeightOpen = categoryLayoutHeight + menuToggleButtonHeight
         val uiHeightClosed = uiHeightOpen - categoryLayoutHeight
 
 
@@ -1081,6 +1170,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         Fractal.all.forEach { it.initialize(resources) }
 
         ListHeader.all.forEach { it.initialize(resources) }
+        ShapeKeyListHeader.all.forEach { it.initialize(resources) }
 
 
 
@@ -1107,18 +1197,43 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
 
         setContentView(R.layout.activity_main)
+        highlightWindow.hide()
+
         // fractalLayout.addView(fsv)
         fsv = fractalSurfaceView!!
         fsv.initialize(r, this)
         fsv.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight, Gravity.CENTER)
         fractalLayout.layoutParams = FrameLayout.LayoutParams(screenWidth, screenHeight, Gravity.CENTER)
-        baseLayout.setOnTouchListener { v, event -> fsv.onTouchEvent(event) }
+        Log.e("MAIN", "fractalLayout y: ${fractalLayout.y}")
+        // baseLayout.setOnTouchListener { v, event -> fsv.onTouchEvent(event) }
+
+//        val gd = GestureDetectorCompat(this, object : GestureDetector.OnGestureListener {
+//            override fun onDown(e: MotionEvent?): Boolean { return true }
+//            override fun onShowPress(e: MotionEvent?) {}
+//            override fun onSingleTapUp(e: MotionEvent?): Boolean { return false }
+//            override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean { return false }
+//            override fun onLongPress(e: MotionEvent?) {}
+//            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+//                if (categoryButtons.isVisible() && abs(velocityY) > abs(2f*velocityX)) {
+//                    if (velocityY < 0f) categoryButtons.getCurrentCategory().onDetermineMenuHeight(this@MainActivity)
+//                    else uiSetHeight(UiLayoutHeight.CLOSED)
+//                    return true
+//                }
+//                return true
+//            }
+//        })
+//        ui.gd = gd
+//        ui.setOnTouchListener { v, event -> gd.onTouchEvent(event) }
+
+        header.setOnTouchListener { v, event -> true }
+        ui.setOnTouchListener { v, event -> true }
+
         onAspectRatioChanged()
 
         deviceHasNotch = calcDeviceHasNotch()
         navBarHeight = calcNavBarHeight()
         statusBarHeight = calcStatusBarHeight()
-        //updateSurfaceViewLayout(resources.getDimension(R.dimen.uiLayoutHeightClosed))
+        // updateSurfaceViewLayout(resources.getDimension(R.dimen.uiLayoutHeightClosed))
 
 
         val layoutList = listOf(
@@ -1126,26 +1241,14 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 fractalLayout,
                 overlay,
                 ui,
-                uiInnerLayout,
-                // uiInnerCard,
                 categoryPager
-                //textureLayout
         )
         layoutList.forEach {
             it.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
         }
 
 
-        val displayParamRows = listOf<LinearLayout>(
-                displayParamRow1,
-                displayParamRow2,
-                displayParamRow3,
-                displayParamRow4
-        )
-        displayParamRows.forEach { it.visibility = LinearLayout.GONE }
-        updateDisplayParams(reactionChanged = true, settingsChanged = true)
-
-        uiInnerLayout.layoutParams.height = categoryButtonsHeight
+        ui.layoutParams.height = UiLayoutHeight.CLOSED_SHORT.dimen.toInt()
         updateSystemUI()
 
 
@@ -1163,25 +1266,29 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
         saveImageButton.setOnClickListener {
 
-            if (fsv.r.isRendering) showMessage(resources.getString(R.string.msg_save_wait))
-            else {
+            if (BuildConfig.DEV_VERSION && false) {
+                fsv.saveVideo(30.0, 12.0, 2.0 * Math.PI)
+            } else {
+                if (fsv.r.isRendering) showMessage(resources.getString(R.string.msg_save_wait))
+                else {
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                    if (ContextCompat.checkSelfPermission(baseContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(
-                                this,
-                                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                                WRITE_STORAGE_REQUEST_CODE)
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        if (ContextCompat.checkSelfPermission(baseContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(
+                                    this,
+                                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                                    WRITE_STORAGE_REQUEST_CODE)
+                        } else {
+                            fsv.r.renderProfile = RenderProfile.SAVE_IMAGE
+                            fsv.requestRender()
+                        }
                     } else {
+                        bookmarkAsPreviousFractal()
                         fsv.r.renderProfile = RenderProfile.SAVE_IMAGE
                         fsv.requestRender()
                     }
-                } else {
-                    bookmarkAsPreviousFractal()
-                    fsv.r.renderProfile = RenderProfile.SAVE_IMAGE
-                    fsv.requestRender()
-                }
 
+                }
             }
 
         }
@@ -1190,65 +1297,61 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
 
 
-        categoryNameButton.setOnClickListener {
-
-            if (!uiIsClosed()) uiSetClosed() else categoryButtons.getCurrentCategory().onOpenMenu(this)
-
+        menuToggleButton.setOnClickListener {
+            editModeButtons.currentEditMode().apply { if (uiIsClosed()) onOpenMenu(this@MainActivity) else onCloseMenu(this@MainActivity) }
         }
 
-        supportFragmentManager.beginTransaction().add(R.id.settingsFragmentContainer, settingsFragment, "SETTINGS").commit()
+
+
+        supportFragmentManager.beginTransaction().add(R.id.settingsFragmentContainer, settingsFragment!!, "SETTINGS").commit()
         settingsFragmentContainer.hide()
 
         val categoryPagerAdapter = ViewPagerAdapter(supportFragmentManager)
-        categoryPagerAdapter.addFrag(imageFragment)
-        categoryPagerAdapter.addFrag(textureFragment)
-        categoryPagerAdapter.addFrag(shapeFragment)
-        categoryPagerAdapter.addFrag(colorFragment)
-        categoryPagerAdapter.addFrag(positionFragment)
+        categoryPagerAdapter.addFrag(imageFragment!!)
+        categoryPagerAdapter.addFrag(textureFragment!!)
+        categoryPagerAdapter.addFrag(shapeFragment!!)
+        categoryPagerAdapter.addFrag(colorFragment!!)
+        categoryPagerAdapter.addFrag(positionFragment!!)
         categoryPager.adapter = categoryPagerAdapter
         categoryPager.offscreenPageLimit = 4
 
+        editModeButtons.setupWithViewPager(categoryPager)
+        EditMode.values().forEach { createTabView(it) }
 
-        categoryButtons.setupWithViewPager(categoryPager)
-        for (i in 0..4) {
-            val transparentIcon = ResourcesCompat.getDrawable(resources, Category.values()[i].icon, null)
-            transparentIcon?.alpha = 128
-            categoryButtons.getTabAt(i)?.apply {
-                contentDescription = resources.getString(Category.values()[i].displayName).toUpperCase(Locale.getDefault())
-                //text = resources.getString(Category.values()[i].displayName)
-                icon = transparentIcon
-            }
-        }
+//        for (i in 0..4) {
+//            val transparentIcon = ResourcesCompat.getDrawable(resources, Category.values()[i].icon, null)
+//            transparentIcon?.alpha = 128
+//            categoryButtons.getTabAt(i)?.apply {
+//                contentDescription = resources.getString(Category.values()[i].displayName).toUpperCase(Locale.getDefault())
+//                //text = resources.getString(Category.values()[i].displayName)
+//                icon = transparentIcon
+//            }
+//        }
 
-        categoryButtons.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        editModeButtons.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab) {
 
-                val category = Category.values()[tab.position]
-                //Log.d("MAIN ACTIVITY", "category ${category.name}")
-
-                tab.icon?.alpha = 255
-
+                val category = EditMode.values()[tab.position]
+                tab.customView?.alpha = 1f
+//                (tab.customView as? TextView)?.setText(category.displayName)
                 category.onCategorySelected(this@MainActivity)
-
-                categoryNameButton.text = resources.getString(category.displayName)
-                updateDisplayParams(reactionChanged = true)
 
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
-                tab.icon?.alpha = 128
-                val category = Category.values()[tab.position]
+                tab.customView?.alpha = 0.4f
+                val category = EditMode.values()[tab.position]
                 category.onCategoryUnselected(this@MainActivity)
+//                (tab.customView as? TextView)?.text = ""
             }
 
             override fun onTabReselected(tab: TabLayout.Tab) {
-                // categoryNameButton.performClick()
-                // onTabSelected(tab)
+                menuToggleButton.performClick()
             }
 
         })
-        categoryButtons.getTabAt(Category.POSITION).select()
+        editModeButtons.getTabAt(EditMode.POSITION).select()
 
 
         // load custom palettes, shapes, and bookmarks
@@ -1263,9 +1366,11 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                     val tableName = cursor.getString(cursor.getColumnIndex("name"))
                     val nextId = cursor.getString(cursor.getColumnIndex("seq"))
                     when (tableName) {
-                        PALETTE_TABLE_NAME -> Palette.nextCustomPaletteNum = nextId?.toInt() ?: 0 + 1
+                        PALETTE_TABLE_NAME -> Palette.nextCustomPaletteNum = nextId?.toInt()
+                                ?: 0 + 1
                         SHAPE_TABLE_NAME -> Shape.nextCustomShapeNum = nextId?.toInt() ?: 0 + 1
-                        FRACTAL_TABLE_NAME -> Fractal.nextCustomFractalNum = nextId?.toInt() ?: 0 + 1
+                        FRACTAL_TABLE_NAME -> Fractal.nextCustomFractalNum = nextId?.toInt()
+                                ?: 0 + 1
                     }
                 } while (cursor.moveToNext())
             }
@@ -1324,8 +1429,8 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                             radius = it.bailoutRadius,
                             isConvergent = it.isConvergent,
                             hasDualFloat = it.hasDualFloat,
-                            customLoopSF = it.loopSF,
-                            customLoopDF = it.loopDF,
+                            customLoopSingle = it.loopSF,
+                            customLoopDual = it.loopDF,
                             isFavorite = it.isFavorite
                     ))
                     Shape.custom[0].initialize(resources)
@@ -1338,6 +1443,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             db.fractalDao().apply {
 
                 if (!previousFractalCreated) {
+                    Log.e("MAIN", "previousFractal not created")
                     Fractal.previous.customId = insert(Fractal.previous.toEntity()).toInt()
                     previousFractalId = Fractal.previous.customId
                     val edit = sp.edit()
@@ -1375,38 +1481,42 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
                     val newBookmark = Fractal(
 
-                                name = it.name,
-                                isFavorite = it.isFavorite,
-                                thumbnailPath = it.thumbnailPath,
-                                thumbnail = thumbnail,
-                                customId = it.id,
-                                goldFeature = false,
+                            name = it.name,
+                            isFavorite = it.isFavorite,
+                            thumbnailPath = it.thumbnailPath,
+                            thumbnail = thumbnail,
+                            customId = it.id,
+                            goldFeature = false,
 
-                                shapeId = it.shapeId,
-                                juliaMode = it.juliaMode,
-                                maxIter = it.maxIter,
-                                shapeParams = shapeParams,
-                                position = if (it.position != null) Position(it.position) else null,
+                            shapeId = it.shapeId,
+                            juliaMode = it.juliaMode,
+                            maxIter = it.maxIter,
+                            shapeParams = shapeParams,
+                            position = if (it.position != null) Position(it.position) else null,
 
-                                textureId = it.textureId,
-                                textureMode = TextureMode.values()[it.textureMode],
-                                radius = it.radius,
-                                textureMin = it.textureMin,
-                                textureMax = it.textureMax,
-                                textureParams = textureParams,
-                                imagePath = it.imagePath,
-                                imageId = Texture.defaultImages.getOrNull(it.imageId) ?: -1,
+                            textureId = it.textureId,
+                            textureMode = TextureMode.values()[it.textureMode],
+                            radius = it.radius,
+                            textureMin = it.textureMin,
+                            textureMax = it.textureMax,
+                            textureParams = textureParams,
+                            imagePath = it.imagePath,
+                            imageId = Texture.defaultImages.getOrNull(it.imageId) ?: -1,
 
-                                paletteId = it.paletteId,
-                                frequency = it.frequency,
-                                phase = it.phase,
-                                density = it.density,
-                                accent1 = it.solidFillColor,
-                                accent2 = it.accent2
+                            paletteId = it.paletteId,
+                            frequency = it.frequency,
+                            phase = it.phase,
+                            density = it.density,
+                            accent1 = it.solidFillColor,
+                            accent2 = it.accent2
 
                     )
-                    if (it.id == previousFractalId) Fractal.previous = newBookmark else Fractal.bookmarks.add(0, newBookmark)
-                    Log.d("MAIN", "Bookmark -- id: ${newBookmark.customId}, name: ${newBookmark.name}, imagePath: ${it.imagePath}, imageId: ${it.imageId} thumbPath: ${it.thumbnailPath}, frequency: ${it.frequency}, phase: ${it.phase}")
+                    if (it.id == previousFractalId) {
+                        Fractal.previous = newBookmark
+                    } else {
+                        Fractal.bookmarks.add(0, newBookmark)
+                        Log.d("MAIN", "Bookmark -- id: ${newBookmark.customId}, name: ${newBookmark.name}, imagePath: ${it.imagePath}, imageId: ${it.imageId} thumbPath: ${it.thumbnailPath}, frequency: ${it.frequency}, phase: ${it.phase}")
+                    }
 
                 }
 
@@ -1425,90 +1535,90 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
 
-        if (!BuildConfig.DEV_VERSION) {
-            if (showEpilepsyDialog) {
-                val dialogView = layoutInflater.inflate(R.layout.alert_dialog_custom, null)
-                val checkBox = dialogView?.findViewById<CheckBox>(R.id.dontShowCheckBox)
-                checkBox?.setOnCheckedChangeListener { buttonView, isChecked ->
-                    showEpilepsyDialog = !isChecked
-                }
-                AlertDialog.Builder(this, R.style.AlertDialogCustom)
-                        .setView(dialogView)
-                        .setIcon(R.drawable.warning)
-                        .setTitle(R.string.epilepsy_title)
-                        .setMessage(R.string.epilepsy_dscript)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .setOnDismissListener {
-                            if (sp.getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) showChangelog()
-                        }
-                        .show()
-            } else {
-                if (sp.getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) showChangelog()
-            }
+        queryTutorialOption()
+
+    }
+
+
+
+
+
+
+    /* USER ITERFACE */
+
+    fun updateSystemUI() {
+
+        uiSetHeight()
+        updateSurfaceViewLayout()
+        if (sc.hideNavBar) {
+            fsv.systemUiVisibility = (
+                    GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            // Set the content to appear under the system bars so that the
+                            // content doesn't resize when the system bars hide and show.
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            // Hide the nav bar and status bar
+                            or GLSurfaceView.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or GLSurfaceView.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
         }
-        if (previousFractalCreated) showLoadPreviousFractalDialog()
+        else {
+            window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                resources.getColor(R.color.menuDark1, null) else resources.getColor(R.color.menuDark1, null)
+            fsv.systemUiVisibility = (
+                    GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or GLSurfaceView.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
+        }
 
     }
 
-
-
-    fun uiSetClosed() {
-        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt())
-    }
-    fun uiSetOpen() {
-        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeight).toInt())
-    }
-    fun uiSetOpenTall() {
-        uiSetHeight(resources.getDimension(R.dimen.uiLayoutHeightTall).toInt())
-    }
     fun uiIsOpen() : Boolean {
         return !uiIsClosed()
     }
+
     fun uiIsClosed() : Boolean {
-        return uiInnerLayout.layoutParams.height == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt()
+        return when (uiLayoutHeight) {
+            UiLayoutHeight.CLOSED_SHORT, UiLayoutHeight.CLOSED_MED -> true
+            else -> false
+        }
     }
-    fun uiSetHeight(newHeight: Int) {
 
-        if (fsv.r.isRendering) fsv.r.pauseRender = true
-        if (newHeight != uiInnerLayout.layoutParams.height) {
+    fun uiSetHeight(newUiLayoutHeight: UiLayoutHeight? = null) {
 
-            uiInnerLayout.layoutParams.height = newHeight
-            uiInnerLayout.requestLayout()
+        val heightChanged = newUiLayoutHeight != uiLayoutHeight
+        newUiLayoutHeight?.let { uiLayoutHeight = it }
 
-            categoryNameButton.setCompoundDrawablesWithIntrinsicBounds(
-                    null, null,
-                    if (newHeight == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt())
-                        ResourcesCompat.getDrawable(resources, R.drawable.expand, null)
-                    else
-                        ResourcesCompat.getDrawable(resources, R.drawable.collapse, null),
-                    null
-            )
+        ui.layoutParams.height = uiLayoutHeight.dimen.toInt()
+        ui.requestLayout()
+
+        if (heightChanged) {
+
+            if (fsv.r.isRendering) fsv.r.pauseRender = true
+            menuToggleButton.rotation = if (uiIsClosed()) 0f else 180f
 
             val anim = ValueAnimator.ofFloat(0f, 1f)
-            anim.duration = uiInnerLayout.layoutTransition.getDuration(LayoutTransition.CHANGING) + 75L
+            anim.duration = ui.layoutTransition.getDuration(LayoutTransition.CHANGING) + 75L
             anim.addUpdateListener {
-
                 updateSurfaceViewLayout()
-
                 if (anim.animatedFraction == 1f) {
-                    if (newHeight == resources.getDimension(R.dimen.uiLayoutHeightClosed).toInt()) {
-                        categoryButtons.getCurrentCategory().onMenuClosed(this)
-                    }
+                    if (uiLayoutHeight.closed) editModeButtons.currentEditMode().onMenuClosed(this)
                 }
-
             }
             anim.start()
 
         }
 
     }
+
     fun updateSurfaceViewLayout() {
 
         if (sc.fitToViewport && fractalLayout.layoutParams.height >= ui.top - header.bottom) {
             val scaleFactor = (ui.top - header.bottom) / fractalLayout.layoutParams.height.toFloat()
             fractalLayout.apply {
-//                pivotX = (left + right)/2f
-//                pivotY = (top + bottom)/2f
                 scaleX = scaleFactor
                 scaleY = scaleFactor
             }
@@ -1523,6 +1633,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         fractalLayout.requestLayout()
 
     }
+
     fun onAspectRatioChanged() {
 
         val newWidth : Int
@@ -1550,11 +1661,13 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         return navBarHeight
 
     }
+
     private fun getDefaultStatusBarHeight() : Int {
 
         return (STATUS_BAR_HEIGHT * resources.displayMetrics.scaledDensity).toInt()
 
     }
+
     private fun calcStatusBarHeight() : Int {
 
         val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -1564,39 +1677,12 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         return statusBarHeight
 
     }
+
     private fun calcDeviceHasNotch() : Boolean {
 
         val hasNotch = calcStatusBarHeight() > getDefaultStatusBarHeight()
         //Log.d("MAIN ACTIVITY", "device has notch: $hasNotch")
         return hasNotch
-
-    }
-    fun updateSystemUI() {
-
-        updateSurfaceViewLayout()
-        if (sc.hideNavBar) {
-            fsv.systemUiVisibility = (
-                    GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            // Set the content to appear under the system bars so that the
-                            // content doesn't resize when the system bars hide and show.
-                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            // Hide the nav bar and status bar
-                            or GLSurfaceView.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            or GLSurfaceView.SYSTEM_UI_FLAG_FULLSCREEN
-                    )
-        }
-        else {
-            window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                resources.getColor(R.color.menuDark1, null) else resources.getColor(R.color.menuDark1)
-            fsv.systemUiVisibility = (
-                    GLSurfaceView.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            or GLSurfaceView.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            or GLSurfaceView.SYSTEM_UI_FLAG_FULLSCREEN
-                    )
-        }
 
     }
 
@@ -1605,12 +1691,12 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             show()
         }
     }
+
     fun closeSettingsMenu() {
         settingsFragmentContainer.apply {
             hide()
         }
     }
-
 
     fun showMessage(msg: String) {
         runOnUiThread {
@@ -1620,145 +1706,38 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             toast.show()
         }
     }
-    fun disableTextures() {
-        texturePreviewName.alpha = 0.3f
-        texturePreviewLayout.isClickable = false
-        texturePreviewLayout.isFocusable = false
-    }
-    fun enableTextures() {
-        texturePreviewName.alpha = 1f
-        texturePreviewLayout.isClickable = true
-        texturePreviewLayout.isFocusable = true
-        textureListButton.performClick()
-    }
-    fun updateDisplayParams(reactionChanged: Boolean = false, settingsChanged: Boolean = false) {
 
-        val displayParamRows = listOf<LinearLayout>(
-                displayParamRow1,
-                displayParamRow2,
-                displayParamRow3,
-                displayParamRow4
-        )
+    fun hideCategoryButtons() { editModeButtons.hide() }
 
-        if (sc.displayParams && fsv.r.reaction != Reaction.NONE) {
+    fun showCategoryButtons() { editModeButtons.show() }
 
-            displayParams.show()
-            if (reactionChanged) displayParamRows.forEach { it.hide() }
-            if (reactionChanged || settingsChanged)
-                for (i in 0 until fsv.r.reaction.numDisplayParams)
-                displayParamRows[i].show()
-
-            val density = resources.displayMetrics.density
-            val w: Int
-
-            // update text content
-            when (fsv.r.reaction) {
-                Reaction.NONE -> {
-
-                    w = (60f * density).toInt()
-
-                }
-                Reaction.POSITION -> {
-
-                    displayParamName1.text = resources.getString(R.string.x)
-                    displayParamName2.text = resources.getString(R.string.y)
-                    displayParamName3.text = resources.getString(R.string.zoom)
-                    displayParamName4.text = resources.getString(R.string.rotation)
-                    displayParam1.text = "%.17f".format(f.shape.position.x)
-                    displayParam2.text = "%.17f".format(f.shape.position.y)
-                    displayParam3.text = "%e".format(f.shape.position.zoom)
-                    displayParam4.text = "%.0f".format(f.shape.position.rotation * 180.0 / Math.PI)
-                    w = (60f * density).toInt()
-
-                }
-                Reaction.COLOR -> {
-
-                    displayParamName1.text = resources.getString(R.string.frequency)
-                    displayParamName2.text = resources.getString(R.string.phase)
-                    displayParam1.text = "%.4f".format(f.frequency)
-                    displayParam2.text = "%.4f".format(f.phase)
-                    w = (75f * density).toInt()
-
-                }
-                Reaction.SHAPE, Reaction.TEXTURE -> {
-
-                    val param =
-                            (if (fsv.r.reaction == Reaction.SHAPE) f.shape.params.active
-                            else f.texture.activeParam)
-                                    .run { if (isRateParam) parent!! else this }
-                    displayParamName1.text = "u"
-                    displayParam1.text = "%.8f".format((param.u))
-                    if (param is ComplexParam) {
-                        displayParamName2.text = "v"
-                        displayParam2.text = "%.8f".format((param.v))
-                    } else {
-                        displayParamRow2.hide()
-                    }
-                    displayParamName3.text = resources.getString(R.string.sensitivity)
-                    displayParam3.text = "%.6f".format(param.sensitivity!!.u)
-                    w = (80f * density).toInt()
-
-                }
-            }
-
-            // update width
-            displayParamName1?.width = w
-            displayParamName2?.width = w
-            displayParamName3?.width = w
-            displayParamName4?.width = w
-            displayParamName1.requestLayout()
-            displayParamName2.requestLayout()
-            displayParamName3?.requestLayout()
-            displayParamName4?.requestLayout()
-            displayParam1?.requestLayout()
-            displayParam2?.requestLayout()
-            displayParam3?.requestLayout()
-            displayParam4?.requestLayout()
-
-            // start fade animation
-            val fadeOut = AlphaAnimation(1f, 0f)
-            fadeOut.duration = 1000L
-            fadeOut.startOffset = 2500L
-            fadeOut.fillAfter = true
-            displayParams.animation = fadeOut
-            displayParams.animation.start()
-            displayParams.requestLayout()
-
-        }
-        else {
-            if (settingsChanged) { displayParams.visibility = LinearLayout.GONE }
-        }
-
-    }
-    fun showTouchIcon() {
-
-        // start fade animation
-        val fadeOut = AlphaAnimation(1f, 0f)
-        fadeOut.duration = 1000L
-        fadeOut.startOffset = 2000L
-        fadeOut.fillAfter = true
-        touchIcon.animation = fadeOut
-        touchIcon.animation.start()
-        touchIcon.requestLayout()
-
-    }
-    fun hideTouchIcon() {
-
-        // start fade animation
-        val fadeOut = AlphaAnimation(1f, 0f)
-        fadeOut.duration = 0L
-        fadeOut.startOffset = 0L
-        fadeOut.fillAfter = true
-        touchIcon.animation = fadeOut
-        touchIcon.animation.start()
-        touchIcon.requestLayout()
-
-    }
-    fun hideCategoryButtons() { categoryButtons.hide() }
-    fun showCategoryButtons() { categoryButtons.show() }
     fun toggleCategoryButtons() {
-        if (categoryButtons.isHidden()) showCategoryButtons()
+        if (editModeButtons.isHidden()) showCategoryButtons()
         else hideCategoryButtons()
+    }
+
+    fun showMenuToggleButton() {
+        menuToggleButton.show()
+    }
+
+    fun hideMenuToggleButton() {
+        menuToggleButton.hide()
+    }
+
+
+
+
+
+
+    /* FRAGMENT COMMUNICATION */
+
+    override fun onComplete() {
+        fragmentsCompleted++
+        Log.d("MAIN", "!! fragment callback !! $fragmentsCompleted fragments completed")
+        if (fragmentsCompleted == 5) {
+            if (!billingClient.isReady) billingClient.startConnection(billingClientStateListener)
+            else queryPurchases()
+        }
     }
 
     fun updateShapeEditTexts() {
@@ -1768,6 +1747,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
 
     }
+
     fun updateTextureEditTexts() {
 
 //        Log.e("MAIN", "bailout: ${"%e".format(Locale.US, f.bailoutRadius)}")
@@ -1777,59 +1757,32 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         //qEdit?.setText(f.texture.params[0].toString())
 
     }
-    fun updateColorEditTexts() {
 
-        frequencyEdit?.setText("%.5f".format(f.frequency))
-        phaseEdit?.setText("%.5f".format(f.phase))
-        densityEdit?.setText("%.5f".format(f.density))
+    fun updateColorEditTexts() {
 
         with(colorFragment as ColorFragment) {
             updateFrequencyLayout()
             updatePhaseLayout()
-//            updateDensityLayout()
+            updateDensityLayout()
         }
 
     }
-    fun updatePositionEditTexts() {
 
-        xEdit?.setText("%.17f".format(f.shape.position.x))
-        yEdit?.setText("%.17f".format(f.shape.position.y))
-
-        val scaleStrings = "%e".format(Locale.US, f.shape.position.zoom).split("e")
-        scaleSignificandEdit?.setText("%.5f".format(scaleStrings[0].toFloat()))
-        scaleExponentEdit?.setText("%d".format(scaleStrings[1].toInt()))
-
-        with(positionFragment as PositionFragment) {
-            updateRotationLayout()
-        }
-
+    fun updatePositionLayout() {
+        runOnUiThread { positionFragment?.updateLayout() }
     }
-    fun updateHintVisibility() {
 
-        val hints = listOf<TextView>(
-                continuousRenderHint,
-                renderBackgroundHint,
-                displayParamsHint
-//                bailoutHint
-//                juliaModeHint,
-//                maxIterHint,
-//                phaseHint,
-//                frequencyHint
-        )
-        hints.forEach { it.visibility = if (sc.showHints) TextView.VISIBLE else TextView.GONE }
-
-    }
     fun updateFragmentLayouts() {
-
-        listOf(textureFragment, shapeFragment, colorFragment, positionFragment).forEach { it.updateLayout() }
-
+        listOf(textureFragment, shapeFragment, colorFragment, positionFragment).forEach {
+            runOnUiThread { it?.updateLayout() }
+        }
     }
 
     fun onTextureChanged() {
         if (f.texture.usesAccent) accentColor2Button.show() else accentColor2Button.hide()
     }
 
-    fun showThumbnailDialog() {
+    fun showThumbnailRenderDialog() {
 
         dialog = AlertDialog.Builder(this, R.style.AlertDialogCustom)
                 .setTitle(R.string.rendering_icons)
@@ -1842,16 +1795,19 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         dialog?.setCanceledOnTouchOutside(false)
 
     }
-    fun updateDialog(index: Int, total: Int) {
+
+    fun updateTumbnailRenderDialog(index: Int, total: Int) {
         dialog?.findViewById<ProgressBar>(R.id.alertProgress)?.apply {
             max = total - 1
             progress = index
         }
         dialog?.findViewById<TextView>(R.id.alertProgressText)?.text = "${index + 1}/$total"
     }
-    fun dismissDialog() {
+
+    fun dismissThumbnailRenderDialog() {
         dialog?.dismiss()
     }
+
     fun showBookmarkDialog(item: ListItem<Fractal>? = null, edit: Boolean = false) {
 
         val dialogView = layoutInflater.inflate(R.layout.alert_dialog_new_preset, null)
@@ -1879,6 +1835,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 }
                 .create()
 
+        d.setCanceledOnTouchOutside(false)
         d.setOnShowListener {
             val b: Button = d.getButton(AlertDialog.BUTTON_POSITIVE)
             b.setOnClickListener {
@@ -1915,7 +1872,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                         }
 
                         (imageFragment as ImageFragment).bookmarkListAdapter.addItemToCustom(
-                                BookmarkListItem(Fractal.tempBookmark1, ListHeader.custom, sc.bookmarkListViewType), 0
+                                ListItem(Fractal.tempBookmark1, ListHeader.CUSTOM, R.layout.other_list_item), 0
                         )
 
                     }
@@ -1929,23 +1886,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         d.show()
 
     }
-    fun showLoadPreviousFractalDialog() {
-        val dialog = AlertDialog.Builder(this, R.style.AlertDialogCustom)
-                .setTitle(R.string.load_previous_fractal)
-                .setIcon(R.drawable.edit)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    val prevZoom = f.shape.position.zoom
-                    Fractal.default.load(Fractal.previous, fsv)
-                    updateFragmentLayouts()
-                    fsv.r.checkThresholdCross(prevZoom)
-                    fsv.r.renderToTex = true
-                    fsv.r.renderShaderChanged = true
-                    fsv.requestRender()
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
 
-    }
     fun bookmarkAsPreviousFractal() {
         GlobalScope.launch {
             db.fractalDao().apply {
@@ -1958,34 +1899,43 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
 
     fun updateColorThumbnails() {
 
-        (colorPreviewList?.adapter as? ListAdapter<Palette>)?.notifyDataSetChanged()
+        (paletteListLayout.list.adapter as? ListAdapter<Palette>)?.notifyDataSetChanged()
 
     }
+
     fun updateTextureThumbnail(layoutIndex: Int, n: Int) {
 
         // Log.e("MAIN ACTIVITY", "updateTextureThumbnail was called !!!")
-        texturePreviewList?.adapter?.notifyItemChanged(layoutIndex)
+        textureListLayout.list?.adapter?.notifyItemChanged(layoutIndex)
         Log.d("MAIN", "n: $n")
-        updateDialog(n, f.shape.compatTextures.size)
-        if (n + 1 == f.shape.compatTextures.size) dismissDialog()
+        updateTumbnailRenderDialog(n, f.shape.compatTextures.size)
+        if (n + 1 == f.shape.compatTextures.size) dismissThumbnailRenderDialog()
 
     }
+
     fun updateShapeThumbnail(shape: Shape, customIndex: Int) {
 
-        (shapePreviewList?.adapter as? ListAdapter<Shape>)?.updateItems(shape)
+        (shapeListLayout.list.adapter as? ListAdapter<Shape>)?.updateItems(shape)
         if (customIndex != -1) {
             Log.d("MAIN", "customIndex: $customIndex")
             val numShapes = Shape.custom.size
-            updateDialog(customIndex, numShapes)
-            if (customIndex + 1 == numShapes) dismissDialog()
+            updateTumbnailRenderDialog(customIndex, numShapes)
+            if (customIndex + 1 == numShapes) dismissThumbnailRenderDialog()
         }
 
     }
 
 
+
+
+
+
+    /* ACTIVITY LIFECYCLE / CALLBACKS */
+
     override fun onBackPressed() {
         //super.onBackPressed()
     }
+
     override fun onPause() {
 
         Log.d("MAIN", "activity paused ...")
@@ -2007,13 +1957,14 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         edit.putBoolean(GOLD_ENABLED_DIALOG_SHOWN, goldEnabledDialogShown)
         edit.putBoolean(GOLD_PENDING_DIALOG_SHOWN, goldPendingDialogShown)
         edit.putBoolean(SHOW_EPILEPSY_DIALOG, showEpilepsyDialog)
-        edit.putInt(RESOLUTION, min(Resolution.all.indexOf(sc.resolution), if (sc.goldEnabled) Resolution.all.indexOf(Resolution.SCREEN) else Resolution.all.indexOf(Resolution.R1080)))
+        edit.putBoolean(SHOW_TUTORIAL_OPTION, showTutorialOption)
+        edit.putInt(RESOLUTION, min(Resolution.working.indexOf(sc.resolution), if (sc.goldEnabled) Resolution.working.indexOf(Resolution.SCREEN) else Resolution.working.indexOf(Resolution.R1080)))
         edit.putInt(ASPECT_RATIO, AspectRatio.all.indexOf(sc.aspectRatio))
         //edit.putInt(PRECISION, sc.precision.ordinal)
         //edit.putBoolean(AUTO_PRECISION, sc.autoPrecision)
         edit.putBoolean(CONTINUOUS_RENDER, sc.continuousPosRender)
-        edit.putBoolean(DISPLAY_PARAMS, sc.displayParams)
         edit.putBoolean(RENDER_BACKGROUND, sc.renderBackground)
+        edit.putBoolean(RESTRICT_PARAMS, sc.restrictParams)
         edit.putBoolean(FIT_TO_VIEWPORT, sc.fitToViewport)
         edit.putBoolean(HIDE_NAV_BAR, sc.hideNavBar)
         //edit.putBoolean(SHOW_HINTS, sc.showHints)
@@ -2042,6 +1993,9 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         Texture.all.forEach { edit.putBoolean(
                 "Texture${usResources.getString(it.nameId).replace(" ", "")}Starred", it.isFavorite
         )}
+        Fractal.defaultList.forEach { edit.putBoolean(
+                "Bookmark${usResources.getString(it.nameId).replace(" ", "")}Starred", it.isFavorite
+        )}
 
         edit.putInt(VERSION_CODE_TAG, BuildConfig.VERSION_CODE)
         edit.putBoolean(USE_ALTERNATE_SPLIT, sc.useAlternateSplit)
@@ -2053,6 +2007,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         fsv.onPause()
 
     }
+
     override fun onResume() {
 
         super.onResume()
@@ -2060,11 +2015,13 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         fsv.onResume()
 
     }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         //Log.d("MAIN ACTIVITY", "window focus changed")
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) updateSystemUI()
     }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
@@ -2081,21 +2038,97 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         }
     }
 
-    fun showChangelog() {
+    fun createTabView(c: EditMode) {
+        val tab = LayoutInflater.from(this).inflate(R.layout.category_tab, null) as TextView
+        tab.setText(c.displayName)
+//        tab.text = ""
+        tab.setCompoundDrawablesWithIntrinsicBounds(0, c.icon, 0, 0)
+        tab.compoundDrawablePadding = resources.getDimension(R.dimen.recyclerViewDividerSize).toInt()
+        tab.alpha = 0.4f
+        editModeButtons.getTabAt(c).customView = tab
+    }
 
-        val showAsDialog = true
-        val bulletList = true
-        val showVersion11OrHigherOnly = false
-        val rowsShouldInheritFilterTextFromReleaseTag = false
-        val managed = false
-        val useCustomRenderer = false
-        val useSorter = false
-        val rateButton = false
-        val showSummmary = false
+    fun queryTutorialOption() {
 
-        // Changelog
-        ChangelogSetup.get().registerTag(GoldTag())
-        val builder: ChangelogBuilder = ChangelogBuilder() // Everything is optional!
+        if (showTutorialOption) {
+            highlightWindow.show()
+            highlightWindow.bringToFront()
+            highlightWindow.consumeTouch = true
+            layoutInflater.inflate(R.layout.tutorial_welcome, baseLayout, true)
+            val tutorialLayout = baseLayout.findViewById<LinearLayout>(R.id.tutorialWelcomeLayout)
+            val skipButton = baseLayout.findViewById<Button>(R.id.tutorialSkipButton)
+            val startButton = baseLayout.findViewById<Button>(R.id.tutorialStartButton)
+            tutorialWelcomeText.text = resources.getString(R.string.tutorial_welcome)
+                .format(resources.getString(R.string.app_name))
+
+            skipButton?.setOnClickListener {
+                showTutorialOption = false
+                highlightWindow.hide()
+                baseLayout.removeView(tutorialLayout)
+                queryEpilepsyDialog()
+            }
+            startButton?.setOnClickListener {
+                baseLayout.removeView(tutorialLayout)
+                startTutorial()
+            }
+        } else queryEpilepsyDialog()
+
+    }
+
+    fun queryEpilepsyDialog() {
+
+        if (showEpilepsyDialog) {
+            val dialogView = layoutInflater.inflate(R.layout.alert_dialog_custom, null)
+            val checkBox = dialogView?.findViewById<CheckBox>(R.id.dontShowCheckBox)
+            checkBox?.setOnCheckedChangeListener { buttonView, isChecked ->
+                showEpilepsyDialog = !isChecked
+            }
+            AlertDialog.Builder(this, R.style.AlertDialogCustom)
+                .setView(dialogView)
+                .setIcon(R.drawable.warning)
+                .setTitle(R.string.epilepsy_title)
+                .setMessage(R.string.epilepsy_dscript)
+                .setPositiveButton(android.R.string.ok, null)
+                .setOnDismissListener { queryLoadPreviousFractalDialog() }
+                .show()
+        } else queryLoadPreviousFractalDialog()
+
+    }
+
+    fun queryLoadPreviousFractalDialog() {
+        if (previousFractalCreated) {
+            val dialog = AlertDialog.Builder(this, R.style.AlertDialogCustom)
+                .setTitle(R.string.load_previous_fractal)
+                .setIcon(R.drawable.edit)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    fsv.r.checkThresholdCross { Fractal.default.load(Fractal.previous, fsv) }
+                    updateFragmentLayouts()
+                    fsv.r.renderToTex = true
+                    fsv.r.renderShaderChanged = true
+                    fsv.requestRender()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        } else queryChangelog()
+    }
+
+    fun queryChangelog(fromSettings: Boolean = false) {
+
+        if (BuildConfig.DEV_VERSION || fromSettings || getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE).getInt(VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE) {
+
+            val showAsDialog = true
+            val bulletList = true
+            val showVersion11OrHigherOnly = false
+            val rowsShouldInheritFilterTextFromReleaseTag = false
+            val managed = false
+            val useCustomRenderer = false
+            val useSorter = false
+            val rateButton = false
+            val showSummmary = false
+
+            // Changelog
+            // ChangelogSetup.get().registerTag(GoldTag())
+            val builder: ChangelogBuilder = ChangelogBuilder() // Everything is optional!
                 .withUseBulletList(bulletList) // default: false
                 .withManagedShowOnStart(managed) // default: false
                 .withMinVersionToShow(if (showVersion11OrHigherOnly) 110 else -1) // default: -1, will show all version
@@ -2103,20 +2136,511 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
                 .withRateButton(rateButton) // default: false
                 .withSummary(showSummmary, true) // default: false
 
-        // finally, show the dialog or the activity
-        builder.buildAndShowDialog(this, false)
+
+            // finally, show the dialog or the activity
+            val changelogFragment = builder.buildAndShowDialog(this, false)
+
+        }
 
     }
-    fun getLocalizedResources(context: Context, desiredLocale: Locale?): Resources {
-        var conf: Configuration = context.resources.configuration
-        conf = Configuration(conf)
-        conf.setLocale(desiredLocale)
-        val localizedContext = context.createConfigurationContext(conf)
-        return localizedContext.resources
+
+
+
+
+
+
+    /* TUTORIAL */
+
+    fun showNextButton() {
+        tutText1?.hide()
+        tutText2?.show()
+        tutText2?.setText(R.string.tutorial_great)
+        tutProgress?.hide()
+        tutNextButton?.show()
+    }
+
+    fun highlightView(v: View) {
+        highlightWindow.highlightView(v)
+        val newConstraints = ConstraintSet()
+        newConstraints.clone(tutorialLayout)
+        newConstraints.connect(tutorialSubLayout.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        newConstraints.applyTo(tutorialLayout)
+        tutorialSubLayout.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            height = FrameLayout.LayoutParams.WRAP_CONTENT
+        }
+    }
+
+    fun highlightCategory(cat: EditMode) {
+        highlightWindow.highlightView(editModeButtons.getTabAt(cat).view)
+        val newConstraints = ConstraintSet()
+        newConstraints.clone(tutorialLayout)
+        newConstraints.connect(tutorialSubLayout.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        newConstraints.applyTo(tutorialLayout)
+        tutorialSubLayout.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            height = FrameLayout.LayoutParams.WRAP_CONTENT
+        }
+    }
+
+    fun highlightFractalWindow() {
+        highlightWindow.highlightRect(Rect(fsv.left, header.bottom, fsv.right, ui.top))
+        val newConstraints = ConstraintSet()
+        newConstraints.clone(tutorialLayout)
+        newConstraints.clear(tutorialSubLayout.id, ConstraintSet.TOP)
+        newConstraints.applyTo(tutorialLayout)
+        tutorialSubLayout.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            height = resources.getDimension(R.dimen.uiLayoutHeightShort).toInt()
+        }
+    }
+
+    fun highlightUiComponent() {
+        highlightWindow.highlightRect(Rect(fsv.left, ui.top, fsv.right, ui.top + resources.getDimension(R.dimen.uiComponentHeightShort).toInt()))
+        val newConstraints = ConstraintSet()
+        newConstraints.clone(tutorialLayout)
+        newConstraints.connect(tutorialSubLayout.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        newConstraints.applyTo(tutorialLayout)
+        tutorialSubLayout.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            height = FrameLayout.LayoutParams.WRAP_CONTENT
+        }
+    }
+
+    fun highlightFractalWindowAndUiComponent() {
+        highlightWindow.highlightRect(Rect(fsv.left, header.bottom, fsv.right, ui.top + resources.getDimension(R.dimen.uiComponentHeightShort).toInt()))
+        val newConstraints = ConstraintSet()
+        newConstraints.clone(tutorialLayout)
+        newConstraints.clear(tutorialSubLayout.id, ConstraintSet.TOP)
+        newConstraints.applyTo(tutorialLayout)
+        tutorialSubLayout.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            height = resources.getDimension(R.dimen.uiLayoutHeightShort).toInt() - resources.getDimension(R.dimen.uiComponentHeightShort).toInt()
+        }
+    }
+
+    fun startTutorial(fromSettings: Boolean = false) {
+
+        tutorialFromSettings = fromSettings
+        if (sc.autofitColorRange) colorAutofitButton.performClick()
+        Texture.stripeAvg.reset()
+        fsv.r.checkThresholdCross { f.load(Fractal.tutorial1, fsv) }
+        fsv.doingTutorial = true
+        fsv.r.renderShaderChanged = true
+        fsv.r.renderToTex = true
+        fsv.requestRender()
+
+        if (fromSettings) {
+            highlightWindow.show()
+            highlightWindow.bringToFront()
+            highlightWindow.consumeTouch = true
+        }
+        editModeButtons.getTabAt(EditMode.IMAGE).select()
+        uiSetHeight(UiLayoutHeight.SHORT)
+        if (tutorialLayout == null) {
+            layoutInflater.inflate(R.layout.tutorial, baseLayout, true)
+        } else {
+            tutorialLayout.show()
+            tutorialLayout.bringToFront()
+        }
+        tutFinishButton.hide()
+        gestureAnimation.stopAnim()
+        startCategoryDetails()
+
+    }
+
+    fun startCategoryDetails() {
+        menuToggleButton.hide()
+        highlightView(editModeButtons)
+        highlightWindow.startHighlightAnimation()
+        tutText1.showAndSetText(R.string.tutorial_1_1)
+        tutText2.hide()
+        tutProgress.hide()
+        fsv.doingTutorial = true
+        tutNextButton.show()
+        tutNextButton.setOnClickListener {
+            tutNextButton.hide()
+            startPositionCategoryClick()
+        }
+        tutExitButton.show()
+        tutExitButton.setOnClickListener { endTutorial() }
+    }
+
+    fun startPositionCategoryClick() {
+        tutText1.showAndSetText(R.string.tutorial_2_00)
+        tutText2.showAndSetText(R.string.tutorial_2_1)
+        if (editModeButtons.currentEditMode() == EditMode.POSITION) editModeButtons.getTabAt(EditMode.COLOR).select()
+        highlightWindow.apply {
+            consumeTouch = false
+            highlightCategory(EditMode.POSITION)
+            isRequirementSatisfied = { true }
+            onRequirementSatisfied = { startPositionPanInteract() }
+        }
+        f.shape.position.reset()
+        // tutBackButton.show()
+        // tutExitButton.setOnClickListener { startCategoryDetails() }
+    }
+
+    fun startPositionPanInteract() {
+
+        editModeButtons.getTabAt(EditMode.POSITION).select()
+        tutProgress.show()
+        tutText1.showAndSetText(R.string.tutorial_2_2)
+        tutText2.showAndSetText(R.string.tutorial_2_3)
+        highlightFractalWindow()
+        gestureAnimation.startSwipeVerticalAnim()
+
+        val highlightRatio = highlightWindow.highlight.run { height().toDouble()/width() }
+        val zoomInit = 6.5
+        val yInit = -0.25*zoomInit*highlightRatio
+        val yReq = 0.25*zoomInit*highlightRatio
+        f.shape.position.apply {
+            reset()
+            zoom = zoomInit
+            zoomLocked = true
+            rotationLocked = true
+            y = yInit
+        }
+        fsv.r.renderToTex = true
+        fsv.requestRender()
+        fsv.isRequirementSatisfied = { f.shape.position.y > yReq }
+        highlightWindow.isRequirementSatisfied = { false }
+        fsv.onRequirementSatisfied = {
+            gestureAnimation.stopAnim()
+            showNextButton()
+        }
+        fsv.updateTutorialProgress = {
+            val d = abs(f.shape.position.y - yReq)
+            tutProgress.progress = (100.0*(1.0 - min(d, abs(yInit - yReq))/(abs(yInit - yReq)))).toInt()
+        }
+        tutNextButton?.setOnClickListener {
+            tutNextButton.hide()
+            startPositionZoomInteract()
+        }
+//        tutExitButton?.setOnClickListener {
+//            startPositionCategoryClick()
+//        }
+    }
+
+    fun startPositionZoomInteract() {
+        tutText1.showAndSetText(R.string.tutorial_pos_zoom_interact_1)
+        tutText2.showAndSetText(R.string.tutorial_pos_zoom_interact_2)
+        tutProgress?.show()
+        tutProgress.progress = 0
+        val zoomInit = 3.5
+        val zoomReq = 6e-3
+        f.shape.position.apply {
+            reset()
+            x = -0.77754949627
+            y = -0.13556904821
+            zoom = 3.5
+            rotation = (-101.7).inRadians()
+            xLocked = true
+            yLocked = true
+            rotationLocked = true
+        }
+        fsv.r.renderToTex = true
+        fsv.requestRender()
+        highlightFractalWindow()
+        gestureAnimation.startPinchAnim()
+        fsv.isRequirementSatisfied = { f.shape.position.zoom < zoomReq }
+        fsv.updateTutorialProgress = {
+            val prevProgress = tutProgress.progress
+            tutProgress.progress = (100.0*log(f.shape.position.zoom / zoomInit, zoomReq / zoomInit)).toInt()
+            if (tutProgress.progress > 50 && prevProgress <= 50) {
+                tutText1.hide()
+                tutText2.showAndSetText(R.string.tutorial_keep_going)
+            }
+            else if (tutProgress.progress <= 50 && prevProgress > 50) {
+                tutText1.showAndSetText(R.string.tutorial_pos_zoom_interact_1)
+                tutText2.showAndSetText(R.string.tutorial_pos_zoom_interact_2)
+            }
+        }
+        tutNextButton?.setOnClickListener {
+            tutNextButton.hide()
+            f.shape.position.zoom = 6e-3
+            fsv.r.renderToTex = true
+            fsv.requestRender()
+            startColorCategoryClick()
+        }
+        // tutExitButton?.setOnClickListener { startPositionPanInteract() }
+    }
+
+    fun startColorCategoryClick() {
+        tutText1.showAndSetText(R.string.tutorial_3_00)
+        tutText2.showAndSetText(R.string.tutorial_3_1)
+        tutProgress?.hide()
+        highlightCategory(EditMode.COLOR)
+        highlightWindow.isRequirementSatisfied = { true }
+        highlightWindow.onRequirementSatisfied = { startPhaseInteract() }
+        gestureAnimation.stopAnim()
+        // tutExitButton?.setOnClickListener { startPositionZoomInteract() }
+    }
+
+    fun startPhaseInteract() {
+        highlightWindow.isRequirementSatisfied = { false }
+        editModeButtons.getTabAt(EditMode.COLOR).select()
+        tutText1.showAndSetText(R.string.tutorial_3_2)
+        tutText2.showAndSetText(R.string.tutorial_3_3)
+        tutProgress?.hide()
+        highlightFractalWindow()
+        gestureAnimation.startSwipeHorizontalAnim()
+        val phaseInit = f.phase
+        fsv.requestRender()
+        fsv.isRequirementSatisfied = { abs(f.phase - phaseInit) > 0.5 }
+        tutNextButton.setOnClickListener {
+            tutNextButton.hide()
+            startFreqInteract()
+        }
+        // tutExitButton.setOnClickListener { startColorCategoryClick() }
+    }
+
+    fun startFreqInteract() {
+        tutText1?.show()
+        tutText1?.setText(R.string.tutorial_3_4)
+        tutText2?.show()
+        tutText2?.setText(R.string.tutorial_3_5)
+        tutProgress?.show()
+        tutProgress?.progress = 0
+        // highlightFractalWindow()
+        highlightFractalWindowAndUiComponent()
+        gestureAnimation.startPinchAnim()
+        val freqInit = f.frequency
+        val freqReq = 1.529f
+        fsv.requestRender()
+        fsv.isRequirementSatisfied = { f.frequency > freqReq }
+        fsv.updateTutorialProgress = {
+            tutProgress?.progress = (100.0*(f.frequency/freqInit - 1f)/(freqReq/freqInit - 1f)).toInt()
+        }
+        tutNextButton.setOnClickListener {
+            tutNextButton.hide()
+            startShapeCategoryClick()
+        }
+        // tutExitButton.setOnClickListener { startPhaseInteract() }
+    }
+
+    fun startShapeCategoryClick() {
+        tutText1?.show()
+        tutText1?.setText(R.string.tutorial_4_00)
+        tutText2?.show()
+        tutText2?.setText(R.string.tutorial_4_1)
+        tutProgress?.hide()
+        highlightCategory(EditMode.SHAPE)
+        highlightWindow.isRequirementSatisfied = { true }
+        highlightWindow.onRequirementSatisfied = { startShapeParamClick() }
+        gestureAnimation.stopAnim()
+        // tutExitButton.setOnClickListener { startFreqInteract() }
+    }
+
+    fun startShapeParamClick() {
+        editModeButtons.getTabAt(EditMode.SHAPE).select()
+        tutText1.showAndSetText(R.string.tutorial_4_2)
+        tutText2.hide()
+        highlightWindow.isRequirementSatisfied = { false }
+        f.phase = 0f
+        f.frequency = 1f
+        f.shape.positions.julia.apply {
+            reset()
+            zoom = 2.5
+            rotation = 135.0.inRadians()
+        }
+        f.shape.params.julia.reset()
+        f.shape.juliaMode = true
+        juliaModeButton.isChecked = true
+        juliaParamButton.show()
+        maxIterButton.performClick()
+        fsv.r.renderToTex = true
+        fsv.r.renderShaderChanged = true
+        fsv.requestRender()
+        juliaParamButton.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                juliaParamButton.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                highlightView(juliaParamButton)
+                highlightWindow.isRequirementSatisfied = { true }
+                highlightWindow.onRequirementSatisfied = { startShapeParamDetails() }
+            }
+        })
+        fsv.isRequirementSatisfied = { false }
+        // tutExitButton?.setOnClickListener { startShapeCategoryClick() }
+    }
+
+    fun startShapeParamDetails() {
+        juliaParamButton.performClick()
+        tutText1.showAndSetText(R.string.tutorial_shape_param_info)
+        tutText2.showAndSetText(R.string.tutorial_shape_param_next)
+        highlightUiComponent()
+        highlightWindow.consumeTouch = true
+        tutNextButton?.show()
+        tutNextButton?.setOnClickListener {
+            tutNextButton.hide()
+            startShapeParamInteract()
+        }
+        // tutExitButton.setOnClickListener { startShapeParamClick() }
+    }
+
+    fun startShapeParamInteract() {
+        highlightFractalWindowAndUiComponent()
+        gestureAnimation.startSwipeDiagonalAnim()
+        tutText1.showAndSetText(R.string.tutorial_shape_param_interact)
+        tutText2.hide()
+        highlightWindow.consumeTouch = false
+        highlightWindow.isRequirementSatisfied = { false }
+        fsv.isRequirementSatisfied = { f.shape.params.julia.u.pow(2) + f.shape.params.julia.v.pow(2) > 0.5 }
+        tutNextButton.setOnClickListener {
+            tutNextButton.hide()
+            startIterationClick()
+        }
+        // tutExitButton.setOnClickListener { startShapeParamDetails() }
+    }
+
+    fun startIterationClick() {
+        tutText1?.show()
+        tutText1?.setText(R.string.tutorial_4_6)
+        tutText2?.show()
+        tutText2?.setText(R.string.tutorial_4_7)
+        f.shape.params.julia.apply {
+            u = -0.75
+            v = 0.15
+        }
+        f.shape.maxIter = 30
+        shapeFragment?.updateLayout()
+        fsv.r.renderToTex = true
+        fsv.requestRender()
+        highlightView(maxIterButton)
+        highlightWindow.apply {
+            isRequirementSatisfied = { true }
+            onRequirementSatisfied = { startIterationInteract() }
+        }
+        // tutExitButton.setOnClickListener { startShapeParamInteract() }
+    }
+
+    fun startIterationInteract() {
+        maxIterButton.performClick()
+        tutText1?.show()
+        tutText1?.setText(R.string.tutorial_4_8)
+        tutText2?.hide()
+        fsv.isRequirementSatisfied = { false }
+        highlightFractalWindowAndUiComponent()
+        (shapeFragment as ShapeFragment).onTutorialReqMet = { showNextButton() }
+        highlightWindow.isRequirementSatisfied = { false }
+        tutNextButton.setOnClickListener {
+            tutNextButton.hide()
+            startTextureCategoryClick()
+        }
+        // tutExitButton.setOnClickListener { startIterationClick() }
+    }
+
+    fun startTextureCategoryClick() {
+        tutText1.showAndSetText(R.string.tutorial_5_00)
+        tutText2.showAndSetText(R.string.tutorial_5_1)
+        highlightCategory(EditMode.TEXTURE)
+        highlightWindow.isRequirementSatisfied = { true }
+        highlightWindow.onRequirementSatisfied = { startTextureParamClick() }
+        f.texture = Texture.stripeAvg
+        f.texture.params.apply {
+            list[1].u = 90.0
+            list[2].u = 30.0
+        }
+        f.shape.maxIter = 512
+        f.frequency = 1.179f
+        f.phase = 0.517f
+        fsv.r.renderShaderChanged = true
+        fsv.r.renderToTex = true
+        fsv.requestRender()
+        textureFragment?.updateLayout()
+        // tutExitButton.setOnClickListener { startIterationInteract() }
+    }
+
+    fun startTextureParamClick() {
+        editModeButtons.getTabAt(EditMode.TEXTURE).select()
+        tutText1.showAndSetText(R.string.tutorial_5_2)
+        tutText2.hide()
+        highlightView(textureParamButton2)
+        highlightWindow.onRequirementSatisfied = { startTextureParamDetails() }
+        // tutExitButton.setOnClickListener { startTextureCategoryClick() }
+    }
+
+    fun startTextureParamDetails() {
+        textureParamButton2.performClick()
+        tutText1.showAndSetText(R.string.tutorial_texure_param_info)
+        tutText2.showAndSetText(R.string.tutorial_texture_param_next)
+        highlightUiComponent()
+        highlightWindow.isRequirementSatisfied = { false }
+        tutNextButton.show()
+        tutNextButton.setOnClickListener {
+            tutNextButton.hide()
+            startTextureParamInteract()
+        }
+        // tutExitButton.setOnClickListener { startTextureParamClick() }
+    }
+
+    fun startTextureParamInteract() {
+        tutText1.showAndSetText(R.string.tutorial_texture_param_interact)
+        tutText2.hide()
+        highlightFractalWindowAndUiComponent()
+        highlightWindow.isRequirementSatisfied = { false }
+        gestureAnimation.startSwipeHorizontalAnim()
+        val uTarget = 230.0
+        fsv.isRequirementSatisfied = { abs(f.texture.activeParam.u - uTarget) < 1.0 }
+        tutNextButton.setOnClickListener {
+            tutNextButton.hide()
+            startTutorialCongrats()
+        }
+        // tutExitButton.setOnClickListener { startTextureParamDetails() }
+    }
+
+    fun startTutorialCongrats() {
+        highlightCategory(EditMode.POSITION)  // just for layout change
+        highlightWindow.clearHighlight()
+        tutText1.showAndSetText(R.string.tutorial_congrats)
+        tutText2.showAndSetText(R.string.tutorial_complete)
+        tutFinishButton.show()
+        tutFinishButton.setOnClickListener { endTutorial() }
+    }
+
+    fun endTutorial() {
+        showTutorialOption = false
+        tutorialLayout.hide()
+        highlightWindow.stopHighlightAnimation()
+        highlightWindow.hide()
+        f.apply {
+            shape.reset()
+            texture = Texture.escapeSmooth
+            shape.position.reset()
+            frequency = 1f
+            phase = 0.65f
+        }
+        Texture.stripeAvg.reset()
+        editModeButtons.getTabAt(EditMode.POSITION).select()
+        fsv.doingTutorial = false
+        fsv.r.renderShaderChanged = true
+        fsv.r.renderToTex = true
+        fsv.requestRender()
+        updateFragmentLayouts()
+        if (!tutorialFromSettings) queryEpilepsyDialog()
+    }
+
+
+
+
+
+
+    /* GOOGLE PLAY BILLING / UPGRADE */
+
+    fun showUpgradeScreen(fromButtonPress: Boolean = false) {
+
+        if (fromButtonPress) {
+            val myIntent = Intent(this, UpgradeActivity::class.java)
+            startActivity(myIntent)
+        } else {
+            // double check to avoid showing upgrade screen if not necessary
+            if (!billingClient.isReady) billingClient.startConnection(billingClientStateListener)
+            else queryPurchases()
+
+            if (!sc.goldEnabled) {
+                val myIntent = Intent(this, UpgradeActivity::class.java)
+                startActivity(myIntent)
+            }
+        }
+
     }
 
     fun consumePurchase() {
-
         val purchaseQueryResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP)
         purchaseQueryResult?.purchasesList?.getOrNull(0)?.apply {
             Log.d("MAIN", "processing purchase...")
@@ -2133,6 +2657,7 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
             }
         }
     }
+
     fun queryPurchases() {
 
         val purchaseQueryResult = billingClient.queryPurchases(BillingClient.SkuType.INAPP)
@@ -2185,15 +2710,31 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         }
 
     }
+
     fun onGoldEnabled() {
         val sp = getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE)
         val edit = sp.edit()
         edit.putBoolean(GOLD_ENABLED_DIALOG_SHOWN, true)
         edit.apply()
-        ( textureFragment  as TextureFragment  ).onGoldEnabled()
-        ( shapeFragment    as ShapeFragment    ).onGoldEnabled()
-        ( colorFragment    as ColorFragment    ).onGoldEnabled()
-        ( imageFragment    as ImageFragment    ).onGoldEnabled()
+        ( textureFragment as? TextureFragment  )?.onGoldEnabled()
+        ( shapeFragment   as? ShapeFragment    )?.onGoldEnabled()
+        ( colorFragment   as? ColorFragment    )?.onGoldEnabled()
+        ( imageFragment   as? ImageFragment    )?.onGoldEnabled()
+    }
+
+
+
+
+
+
+    /* UTILITY */
+
+    fun getLocalizedResources(context: Context, desiredLocale: Locale?): Resources {
+        var conf: Configuration = context.resources.configuration
+        conf = Configuration(conf)
+        conf.setLocale(desiredLocale)
+        val localizedContext = context.createConfigurationContext(conf)
+        return localizedContext.resources
     }
 
     fun getAvailableHeapMemory() : Long {
@@ -2202,33 +2743,11 @@ class MainActivity : AppCompatActivity(), OnCompleteListener {
         val maxHeapSizeInMB = runtime.maxMemory() / 1048576L
         return maxHeapSizeInMB - usedMemInMB
     }
-    fun showUpgradeScreen() {
-
-        // double check to avoid showing upgrade screen if not necessary
-        if (!billingClient.isReady) billingClient.startConnection(billingClientStateListener)
-        else queryPurchases()
-
-        if (!sc.goldEnabled) {
-            val myIntent = Intent(this, UpgradeActivity::class.java)
-            startActivity(myIntent)
-        }
-
-    }
 
     fun onRateButtonClicked(): Boolean {
         Toast.makeText(this, "Rate button was clicked", Toast.LENGTH_LONG).show()
         // button click handled
         return true
     }
-
-    override fun onComplete() {
-        fragmentsCompleted++
-        Log.d("MAIN", "!! fragment callback !! $fragmentsCompleted fragments completed")
-        if (fragmentsCompleted == 5) {
-            if (!billingClient.isReady) billingClient.startConnection(billingClientStateListener)
-            else queryPurchases()
-        }
-    }
-
 
 }

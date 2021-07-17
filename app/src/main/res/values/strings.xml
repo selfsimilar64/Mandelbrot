@@ -22,12 +22,6 @@
     <string name="display_param4" translatable="false">param4</string>
     <string name="e" translatable="false">e</string>
     <string name="welcome_message" translatable="false">Welcome to Fractal Eye!</string>
-    <string name="tutorial_position1" translatable="false" tools:ignore="ExtraTranslation">To move around and explore the fractal, click the POSITION button.</string>
-    <string name="tutorial_position2" translatable="false">Swipe in any direction to move</string>
-    <string name="tutorial_position3" translatable="false">Pinch to zoom in or out!</string>
-    <string name="tutorial_color1" translatable="false">To change how the fractal is colored, click the COLOR button.</string>
-    <string name="tutorial_color2" translatable="false">Swipe left or right to shift the colors</string>
-    <string name="tutorial_color3" translatable="false">Pinch to make the colors change more or less frequently!</string>
     <string name="empty" translatable="false"> </string>
     <string name="reset">Reset</string>
     <string name="new_str">new</string>
@@ -37,8 +31,8 @@
     <string name="cancel">cancel</string>
     <string name="delete">Delete</string>
     <string name="list">List</string>
-    <string name="empty_list_favorite">Swipe left on an item and press the star icon to add it to your favorites!</string>
-    <string name="empty_list_custom">Press the «NEW» button at the bottom of the screen to create a custom item!</string>
+    <string name="empty_list_favorite">Long press on an item, then click the star icon to add it to your favorites!</string>
+    <string name="empty_list_custom">Press the plus icon at the bottom of the screen to create a custom item!</string>
     <string name="gold_enabled">Upgrade Successful!</string>
     <string name="gold_enabled_dscript">All features should now be available! For questions or concerns please contact selfsimilartech@gmail.com. Thank you for your purchase and happy fractal-making!</string>
     <string name="gold_pending">Purchase Pending…</string>
@@ -51,6 +45,54 @@
     <string name="fractal">Fractal</string>
     <string name="compiling">Compiling Shader …</string>
     <string name="load_previous_fractal">Load fractal from previous session?</string>
+    <string name="copy">Copy</string>
+
+
+    <string name="tutorial">Tutorial</string>
+    <string name="tutorial_start">Start</string>
+    <string name="tutorial_skip">Skip</string>
+    <string name="tutorial_next">Next</string>
+    <string name="tutorial_great">Great!</string>
+    <string name="tutorial_back">Back</string>
+    <string name="tutorial_finish">Finish</string>
+    <string name="tutorial_exit">Exit</string>
+    <string name="tutorial_keep_going">Keep going!</string>
+    <string name="tutorial_texure_param_info">This parameter has only one number, and swiping horizontally changes its value. You can also change the value by clicking the adjust buttons, or you can manually enter a number by clicking the value.</string>
+    <string name="tutorial_texture_param_next">Click \'next\' to try it out!</string>
+    <string name="tutorial_texture_param_interact">Change the value to 230 to continue!</string>
+    <string name="tutorial_shape_param_info">This parameter has two numbers. Swiping horizontally changes the first number and swiping vertically changes the second number. Performing a pinch gesture with two fingers will change the sensitivity.</string>
+    <string name="tutorial_shape_param_next">Click \'next\' to try out different parameter values!</string>
+    <string name="tutorial_shape_param_interact">Move one finger around on the screen to change the parameter!</string>
+    <string name="tutorial_welcome">Welcome to %s!</string>
+    <string name="tutorial_0_2">Would you like to start the tutorial? You can always access it later in the settings menu.</string>
+    <string name="tutorial_1_1">The primary buttons are highlighted at the bottom of the screen. Clicking one of these buttons will switch the editing mode and allow you to change different qualities of the fractal!</string>
+    <string name="tutorial_2_00">Position mode determines which part of the fractal is visible. In position mode you can zoom, rotate, and move around!</string>
+    <string name="tutorial_2_1">Click the highlighted button to enter position mode.</string>
+    <string name="tutorial_2_2">Moving one finger around on the screen will move the fractal in the same direction.</string>
+    <string name="tutorial_2_3">Move the fractal to the bottom of the screen to continue!</string>
+    <string name="tutorial_pos_zoom_interact_1">Performing a pinch gesture with two fingers will zoom in or out of the fractal.</string>
+    <string name="tutorial_pos_zoom_interact_2">Zoom in until the progress bar is full to continue!</string>
+    <string name="tutorial_3_00">Color mode affects how the colors are displayed on the fractal!</string>
+    <string name="tutorial_3_1">Click the highlighted button to enter color mode.</string>
+    <string name="tutorial_3_2">Moving one finger on the screen horizontally changes the \'phase\', which is the displacement of the colors.</string>
+    <string name="tutorial_3_3">Try it now!</string>
+    <string name="tutorial_3_4">Performing a pinch gesture with two fingers changes the \'frequency\', which is the rate of change of the colors.</string>
+    <string name="tutorial_3_5">Increase the frequency until the progress bar is full!</string>
+    <string name="tutorial_4_00">Shape mode affects the overall form of the fractal!</string>
+    <string name="tutorial_4_1">Click the highlighted button to enter shape mode.</string>
+    <string name="tutorial_4_2">Some shapes have parameters, indicated by the parameter icon. Click the highlighted button to select the shape parameter.</string>
+    <string name="tutorial_4_6">\'Iterate\' determines the number calculations used to generate the fractal. Increasing this number will show more detail in the fractal, but will also be slower.</string>
+    <string name="tutorial_4_7">Click the highlighted button to change the number of iterations.</string>
+    <string name="tutorial_4_8">Change the number of iterations to 500 to increase the amount of detail in the image!</string>
+    <string name="tutorial_5_00">Texture mode affects the pattern that is displayed around the fractal!</string>
+    <string name="tutorial_5_1">Click the highlighted button to enter texture mode.</string>
+    <string name="tutorial_5_2">Textures can also have parameters! Click the highlighted button to select the texture parameter.</string>
+    <string name="tutorial_congrats">Congratulations!</string>
+    <string name="tutorial_complete">You have successfully completed the tutorial and have everything you need to start making your own fractals!</string>
+    <string name="tutorial_image_1">IMAGE mode lets you ajust properties of the whole image like resolution and aspect ratio!</string>
+    <string name="tutorial_extra_1">The leftmost button will create a new bookmark so you can reload your fractal at any time!</string>
+    <string name="tutorial_extra_2">The middle button will save an image directly to your gallery!</string>
+    <string name="tutorial_extra_3">The rightmost button will open the settings menu!</string>
 
 
 
@@ -60,7 +102,7 @@
 
     <!-- UPGRADE ACTIVITY -->
     <string name="upgrade">Upgrade</string>
-    <string name="no_thanks">No thanks</string>
+    <string name="no_thanks">Not now</string>
     <string name="upgrade_resolution_header">Preserve Details</string>
     <string name="upgrade_customization_header">Unlock Everything</string>
     <string name="upgrade_creativity_header">Unleash Your Creativity</string>
@@ -87,11 +129,13 @@
 
 
     <!-- SETTINGS FRAGMENT -->
+    <string name="unrestricted_params">Unrestricted Parameters</string>
+    <string name="unrestricted_params_hint">Allows parameter values to be set outside of their suggested range</string>
     <string name="contact_email" translatable="false">selfaffinetech@gmail.com</string>
     <string name="about">About</string>
-    <string name="about_info_1">Fractal Eye v%s © 2019 created by Matt Kelley</string>
+    <string name="about_info_1">Fractal Eye v%s © 2019-2021 Matt Kelley</string>
     <string name="about_info_2">Experiencing issues? Please contact me:</string>
-    <string name="show_changelog">Show Changelog</string>
+    <string name="show_changelog">Version History</string>
     <string name="upgrade_to">Upgrade To</string>
     <string name="reload">reload</string>
     <string name="precision">Precision</string>
@@ -100,6 +144,7 @@
     <string name="display">display</string>
     <string name="precision_bits" translatable="false">32-bit</string>
     <string name="resolution_low">Low</string>
+    <string name="medium">Medium</string>
     <string name="resolution_high">High</string>
     <string name="precision_single">single</string>
     <string name="precision_dual">dual</string>
@@ -168,11 +213,16 @@
     <string name="more_detail">More detail</string>
     <string name="less_detail">Less detail</string>
     <string name="rendering_icons">Rendering Icons …</string>
+    <string name="set_from_position">Set From Position</string>
     <string name="delete_shape_bookmark_warning">Any bookmarks that use this shape will also be deleted (%d found)</string>
     <string name="edit_shape_bookmark_warning">Any bookmarks that use this shape might not look the same after editing (%d found)</string>
     <string name="delete_palette_bookmark_warning">Any bookmarks that use this palette will be changed to a default palette (%d found)</string>
     <string name="edit_palette_bookmark_warning">Any bookmarks that use this palette might not look the same after editing (%d found)</string>
     <string name="remove_texture_image_bookmark_warning">Any bookmarks that use this image will be changed to a default image (%d found)</string>
+    <string name="shapekey_header_variables">Variables</string>
+    <string name="shapekey_header_numbers">Numbers</string>
+    <string name="shapekey_header_basic">Basic</string>
+    <string name="shapekey_header_trig" translatable="false">Trig</string>
 
 
     <!-- COLOR FRAGMENT -->
@@ -192,6 +242,9 @@
     <string name="choose_color">Choose Color</string>
     <string name="accent1">Accent 1</string>
     <string name="accent2">Accent 2</string>
+    <string name="color_mode_manual">Manual</string>
+    <string name="color_mode_minmax">Min-Max</string>
+    <string name="color_mode_histogram">HistogramP</string>
 
 
     <!-- POSITION FRAGMENT -->
@@ -281,6 +334,22 @@
     <string name="mandelbox2">Mandelbox 2</string>
 
 
+    <!-- SHAPE LATEX -->
+    <string name="mandelbrot_latex" translatable="false">z^2 + c</string>
+    <string name="mandelbrot_cubic_latex" translatable="false">z^3 + c</string>
+    <string name="mandelbrot_quartic_latex" translatable="false">z^4 + c</string>
+    <string name="mandelbrot_quintic_latex" translatable="false">z^5 + c</string>
+    <string name="mandelbrot_sextic_latex" translatable="false">z^6 + c</string>
+    <string name="collatz_latex" translatable="false">0.25(2 + 7z - (2.0 + 5z)cos(3.14159z)) + c</string>
+    <string name="clover_latex" translatable="false">c(z^2 + z^{-2})</string>
+    <string name="burningship_latex" translatable="false">abs(z)^2 + c</string>
+    <string name="sine1_latex" translatable="false">sin(z) + c</string>
+    <string name="cosine_latex" translatable="false">cos(z) + c</string>
+    <string name="hyperbolic_sine_latex" translatable="false">-isinh(z) + c</string>
+    <string name="hyperbolic_cosine_latex" translatable="false">cosh(z) + c</string>
+    <string name="magnet1_latex" translatable="false">(\\frac{z^2 + c - 1}{2z + c - 2})^2</string>
+
+
     <!-- PALETTE NAMES -->
     <string name="yinyang">Yin Yang</string>
     <string name="night">Night</string>
@@ -337,7 +406,11 @@
     <string name="refraction">Refraction</string>
     <string name="fusion">Fusion</string>
     <string name="honor">Honor</string>
-    <string name="passionfruit">Passionfruit</string>
+    <string name="sphere">Sphere</string>
+    <string name="who">Who</string>
+    <string name="what">What</string>
+    <string name="string_void">Void</string>
+    <string name="eye">Eye</string>
 
 
     <!-- TEXTURE NAMES -->

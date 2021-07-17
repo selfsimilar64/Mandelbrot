@@ -6,36 +6,80 @@
     <color name="colorPrimaryDark">@color/black</color>
     <color name="colorPrimaryDark2">#555</color>
     <color name="colorDarkSelected">#3a3a3a</color>
-    <color name="colorDarkUnselected">@color/menuDark5</color>
-    <color name="colorDarkText">#ffffff</color>
-    <color name="colorDescriptionDark">#9a9a9a</color>
+    <color name="colorDarkUnselected">@color/menuDark6</color>
+
+    <color name="colorDarkText">@color/highlight</color>
+    <color name="colorDarkTextMuted">#7B7B8C</color>
+    <color name="colorDescriptionDark">#8A8A99</color>
+
+    <color name="launchBackground">@color/menuDarkSecondary</color>
+
     <color name="halfTransparentBlack">#a000</color>
-    <color name="settingsBackground">#e000</color>
+    <color name="settingsBackground">@color/menuDarkSecondary</color>
     <color name="halfTransparentWhite">#3fff</color>
     <color name="transparent">#0000</color>
     <color name="colorAccent">#fff</color>
     <color name="menuDark1">#000000</color>
-    <color name="menuDark2">#0e0e0e</color>
-    <color name="menuDark3">#121212</color>
+    <color name="menuDark2">#101010</color>
+    <color name="menuDark3">#191B1E</color>
+    <color name="menuDark35">#292933</color>
     <color name="menuDark4">#202020</color>
-    <color name="menuDark5">#2a2a2a</color>
+    <color name="menuDark5">#2c2c2c</color>
     <color name="menuDark6">#3a3a3a</color>
     <color name="menuDark7">#4a4a4a</color>
     <color name="menuDark8">#666</color>
+    <color name="menuTransparent">#000</color>
+
+    <color name="menuDarkPrimary">#1B1B26</color>
+    <color name="menuDarkSecondary">#11111A</color>
+    <color name="menuDarkTertiary">#0A0A0F</color>
+
+    <color name="accent">#A5A5FF</color>
+    <color name="highlight">#EBEBFF</color>
+    <color name="indent">#0B0B0D</color>
+    <color name="switchTrack">#272733</color>
+
+    <color name="toggleButtonSelected">@color/highlight</color>
+    <color name="toggleButtonUnselected">#2D2D40</color>
+
+    <color name="divider">#78788F</color>
+    <color name="buttonOutline">#B4B4CC</color>
+    <color name="uiComponentOutline">#878799</color>
+
+    <color name="tutorialBackground">#c000</color>
 
     <color name="disabled">#777</color>
     <color name="unselectedTint">#aaa</color>
     <color name="selectedTint">@color/white</color>
 
-    <color name="shapeKeyColor">#1D1D1D</color>
+    <color name="shapeKeyColor">@color/switchTrack</color>
     <color name="star">#FE1</color>
 
+    <color name="gestureIndicatorInnerEdgeColor">#E6FFFFFF</color>
+    <color name="gestureIndicatorInnerCenterColor">#BFFFFFFF</color>
 
-    <color name="fractaleye1">#006CB0</color>
-    <color name="fractaleye2">#4640C7</color>
-    <color name="fractaleye3">#B030A2</color>
-    <color name="fractaleye4">#EC891D</color>
-    <color name="fractaleye5">#F2C100</color>
+
+    <color name="fractaleye0">#79CBFF</color>
+    <color name="fractaleye1half">#3AB3FF</color>
+    <color name="fractaleye1">#0B87D5</color>
+    <color name="fractaleye2">#5952F4</color>
+    <color name="fractaleye5halves">#AD3CFF</color>
+    <color name="fractaleye3">#E545D4</color>
+    <color name="fractaleye7halves">#E54E69</color>
+    <color name="fractaleye4">#EF993B</color>
+    <color name="fractaleye5">#FFCB00</color>
+    <color name="fractaleye6">#FFE067</color>
+
+
+    <color name="fe0">#B1F9FF</color>
+    <color name="fe1">#18EEFF</color>
+    <color name="fe2">#2392CF</color>
+    <color name="fe3">#2457B7</color>
+    <color name="fe4">#402B9D</color>
+    <color name="fe5">#792FBA</color>
+    <color name="fe6">#B835B8</color>
+    <color name="fe7">#FF68B1</color>
+    <color name="fe8">#FFD1E7</color>
 
 
     <color name="gold1">#fdf1cc</color>
