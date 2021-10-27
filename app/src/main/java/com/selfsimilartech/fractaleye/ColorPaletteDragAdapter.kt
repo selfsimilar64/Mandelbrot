@@ -5,8 +5,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.selfsimilartech.fractaleye.databinding.ColorDragItemBinding
 import com.woxthebox.draglistview.DragItemAdapter
-import kotlinx.android.synthetic.main.color_drag_item.view.*
 import java.util.ArrayList
 
 class ColorPaletteDragAdapter(
@@ -62,8 +62,8 @@ class ColorPaletteDragAdapter(
         //Log.e("DRAG ADAPTER", "item bound")
         super.onBindViewHolder(holder, position)
 
-        holder.v.customColorSquare.setBackgroundColor(itemList[position].second)
-        holder.v.customColorLayout.setBackgroundColor(
+        holder.b.customColorSquare.setBackgroundColor(itemList[position].second)
+        holder.b.customColorLayout.setBackgroundColor(
                 if (position == selectedItemIndex) Color.WHITE
                 else itemList[position].second
         )
@@ -72,6 +72,8 @@ class ColorPaletteDragAdapter(
     }
 
     inner class ColorPaletteDragHolder(val v: View) : ViewHolder(v, grabHandleId, dragOnLongPress) {
+
+        val b = ColorDragItemBinding.bind(v)
 
         override fun onItemClicked(view: View?) {
 

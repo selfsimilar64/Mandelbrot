@@ -16,17 +16,18 @@ import android.widget.SeekBar
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.core.view.children
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
+import com.selfsimilartech.fractaleye.databinding.ImageFragmentBinding
 import eu.davidea.flexibleadapter.FlexibleAdapter
-import kotlinx.android.synthetic.main.image_fragment.*
-import kotlinx.android.synthetic.main.list_layout.view.*
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.lang.IndexOutOfBoundsException
 
 
 class ImageFragment : MenuFragment() {
+
+    lateinit var b : ImageFragmentBinding
 
 //    private fun createNotificationChannel() {
 //        // Create the NotificationChannel, but only on API 26+ because
@@ -49,15 +50,15 @@ class ImageFragment : MenuFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View {
 
-        return inflater.inflate(R.layout.image_fragment, container, false)
+        b = ImageFragmentBinding.inflate(inflater, container, false)
+        return b.root
+        // return inflater.inflate(R.layout.image_fragment, container, false)
 
     }
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
         super.onViewCreated(v, savedInstanceState)
-
-
 
         val nonClickableViewTypes = listOf(
                 R.layout.list_header,
@@ -67,23 +68,23 @@ class ImageFragment : MenuFragment() {
 
         val handler = Handler(Looper.getMainLooper())
 
-        imageLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        b.imageLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
 
-        fitToViewportButton.setOnClickListener {
+        b.fitToViewportButton.setOnClickListener {
 
             // if (!fitToViewportButton.isChecked && sc.aspectRatio != AspectRatio.RATIO_SCREEN) aspectDefaultButton.performClick()
 
-            sc.fitToViewport = fitToViewportButton.isChecked
-            act.updateSurfaceViewLayout()
+            sc.fitToViewport = b.fitToViewportButton.isChecked
+            act.updateFractalLayout()
 
         }
-        fitToViewportButton.isChecked = sc.fitToViewport
+        b.fitToViewportButton.isChecked = sc.fitToViewport
 
 
-        resolutionBar.showGradient = true
-        resolutionBar.gradientStartProgress = Resolution.NUM_VALUES_FREE - 1
-        resolutionBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        b.resolutionBar.showGradient = true
+        b.resolutionBar.gradientStartProgress = Resolution.NUM_VALUES_FREE - 1
+        b.resolutionBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
             var prevProgress = 0
 
@@ -91,18 +92,19 @@ class ImageFragment : MenuFragment() {
                 // Log.e("SETTINGS", "progress: $progress")
                 updateResolutionText(Resolution.working[progress], sc.aspectRatio)
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                prevProgress = resolutionBar.progress
+                prevProgress = b.resolutionBar.progress
             }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
-                val newRes = Resolution.working[resolutionBar.progress]
+                val newRes = Resolution.working[b.resolutionBar.progress]
 
                 if (sc.resolution != newRes) {
 
-                    if (resolutionBar.progress > resolutionBar.gradientStartProgress && !sc.goldEnabled) {
-                        resolutionBar.progress = prevProgress
+                    crashlytics().updateLastAction(Action.RESOLUTION_CHANGE)
+
+                    if (b.resolutionBar.progress > b.resolutionBar.gradientStartProgress && !sc.goldEnabled) {
+                        b.resolutionBar.progress = prevProgress
                         act.showUpgradeScreen()
                     }
                     else {
@@ -111,6 +113,7 @@ class ImageFragment : MenuFragment() {
                         if (newRes.w > sc.resolution.w) act.bookmarkAsPreviousFractal()
 
                         sc.resolution = newRes
+                        crashlytics().setCustomKey(CRASH_KEY_RESOLUTION, sc.resolution.toString())
                         if (fsv.r.isRendering) fsv.r.interruptRender = true
                         fsv.r.fgResolutionChanged = true
                         fsv.r.renderToTex = true
@@ -123,32 +126,10 @@ class ImageFragment : MenuFragment() {
             }
 
         })
-        resolutionBar.max = Resolution.NUM_VALUES_WORKING() - 1
+        b.resolutionBar.max = Resolution.NUM_VALUES_WORKING() - 1
         //Log.e("SETTINGS", "resolution ordinal: ${sc.resolution.ordinal}")
-        resolutionBar.progress = Resolution.working.indexOf(sc.resolution)
+        b.resolutionBar.progress = Resolution.working.indexOf(sc.resolution)
         updateResolutionText(sc.resolution, sc.aspectRatio)
-
-
-//        renderBackgroundSwitch.isChecked = sc.renderBackground
-//        renderBackgroundSwitch.setOnCheckedChangeListener { _, isChecked ->
-//
-//            sc.renderBackground = isChecked
-//
-//            fsv.r.renderBackgroundChanged = true
-//            fsv.r.renderToTex = isChecked
-//            fsv.requestRender()
-//
-//        }
-
-
-//        fitToViewportSwitch.isChecked = sc.fitToViewport
-//        fitToViewportSwitch.setOnCheckedChangeListener { _, isChecked ->
-//
-//            sc.fitToViewport = isChecked
-//            act.updateSurfaceViewLayout()
-//
-//        }
-
 
 
         val listLayoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
@@ -169,7 +150,7 @@ class ImageFragment : MenuFragment() {
                         adapter.removeItemFromCustom(item)
                         val deleteId = item.t.customId
 
-                        GlobalScope.launch {
+                        viewLifecycleOwner.lifecycleScope.launch {
                             act.db.fractalDao().apply {
                                 delete(findById(deleteId))
                             }
@@ -224,7 +205,7 @@ class ImageFragment : MenuFragment() {
                 emptyFavorite,
                 emptyCustom
         )
-        bookmarkListLayout.list.apply {
+        b.bookmarkListLayout.list.apply {
             adapter = bookmarkListAdapter
             setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
                 val firstVisiblePos = listLayoutManager.findFirstCompletelyVisibleItemPosition()
@@ -253,8 +234,8 @@ class ImageFragment : MenuFragment() {
 
                 val firstVisiblePos = listLayoutManager.findFirstCompletelyVisibleItemPosition()
                 val lastVisiblePos = listLayoutManager.findLastCompletelyVisibleItemPosition()
-                if (position + 1 > lastVisiblePos) bookmarkListLayout.list.smoothSnapToPosition(position + 1, LinearSmoothScroller.SNAP_TO_END)
-                else if (position - 1 < firstVisiblePos) bookmarkListLayout.list.smoothSnapToPosition(position - 1)
+                if (position + 1 > lastVisiblePos) b.bookmarkListLayout.list.smoothSnapToPosition(position + 1, LinearSmoothScroller.SNAP_TO_END)
+                else if (position - 1 < firstVisiblePos) b.bookmarkListLayout.list.smoothSnapToPosition(position - 1)
 
                 if (position != bookmarkListAdapter.activatedPos) bookmarkListAdapter.setActivatedPositionNoToggle(position)
                 val bookmark: Fractal = try {
@@ -280,6 +261,7 @@ class ImageFragment : MenuFragment() {
                         f.preload(bookmark)
                         Fractal.tempBookmark2 = f.bookmark(fsv)
                         f.load(bookmark, fsv)
+                        act.updateCrashKeys()
 
                     }
 
@@ -301,23 +283,24 @@ class ImageFragment : MenuFragment() {
         }
 
 
-        bookmarkListButton.setOnClickListener {
-            Handler(Looper.getMainLooper()).postDelayed({
-
-                fsv.r.reaction = Reaction.NONE
-
-                showLayout(bookmarkListLayout)
-                imageSubMenuButtons.hide()
-                imageNavButtons.show()
-
-                Fractal.tempBookmark3 = f.bookmark(fsv)
-
-                act.hideMenuToggleButton()
-                act.hideCategoryButtons()
-                act.uiSetHeight(UiLayoutHeight.TALL)
-
-            }, BUTTON_CLICK_DELAY_SHORT)
-        }
+//        b.bookmarkListButton.setOnClickListener {
+//            crashlytics().updateLastAction(Action.BOOKMARK_LOAD)
+//            Handler(Looper.getMainLooper()).postDelayed({
+//
+//                fsv.r.reaction = Reaction.NONE
+//
+//                showLayout(b.bookmarkListLayout.root)
+//                b.imageSubMenuButtons.hide()
+//                b.imageNavButtons.show()
+//
+//                Fractal.tempBookmark3 = f.bookmark(fsv)
+//
+//                act.hideMenuToggleButton()
+//                act.hideCategoryButtons()
+//                act.uiSetHeight(UiLayoutHeight.TALL)
+//
+//            }, BUTTON_CLICK_DELAY_SHORT)
+//        }
 
         var currentAspect : CardView? = null
         val aspectRatioButtonListener = { card: CardView, button: ImageButton, ratio: AspectRatio ->
@@ -345,38 +328,38 @@ class ImageFragment : MenuFragment() {
             }
         }
 
-        aspect11Button.setOnClickListener(aspectRatioButtonListener(aspect11Card, aspect11Button, AspectRatio.RATIO_1_1))
-        aspect45Button.setOnClickListener(aspectRatioButtonListener(aspect45Card, aspect45Button, AspectRatio.RATIO_4_5))
-        aspect57Button.setOnClickListener(aspectRatioButtonListener(aspect57Card, aspect57Button, AspectRatio.RATIO_5_7))
-        aspect23Button.setOnClickListener(aspectRatioButtonListener(aspect23Card, aspect23Button, AspectRatio.RATIO_2_3))
-        aspect916Button.setOnClickListener(aspectRatioButtonListener(aspect916Card, aspect916Button, AspectRatio.RATIO_9_16))
-        aspect12Button.setOnClickListener(aspectRatioButtonListener(aspect12Card, aspect12Button, AspectRatio.RATIO_1_2))
-        aspectDefaultButton.setOnClickListener(aspectRatioButtonListener(aspectDefaultCard, aspectDefaultButton, AspectRatio.RATIO_SCREEN))
+        b.aspect11Button.setOnClickListener(aspectRatioButtonListener(b.aspect11Card, b.aspect11Button, AspectRatio.RATIO_1_1))
+        b.aspect45Button.setOnClickListener(aspectRatioButtonListener(b.aspect45Card, b.aspect45Button, AspectRatio.RATIO_4_5))
+        b.aspect57Button.setOnClickListener(aspectRatioButtonListener(b.aspect57Card, b.aspect57Button, AspectRatio.RATIO_5_7))
+        b.aspect23Button.setOnClickListener(aspectRatioButtonListener(b.aspect23Card, b.aspect23Button, AspectRatio.RATIO_2_3))
+        b.aspect916Button.setOnClickListener(aspectRatioButtonListener(b.aspect916Card, b.aspect916Button, AspectRatio.RATIO_9_16))
+        b.aspect12Button.setOnClickListener(aspectRatioButtonListener(b.aspect12Card, b.aspect12Button, AspectRatio.RATIO_1_2))
+        b.aspectDefaultButton.setOnClickListener(aspectRatioButtonListener(b.aspectDefaultCard, b.aspectDefaultButton, AspectRatio.RATIO_SCREEN))
 
         val aspectCards = listOf(
-                aspectDefaultCard,
-                aspect11Card,
-                aspect45Card,
-                aspect57Card,
-                aspect23Card,
-                aspect916Card,
-                aspect12Card
+                b.aspectDefaultCard,
+                b.aspect11Card,
+                b.aspect45Card,
+                b.aspect57Card,
+                b.aspect23Card,
+                b.aspect916Card,
+                b.aspect12Card
         )
         val aspectButtons = listOf(
-                aspectDefaultButton,
-                aspect11Button,
-                aspect45Button,
-                aspect57Button,
-                aspect23Button,
-                aspect916Button,
-                aspect12Button
+                b.aspectDefaultButton,
+                b.aspect11Button,
+                b.aspect45Button,
+                b.aspect57Button,
+                b.aspect23Button,
+                b.aspect916Button,
+                b.aspect12Button
         )
         val goldAspects = listOf(
-                aspect45Button,
-                aspect57Button,
-                aspect23Button,
-                aspect916Button,
-                aspect12Button
+                b.aspect45Button,
+                b.aspect57Button,
+                b.aspect23Button,
+                b.aspect916Button,
+                b.aspect12Button
         )
         goldAspects.forEach {
             it.showGradient = true
@@ -385,15 +368,15 @@ class ImageFragment : MenuFragment() {
 
 
 
-        resolutionButton.setOnClickListener(subMenuButtonListener(resolutionLayout, resolutionButton))
-        aspectRatioButton.setOnClickListener(subMenuButtonListener(aspectRatioLayout, aspectRatioButton, UiLayoutHeight.MED))
+//        b.resolutionButton.setOnClickListener(subMenuButtonListener(b.resolutionLayout, b.resolutionButton))
+//        b.aspectRatioButton.setOnClickListener(subMenuButtonListener(b.aspectRatioLayout, b.aspectRatioButton, UiLayoutHeight.MED))
 
 
         currentAspect = aspectCards[AspectRatio.all.indexOf(sc.aspectRatio)]
-        aspectButtons[AspectRatio.all.indexOf(sc.aspectRatio)]?.performClick()
+        aspectButtons[AspectRatio.all.indexOf(sc.aspectRatio)].performClick()
 
 
-        bookmarkListLayout.apply {
+        b.bookmarkListLayout.apply {
             listFavoritesButton.setOnClickListener {
                 list.smoothSnapToPosition(bookmarkListAdapter.getGlobalPositionOf(bookmarkListAdapter.headerItems[0]))
             }
@@ -404,41 +387,28 @@ class ImageFragment : MenuFragment() {
                 list.smoothSnapToPosition(bookmarkListAdapter.getGlobalPositionOf(bookmarkListAdapter.headerItems[2]))
             }
         }
-        
 
-        newBookmarkButton2.setOnClickListener {
 
-            Fractal.tempBookmark1 = f.bookmark(fsv)
+//        b.newBookmarkButton2.setOnClickListener {
+//
+//            crashlytics().updateLastAction(Action.NEW_BOOKMARK)
+//            Fractal.tempBookmark1 = f.bookmark(fsv)
+//
+//            fsv.r.renderProfile = RenderProfile.SAVE_THUMBNAIL
+//            fsv.requestRender()
+//
+//        }
 
-            fsv.r.renderProfile = RenderProfile.SAVE_THUMBNAIL
-            fsv.requestRender()
-
-        }
-        bookmarkListDoneButton.setOnClickListener {
-            handler.postDelayed({
-
-                firstBookmarkSelection = true
-
-                act.showCategoryButtons()
-                act.showMenuToggleButton()
-                imageNavButtons.hide()
-                imageSubMenuButtons.show()
-                resolutionButton.performClick()
-                act.uiSetHeight(UiLayoutHeight.SHORT)
-
-                act.updateFragmentLayouts()
-
-            }, BUTTON_CLICK_DELAY_SHORT)
-        }
-        bookmarkListCancelButton.setOnClickListener {
+        b.bookmarkListCancelButton.setOnClickListener {
             handler.postDelayed({
 
                 act.showCategoryButtons()
                 act.showMenuToggleButton()
-                imageNavButtons.hide()
-                imageSubMenuButtons.show()
-                resolutionButton.performClick()
+                b.imageNavButtons.hide()
+//                b.imageSubMenuButtons.show()
+//                b.resolutionButton.performClick()
                 act.uiSetHeight(UiLayoutHeight.SHORT)
+
 
             }, BUTTON_CLICK_DELAY_SHORT)
             handler.postDelayed({
@@ -454,21 +424,25 @@ class ImageFragment : MenuFragment() {
         }
 
 
-        currentLayout = resolutionLayout
-        currentButton = resolutionButton
-        resolutionLayout.hide()
-        aspectRatioLayout.hide()
-        imageNavButtons.hide()
-        bookmarkListLayout.hide()
+        layout = b.resolutionLayout
+        button = b.fitToViewportButton
+//        currentButton = b.resolutionButton
+        b.resolutionLayout.hide()
+        b.aspectRatioLayout.hide()
+        b.imageNavButtons.hide()
+        b.bookmarkListLayout.root.hide()
 
 
-        resolutionButton.performClick()
+        setCurrentLayout(b.resolutionLayout)
+//        alphaButton(b.resolutionButton)
 
-
-        // if (sc.goldEnabled) onGoldEnabled()
+        updateLayout()
 
     }
 
+    override fun updateLayout() {}
+
+    override fun updateValues() {}
 
     fun updateResolutionText(res: Resolution, ratio: AspectRatio) {
 
@@ -476,31 +450,31 @@ class ImageFragment : MenuFragment() {
         if (ratio.r > AspectRatio.RATIO_SCREEN.r) dims.x = (dims.y / ratio.r).toInt()
         else if (ratio.r < AspectRatio.RATIO_SCREEN.r) dims.y = (dims.x * ratio.r).toInt()
 
-        resolutionValue.text = "${dims.x} x ${dims.y}"
+        b.resolutionValue.text = "${dims.x} x ${dims.y}"
     }
 
     fun highlightListHeader(adapter: ListAdapter<Fractal>, index: Int) {
         adapter.apply {
             listOf(
-                    bookmarkListLayout.listFavoritesButton,
-                    bookmarkListLayout.listCustomButton,
-                    bookmarkListLayout.listDefaultButton
+                b.bookmarkListLayout.listFavoritesButton,
+                b.bookmarkListLayout.listCustomButton,
+                b.bookmarkListLayout.listDefaultButton
             ).forEachIndexed { i, b ->
                 b.setTextColor(resources.getColor(if (index == i) R.color.colorDarkText else R.color.colorDarkTextMuted, null))
             }
         }
     }
 
-    fun onGoldEnabled() {
+    override fun onGoldEnabled() {
 
         bookmarkListAdapter.notifyDataSetChanged()
-        resolutionBar.showGradient = false
+        b.resolutionBar.showGradient = false
         val goldAspects = listOf(
-                aspect45Button,
-                aspect57Button,
-                aspect23Button,
-                aspect916Button,
-                aspect12Button
+                b.aspect45Button,
+                b.aspect57Button,
+                b.aspect23Button,
+                b.aspect916Button,
+                b.aspect12Button
         )
         goldAspects.forEach {
             it.showGradient = false

@@ -4,12 +4,14 @@ import android.util.Log
 
 enum class ExprType { REAL, COMPLEX, NONE }
 enum class Precision { SINGLE, DUAL, NONE }
+enum class ZoomLevel { SHALLOW, DEEP, NONE }
 
 open class Expr(
 
         val latex           : String,
         val type            : ExprType   = ExprType.NONE,
         precision           : Precision  = Precision.SINGLE,
+        var zoomLevel       : ZoomLevel  = ZoomLevel.DEEP,
         str                 : String     = "",
         val imgId           : Int        = -1,
         val isCmd           : Boolean    = false,
@@ -21,16 +23,17 @@ open class Expr(
 ) {
 
     constructor(other: Expr) : this(
-            other.latex,
-            other.type,
-            other.precision,
-            other.str,
-            other.imgId,
-            other.isCmd,
-            other.insertParens,
-            other.leftAfter,
-            other.rightAfter,
-            other.isConstant
+        other.latex,
+        other.type,
+        other.precision,
+        other.zoomLevel,
+        other.str,
+        other.imgId,
+        other.isCmd,
+        other.insertParens,
+        other.leftAfter,
+        other.rightAfter,
+        other.isConstant
     )
 
 
@@ -52,9 +55,9 @@ open class Expr(
         val nine    = Expr("9", imgId = R.drawable.key_9)
         val decimal = Expr(".", imgId = R.drawable.key_decimal)
 
-        val z = Expr("z", ExprType.COMPLEX, Precision.SINGLE, imgId = R.drawable.key_z)
-        val c = Expr("c", ExprType.COMPLEX, Precision.SINGLE, imgId = R.drawable.key_c)
-        val i = Expr("i", ExprType.COMPLEX, Precision.SINGLE, "_i", imgId = R.drawable.key_i, isConstant = true)
+        val z = Expr("z", ExprType.COMPLEX, imgId = R.drawable.key_z)
+        val c = Expr("c", ExprType.COMPLEX, imgId = R.drawable.key_c)
+        val i = Expr("i", ExprType.COMPLEX, str = "_i", imgId = R.drawable.key_i, isConstant = true)
 
 
         val neg   = Operator("neg",        0,  1) { args ->
@@ -105,7 +108,7 @@ open class Expr(
             }
             else Expr("csign(${args[0]})", ExprType.COMPLEX, args[0].precision)
         }
-        val arg   = Operator("arg",        0,  1, imgId = R.drawable.key_arg, insertParens = true, leftAfter = true) { args ->
+        val arg   = Operator("arg",        0,  1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arg, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) "arg(${args[0]})" else "carg(${args[0]})"
             Expr(glsl, ExprType.REAL, args[0].precision)
         }
@@ -130,8 +133,6 @@ open class Expr(
             Expr(glsl, args[0].type, args[0].precision)
         }
         val pow   = Operator("^",          1,  2, imgId = R.drawable.key_pow) { args ->
-
-            // Log.e("EXPR", "POW -- arg1: ${args[0]}(${args[0].precision.name[0]}), arg2: ${args[1]}(${args[1].precision.name[0]})")
             when {
                 args[1].str == "1.0" -> args[0]
                 args[1].str == "2.0" -> sqr.of(listOf(args[0]))
@@ -146,14 +147,14 @@ open class Expr(
                 args[1].str == "-5.0" -> inv.of(listOf(quint.of(listOf(args[0]))))
                 args[1].str == "-6.0" -> inv.of(listOf(sext.of(listOf(args[0]))))
                 args[0].isComplex && args[1].str.toFloatOrNull()?.run { compareTo(1f) > 0 && rem(1f) == 0f } ?: false -> {
-                    Expr("cpow(${args[0]}, ${args[1].str.toFloat().toInt()})", ExprType.COMPLEX, args[0].precision)
+                    val p = args[1].str.toFloat().toInt()
+                    Expr("cpow(${args[0]}, $p)", ExprType.COMPLEX, args[0].precision, if (p > 10) ZoomLevel.SHALLOW else ZoomLevel.DEEP)
                 }
-
                 args[0].isReal && args[1].isReal -> {
                     if (args[0].isSingle && args[1].isSingle) Expr("pow(${args[0]}, ${args[1]})", ExprType.REAL, Precision.SINGLE)
                     else                                      Expr("powd(${args[0]}, ${args[1]})", ExprType.REAL, Precision.DUAL)
                 }
-                else -> Expr("cpow(${args[0]}, ${args[1]})", ExprType.COMPLEX, args[0].precision)
+                else -> Expr("cpow(${args[0]}, ${args[1]})", ExprType.COMPLEX, args[0].precision, ZoomLevel.SHALLOW)
             }
         }
         val inv   = Operator("^-1",        1,  1, imgId = R.drawable.key_inverse, rightAfter = true) { args ->
@@ -270,42 +271,42 @@ open class Expr(
 
 
 
-        val sin = Operator("sin", 0, 1, imgId = R.drawable.key_sin, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sin = Operator("sin", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_sin, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sin(${args[0]})" else "sind(${args[0]})"
             }
             else "csin(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val cos = Operator("cos", 0, 1, imgId = R.drawable.key_cos, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val cos = Operator("cos", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_cos, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "cos(${args[0]})" else "cosd(${args[0]})"
             }
             else "ccos(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val tan = Operator("tan", 0, 1, imgId = R.drawable.key_tan, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val tan = Operator("tan", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_tan, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "tan(${args[0]})" else "tand(${args[0]})"
             }
             else "ctan(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val csc = Operator("csc", 0, 1, imgId = R.drawable.key_csc, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val csc = Operator("csc", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_csc, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "csc(${args[0]})" else "cscd(${args[0]})"
             }
             else "ccsc(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val sec = Operator("sec", 0, 1, imgId = R.drawable.key_sec, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sec = Operator("sec", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_sec, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sec(${args[0]})" else "secd(${args[0]})"
             }
             else "csec(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val cot = Operator("cot", 0, 1, imgId = R.drawable.key_cot, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val cot = Operator("cot", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_cot, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "cot(${args[0]})" else "cotd(${args[0]})"
             }
@@ -313,42 +314,42 @@ open class Expr(
             Expr(glsl, args[0].type, args[0].precision)
         }
 
-        val asin = Operator("arcsin", 0, 1, imgId = R.drawable.key_arcsin, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asin = Operator("arcsin", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arcsin, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asin(${args[0]})" else "asind(${args[0]})"
             }
             else "casin(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acos = Operator("arccos", 0, 1, imgId = R.drawable.key_arccos, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acos = Operator("arccos", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arccos, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acos(${args[0]})" else "acosd(${args[0]})"
             }
             else "cacos(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val atan = Operator("arctan", 0, 1, imgId = R.drawable.key_arctan, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val atan = Operator("arctan", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arctan, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "atan(${args[0]})" else "atand(${args[0]})"
             }
             else "catan(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acsc = Operator("arccsc", 0, 1, imgId = R.drawable.key_arccsc, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acsc = Operator("arccsc", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arccsc, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acsc(${args[0]})" else "acscd(${args[0]})"
             }
             else "cacsc(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val asec = Operator("arcsec", 0, 1, imgId = R.drawable.key_arcsec, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asec = Operator("arcsec", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arcsec, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asec(${args[0]})" else "asecd(${args[0]})"
             }
             else "casec(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acot = Operator("arccot", 0, 1, imgId = R.drawable.key_arccot, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acot = Operator("arccot", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arccot, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acot(${args[0]})" else "acotd(${args[0]})"
             }
@@ -358,42 +359,42 @@ open class Expr(
 
 
 
-        val sinh = Operator("sinh", 0, 1, imgId = R.drawable.key_sinh, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sinh = Operator("sinh", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_sinh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sinh(${args[0]})" else "sinhd(${args[0]})"
             }
             else "csinh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val cosh = Operator("cosh", 0, 1, imgId = R.drawable.key_cosh, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val cosh = Operator("cosh", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_cosh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "cosh(${args[0]})" else "coshd(${args[0]})"
             }
             else "ccosh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val tanh = Operator("tanh", 0, 1, imgId = R.drawable.key_tanh, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val tanh = Operator("tanh", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_tanh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "tanh(${args[0]})" else "tanhd(${args[0]})"
             }
             else "ctanh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val csch = Operator("csch", 0, 1, imgId = R.drawable.key_csch, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val csch = Operator("csch", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_csch, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "csch(${args[0]})" else "cschd(${args[0]})"
             }
             else "ccsch(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val sech = Operator("sech", 0, 1, imgId = R.drawable.key_sech, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val sech = Operator("sech", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_sech, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "sech(${args[0]})" else "sechd(${args[0]})"
             }
             else "csech(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val coth = Operator("coth", 0, 1, imgId = R.drawable.key_coth, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val coth = Operator("coth", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_coth, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "coth(${args[0]})" else "cothd(${args[0]})"
             }
@@ -401,42 +402,42 @@ open class Expr(
             Expr(glsl, args[0].type, args[0].precision)
         }
 
-        val asinh = Operator("arcsinh", 0, 1, imgId = R.drawable.key_arcsinh, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asinh = Operator("arcsinh", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arcsinh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asinh(${args[0]})" else "asinhd(${args[0]})"
             }
             else "casinh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acosh = Operator("arccosh", 0, 1, imgId = R.drawable.key_arccosh, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acosh = Operator("arccosh", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arccosh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acosh(${args[0]})" else "acoshd(${args[0]})"
             }
             else "cacosh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val atanh = Operator("arctanh", 0, 1, imgId = R.drawable.key_arctanh, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val atanh = Operator("arctanh", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arctanh, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "atanh(${args[0]})" else "atanhd(${args[0]})"
             }
             else "catanh(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acsch = Operator("arccsch", 0, 1, imgId = R.drawable.key_arccsch, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acsch = Operator("arccsch", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arccsch, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acsch(${args[0]})" else "acschd(${args[0]})"
             }
             else "cacsch(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val asech = Operator("arcsech", 0, 1, imgId = R.drawable.key_arcsech, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val asech = Operator("arcsech", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arcsech, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "asech(${args[0]})" else "asechd(${args[0]})"
             }
             else "casech(${args[0]})"
             Expr(glsl, args[0].type, args[0].precision)
         }
-        val acoth = Operator("arccoth", 0, 1, imgId = R.drawable.key_arccoth, isCmd = true, insertParens = true, leftAfter = true) { args ->
+        val acoth = Operator("arccoth", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_arccoth, isCmd = true, insertParens = true, leftAfter = true) { args ->
             val glsl = if (args[0].isReal) {
                 if (args[0].isSingle) "acoth(${args[0]})" else "acothd(${args[0]})"
             }
@@ -446,17 +447,26 @@ open class Expr(
 
 
 
-        val ln = Operator("ln", 0, 1, insertParens = true, leftAfter = true) { args ->
-            if (args[0].isReal) Expr("log(${args[0]})", ExprType.REAL)
-            else Expr("clog(${args[0]})", ExprType.COMPLEX)
+        val ln    = Operator("ln",     0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_ln, insertParens = true, leftAfter = true) { args ->
+            if (args[0].isReal) {
+                if (args[0].isSingle)   Expr("log(${args[0]})",  ExprType.REAL, Precision.SINGLE)
+                else                    Expr("logd(${args[0]})", ExprType.REAL, Precision.DUAL)
+            }
+            else Expr("clog(${args[0]})", ExprType.COMPLEX, args[0].precision)
         }
-        val log2 = Operator("log_2", 0, 1, insertParens = true, leftAfter = true) { args ->
-            if (args[0].isReal) Expr("log2(${args[0]})", ExprType.REAL)
-            else Expr("clog2(${args[0]})", ExprType.COMPLEX)
+        val log2  = Operator("log_2",  0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_log2, insertParens = true, leftAfter = true) { args ->
+            if (args[0].isReal) {
+                if (args[0].isSingle)   Expr("log2(${args[0]})",  ExprType.REAL, Precision.SINGLE)
+                else                    Expr("log2d(${args[0]})", ExprType.REAL, Precision.DUAL)
+            }
+            else Expr("clog2(${args[0]})", ExprType.COMPLEX, args[0].precision)
         }
-        val log10 = Operator("log_10", 0, 1, insertParens = true, leftAfter = true) { args ->
-            if (args[0].isReal) Expr("log10(${args[0]})", ExprType.REAL)
-            else Expr("clog10(${args[0]})", ExprType.COMPLEX)
+        val log10 = Operator("log_10", 0, 1, zoomLevel = ZoomLevel.SHALLOW, imgId = R.drawable.key_log10, str = "log_(10)", insertParens = true, leftAfter = true) { args ->
+            if (args[0].isReal) {
+                if (args[0].isSingle)   Expr("log10(${args[0]})",  ExprType.REAL, Precision.SINGLE)
+                else                    Expr("log10d(${args[0]})", ExprType.REAL, Precision.DUAL)
+            }
+            else Expr("clog10(${args[0]})", ExprType.COMPLEX, args[0].precision)
         }
 //        val log = Operator("log_()", 0, 1, insertParens = true, leftAfter = true) { args, _ ->
 //            if (args[0].isReal) Expr("log2(${args[0]})", ExprType.REAL)
@@ -499,22 +509,29 @@ open class Expr(
         )
 
         val basic = listOf(
-                add,
-                sub,
-                mult,
-                div,
-                sqr,
-                cube,
-                quad,
-                inv,
-                sqrt,
-                pow,
-                abs,
-                rabs,
-                iabs,
-                conj,
-                mod,
-                arg
+            add,
+            sub,
+            mult,
+            div,
+            sqr,
+            cube,
+            quad,
+            inv,
+            sqrt,
+            pow,
+            abs,
+            rabs,
+            iabs,
+            conj,
+            mod,
+            arg,
+            ln,
+            log2,
+            log10
+        )
+
+        val logarithmic = listOf(
+            log2, log10
         )
 
         val trig = listOf(
@@ -627,15 +644,24 @@ open class Expr(
 
 class Operator(
 
-        latex: String,
-        val order: Int,
-        val numArgs: Int,
-        str: String = "",
-        imgId: Int = -1,
-        isCmd: Boolean = false,
-        insertParens: Boolean = false,
-        leftAfter: Boolean = false,
-        rightAfter: Boolean = false,
-        val of: (args: List<Expr>) -> Expr
+    latex: String,
+    val order: Int,
+    val numArgs: Int,
+    zoomLevel : ZoomLevel = ZoomLevel.DEEP,
+    str: String = "",
+    imgId: Int = -1,
+    isCmd: Boolean = false,
+    insertParens: Boolean = false,
+    leftAfter: Boolean = false,
+    rightAfter: Boolean = false,
+    val operate: (args: List<Expr>) -> Expr
 
-) : Expr(latex, ExprType.NONE, Precision.NONE, str, imgId, isCmd, insertParens, leftAfter, rightAfter)
+) : Expr(latex, ExprType.NONE, Precision.NONE, zoomLevel, str, imgId, isCmd, insertParens, leftAfter, rightAfter) {
+
+    fun of(args: List<Expr>) : Expr {
+        val expr = operate(args)
+        expr.zoomLevel = if (args.any { it.zoomLevel == ZoomLevel.SHALLOW } || zoomLevel == ZoomLevel.SHALLOW) ZoomLevel.SHALLOW else ZoomLevel.DEEP
+        return expr
+    }
+
+}

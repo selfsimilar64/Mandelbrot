@@ -871,6 +871,14 @@ vec2 logd(vec2 a) {
 
 }
 
+vec2 log2d(vec2 a) {
+    return div(logd(a), _log2);
+}
+
+vec2 log10d(vec2 a) {
+    return div(logd(a), _log10);
+}
+
 vec2 sinhd(vec2 a) {
 
 //    if (a == ZERO) return ZERO;
@@ -1092,6 +1100,12 @@ float carg(vec2 z) {
 }
 vec2 carg(vec4 z) {
     return atan2d(z.zw, z.xy);
+}
+float carg2(vec2 z) {
+    return carg(z)*_inv2pi.x + 0.5;
+}
+vec2 carg2 (vec4 z) {
+    return add(mult(carg(z), _inv2pi), 0.5);
 }
 
 vec2 conj(vec2 z) {
@@ -3583,6 +3597,75 @@ float harriss_test_final(vec2 z, uint n) {
     float d;
     if (d1 < d2) d = d1; else d = d2;
     if (d < q1.x) return specialValue; else return 0.0;
+}
+
+void importance_loop(vec2 z, inout float h) {
+
+    float d = cmod(z - q1);
+//    if (d < q2.x) d = q2.x;
+    h += exp(-d);
+
+}
+void importance_loop(vec4 z, inout float h) {
+    importance_loop(z.xz, h);
+}
+
+float importance_final(uint type, float h, vec2 z) {
+
+//    float dx = dFdx(h);
+//    float dy = dFdy(h);
+//    return carg2(vec2(dx, dy));
+//    return cmod(vec2(dx, dy));
+
+    return h;
+
+}
+
+void importance_grad_analytic_loop(uint n, vec2 z, vec2 z1, inout vec2 alpha, inout vec2 grad) {
+
+    alpha = mandelbrot_delta1(alpha, z1);
+    float d = cmod(z - q1);
+
+    if (d >= q2.x) {
+//        grad -= cmult((z - q1)/d*exp(-d), cmodsqr(alpha)*cinv(alpha));
+        grad -= 2.0*cmult((z - q1)/(d*d*d*d), cmodsqr(alpha)*cinv(alpha));
+    }
+
+}
+
+float importance_grad_analytic_final(vec2 z, vec2 alpha, vec2 grad) {
+
+    return carg2(grad);
+//    return cmod(grad);
+
+}
+
+void importance_grad_numeric_loop(uint n, vec2 z, inout vec2 z_dx, inout vec2 z_dy, vec2 c, inout float h, inout float h_dx, inout float h_dy) {
+
+    z_dx = csqr(z_dx) + c + vec2(1e-4, 0.0);
+    z_dy = csqr(z_dy) + c + vec2(0.0, 1e-4);
+
+    float dist = cmod(z - q1);
+    float dist_dx = cmod(z_dx - q1);
+    float dist_dy = cmod(z_dy - q1);
+
+//    h += exp(-dist);
+//    h_dx += exp(-dist_dx);
+//    h_dy += exp(-dist_dy);
+
+    if (dist >= q2.x)    h    += q2.x/dist;   else h    += 1.0;
+    if (dist_dx >= q2.x) h_dx += 1.0/dist_dx; else h_dx += 1.0;
+    if (dist_dy >= q2.x) h_dy += 1.0/dist_dy; else h_dy += 1.0;
+
+}
+
+float importance_grad_numeric_final(float h, float h_dx, float h_dy) {
+    vec2 w = vec2(
+        (h_dx - h)/1e-4,
+        (h_dy - h)/1e-4
+    );
+    return carg2(w);
+//    return cmod(w);
 }
 
 

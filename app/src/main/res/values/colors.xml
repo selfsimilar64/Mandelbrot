@@ -5,12 +5,13 @@
     <color name="colorPrimary">#fff</color>
     <color name="colorPrimaryDark">@color/black</color>
     <color name="colorPrimaryDark2">#555</color>
-    <color name="colorDarkSelected">#3a3a3a</color>
+    <color name="colorDarkSelected">#454553</color>
     <color name="colorDarkUnselected">@color/menuDark6</color>
 
     <color name="colorDarkText">@color/highlight</color>
     <color name="colorDarkTextMuted">#7B7B8C</color>
     <color name="colorDescriptionDark">#8A8A99</color>
+    <color name="aspectRatioIconUnselected">#9797AC</color>
 
     <color name="launchBackground">@color/menuDarkSecondary</color>
 
@@ -32,9 +33,12 @@
 
     <color name="menuDarkPrimary">#1B1B26</color>
     <color name="menuDarkSecondary">#11111A</color>
-    <color name="menuDarkTertiary">#0A0A0F</color>
+    <color name="menuDarkTertiary">#0A0A0F</color>"
 
-    <color name="accent">#A5A5FF</color>
+    <color name="switchTrackOn">@color/accent</color>
+    <color name="switchTrackOff">#454553</color>
+
+    <color name="accent">#9797C0</color>
     <color name="highlight">#EBEBFF</color>
     <color name="indent">#0B0B0D</color>
     <color name="switchTrack">#272733</color>

@@ -1,13 +1,21 @@
 <changelog>
 
+    <release versionCode="40" versionName="v1.5.1" date="2021-11-01">
+        <new name="summary">5 new bookmarks!</new>
+        <new name="summary">2 new palettes!</new>
+        <new name="summary">Logarithmic functions added to the custom shape creator!</new>
+        <new name="summary">'Randomize' feature added to the options menu!</new>
+        <new name="summary">Many bug fixes and improved crash reporting system!</new>
+    </release>
+
 
     <release versionCode="37" versionName="v1.5.0" date="2021-07-15">
-        <new type="summary">Improved user interface - smaller, new adjust buttons, and more!</new>
-        <new type="summary">Added tutorial! Accessible by going to (Settings) -> (Tutorial)</new>
-        <new type="summary">GOLD: Make copies of palettes and shapes! (Long click an item and press the copy button)</new>
-        <new type="summary">GOLD: Added inverse trigonometry functions to the custom shape creator!</new>
-        <new type="summary">Added (Settings) -> (Unrestricted Parameters)</new>
-        <new type="summary">Added 2 new palettes: Eye, Who</new>
+        <info>Improved user interface - smaller, new adjust buttons, and more!</info>
+        <info>Added tutorial! Accessible by going to (Settings) -> (Tutorial)</info>
+        <info>GOLD: Make copies of palettes and shapes! (Long click an item and press the copy button)</info>
+        <info>GOLD: Added inverse trigonometry functions to the custom shape creator!</info>
+        <info>Added (Settings) -> (Unrestricted Parameters)</info>
+        <info>Added 2 new palettes: Eye, Who</info>
     </release>
 
 

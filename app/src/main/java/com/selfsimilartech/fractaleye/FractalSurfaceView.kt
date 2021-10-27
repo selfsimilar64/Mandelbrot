@@ -791,7 +791,7 @@ class FractalSurfaceView : GLSurfaceView {
                             }
 
                             if (reaction == Reaction.SHAPE) act.updateShapeEditTexts()
-                            else                            act.updateTextureEditTexts()
+                            else                            act.updateTextureParam()
 
                         }
                         Reaction.NONE -> {
@@ -844,13 +844,13 @@ class FractalSurfaceView : GLSurfaceView {
                         }
                         Reaction.COLOR -> {
                             if (renderProfile == RenderProfile.COLOR_THUMB) renderThumbnails = true
-                            act.updateColorEditTexts()
+                            act.updateColorValues()
                             prevFocalLen = 1f
                         }
                         Reaction.SHAPE, Reaction.TEXTURE -> {
 
                             if (reaction == Reaction.SHAPE) act.updateShapeEditTexts()
-                            else act.updateTextureEditTexts()
+                            else act.updateTextureParam()
 
                             val param = if (reaction == Reaction.SHAPE) f.shape.params.active else f.texture.activeParam
 
@@ -861,6 +861,8 @@ class FractalSurfaceView : GLSurfaceView {
                         Reaction.NONE -> {
                         }
                     }
+
+                    Log.e("FSV", "Config(${f.shape.position}, ${f.shape.params.toConstructorString()}\n)")
 
                     requestRender()
                     return true

@@ -1,13 +1,21 @@
 <changelog>
 
+    <release versionCode="40" versionName="v1.5.1" date="2021-11-01">
+        <new name="summary">5 novos marcadores!</new>
+        <new name="summary">2 novas paletes!</new>
+        <new name="summary">Funções logarítmicas adicionadas ao criador de forma personalizada!</new>
+        <new name="summary">Recurso 'Randomizar' adicionado ao menu de opções!</new>
+        <new name="summary">Muitas correções de bugs e sistema de relatórios de falhas melhorado!</new>
+    </release>
+
 
     <release versionCode="37" versionName="v1.5.0" date="2021-07-15">
-        <new type="summary">Interface de usuário aprimorada - menor, novos botões de ajuste e muito mais!</new>
-        <new type="summary">Tutorial adicionado! Acessível em (Configurações) -> (Tutorial)</new>
-        <new type="summary">OURO: Faça cópias de paletas e formas! (Dê um clique longo em um item e pressione o botão de cópia)</new>
-        <new type="summary">OURO: Adicionadas funções de trigonometria inversa ao criador de formas personalizadas!</new>
-        <new type="summary">Adicionado (Configuraçõesc) -> (Parâmetros Irrestritos)</new>
-        <new type="summary">Adicionadas 2 novas paletas: Olho, Quem</new>
+        <info>Interface de usuário aprimorada - menor, novos botões de ajuste e muito mais!</info>
+        <info>Tutorial adicionado! Acessível em (Configurações) -> (Tutorial)</info>
+        <info>OURO: Faça cópias de paletas e formas! (Dê um clique longo em um item e pressione o botão de cópia)</info>
+        <info>OURO: Adicionadas funções de trigonometria inversa ao criador de formas personalizadas!</info>
+        <info>Adicionado (Configuraçõesc) -> (Parâmetros Irrestritos)</info>
+        <info>Adicionadas 2 novas paletas: Olho, Quem</info>
     </release>
 
 

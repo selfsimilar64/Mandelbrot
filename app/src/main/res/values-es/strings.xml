@@ -36,7 +36,7 @@
     <string name="solid_fill_black">negro</string>
     <string name="solid_fill">llenar</string>
     <string name="shape">Forma</string>
-    <string name="settings">configuraciones</string>
+    <string name="settings">Configuraciones</string>
     <string name="save">Guardar</string>
     <string name="royal">Real</string>
     <string name="rotation">rotación</string>
@@ -230,12 +230,10 @@
     <string name="image">Imagen</string>
     <string name="aspect_ratio">Relación</string>
     <string name="about">Acerca</string>
-    <string name="about_info_1">Fractal Eye v%s © 2019-2021 Matt Kelley</string>
-    <string name="about_info_2">¿Tiene problemas? Por favor póngase en contacto conmigo:</string>
+    <string name="about_info_2">¿Tiene problemas?</string>
     <string name="show_changelog">Historial de Versiones</string>
     <string name="upgrade_to">Actualizar a ORO</string>
     <string name="carousel">Carrusel</string>
-    <string name="slow_dualfloat_title">Parámetros no restringidos</string>
     <string name="monster">Monstruo</string>
     <string name="split_type">Usar Método de División Alternativo</string>
     <string name="split_type_hint">Cambie esto si no puede ampliar más de 1e-6 en formas como Mandelbrot</string>
@@ -347,4 +345,17 @@
     <string name="tutorial_texture_param_interact">¡Cambie el valor a 230 para continuar!</string>
     <string name="tutorial_texture_param_next">Haga clic en \'próximo\' para probarlo.</string>
     <string name="tutorial_texure_param_info">Este parámetro tiene solo un número y deslizar el dedo horizontalmente cambia su valor. También puede cambiar el valor haciendo clic en los botones de ajuste, o puede ingresar manualmente un número haciendo clic en el valor.</string>
+    <string name="about_info_3">Por favor póngase en contacto conmigo:</string>
+    <string name="random_fractal">Aleatorizar</string>
+    <string name="new_bookmark">Nuevo Marcador</string>
+    <string name="target_framerate">Framerate Objetivo</string>
+    <string name="target_framerate_hint">La resolución se ajustará para que coincida con esta framerate durante los cambios de parámetros</string>
+    <string name="epicenter">Epicentro</string>
+    <string name="invertedforest">Bosque Invertido</string>
+    <string name="sundial">Reloj de Sol</string>
+    <string name="mitosis">Mitosis</string>
+    <string name="dawn">Amanecer</string>
+    <string name="mirage">Espejismo</string>
+    <string name="msg_empty_name">Introduzca un nombre para este artículo</string>
+    <string name="error">¡ Error !</string>
 </resources>

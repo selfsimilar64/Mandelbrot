@@ -6,7 +6,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 
-class Position(
+class   Position(
 
         x: Double = 0.0,
         y: Double = 0.0,
@@ -261,6 +261,10 @@ class Position(
 //        xap = Apfloat(xap.toString(), ap)
 //        yap = Apfloat(yap.toString(), ap)
 
+    }
+
+    override fun toString(): String {
+        return "\n\tPosition(x = $x, y = $y, " + "zoom = %e)".format(zoom)
     }
 
 }

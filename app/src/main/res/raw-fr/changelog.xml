@@ -1,13 +1,21 @@
 <changelog>
 
+    <release versionCode="40" versionName="v1.5.1" date="2021-11-01">
+        <new name="summary">5 nouveaux signets!</new>
+        <new name="summary">2 nouvelles palettes!</new>
+        <new name="summary">Fonctions logarithmiques ajoutées au créateur de forme personnalisé!</new>
+        <new name="summary">Ajout de la fonction 'Randomiser' au menu des options!</new>
+        <new name="summary">Beaucoup de corrections de bugs et système amélioré de rapports de plantage!</new>
+    </release>
+
 
     <release versionCode="37" versionName="v1.5.0" date="2021-07-15">
-        <new type="summary">Interface utilisateur améliorée - plus petits, nouveaux boutons de réglage, et plus encore!</new>
-        <new type="summary">Tutoriel ajouté ! Accessible en allant dans (Configuration) -> (Tutoriel)</new>
-        <new type="summary">OR: Faites des copies de palettes et de formes ! (Cliquez longuement sur un élément et appuyez sur le bouton Copier)</new>
-        <new type="summary">OR: Ajout de fonctions de trigonométrie inverse au créateur de formes personnalisées!</new>
-        <new type="summary">Ajouté (Configuration) -> (Paramètres Non Restreints)</new>
-        <new type="summary">Ajout de 2 nouvelles palettes : Œil, Qui</new>
+        <info>Interface utilisateur améliorée - plus petits, nouveaux boutons de réglage, et plus encore!</info>
+        <info>Tutoriel ajouté ! Accessible en allant dans (Configuration) -> (Tutoriel)</info>
+        <info>OR: Faites des copies de palettes et de formes ! (Cliquez longuement sur un élément et appuyez sur le bouton Copier)</info>
+        <info>OR: Ajout de fonctions de trigonométrie inverse au créateur de formes personnalisées!</info>
+        <info>Ajouté (Configuration) -> (Paramètres Non Restreints)</info>
+        <info>Ajout de 2 nouvelles palettes : Œil, Qui</info>
     </release>
 
 

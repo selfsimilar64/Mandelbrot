@@ -2,6 +2,7 @@ package com.selfsimilartech.fractaleye
 
 import android.renderscript.Double2
 import android.util.Range
+import androidx.core.util.toClosedRange
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -13,13 +14,15 @@ open class RealParam (
         uLocked         : Boolean         = false,
         var discrete    : Boolean         = false,
         var toRadians   : Boolean         = false,
-        val goldFeature : Boolean         = false,
+        override val goldFeature : Boolean         = false,
         val devFeature  : Boolean         = false,
         sensitivity     : Double          = 50.0
 
-) {
+) : Goldable {
 
     constructor(data: Data) : this(u = data.u, sensitivity = if (data.sensitivity == 0.0) 50.0 else data.sensitivity)
+
+    constructor(u: Double) : this(-1, u)
 
     data class Data(val u: Double, val v: Double, val isComplex: Boolean, val sensitivity: Double)
 
@@ -48,7 +51,7 @@ open class RealParam (
 
     open var sensitivity = sensitivity
         set(value) {
-            field = clamp(value, 1.0, 99.0)
+            field = value.clamp(1.0, 99.0)
             val t = 0.5 - (field - 1.0)/98.0
             sensitivityFactor = 0.5*10.0.pow(t*(SENSITIVITY_EXP_LOW - SENSITIVITY_EXP_HIGH)) * uRange.size()/3.5
         }
@@ -58,15 +61,30 @@ open class RealParam (
 
     val interval = uRange.upper - uRange.lower
 
+    open fun valueEquals(other: RealParam) : Boolean {
+        return u == other.u
+    }
+
+    open fun randomize(mag: Double) {
+        u = Math.random()*(uRange.upper - uRange.lower) + uRange.lower
+    }
+
+    open fun randomizePerturb(mag: Double) {
+        u += Math.random()*(uRange.upper - uRange.lower)*mag
+    }
+
     open fun getProgress() : Double {
         return (u - uRange.lower)/interval
     }
+
     open fun getValueFromProgress(p: Double) : Double {
         return uRange.lower + p*interval
     }
+
     open fun setValueFromProgress(p: Double) {
         u = getValueFromProgress(p)
     }
+
     open fun clamp(u: Double) : Double {
         return when {
             u < uRange.lower -> uRange.lower
@@ -74,17 +92,20 @@ open class RealParam (
             else -> u
         }
     }
+
     open fun reset() {
         uLocked = false
         u = uInit
         uLocked = uLockedInit
         sensitivity = 50.0
     }
+
     open fun clone() : RealParam {
 
         return RealParam(u = u)
 
     }
+
     open fun setFrom(newParam: RealParam) {
 
         uLocked = false
@@ -92,8 +113,11 @@ open class RealParam (
         sensitivity = newParam.sensitivity
 
     }
+
     open fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), 0f)
+
     open fun toDouble2() : Double2 = Double2(u, 0.0)
+
     open fun toData(index: Int) : Data {
         return Data(u, 0.0, false, sensitivity)
     }
@@ -104,6 +128,10 @@ open class RealParam (
 
     fun toString(U: Double) : String {
         return if (discrete) "%d".format(U.roundToInt()) else U.format(REAL_PARAM_DIGITS)
+    }
+
+    open fun toConstructorString() : String {
+        return "RealParam($u)"
     }
 
 }

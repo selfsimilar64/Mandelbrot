@@ -4,13 +4,10 @@
     <string name="fe_abbrev">FE</string>
 
 
-    <!-- LAYOUT -->
-    <!-- ===================================================================================== -->
-
 
     <!-- MAIN -->
     <string name="category" translatable="false">category</string>
-    <string name="settings">settings</string>
+    <string name="settings">Settings</string>
     <string name="texture">texture</string>
     <string name="shape">Shape</string>
     <string name="color">color</string>
@@ -39,13 +36,13 @@
     <string name="gold_pending_dscript">Your purchase is still being processed. Please check back later.</string>
     <string name="epilepsy_title">Caution</string>
     <string name="epilepsy_dscript">This app can sometimes produce fast flashing images which may be harmful to users with photosensitive epilepsy.</string>
-    <string name="changelog_tag_gold_prefix">[font color=#ffe557]GOLD: [/font]</string>
+    <string name="changelog_tag_gold_prefix" translatable="false">[font color=#ffe557]GOLD: [/font]</string>
     <string name="bookmark">Bookmark</string>
     <string name="bookmarks">Bookmarks</string>
     <string name="fractal">Fractal</string>
-    <string name="compiling">Compiling Shader …</string>
     <string name="load_previous_fractal">Load fractal from previous session?</string>
     <string name="copy">Copy</string>
+    <string name="error">! Error !</string>
 
 
     <string name="tutorial">Tutorial</string>
@@ -53,7 +50,6 @@
     <string name="tutorial_skip">Skip</string>
     <string name="tutorial_next">Next</string>
     <string name="tutorial_great">Great!</string>
-    <string name="tutorial_back">Back</string>
     <string name="tutorial_finish">Finish</string>
     <string name="tutorial_exit">Exit</string>
     <string name="tutorial_keep_going">Keep going!</string>
@@ -89,15 +85,14 @@
     <string name="tutorial_5_2">Textures can also have parameters! Click the highlighted button to select the texture parameter.</string>
     <string name="tutorial_congrats">Congratulations!</string>
     <string name="tutorial_complete">You have successfully completed the tutorial and have everything you need to start making your own fractals!</string>
-    <string name="tutorial_image_1">IMAGE mode lets you ajust properties of the whole image like resolution and aspect ratio!</string>
-    <string name="tutorial_extra_1">The leftmost button will create a new bookmark so you can reload your fractal at any time!</string>
-    <string name="tutorial_extra_2">The middle button will save an image directly to your gallery!</string>
-    <string name="tutorial_extra_3">The rightmost button will open the settings menu!</string>
 
 
 
-    <!-- VIDEO -->
+    <!-- EXTRAS -->
+    <string name="random_fractal">Randomize</string>
     <string name="rendering_video">Rendering Video</string>
+    <string name="render_video">Render Video</string>
+    <string name="new_bookmark">New Bookmark</string>
 
 
     <!-- UPGRADE ACTIVITY -->
@@ -123,8 +118,7 @@
     <string name="image">Image</string>
     <string name="resolution">Resolution</string>
     <string name="resolution_dims" translatable="false">width x height</string>
-    <string name="aspect_ratio">Ratio</string>
-    <string name="aspect_screen">Screen</string>
+    <string name="aspect_ratio">Aspect Ratio</string>
     <string name="fit_viewport">Fit</string>
 
 
@@ -133,8 +127,9 @@
     <string name="unrestricted_params_hint">Allows parameter values to be set outside of their suggested range</string>
     <string name="contact_email" translatable="false">selfaffinetech@gmail.com</string>
     <string name="about">About</string>
-    <string name="about_info_1">Fractal Eye v%s © 2019-2021 Matt Kelley</string>
-    <string name="about_info_2">Experiencing issues? Please contact me:</string>
+    <string name="about_info_1" translatable="false">Fractal Eye v%s © 2019-2021</string>
+    <string name="about_info_2">Experiencing issues?</string>
+    <string name="about_info_3">Please contact me:</string>
     <string name="show_changelog">Version History</string>
     <string name="upgrade_to">Upgrade To</string>
     <string name="reload">reload</string>
@@ -144,7 +139,6 @@
     <string name="display">display</string>
     <string name="precision_bits" translatable="false">32-bit</string>
     <string name="resolution_low">Low</string>
-    <string name="medium">Medium</string>
     <string name="resolution_high">High</string>
     <string name="precision_single">single</string>
     <string name="precision_dual">dual</string>
@@ -169,12 +163,13 @@
     <string name="header_custom">Custom</string>
     <string name="header_default">Default</string>
     <string name="header_custom_descript">(swipe left to edit)</string>
-    <string name="highres_render">High Resolution Render</string>
     <string name="dont_show_again">Don\'t show this message again</string>
     <string name="split_type">Use Alternate Split Method</string>
     <string name="split_type_hint">Change this if you cannot zoom further than 1e-6 on shapes like Mandelbrot</string>
     <string name="allow_slow_renders">Allow Slow Renders</string>
     <string name="allow_slow_renders_hint">Zoom past 1e-6 on shapes with certain equations like %s. This feature is experimental and may not work on all devices.</string>
+    <string name="target_framerate">Target Framerate</string>
+    <string name="target_framerate_hint">The resolution will adjust to match this framerate during parameter changes</string>
 
 
     <!-- TEXTURE FRAGMENT -->
@@ -188,7 +183,6 @@
     <string name="texture_mode_in">in</string>
     <string name="texture_mode_both">both</string>
     <string name="bailout_hint" translatable="false">Determines how large the numbers can get during calcualtion before terminating</string>
-    <string name="bins">Bins</string>
     <string name="texture_image_choose_res">Choose a resolution for the image — Higher resolutions will cause image generation to be slower and will use more memory.</string>
 
 
@@ -213,7 +207,6 @@
     <string name="more_detail">More detail</string>
     <string name="less_detail">Less detail</string>
     <string name="rendering_icons">Rendering Icons …</string>
-    <string name="set_from_position">Set From Position</string>
     <string name="delete_shape_bookmark_warning">Any bookmarks that use this shape will also be deleted (%d found)</string>
     <string name="edit_shape_bookmark_warning">Any bookmarks that use this shape might not look the same after editing (%d found)</string>
     <string name="delete_palette_bookmark_warning">Any bookmarks that use this palette will be changed to a default palette (%d found)</string>
@@ -238,13 +231,8 @@
     <string name="remove">Remove</string>
     <string name="phase_hint" translatable="false">Determines the color offset. Swipe left or right with one finger to change.</string>
     <string name="freq_hint" translatable="false">Determines how frequently the colors change. Use pinch gestures to change.</string>
-    <string name="adjust">Adjust</string>
-    <string name="choose_color">Choose Color</string>
     <string name="accent1">Accent 1</string>
     <string name="accent2">Accent 2</string>
-    <string name="color_mode_manual">Manual</string>
-    <string name="color_mode_minmax">Min-Max</string>
-    <string name="color_mode_histogram">HistogramP</string>
 
 
     <!-- POSITION FRAGMENT -->
@@ -256,7 +244,7 @@
     <string name="rotate">rotate</string>
 
 
-    <!-- PRESET NAMES -->
+    <!-- BOOKMARK NAMES -->
     <string name="supernova" translatable="false">Supernova</string>
     <string name="nautilus">Nautilus</string>
     <string name="verbose">Verbose</string>
@@ -264,7 +252,6 @@
     <string name="eukaryote">Eukaryote</string>
     <string name="radio_tower">Radio Tower</string>
     <string name="homeostasis">Homeostasis</string>
-    <string name="crown">Crown</string>
     <string name="masquerade">Masquerade</string>
     <string name="perpetual_light">Perpetual Light</string>
     <string name="transformation">Transformation</string>
@@ -286,8 +273,12 @@
     <string name="reactor">Reactor</string>
     <string name="synchronized_swimming">Synchronized Swimming</string>
     <string name="thought_antannae">Thought Antannae</string>
-    <string name="tree_planet">Tree Planet</string>
     <string name="watermelon">Watermelon</string>
+    <string name="epicenter">Epicenter</string>
+    <string name="invertedforest">Inverted Forest</string>
+    <string name="sundial">Sundial</string>
+    <string name="mantra" translatable="false">Mantra</string>
+    <string name="mitosis">Mitosis</string>
 
 
     <!-- SHAPE NAMES -->
@@ -411,6 +402,8 @@
     <string name="what">What</string>
     <string name="string_void">Void</string>
     <string name="eye">Eye</string>
+    <string name="dawn">Dawn</string>
+    <string name="mirage">Mirage</string>
 
 
     <!-- TEXTURE NAMES -->
@@ -447,6 +440,10 @@
     <string name="image_over">Image 1</string>
     <string name="image_under">Image 2</string>
     <string name="binary">Binary</string>
+    <string name="harriss_test" translatable="false">Harriss Test</string>
+    <string name="importance" translatable="false">Importance</string>
+    <string name="importance_gradient_numeric" translatable="false">Numeric</string>
+    <string name="importance_gradient_analytic" translatable="false">Analytic</string>
 
 
 
@@ -493,6 +490,7 @@
     <string name="msg_eqn_error">Please edit the equation until the error indicator is not showing</string>
     <string name="msg_enable_autocolor">Please enable [Color] -> [Auto]</string>
     <string name="msg_bookmark_created">Bookmark created!</string>
+    <string name="msg_empty_name">Please enter a name for this item</string>
 
 
     <!-- UTILITY -->

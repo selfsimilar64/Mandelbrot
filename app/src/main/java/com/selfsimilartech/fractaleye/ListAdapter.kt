@@ -5,7 +5,7 @@ import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.IHeader
 import eu.davidea.flexibleadapter.items.ISectionable
 
-class ListAdapter< T : Customizable >(
+class ListAdapter<T> (
 
         items: List<ListItem<T>>?,
         val onEdit          : (a: ListAdapter<T>, ListItem<T>) -> Unit,
@@ -14,7 +14,7 @@ class ListAdapter< T : Customizable >(
         val emptyFavorite   : ListItem<T>,
         val emptyCustom     : ListItem<T>
 
-) : FlexibleAdapter<ListItem<T>>(items) {
+) : FlexibleAdapter<ListItem<T>>(items)  where T : Customizable, T : Goldable {
 
     var activatedPos = 0
 

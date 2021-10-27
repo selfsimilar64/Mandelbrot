@@ -6,12 +6,13 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.lifecycleScope
 import com.android.billingclient.api.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.request.RequestOptions
-import kotlinx.android.synthetic.main.activity_upgrade.*
+import com.selfsimilartech.fractaleye.databinding.ActivityUpgradeBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -20,6 +21,7 @@ import java.util.ArrayList
 
 class UpgradeActivity : AppCompatActivity() {
 
+    lateinit var b : ActivityUpgradeBinding
     private lateinit var billingClient : BillingClient
 
     private val purchaseUpdateListener =
@@ -53,7 +55,8 @@ class UpgradeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_upgrade)
+        b = ActivityUpgradeBinding.inflate(layoutInflater)
+        setContentView(b.root)
 
 
         billingClient = BillingClient.newBuilder(this)
@@ -79,7 +82,7 @@ class UpgradeActivity : AppCompatActivity() {
         })
 
 
-        imageLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        b.imageLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
 //        val timer = Timer()
 //
@@ -107,11 +110,11 @@ class UpgradeActivity : AppCompatActivity() {
 //        val highestResDims = Resolution.R2880.size
 //        resolutionDiffText2.text = resolutionDiffText2.text.toString().format(highestResDims.x, highestResDims.y)
 
-        upgradeNoThanksButton.setOnClickListener {
+        b.upgradeNoThanksButton.setOnClickListener {
             finish()
         }
-        upgradeConfirmButton.setOnClickListener {
-            GlobalScope.launch(Dispatchers.IO) { launchUpgradeFlow() }
+        b.upgradeConfirmButton.setOnClickListener {
+            lifecycleScope.launch { launchUpgradeFlow() }
             //finish()
         }
 
@@ -122,16 +125,16 @@ class UpgradeActivity : AppCompatActivity() {
                             .format(DecodeFormat.PREFER_RGB_565)
                             .downsample(DownsampleStrategy.AT_MOST)
             )
-            load( ResourcesCompat.getDrawable(resources, R.drawable.pro_header, null)).into(headerImage)
-            load( R.drawable.creativity_collage     ).into(creativityImage)
-            load( R.drawable.customization_collage  ).into(customizationImage)
-            load( R.drawable.upgrade_resolution     ).into(resolutionImage)
+            load( ResourcesCompat.getDrawable(resources, R.drawable.pro_header, null)).into(b.headerImage)
+            load( R.drawable.creativity_collage     ).into(b.creativityImage)
+            load( R.drawable.customization_collage  ).into(b.customizationImage)
+            load( R.drawable.upgrade_resolution     ).into(b.resolutionImage)
         }
 
 
-        upgradeCustomizationText1.text = resources.getString(R.string.upgrade_customization_content1).format(Shape.all.filter { it.goldFeature }.size)
-        upgradeCustomizationText2.text = resources.getString(R.string.upgrade_customization_content2).format(Texture.all.filter { it.goldFeature }.size)
-        upgradeCustomizationText3.text = resources.getString(R.string.upgrade_customization_content3).format(
+        b.upgradeCustomizationText1.text = resources.getString(R.string.upgrade_customization_content1).format(Shape.all.filter { it.goldFeature }.size)
+        b.upgradeCustomizationText2.text = resources.getString(R.string.upgrade_customization_content2).format(Texture.all.filter { it.goldFeature }.size)
+        b.upgradeCustomizationText3.text = resources.getString(R.string.upgrade_customization_content3).format(
                 Shape.all.sumBy { shape ->
                     if (shape!!.goldFeature) shape.params.list.size + 1
                     else                    shape.params.list.filter { it.goldFeature }.size + 1
@@ -141,10 +144,10 @@ class UpgradeActivity : AppCompatActivity() {
                 }
         )
 
-        goldResolutionLabel.showGradient = true
-        goldResolutionDims.showGradient = true
-        freeResolutionDims.text = "%d x %d".format(Resolution.MAX_FREE.w, Resolution.MAX_FREE.h)
-        goldResolutionDims.text = "%d x %d".format(Resolution.R2880.w, Resolution.R2880.h)
+        b.goldResolutionLabel.showGradient = true
+        b.goldResolutionDims.showGradient = true
+        b.freeResolutionDims.text = "%d x %d".format(Resolution.MAX_FREE.w, Resolution.MAX_FREE.h)
+        b.goldResolutionDims.text = "%d x %d".format(Resolution.R2880.w, Resolution.R2880.h)
 
     }
 

@@ -17,7 +17,6 @@ class Texture (
         val usesFirstDelta  : Boolean = false,
         val usesSecondDelta : Boolean = false,
         val params          : ParamList = ParamList(),
-        val bins            : RealParam = RealParam(nameId = R.string.bins, u = 20.0, uRange = Range(0.0, 20.0), goldFeature = true),
         val auto            : Boolean = false,
         val radius          : Float = 1e2f,
         val frequency       : Float? = null,
@@ -29,7 +28,7 @@ class Texture (
         val usesDensity     : Boolean = false,
         override var isFavorite      : Boolean = false
 
-) : Customizable {
+) : Customizable, Goldable {
 
 
 
@@ -153,7 +152,7 @@ class Texture (
                 final = "normal_map2_final(modsqrz, z, alpha, beta)",
                 usesFirstDelta = true,
                 usesSecondDelta = true,
-                radius = 1e2f,
+                radius = 4e0f,
                 frequency = 1f
         )
         val triangleIneqAvgInt = Texture(
@@ -374,7 +373,7 @@ class Texture (
                 final = "field_lines2_final(z, z1, textureType)",
                 goldFeature = true
         )
-        val escapeWithDistance = Texture(
+        val escapeWithOutline = Texture(
                 id = nextId,
                 nameId = R.string.escape_with_distance,
                 usesFirstDelta = true,
@@ -422,45 +421,89 @@ class Texture (
         )
         val harrissTest = Texture(
                 id = nextId,
-                nameId = R.string.hardware_cpu,
+                nameId = R.string.harriss_test,
                 final = "harriss_test_final(z, n)",
                 params = ParamList(listOf(RealParam(u = 0.5, uRange = Range(0.0, 5.0)))),
                 devFeature = true
+        )
+        val importanceGradientNumeric = Texture(
+            id = nextId,
+            nameId = R.string.importance_gradient_numeric,
+            init = "vec2 z_dx = vec2(0.0); vec2 z_dy = vec2(0.0); float h = 0.0; float h_dx = 0.0; float h_dy = 0.0;",
+            loop = "importance_grad_numeric_loop(n, z, z_dx, z_dy, c, h, h_dx, h_dy);",
+            final = "importance_grad_numeric_final(h, h_dx, h_dy)",
+            params = ParamList(listOf(
+                ComplexParam(),
+                RealParam(u = 1.0, uRange = Range(0.0, 10.0)),
+                RealParam(u = 1.0, uRange = Range(0.0, 100.0))
+            )),
+            devFeature = true
+        )
+        val importance = Texture(
+            id = nextId,
+            nameId = R.string.importance,
+            init = "float h = 0.0;",
+            loop = "importance_loop(z, h);",
+            final = "importance_final(textureType, h, z)",
+            params = ParamList(listOf(
+                ComplexParam(),
+                RealParam(u = 1.0, uRange = Range(0.0, 10.0)),
+                RealParam(u = 1.0, uRange = Range(0.0, 100.0))
+            )),
+            devFeature = true
+        )
+        val importanceGradientAnalytic = Texture(
+            id = nextId,
+            nameId = R.string.importance_gradient_analytic,
+            init = "vec2 grad = vec2(0.0);",
+            loop = "importance_grad_analytic_loop(n, z, z1, alpha, grad);",
+            final = "importance_grad_analytic_final(z, alpha, grad)",
+            params = ParamList(listOf(
+                ComplexParam(),
+                RealParam(u = 1.0, uRange = Range(0.0, 10.0)),
+                RealParam(u = 1.0, uRange = Range(0.0, 100.0))
+            )),
+            devFeature = true
         )
 
 
 
         val all = mutableListOf(
-                harrissTest,
-                escape,
-                escapeSmooth,
-                converge,
-                convergeSmooth,
-                exponentialSmoothing,
-                umbrella,
-                umbrellaInverse,
-                angularMomentum,
-                outline,
-                distanceEstimation,
-                escapeWithDistance,
-                triangleIneqAvgInt,
-                triangleIneqAvgFloat,
-                curvatureAvg,
-                stripeAvg,
-                overlayAvg,
-                fieldLines,
-                discLens,
-                starLens,
-                sineLens,
-                orbitTrapLine,
-                orbitTrapCirc,
-                orbitTrapBox,
-                orbitTrapImageOver,
-                orbitTrapImageUnder,
-                normalMap1,
-                normalMap2,
-                kleinianDistance,
-                kleinianBinary
+
+            escape,
+            escapeSmooth,
+            converge,
+            convergeSmooth,
+            exponentialSmoothing,
+            umbrella,
+            umbrellaInverse,
+            angularMomentum,
+            outline,
+            distanceEstimation,
+            escapeWithOutline,
+            triangleIneqAvgInt,
+            triangleIneqAvgFloat,
+            curvatureAvg,
+            stripeAvg,
+            overlayAvg,
+            fieldLines,
+            discLens,
+            starLens,
+            sineLens,
+            orbitTrapLine,
+            orbitTrapCirc,
+            orbitTrapBox,
+            orbitTrapImageOver,
+            orbitTrapImageUnder,
+            normalMap1,
+            normalMap2,
+            kleinianDistance,
+            kleinianBinary,
+            importance,
+            importanceGradientNumeric,
+            importanceGradientAnalytic,
+            harrissTest,
+
         ).filter { BuildConfig.DEV_VERSION || !it.devFeature }
 
         val mandelbrot = all.minus(listOf(
@@ -485,16 +528,13 @@ class Texture (
         val convergent = mutableListOf(
                 converge,
                 convergeSmooth,
-                exponentialSmoothing,
-                orbitTrapLine,
-                orbitTrapCirc,
-                orbitTrapBox
+                exponentialSmoothing
         )
 
         val kleinianCompat = listOf(
                 kleinianDistance,
                 kleinianBinary
-        ).plus(divergent.minus(listOf(escapeSmooth, escapeWithDistance)))
+        ).plus(divergent.minus(listOf(escapeSmooth, escapeWithOutline)))
 
         val custom = listOf<Texture>()
 
@@ -529,12 +569,20 @@ class Texture (
 
     }
 
+    override fun getName(localizedResource: Resources): String {
+        return if (isCustom()) name else localizedResource.getString(nameId)
+    }
+
     var activeParam = if (params.size != 0) params.list[0] else RealParam(R.string.empty)
 
     override var thumbnail : Bitmap? = null
 
     fun reset() {
         params.reset()
+    }
+
+    fun generateStarredKey(usResources: Resources) : String {
+        return "Texture${usResources.getString(nameId).replace(" ", "")}Starred"
     }
 
     override fun equals(other: Any?): Boolean {

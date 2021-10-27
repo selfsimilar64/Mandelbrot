@@ -8,7 +8,6 @@ import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.widget.LinearLayout
 import androidx.core.view.GestureDetectorCompat
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.math.abs
 
 class InterceptLinearLayout : LinearLayout {

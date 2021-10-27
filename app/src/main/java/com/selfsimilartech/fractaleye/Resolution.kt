@@ -25,6 +25,13 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null, var
 
     fun getBuilder() = builders?.last { it.w <= SCREEN.w } ?: this
 
+    override fun toString(): String {
+        return "$w x $h"
+    }
+
+    fun toString(ratio: AspectRatio) : String {
+        return "$w x ${(w*ratio.r).toInt()}"
+    }
 
     companion object {
 
@@ -36,6 +43,7 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null, var
         val R45    = Resolution(45)
         val R60    = Resolution(60)
         val R90    = Resolution(90)
+
         val R120   = Resolution(120)
         val R180   = Resolution(180)
         val R240   = Resolution(240)

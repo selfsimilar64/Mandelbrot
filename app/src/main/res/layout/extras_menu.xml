@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/extrasPopup"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/menuDarkSecondary"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:id="@+id/logisticsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/settingsButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/settings"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/upgradeButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/upgrade"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/upgrade" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tutorialButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/tutorial"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/tutorial" />
+        </LinearLayout>
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/changelogButton"-->
+<!--            style="@style/ExtrasMenuItem">-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:scaleType="centerInside"-->
+<!--                app:srcCompat="@drawable/changelog"-->
+<!--                app:tint="@color/highlight" />-->
+
+<!--            <TextView-->
+<!--                style="@style/ExtrasMenu.Text"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1"-->
+<!--                android:text="@string/version_history" />-->
+<!--        </LinearLayout>-->
+
+        <LinearLayout
+            android:id="@+id/aboutButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/info2"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/about" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:background="@color/divider"
+        android:orientation="horizontal"></LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/bookmarksButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/bookmarks_folder" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/bookmarks" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/newBookmarkButton"
+            style="@style/ExtrasMenuItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/new_bookmark" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/new_bookmark" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:background="@color/divider"
+        android:orientation="horizontal"></LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/imageLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/randomizerButton"
+            style="@style/ExtrasMenuItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/random"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/random_fractal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/renderVideoButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/video"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/render_video" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/aspectRatioButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/aspect_ratio"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/aspect_ratio" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/resolutionButton"
+            style="@style/ExtrasMenuItem">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/resolution"
+                app:tint="@color/highlight" />
+
+            <TextView
+                style="@style/ExtrasMenu.Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/resolution" />
+        </LinearLayout>
+    </LinearLayout>
+
+
+</LinearLayout>

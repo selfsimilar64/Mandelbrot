@@ -37,7 +37,7 @@
                 android:layout_marginStart="5dp"
                 android:layout_marginEnd="5dp"
                 android:layout_weight="1"
-                android:max="1000"
+                android:max="2000"
                 android:progress="0" />
         </LinearLayout>
 
@@ -60,34 +60,6 @@
 
     </LinearLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/sensitivityLayout"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeight"
-        android:visibility="gone">
-
-        <com.selfsimilartech.fractaleye.SeekBar2
-            android:id="@+id/sensitivitySeekBar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:max="500"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sensitivityEdit" />
-
-        <EditText
-            android:id="@+id/sensitivityEdit"
-            style="@style/EditNumberDark"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:imeOptions="actionDone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
     <include
         android:id="@+id/realShapeParam"
         layout="@layout/real_param"
@@ -99,55 +71,6 @@
         layout="@layout/complex_param"
         android:layout_width="match_parent"
         android:layout_height="@dimen/uiComponentHeightShort" />
-
-    <LinearLayout
-        android:id="@+id/shapePreviewLayout"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/fragmentItemHeight"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingTop="2dp"
-        android:paddingBottom="2dp"
-        tools:visibility="gone">
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp"
-            app:cardBackgroundColor="@color/transparent"
-            app:cardCornerRadius="10dp"
-            app:cardElevation="0dp">
-
-            <ImageView
-                android:id="@+id/shapePreviewImage"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:contentDescription="@string/dscript_shape_preview"
-                android:tintMode="add"
-                app:srcCompat="@drawable/mandelbrot_icon"
-                app:tint="@color/menuDark1" />
-
-        </androidx.cardview.widget.CardView>
-
-        <TextView
-            android:id="@+id/shapePreviewText"
-            style="@style/TextDark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:drawableEnd="@drawable/edit"
-            android:drawablePadding="10dp"
-            android:gravity="center"
-            android:text="@string/shape_name"
-            android:textAlignment="center"
-            android:textSize="16sp" />
-
-
-    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -188,7 +111,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    app:layout_constraintEnd_toEndOf="parent">
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
                     <LinearLayout
                         android:layout_width="match_parent"

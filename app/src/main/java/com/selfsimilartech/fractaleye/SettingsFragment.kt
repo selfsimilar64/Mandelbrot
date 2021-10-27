@@ -1,17 +1,39 @@
 package com.selfsimilartech.fractaleye
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
 import com.jaredrummler.android.device.DeviceName
-import kotlinx.android.synthetic.main.settings_fragment.*
+import com.selfsimilartech.fractaleye.databinding.SettingsFragmentBinding
+import java.text.NumberFormat
+import java.text.ParseException
 
 
 class SettingsFragment : Fragment(R.layout.settings_fragment) {
+
+    lateinit var b : SettingsFragmentBinding
+
+    private fun String.formatToDouble(showMsg: Boolean = true) : Double? {
+        val nf = NumberFormat.getInstance()
+        var d : Double? = null
+        try { d = nf.parse(this)?.toDouble() }
+        catch (e: ParseException) {
+            if (showMsg) {
+                val act = activity as MainActivity
+                act.showMessage(resources.getString(R.string.msg_invalid_format))
+            }
+        }
+        return d
+    }
 
 //    private fun createNotificationChannel() {
 //        // Create the NotificationChannel, but only on API 26+ because
@@ -29,6 +51,13 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 //            notificationManager.createNotificationChannel(channel)
 //        }
 //    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+        b = SettingsFragmentBinding.inflate(inflater, container, false)
+        return b.root
+
+    }
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
 
@@ -89,45 +118,50 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 //        }
 
 
-        hideNavBarSwtich.isChecked = sc.hideNavBar
-        hideNavBarSwtich.setOnCheckedChangeListener { _, isChecked ->
+        b.hideNavBarSwtich.isChecked = sc.hideSystemBars
+        b.hideNavBarSwtich.setOnCheckedChangeListener { _, isChecked ->
 
-            sc.hideNavBar = isChecked
-            act.updateSystemUI()
+            sc.hideSystemBars = isChecked
+            act.updateSystemBarsVisibility()
 
         }
 
 
 
-        continuousRenderSwitch.setOnCheckedChangeListener { _, isChecked ->
-            sc.continuousPosRender = isChecked
+        b.continuousRenderSwitch.setOnClickListener {
+            sc.continuousPosRender = b.continuousRenderSwitch.isChecked
             fsv.r.onContinuousPositionRenderChanged()
             if (sc.continuousPosRender && sc.renderBackground) {
-                renderBackgroundSwitch.isChecked = false
+                b.renderBackgroundSwitch.isChecked = false
                 fsv.r.renderBackgroundChanged = true
             }
-            renderBackgroundSwitch.isClickable = !sc.continuousPosRender
-            renderBackgroundLayout.alpha = if (sc.continuousPosRender) 0.35f else 1f
+            b.renderBackgroundSwitch.isClickable = !sc.continuousPosRender
+            b.renderBackgroundLayout.alpha = if (sc.continuousPosRender) 0.35f else 1f
             if (sc.continuousPosRender) fsv.requestRender()
         }
-        continuousRenderSwitch.isChecked =
+        if (sc.continuousPosRender) {
+            b.renderBackgroundSwitch.isClickable = !sc.continuousPosRender
+            b.renderBackgroundLayout.alpha = if (sc.continuousPosRender) 0.35f else 1f
+        }
+
+        b.continuousRenderSwitch.isChecked =
                 savedInstanceState?.getBoolean("continuousRender")
                         ?: sc.continuousPosRender
 
 
-        renderBackgroundSwitch.isChecked = sc.renderBackground
-        renderBackgroundSwitch.setOnCheckedChangeListener { _, isChecked ->
+        b.renderBackgroundSwitch.isChecked = sc.renderBackground
+        b.renderBackgroundSwitch.setOnClickListener {
 
-            sc.renderBackground = isChecked
+            sc.renderBackground = b.renderBackgroundSwitch.isChecked
 
             fsv.r.renderBackgroundChanged = true
-            fsv.r.renderToTex = isChecked
+            fsv.r.renderToTex = b.renderBackgroundSwitch.isChecked
             fsv.requestRender()
 
         }
 
 
-        unrestrictedParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
+        b.unrestrictedParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
             sc.restrictParams = !isChecked
         }
 
@@ -140,7 +174,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 //
 //        }
 
-        settingsDoneButton.setOnClickListener {
+        b.settingsDoneButton.setOnClickListener {
             act.closeSettingsMenu()
         }
 
@@ -154,85 +188,78 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 //        }
 
 
+        val editListener = { nextEditText: EditText?, setValueAndFormat: (w: EditText) -> Unit
+            -> TextView.OnEditorActionListener { editText, actionId, _ ->
 
-        showChangelogLayout.setOnClickListener { act.queryChangelog(fromSettings = true) }
-
-        upgradeToGoldLayout.setOnClickListener { act.showUpgradeScreen(true) }
-
-        startTutorialSettingLayout.setOnClickListener {
-            settingsDoneButton.performClick()
-            act.startTutorial(fromSettings = true)
-        }
-
-        aboutText1.text = resources.getString(R.string.about_info_1).format(BuildConfig.VERSION_NAME)
-
-        emailLayout.setOnClickListener {
-
-            var contentString = ""
-            contentString += "Android Version: ${android.os.Build.VERSION.RELEASE}\n"
-            contentString += "Device: ${DeviceName.getDeviceName() ?: android.os.Build.BRAND} (${android.os.Build.MODEL})\n"
-            contentString += "Fractal Eye Version: ${BuildConfig.VERSION_NAME}\n\n"
-            contentString += "Please describe your problem here and attach images/video of the problem occurring if possible:\n\n"
-
-            val emailIntent = Intent(Intent.ACTION_SENDTO)
-            emailIntent.apply {
-                type = "message/rfc822"
-                data = Uri.parse("mailto:")
-                putExtra(Intent.EXTRA_EMAIL, arrayOf("selfaffinetech@gmail.com"))
-                putExtra(Intent.EXTRA_SUBJECT, "Fractal Eye Help")
-                putExtra(Intent.EXTRA_TEXT, contentString)
-                if (emailIntent.resolveActivity(act.packageManager) != null) startActivity(emailIntent)
+            when (actionId) {
+                EditorInfo.IME_ACTION_NEXT -> {
+                    setValueAndFormat(editText as EditText)
+                    editText.clearFocus()
+                    editText.isSelected = false
+                    nextEditText?.requestFocus()
+                }
+                EditorInfo.IME_ACTION_DONE -> {
+                    setValueAndFormat(editText as EditText)
+                    val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(view?.windowToken, 0)
+                    editText.clearFocus()
+                    editText.isSelected = false
+                    fsv.requestRender()
+                }
+                else -> {
+                    Log.d("EQUATION FRAGMENT", "some other action")
+                }
             }
 
-        }
-
-        instagramLayout.setOnClickListener {
-
-            val uri = Uri.parse("http://instagram.com/_u/fractaleye.app")
-            val likeIng = Intent(Intent.ACTION_VIEW, uri)
-
-            likeIng.setPackage("com.instagram.android")
-
-            try {
-                startActivity(likeIng)
-            } catch (e: ActivityNotFoundException) {
-                startActivity(Intent(Intent.ACTION_VIEW,
-                        Uri.parse("http://instagram.com/fractaleye.app")))
+            editText.clearFocus()
+            act.apply {
+                uiSetHeight()
+                updateFractalLayout()
+                updateSystemBarsVisibility()
             }
+            true
 
-        }
-
-
-        chunkProfileTabs.getTabAt(sc.chunkProfile.ordinal)?.apply {
-            view.setBackgroundColor(resources.getColor(R.color.divider, null))
-            select()
-        }
-        chunkProfileTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {
-
-                tab?.view?.setBackgroundColor(resources.getColor(R.color.menuDarkPrimary, null))
-
+        }}
+        b.targetFramerateValue.setText(sc.targetFramerate.toString())
+        b.targetFramerateValue.setOnEditorActionListener(editListener(null) {
+            val result = b.targetFramerateValue.text.toString().formatToDouble()
+            if (result != null) {
+                sc.targetFramerate = result.toInt().clamp(MIN_FRAMERATE, MAX_FRAMERATE)
             }
-
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-
-                tab?.view?.setBackgroundColor(resources.getColor(R.color.divider, null))
-
-                sc.chunkProfile = ChunkProfile.values()[tab?.position ?: 0]
-                fsv.r.onChunkProfileChanged()
-
-            }
-
+            b.targetFramerateValue.setText(sc.targetFramerate.toString())
         })
 
 
-        splitTypeSwitch.isChecked = sc.useAlternateSplit
-        splitTypeSwitch.setOnCheckedChangeListener { v, isChecked ->
+//        b.chunkProfileTabs.getTabAt(sc.chunkProfile.ordinal)?.apply {
+//            view.setBackgroundColor(resources.getColor(R.color.divider, null))
+//            select()
+//        }
+//        b.chunkProfileTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+//
+//            override fun onTabReselected(tab: TabLayout.Tab?) {}
+//
+//            override fun onTabUnselected(tab: TabLayout.Tab?) {
+//
+//                tab?.view?.setBackgroundColor(resources.getColor(R.color.menuDarkPrimary, null))
+//
+//            }
+//
+//            override fun onTabSelected(tab: TabLayout.Tab?) {
+//
+//                tab?.view?.setBackgroundColor(resources.getColor(R.color.divider, null))
+//
+//                sc.chunkProfile = ChunkProfile.values()[tab?.position ?: 0]
+//                fsv.r.onChunkProfileChanged()
+//
+//            }
+//
+//        })
 
-            sc.useAlternateSplit = isChecked
+
+        b.splitTypeSwitch.isChecked = sc.useAlternateSplit
+        b.splitTypeSwitch.setOnClickListener { v ->
+
+            sc.useAlternateSplit = b.splitTypeSwitch.isChecked
             fsv.r.renderShaderChanged = true
             fsv.r.renderToTex = true
             fsv.requestRender()
@@ -240,9 +267,9 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
         }
 
 
-        allowSlowRendersSwitch.isChecked = sc.allowSlowDualfloat
-        allowSlowRendersSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-            sc.allowSlowDualfloat = isChecked
+        b.allowSlowRendersSwitch.isChecked = sc.allowSlowDualfloat
+        b.allowSlowRendersSwitch.setOnClickListener { buttonView ->
+            sc.allowSlowDualfloat = b.allowSlowRendersSwitch.isChecked
             fsv.r.checkThresholdCross(showMsg = false)
             if (f.shape.slowDualFloat && f.shape.position.zoom <= GpuPrecision.SINGLE.threshold) {
                 fsv.r.renderToTex = true
@@ -250,7 +277,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
                 fsv.requestRender()
             }
         }
-        allowSlowRendersHint.text = allowSlowRendersHint.text.toString().format(resources.getString(R.string.sine))
+        b.allowSlowRendersHint.text = b.allowSlowRendersHint.text.toString().format(resources.getString(R.string.sine))
 
 
 

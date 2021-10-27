@@ -8,7 +8,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.fragment.app.Fragment
-import com.google.android.material.tabs.TabLayout
 import java.text.NumberFormat
 import java.text.ParseException
 
@@ -16,7 +15,7 @@ interface OnCompleteListener {
     fun onComplete()
 }
 
-open class MenuFragment : Fragment() {
+abstract class MenuFragment : Fragment() {
 
     lateinit var onCompleteListener : OnCompleteListener
 
@@ -26,8 +25,8 @@ open class MenuFragment : Fragment() {
     lateinit var act : MainActivity
     lateinit var fsv : FractalSurfaceView
 
-    val nf = NumberFormat.getInstance()
     fun String.formatToDouble(showMsg: Boolean = true) : Double? {
+        val nf = NumberFormat.getInstance()
         var d : Double? = null
         try { d = nf.parse(this)?.toDouble() }
         catch (e: ParseException) {
@@ -63,13 +62,18 @@ open class MenuFragment : Fragment() {
         }
 
         editText.clearFocus()
-        act.updateSystemUI()
+        act.apply {
+            uiSetHeight()
+            updateFractalLayout()
+            updateSystemBarsVisibility()
+        }
         true
 
     }}
 
-    lateinit var currentLayout : View
-    lateinit var currentButton : Button
+    lateinit var layout : View
+    lateinit var button : Button
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         act = requireActivity() as MainActivity
@@ -92,26 +96,30 @@ open class MenuFragment : Fragment() {
     }
 
 
-    fun showLayout(newLayout: View) {
-        currentLayout.hide()
-        newLayout.show()
-        currentLayout = newLayout
+    fun setCurrentLayout(newLayout: View?) {
+        layout.hide()
+        newLayout?.show()
+        newLayout?.let { layout = it }
     }
 
-    fun alphaButton(newButton: Button) {
-        currentButton.alpha = 0.5f
-        newButton.alpha = 1f
-        currentButton = newButton
+    fun setCurrentButton(newButton: Button?) {
+        button.alpha = 0.5f
+        newButton?.alpha = 1f
+        newButton?.let { button = it }
     }
 
     fun subMenuButtonListener(layout: View, button: Button, uiLayoutHeight: UiLayoutHeight = UiLayoutHeight.SHORT) : View.OnClickListener {
         return View.OnClickListener {
             act.uiSetHeight(uiLayoutHeight)
-            showLayout(layout)
-            alphaButton(button)
+            setCurrentLayout(layout)
+            setCurrentButton(button)
         }
     }
 
-    open fun updateLayout() {}
+    abstract fun updateLayout()
+
+    abstract fun onGoldEnabled()
+
+    abstract fun updateValues()
 
 }

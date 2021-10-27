@@ -4,6 +4,7 @@ object SettingsConfig {
         var goldEnabled                 = false
         var resolution                  = Resolution.R1440
         var aspectRatio                 = AspectRatio.RATIO_SCREEN
+        var targetFramerate             = 60
         var gpuPrecision                = GpuPrecision.SINGLE
         var cpuPrecision                = CpuPrecision.DOUBLE
         var perturbPrecision            = 64L
@@ -11,14 +12,14 @@ object SettingsConfig {
         var useAlternateSplit           = false
         var chunkProfile                = ChunkProfile.HIGH
         var autoPrecision               = true
-        var continuousPosRender         = false
+        var continuousPosRender         = true
         var continuousParamRender       = true
         var showProgress                = true
         var sampleOnStrictTranslate     = true
         var renderBackground            = true
         var allowSlowDualfloat          = false
         var fitToViewport               = false
-        var hideNavBar                  = true
+        var hideSystemBars              = true
         var restrictParams              = true
         var colorListViewType           = ListLayoutType.GRID
         var shapeListViewType           = ListLayoutType.GRID

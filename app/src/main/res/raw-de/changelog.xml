@@ -1,13 +1,22 @@
 <changelog>
 
 
+    <release versionCode="40" versionName="v1.5.1" date="2021-11-01">
+        <new name="summary">5 neue Lesezeichen!</new>
+        <new name="summary">2 neue Paletten!</new>
+        <new name="summary">Logarithmische Funktionen hinzugefügt, um die benutzerdefinierte Form Schöpfer!</new>
+        <new name="summary">'Randomisieren' Funktion zum Optionsmenü hinzugefügt!</new>
+        <new name="summary">Viele Fehlerbehebungen und verbessertes Absturzmeldesystem!</new>
+    </release>
+
+
     <release versionCode="37" versionName="v1.5.0" date="2021-07-15">
-        <new type="summary">Verbesserte Benutzeroberfläche - kleinere, neue Einstellknöpfe und mehr!</new>
-        <new type="summary">Lernprogramm hinzugefügt! Zugriff über (Einstellungen) -> (Lernprogramm)</new>
-        <new type="summary">GOLD: Erstellen Sie Kopien von Paletten und Formen! (Klicken Sie lange auf ein Element und drücken Sie die Kopiertaste)</new>
-        <new type="summary">GOLD: Inverse Trigonometrie-Funktionen zum Ersteller von benutzerdefinierten Formen hinzugefügt!</new>
-        <new type="summary">Hinzugefügt (Einstellungen) -> (Uneingeschränkte Parameter)</new>
-        <new type="summary">2 neue Paletten hinzugefügt: Auge, Wer</new>
+        <info>Verbesserte Benutzeroberfläche - kleinere, neue Einstellknöpfe und mehr!</info>
+        <info>Lernprogramm hinzugefügt! Zugriff über (Einstellungen) -> (Lernprogramm)</info>
+        <info>GOLD: Erstellen Sie Kopien von Paletten und Formen! (Klicken Sie lange auf ein Element und drücken Sie die Kopiertaste)</info>
+        <info>GOLD: Inverse Trigonometrie-Funktionen zum Ersteller von benutzerdefinierten Formen hinzugefügt!</info>
+        <info>Hinzugefügt (Einstellungen) -> (Uneingeschränkte Parameter)</info>
+        <info>2 neue Paletten hinzugefügt: Auge, Wer</info>
     </release>
 
 

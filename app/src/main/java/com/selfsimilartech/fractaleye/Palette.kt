@@ -64,7 +64,7 @@ class Palette (
         oscillate               : Boolean = true,
         override var isFavorite : Boolean = false
 
-) : Customizable {
+) : Customizable, Goldable {
 
 
     companion object {
@@ -134,70 +134,74 @@ class Palette (
         val sphere          = Palette( id = 56, nameId = R.string.sphere,           arrayId = R.array.sphere                                )
         val who             = Palette( id = 57, nameId = R.string.who,              arrayId = R.array.who,              oscillate = false   )
         val void            = Palette( id = 58, nameId = R.string.string_void,             arrayId = R.array.array_void                            )
-        val eye             = Palette( id = 59, nameId = R.string.eye,             arrayId = R.array.eye                            )
+        val eye             = Palette( id = 59, nameId = R.string.eye,              arrayId = R.array.eye                                   )
+        val dawn            = Palette( id = 60, nameId = R.string.dawn,             arrayId = R.array.dawn                                  )
+        val mirage          = Palette( id = 61, nameId = R.string.mirage,           arrayId = R.array.mirage,           oscillate = false   )
 
 
 
         var nextCustomPaletteNum = 0
         val custom = arrayListOf<Palette>()
         val default = arrayListOf(
-                eye,
-                yinyang,
-                who,
-                parachute,
-                night,
-                torus,
-                sphere,
-                time,
-                polyphonic,
-                carousel,
-                coral,
-                honor,
-                overgrown,
-                catalyst,
-                refraction,
-                starling,
-                pagoda,
-                island,
-                aquamarine,
-                fusion,
-                cactus,
-                p9,
-                chroma,
-                monster,
-                rose,
-                kingfisher,
-                anaglyph,
-                melted,
-                dragon,
-                bioluminescent,
-                ruby,
-                sapphire,
-                amethyst,
-                aztec,
-                atlas,
-                fossil,
-                cosmic,
-                peacock,
-                backwards,
-                alpha,
-                peach,
-                jazz,
-                polygon,
-                elephant,
-                oldskool,
-                bronze,
-                gold,
-                neon,
-                viridis,
-                plasma,
-                magma,
-                vascular,
-                flora,
-                royal,
-                canyon,
-                slow,
-                anubis
+            eye,
+            yinyang,
+            dawn,
+            mirage,
+            who,
+            parachute,
+            night,
+            torus,
+            sphere,
+            time,
+            polyphonic,
+            carousel,
+            coral,
+            honor,
+            overgrown,
+            catalyst,
+            refraction,
+            starling,
+            pagoda,
+            island,
+            aquamarine,
+            fusion,
+            cactus,
+            p9,
+            chroma,
+            monster,
+            rose,
+            kingfisher,
+            anaglyph,
+            melted,
+            dragon,
+            bioluminescent,
+            ruby,
+            sapphire,
+            amethyst,
+            aztec,
+            atlas,
+            fossil,
+            cosmic,
+            peacock,
+            backwards,
+            alpha,
+            peach,
+            jazz,
+            polygon,
+            elephant,
+            oldskool,
+            bronze,
+            gold,
+            neon,
+            viridis,
+            plasma,
+            magma,
+            vascular,
+            flora,
+            royal,
+            canyon,
+            slow,
+            anubis
         )
         val all = ArrayList(default)
 
@@ -242,6 +246,9 @@ class Palette (
         get() = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors.toIntArray())
     var flatPalette = floatArrayOf()
 
+    override fun getName(localizedResource: Resources): String {
+            return if (isCustom()) name else localizedResource.getString(nameId)
+    }
 
     fun getColor(t: Float) : Int {
         return when (t) {
@@ -261,6 +268,7 @@ class Palette (
             }
         }
     }
+
     fun getColors(n: Int) : ArrayList<Int> {
         val list = arrayListOf<Int>()
         for (i in 0 until n) list.add(getColor(i.toFloat()/(n - 1)))
@@ -296,6 +304,7 @@ class Palette (
         updateFlatPalette()
 
     }
+
     fun release() {
         thumbnail?.recycle()
         thumbnail = null
@@ -304,6 +313,7 @@ class Palette (
     fun reset() {
         oscillate = oscillateInit
     }
+
     fun updateFlatPalette() {
 
         val palette = intArrayToList(
@@ -314,9 +324,11 @@ class Palette (
         flatPalette = palette.flatMap { a -> a.asIterable() }.toFloatArray()
 
     }
+
     private fun intArrayToList(C: List<Int>) : List<FloatArray> {
         return List(C.size) { i: Int -> colorToRGB(C[i]) }
     }
+
     fun toDatabaseEntity() : ColorPaletteEntity {
         return ColorPaletteEntity(
                 id = if (hasCustomId) id else 0,
@@ -341,6 +353,7 @@ class Palette (
     override fun equals(other: Any?): Boolean {
         return other is Palette && other.id == id
     }
+
     override fun hashCode(): Int { return name.hashCode() }
 
     override fun isCustom() : Boolean = hasCustomId
@@ -351,6 +364,10 @@ class Palette (
                 arrayId = arrayId,
                 colors = if (hasCustomId || colors.size <= MAX_CUSTOM_COLORS_GOLD) ArrayList(colors) else getColors(MAX_CUSTOM_COLORS_GOLD)
         ).also { it.initialize(res) }
+    }
+
+    fun generateStarredKey(usResources: Resources) : String {
+        return "Palette${usResources.getString(nameId).replace(" ", "")}Starred"
     }
 
 }

@@ -12,14 +12,14 @@ import eu.davidea.flexibleadapter.items.IFlexible
 import eu.davidea.viewholders.FlexibleViewHolder
 
 
-open class ListItem< T : Customizable > (
+open class ListItem<T> (
 
         val t: T,
         header: ListHeader,
         val layoutResId : Int = -1,
         var compliment : ListItem<T>? = null
 
-) : AbstractSectionableItem<FlexibleViewHolder, ListHeader>(header) {
+) : AbstractSectionableItem<FlexibleViewHolder, ListHeader>(header) where T : Customizable, T : Goldable {
 
     override fun equals(other: Any?): Boolean {
         if (other is ListItem<*>) {

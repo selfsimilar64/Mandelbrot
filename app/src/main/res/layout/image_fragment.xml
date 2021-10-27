@@ -233,24 +233,6 @@
 
     </LinearLayout>
 
-    <!--
-    <Button
-        android:id="@+id/restartActivityButton"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="restart activity"
-        tools:visibility="gone" />
-
-    <Button
-        android:id="@+id/sendNotificationButton"
-        style="@style/FragmentItem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="send notification"
-        tools:visibility="gone" />
-        -->
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -264,56 +246,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <LinearLayout
-            android:id="@+id/imageSubMenuButtons"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/menuButtonHeight"
-            android:orientation="horizontal">
-
-            <HorizontalScrollView
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/resolutionButton"
-                        style="@style/MenuNavToggleButton"
-                        android:layout_width="70dp"
-                        android:layout_height="wrap_content"
-                        android:drawableTop="@drawable/resolution"
-                        android:text="@string/resolution" />
-
-                    <Button
-                        android:id="@+id/aspectRatioButton"
-                        style="@style/MenuNavToggleButton"
-                        android:layout_width="70dp"
-                        android:layout_height="wrap_content"
-                        android:drawableTop="@drawable/aspect_ratio"
-                        android:text="@string/aspect_ratio" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <View
-                android:id="@+id/divider25"
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_margin="5dp"
-                android:background="@color/divider" />
-
-            <Button
-                android:id="@+id/bookmarkListButton"
-                style="@style/MenuNavListButton"
-                android:layout_width="75dp"
-                android:drawableTop="@drawable/bookmarks_folder"
-                android:drawableTint="@null"
-                android:text="@string/bookmarks" />
-
-        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -328,16 +260,8 @@
             style="@style/NewNavButton"
             android:src="@drawable/cancel" />
 
-        <ImageButton
-            android:id="@+id/newBookmarkButton2"
-            style="@style/NewNavButton"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/add" />
-
         <com.selfsimilartech.fractaleye.GradientImageButton
-            android:id="@+id/bookmarkListDoneButton"
+            android:id="@+id/positionDoneButton"
             style="@style/NewNavButton"
             android:src="@drawable/done" />
 

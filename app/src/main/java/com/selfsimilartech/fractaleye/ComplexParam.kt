@@ -30,7 +30,7 @@ class ComplexParam (
 
     override var sensitivity = sensitivity
         set(value) {
-            field = clamp(value, 1.0, 99.0)
+            field = value.clamp(1.0, 99.0)
             val t = 0.5 - (field - 1.0)/98.0
             sensitivityFactor = 0.5*10.0.pow(t*(SENSITIVITY_EXP_LOW - SENSITIVITY_EXP_HIGH)) * 1.75
         }
@@ -61,6 +61,21 @@ class ComplexParam (
             if (value) v = u
         }
 
+
+    override fun valueEquals(other: RealParam): Boolean {
+        return other is ComplexParam && u == other.u && v == other.v
+    }
+
+    override fun randomize(mag: Double) {
+        u = Math.random()*mag - 0.5*mag
+        v = Math.random()*mag - 0.5*mag
+    }
+
+    override fun randomizePerturb(mag: Double) {
+        u += Math.random()*10.0*mag
+        v += Math.random()*10.0*mag
+    }
+
     override fun reset() {
         super.reset()
         vLocked = false
@@ -68,11 +83,13 @@ class ComplexParam (
         uLocked = uLockedInit
         linked = linkedInit
     }
+
     override fun clone() : ComplexParam {
 
         return ComplexParam(u = u, v = v, sensitivity = sensitivity)
 
     }
+
     override fun setFrom(newParam: RealParam) {
 
         super.setFrom(newParam)
@@ -86,10 +103,17 @@ class ComplexParam (
         sensitivity = newParam.sensitivity
 
     }
+
     override fun toFloatArray() : FloatArray = floatArrayOf(u.toFloat(), v.toFloat())
+
     override fun toDouble2() : Double2 = Double2(u, v)
+
     override fun toData(index: Int) : Data {
         return Data(u, v, true, sensitivity)
+    }
+
+    override fun toConstructorString(): String {
+        return "ComplexParam($u, $v)"
     }
 
 }

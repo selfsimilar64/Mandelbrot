@@ -36,7 +36,6 @@ void main() {
 
     float textureValue = uintBitsToFloat((textureValueInt >> 1) << 1);
 
-
     // video/developer only
 //    if (adjustWithZoom == 1) {
 //        if ((textureType & 2u) == 2u) {

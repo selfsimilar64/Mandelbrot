@@ -20,8 +20,8 @@
             android:id="@+id/fractalSurfaceView"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-
         </com.selfsimilartech.fractaleye.FractalSurfaceView>
+
     </FrameLayout>
 
     <androidx.fragment.app.FragmentContainerView
@@ -58,10 +58,11 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/header" />
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/header"
             android:layout_width="match_parent"
             android:layout_height="@dimen/categoryButtonHeight"
+            android:animateLayoutChanges="true"
             android:background="@color/menuDarkPrimary"
             android:gravity="center|end"
             android:orientation="horizontal"
@@ -69,30 +70,52 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
+<!--            <ImageButton-->
+<!--                android:id="@+id/debugButton"-->
+<!--                style="@style/MenuImageButtonDark"-->
+<!--                android:layout_width="50dp"-->
+<!--                android:layout_height="40dp"-->
+<!--                android:padding="5dp"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent"-->
+<!--                app:srcCompat="@drawable/debug" />-->
+
             <ImageButton
-                android:id="@+id/newBookmarkButton"
+                android:id="@+id/extrasMenuButton"
                 style="@style/MenuImageButtonDark"
                 android:layout_width="50dp"
                 android:layout_height="40dp"
-                android:layout_weight="0"
+                android:layout_marginEnd="5dp"
+                android:padding="6dp"
                 android:scaleType="centerInside"
-                app:srcCompat="@drawable/new_bookmark" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/more" />
 
             <View
                 android:id="@+id/divider29"
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
                 android:layout_margin="5dp"
-                android:background="?android:attr/listDivider" />
+                android:background="?android:attr/listDivider"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/saveImageButton"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
                 android:id="@+id/saveImageButton"
                 style="@style/MenuImageButtonDark"
                 android:layout_width="50dp"
                 android:layout_height="40dp"
-                android:layout_marginStart="0dp"
+                android:layout_marginEnd="5dp"
                 android:layout_weight="0"
                 android:scaleType="centerInside"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/divider28"
+                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/save" />
 
             <View
@@ -100,20 +123,13 @@
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
                 android:layout_margin="5dp"
-                android:background="?android:attr/listDivider" />
-
-            <ImageButton
-                android:id="@+id/settingsButton"
-                style="@style/MenuImageButtonDark"
-                android:layout_width="50dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="0dp"
                 android:layout_marginEnd="5dp"
-                android:layout_weight="0"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/settings" />
+                android:background="?android:attr/listDivider"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/extrasMenuButton"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ImageButton
             android:id="@+id/menuToggleButton"
@@ -130,7 +146,7 @@
         <LinearLayout
             android:id="@+id/ui"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/uiLayoutHeightShort"
+            android:layout_height="@dimen/uiLayoutHeightClosedShort"
             android:animateLayoutChanges="true"
             android:background="@color/menuDarkPrimary"
             android:orientation="vertical"
@@ -154,43 +170,7 @@
                 android:layout_marginStart="3dp"
                 android:layout_marginEnd="3dp"
                 app:tabIndicator="@null"
-                app:tabTextAppearance="@style/TabText">
-
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/imageButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/texture"
-                    android:icon="@drawable/image2" />
-
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/textureButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/texture"
-                    android:icon="@drawable/texture" />
-
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/shapeButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/shape"
-                    android:icon="@drawable/shape" />
-
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/colorButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/color"
-                    android:icon="@drawable/color" />
-
-                <com.google.android.material.tabs.TabItem
-                    android:id="@+id/positionButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/position"
-                    android:icon="@drawable/position" />
-            </com.google.android.material.tabs.TabLayout>
+                app:tabTextAppearance="@style/TabText" />
         </LinearLayout>
 
 

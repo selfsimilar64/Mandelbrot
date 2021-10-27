@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:gravity="center_vertical">
-        <shape android:shape="rectangle"
-            android:tint="@color/colorDarkSelected">
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <shape android:shape="rectangle" android:tint="@color/switchTrackOn">
             <corners android:radius="13dp" />
-            <solid android:color="@color/white" />
+            <solid android:color="@color/switchTrackOn" />
             <size  android:height="26dp" />
         </shape>
     </item>
-</layer-list>
+    <item android:state_checked="false">
+        <shape android:shape="rectangle" android:tint="@color/switchTrackOff">
+            <corners android:radius="13dp" />
+            <solid android:color="@color/switchTrackOff" />
+            <size  android:height="26dp" />
+        </shape>
+    </item>
+</selector>

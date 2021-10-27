@@ -7,24 +7,27 @@ import androidx.room.*
 interface ColorPaletteDao {
 
     @Query("SELECT * FROM palette")
-    fun getAll(): List<ColorPaletteEntity>
+    suspend fun getAll(): List<ColorPaletteEntity>
 
     @Query("SELECT * FROM palette WHERE name IS :name")
-    fun findByName(name: String): ColorPaletteEntity
+    suspend fun findByName(name: String): ColorPaletteEntity
 
     @Query("SELECT * FROM palette WHERE id IS :id")
-    fun findById(id: Int): ColorPaletteEntity
+    suspend fun findById(id: Int): ColorPaletteEntity
 
     @Insert
-    fun insertAll(vararg palettes: ColorPaletteEntity)
+    suspend fun insertAll(vararg palettes: ColorPaletteEntity)
 
     @Insert
-    fun insert(palette: ColorPaletteEntity) : Long
+    suspend fun insert(palette: ColorPaletteEntity) : Long
 
     @Update
-    fun update(palette: ColorPaletteEntity) : Int
+    suspend fun update(palette: ColorPaletteEntity) : Int
+
+    @Query("UPDATE palette SET starred=:newStarred WHERE id IS :id")
+    suspend fun updateIsFavorite(id: Int, newStarred: Boolean)
 
     @Delete
-    fun delete(palette: ColorPaletteEntity)
+    suspend fun delete(palette: ColorPaletteEntity)
 
 }
