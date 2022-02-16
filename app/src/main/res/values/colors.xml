@@ -1,22 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+<!--    <color name="outlineBasic">#DD808080</color>-->
+    <color name="outlineBasic">#D888</color>
+    <color name="outlineHighlight">#dfff</color>
+
+    <color name="ui_color">#d000</color>
+
+    <color name="editModeButtonSelected">#3F3F3F</color>
+    <color name="editModeButtonUnselected">@color/ui_color</color>
+    <color name="rippleColor">#fff</color>
+    <color name="listItemHighlight">@color/highlight</color>
+    <color name="aspectItem">#5fff</color>
+
     <!-- LAYOUT COLORS -->
-    <color name="colorPrimary">#fff</color>
     <color name="colorPrimaryDark">@color/black</color>
     <color name="colorPrimaryDark2">#555</color>
-    <color name="colorDarkSelected">#454553</color>
+    <color name="colorDarkSelected">#3F3F4D</color>
     <color name="colorDarkUnselected">@color/menuDark6</color>
 
-    <color name="colorDarkText">@color/highlight</color>
+    <color name="colorDarkText">@color/white</color>
     <color name="colorDarkTextMuted">#7B7B8C</color>
-    <color name="colorDescriptionDark">#8A8A99</color>
-    <color name="aspectRatioIconUnselected">#9797AC</color>
+    <color name="colorDescriptionDark">#999999</color>
+    <color name="aspectRatioIconUnselected">#ABABAB</color>
+    <color name="aspectRatioIconSelected">@color/white</color>
 
-    <color name="launchBackground">@color/menuDarkSecondary</color>
+    <color name="launchBackground">#1A1A1A</color>
 
     <color name="halfTransparentBlack">#a000</color>
-    <color name="settingsBackground">@color/menuDarkSecondary</color>
+    <color name="settingsBackground">#030303</color>
+    <color name="settingsGroupBackground">#1A1A1A</color>
     <color name="halfTransparentWhite">#3fff</color>
     <color name="transparent">#0000</color>
     <color name="colorAccent">#fff</color>
@@ -31,36 +44,48 @@
     <color name="menuDark8">#666</color>
     <color name="menuTransparent">#000</color>
 
+    <color name="alertDialogBackground">@color/black</color>
+
+    <color name="render_video_icon">#FE1C1D</color>
+
     <color name="menuDarkPrimary">#1B1B26</color>
     <color name="menuDarkSecondary">#11111A</color>
     <color name="menuDarkTertiary">#0A0A0F</color>"
 
-    <color name="switchTrackOn">@color/accent</color>
-    <color name="switchTrackOff">#454553</color>
+    <color name="switchTrackOn">#B3B3B3</color>
+    <color name="switchTrackOff">#404040</color>
 
-    <color name="accent">#9797C0</color>
-    <color name="highlight">#EBEBFF</color>
+    <color name="seekbarProgress1">@color/switchTrackOff</color>
+    <color name="seekbarProgress2">@color/switchTrackOn</color>
+
+    <color name="accent">#6D68B1</color>
+    <color name="accent2">#842DFF</color>
+    <color name="accent3">#C38FFF</color>
+
+
+    <color name="highlight">#5fff</color>
     <color name="indent">#0B0B0D</color>
-    <color name="switchTrack">#272733</color>
+    <color name="switchTrack">#262626</color>
 
-    <color name="toggleButtonSelected">@color/highlight</color>
-    <color name="toggleButtonUnselected">#2D2D40</color>
+    <color name="toggleButtonSelected">#FFF</color>
+    <color name="toggleButtonUnselected">#6FFF</color>
 
-    <color name="divider">#78788F</color>
+    <color name="divider">#5fff</color>
+
     <color name="buttonOutline">#B4B4CC</color>
     <color name="uiComponentOutline">#878799</color>
 
-    <color name="tutorialBackground">#c000</color>
+    <color name="tutorialBackground">#0000</color>
 
     <color name="disabled">#777</color>
     <color name="unselectedTint">#aaa</color>
     <color name="selectedTint">@color/white</color>
 
-    <color name="shapeKeyColor">@color/switchTrack</color>
+    <color name="shapeKeyColor">#3fff</color>
     <color name="star">#FE1</color>
 
-    <color name="gestureIndicatorInnerEdgeColor">#E6FFFFFF</color>
-    <color name="gestureIndicatorInnerCenterColor">#BFFFFFFF</color>
+    <color name="gestureIndicatorInnerEdgeColor">#fff</color>
+    <color name="gestureIndicatorInnerCenterColor">#cfff</color>
 
 
     <color name="fractaleye0">#79CBFF</color>
@@ -90,7 +115,7 @@
     <color name="gold2">#f6eca7</color>
     <color name="gold3">#efdc61</color>
     <color name="gold4">#e6b32c</color>
-    <color name="gold5">#D68A08</color>
+    <color name="gold5">#C58B27</color>
     <color name="gold6">#643D02</color>
     <color name="gold7">#191001</color>
     <color name="gold8">#0E0900</color>

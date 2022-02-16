@@ -1,5 +1,11 @@
 <changelog>
 
+    <release versionCode="42" versionName="v1.5.2" date="2022-02-06">
+        <new name="summary">Revamped user interface</new>
+        <new name="summary">Added UI visibility toggle</new>
+        <new name="summary">Added (Settings) -> (Advanced) -> (Ultra High Resolutions)</new>
+    </release>
+
     <release versionCode="40" versionName="v1.5.1" date="2021-11-01">
         <new name="summary">5 new bookmarks!</new>
         <new name="summary">2 new palettes!</new>

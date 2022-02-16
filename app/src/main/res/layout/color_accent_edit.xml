@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/colorEditorWidth"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.selfsimilartech.fractaleye.SatValueSelectorView
+        android:id="@+id/satValueSelector"
+        android:layout_width="match_parent"
+        android:layout_height="100dp" />
+
+    <com.selfsimilartech.fractaleye.HueSelector
+        android:id="@+id/hueSelector"
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:layout_marginTop="6dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:progressDrawable="@drawable/hue_slider_track"
+        android:splitTrack="false"
+        android:thumb="@drawable/hue_slider_thumb"
+        android:thumbOffset="0dp" />
+
+</LinearLayout>

@@ -11,16 +11,26 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.google.android.material.tabs.TabLayout
 import com.jaredrummler.android.device.DeviceName
-import com.selfsimilartech.fractaleye.databinding.SettingsFragmentBinding
+import com.selfsimilartech.fractaleye.databinding.FragmentSettingsBinding
 import java.text.NumberFormat
 import java.text.ParseException
 
 
-class SettingsFragment : Fragment(R.layout.settings_fragment) {
+class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
-    lateinit var b : SettingsFragmentBinding
+    interface OnSettingsChangedListener {
+
+        fun closeSettingsMenu()
+        fun updateSystemBarsVisibility()
+        fun enableUltraHighRes()
+        fun disableUltraHighRes()
+
+    }
+
+    private var listener : OnSettingsChangedListener? = null
+
+    lateinit var b : FragmentSettingsBinding
 
     private fun String.formatToDouble(showMsg: Boolean = true) : Double? {
         val nf = NumberFormat.getInstance()
@@ -54,9 +64,18 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        b = SettingsFragmentBinding.inflate(inflater, container, false)
+        b = FragmentSettingsBinding.inflate(inflater, container, false)
         return b.root
 
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        try {
+            listener = context as OnSettingsChangedListener
+        } catch (castException: ClassCastException) {
+            Log.e("SETTINGS", "the activity does not implement the interface")
+        }
     }
 
     override fun onViewCreated(v: View, savedInstanceState: Bundle?) {
@@ -122,7 +141,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
         b.hideNavBarSwtich.setOnCheckedChangeListener { _, isChecked ->
 
             sc.hideSystemBars = isChecked
-            act.updateSystemBarsVisibility()
+            listener?.updateSystemBarsVisibility()
 
         }
 
@@ -133,6 +152,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
             fsv.r.onContinuousPositionRenderChanged()
             if (sc.continuousPosRender && sc.renderBackground) {
                 b.renderBackgroundSwitch.isChecked = false
+                sc.renderBackground = false
                 fsv.r.renderBackgroundChanged = true
             }
             b.renderBackgroundSwitch.isClickable = !sc.continuousPosRender
@@ -161,6 +181,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
         }
 
 
+        b.unrestrictedParamsSwitch.isChecked = !sc.restrictParams
         b.unrestrictedParamsSwitch.setOnCheckedChangeListener { _, isChecked ->
             sc.restrictParams = !isChecked
         }
@@ -175,7 +196,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
 //        }
 
         b.settingsDoneButton.setOnClickListener {
-            act.closeSettingsMenu()
+            listener?.closeSettingsMenu()
         }
 
 
@@ -212,11 +233,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
             }
 
             editText.clearFocus()
-            act.apply {
-                uiSetHeight()
-                updateFractalLayout()
-                updateSystemBarsVisibility()
-            }
+            listener?.updateSystemBarsVisibility()
             true
 
         }}
@@ -270,7 +287,7 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
         b.allowSlowRendersSwitch.isChecked = sc.allowSlowDualfloat
         b.allowSlowRendersSwitch.setOnClickListener { buttonView ->
             sc.allowSlowDualfloat = b.allowSlowRendersSwitch.isChecked
-            fsv.r.checkThresholdCross(showMsg = false)
+            fsv.r.checkThresholdCross()
             if (f.shape.slowDualFloat && f.shape.position.zoom <= GpuPrecision.SINGLE.threshold) {
                 fsv.r.renderToTex = true
                 fsv.r.renderShaderChanged = true
@@ -278,6 +295,33 @@ class SettingsFragment : Fragment(R.layout.settings_fragment) {
             }
         }
         b.allowSlowRendersHint.text = b.allowSlowRendersHint.text.toString().format(resources.getString(R.string.sine))
+
+
+
+        b.advancedSettingsLayout.run { if (sc.advancedSettingsEnabled) enable() else disable(toggleAlpha = true) }
+        b.advancedSettingsSwitch.isChecked = sc.advancedSettingsEnabled
+        b.advancedSettingsSwitch.setOnClickListener {
+            sc.advancedSettingsEnabled = b.advancedSettingsSwitch.isChecked
+            if (sc.advancedSettingsEnabled) {
+                b.advancedSettingsLayout.enable()
+            } else {
+                b.advancedSettingsLayout.disable(toggleAlpha = true)
+                if ( b.allowSlowRendersSwitch    .isChecked ) b.allowSlowRendersSwitch    .performClick()
+                if ( b.unrestrictedParamsSwitch  .isChecked ) b.unrestrictedParamsSwitch  .performClick()
+                if ( b.ultraHighResSwitch        .isChecked ) b.ultraHighResSwitch        .performClick()
+            }
+        }
+
+        b.ultraHighResSwitch.isChecked = sc.ultraHighResolutions
+        if (sc.ultraHighResolutions) listener?.enableUltraHighRes() else listener?.disableUltraHighRes()
+        b.ultraHighResSwitch.setOnClickListener {
+            sc.ultraHighResolutions = b.ultraHighResSwitch.isChecked
+            if (sc.ultraHighResolutions) act.enableUltraHighRes() else act.disableUltraHighRes()
+        }
+        b.ultraHighResHint.text = b.ultraHighResHint.text.toString().format(
+            Resolution.ultraHigh.last().w,
+            Resolution.ultraHigh.last().h
+        )
 
 
 

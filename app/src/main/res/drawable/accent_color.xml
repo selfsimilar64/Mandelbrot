@@ -6,7 +6,7 @@
 
     <!--If your shape requires only one solid color-->
     <solid
-        android:color="@color/fractaleye1" />
+        android:color="@color/black" />
 
     <size
         android:width="24dp"

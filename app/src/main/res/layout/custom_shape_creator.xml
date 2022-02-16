@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/customShapeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/equationLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floatingButtonSize"
+        android:layout_marginBottom="@dimen/menuItemMarginInner"
+        android:animateLayoutChanges="true"
+        android:background="@drawable/ui_component_bg"
+        android:descendantFocusability="blocksDescendants"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp">
+
+
+        <com.selfsimilartech.fractaleye.MathQuillView
+            android:id="@+id/shapeMathQuill"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:focusable="false"
+            android:focusableInTouchMode="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/eqnErrorIndicator"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+        </com.selfsimilartech.fractaleye.MathQuillView>
+
+        <ImageView
+            android:id="@+id/eqnErrorIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/equationLayoutSizeButton"
+            app:layout_constraintEnd_toStartOf="@+id/equationLayoutSizeButton"
+            app:layout_constraintTop_toTopOf="@+id/equationLayoutSizeButton"
+            app:srcCompat="@drawable/warning" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/equationLayoutSizeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/floatingButtonSize"
+            android:background="@drawable/menu_button_ripple"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/maximize" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/ui_component_bg"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:cardBackgroundColor="@color/transparent"
+                app:cardCornerRadius="@dimen/shapeKeyRadius"
+                app:cardElevation="0dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/shapeKeyList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fadeScrollbars="false"
+                    android:orientation="vertical"
+                    android:scrollIndicators="top|bottom"
+                    android:scrollbarAlwaysDrawVerticalTrack="true"
+                    android:scrollbarStyle="insideInset"
+                    android:scrollbars="vertical"
+                    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                    app:spanCount="4"
+                    tools:itemCount="24"
+                    tools:listitem="@layout/shape_key_list_item" />
+            </androidx.cardview.widget.CardView>
+
+            <View
+                android:id="@+id/divider8"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:background="@color/divider" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:orientation="vertical">
+
+                <ImageButton
+                    android:id="@+id/zKey"
+                    style="@style/KeyboardButtonRect"
+                    android:layout_width="match_parent"
+                    android:src="@drawable/key_z" />
+
+                <ImageButton
+                    android:id="@+id/cKey"
+                    style="@style/KeyboardButtonRect"
+                    android:layout_width="match_parent"
+                    android:src="@drawable/key_c"
+                    app:layout_constraintStart_toEndOf="@+id/zKey" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:background="@color/divider" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/prevKey"
+                        style="@style/KeyboardButtonSquare"
+                        android:layout_weight="1"
+                        android:src="@drawable/key_prev"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/deleteKey" />
+
+                    <ImageButton
+                        android:id="@+id/nextKey"
+                        style="@style/KeyboardButtonSquare"
+                        android:layout_weight="1"
+                        android:src="@drawable/key_next"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/prevKey"
+                        app:layout_constraintTop_toBottomOf="@+id/parensKey" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/deleteKey"
+                    style="@style/KeyboardButtonRect"
+                    android:layout_width="match_parent"
+                    android:padding="7dp"
+                    android:src="@drawable/key_delete" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/leftParenKey"
+                        style="@style/KeyboardButtonSquare"
+                        android:layout_weight="1"
+                        android:src="@drawable/key_left_paren"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/deleteKey" />
+
+                    <ImageButton
+                        android:id="@+id/rightParenKey"
+                        style="@style/KeyboardButtonSquare"
+                        android:layout_weight="1"
+                        android:src="@drawable/key_right_paren"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/deleteKey" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

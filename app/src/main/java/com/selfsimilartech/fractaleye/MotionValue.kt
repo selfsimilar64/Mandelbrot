@@ -10,7 +10,7 @@ class MotionValue (
 ) {
 
     companion object {
-        const val DELTA_CONTINUOUS = 0.035f
+        const val DELTA_CONTINUOUS = 0.05f
         const val DELTA_DISCRETE = 0.25f
     }
 

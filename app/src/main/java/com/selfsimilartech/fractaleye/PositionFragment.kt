@@ -1,6 +1,5 @@
 package com.selfsimilartech.fractaleye
 
-import android.animation.LayoutTransition
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -21,8 +20,8 @@ import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
+import com.selfsimilartech.fractaleye.databinding.FragmentPositionBinding
 import java.util.*
-import com.selfsimilartech.fractaleye.databinding.PositionFragmentBinding
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import kotlinx.coroutines.launch
 import java.lang.IndexOutOfBoundsException
@@ -30,7 +29,7 @@ import java.lang.IndexOutOfBoundsException
 
 class PositionFragment : MenuFragment() {
 
-    lateinit var b : PositionFragmentBinding
+    lateinit var b : FragmentPositionBinding
     
     lateinit var db : AppDatabase
     
@@ -38,7 +37,7 @@ class PositionFragment : MenuFragment() {
     // Inflate the view for the fragment based on layout XML
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 
-        b = PositionFragmentBinding.inflate(inflater, container, false)
+        b = FragmentPositionBinding.inflate(inflater, container, false)
         return b.root
         // return inflater.inflate(R.layout.position_fragment, container, false)
 
@@ -60,15 +59,15 @@ class PositionFragment : MenuFragment() {
         val handler = Handler(Looper.getMainLooper())
 
 
-        b.fitToViewportButton.setOnClickListener {
-
-            // if (!fitToViewportButton.isChecked && sc.aspectRatio != AspectRatio.RATIO_SCREEN) aspectDefaultButton.performClick()
-
-            sc.fitToViewport = b.fitToViewportButton.isChecked
-            act.updateFractalLayout()
-
-        }
-        b.fitToViewportButton.isChecked = sc.fitToViewport
+//        b.fitToViewportButton.setOnClickListener {
+//
+//            // if (!fitToViewportButton.isChecked && sc.aspectRatio != AspectRatio.RATIO_SCREEN) aspectDefaultButton.performClick()
+//
+//            sc.fitToViewport = b.fitToViewportButton.isChecked
+//            act.updateFractalLayout()
+//
+//        }
+//        b.fitToViewportButton.isChecked = sc.fitToViewport
 
 
         b.resolutionBar.showGradient = true
@@ -79,14 +78,14 @@ class PositionFragment : MenuFragment() {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 // Log.e("SETTINGS", "progress: $progress")
-                updateResolutionText(Resolution.working[progress], sc.aspectRatio)
+                updateResolutionText(Resolution.foregrounds[progress], sc.aspectRatio)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 prevProgress = b.resolutionBar.progress
             }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
 
-                val newRes = Resolution.working[b.resolutionBar.progress]
+                val newRes = Resolution.foregrounds[b.resolutionBar.progress]
 
                 if (sc.resolution != newRes) {
 
@@ -117,7 +116,7 @@ class PositionFragment : MenuFragment() {
         })
         b.resolutionBar.max = Resolution.NUM_VALUES_WORKING() - 1
         //Log.e("SETTINGS", "resolution ordinal: ${sc.resolution.ordinal}")
-        b.resolutionBar.progress = Resolution.working.indexOf(sc.resolution)
+        b.resolutionBar.progress = Resolution.foregrounds.indexOf(sc.resolution)
         updateResolutionText(sc.resolution, sc.aspectRatio)
 
 
@@ -127,7 +126,7 @@ class PositionFragment : MenuFragment() {
         val onEditCustomBookmark = { adapter: ListAdapter<Fractal>, item: ListItem<Fractal> ->
 
             Fractal.tempBookmark1 = item.t
-            act.showBookmarkDialog(item, edit = true)
+            act.showBookmarkDialog(item.t, edit = true)
 
         }
         val onDeleteCustomBookmark = { adapter: ListAdapter<Fractal>, item: ListItem<Fractal> ->
@@ -164,8 +163,8 @@ class PositionFragment : MenuFragment() {
 
         var firstBookmarkSelection = true
 
-        val emptyFavorite = ListItem(Fractal.emptyFavorite, ListHeader.FAVORITE, R.layout.list_item_linear_empty_favorite)
-        val emptyCustom = ListItem(Fractal.emptyCustom, ListHeader.CUSTOM, R.layout.list_item_linear_empty_custom)
+        val emptyFavorite = ListItem(Fractal.emptyFavorite, ListItemType.FAVORITE, R.layout.list_item_linear_empty_favorite)
+        val emptyCustom = ListItem(Fractal.emptyCustom, ListItemType.CUSTOM, R.layout.list_item_linear_empty_custom)
         val listItems = arrayListOf<ListItem<Fractal>>()
 
 
@@ -179,7 +178,7 @@ class PositionFragment : MenuFragment() {
 
                 if (!act.previousFractalCreated || act.previousFractalId == -1) {
                     Log.d("MAIN", "previousFractal not created")
-                    Fractal.previous.customId = insert(Fractal.previous.toEntity()).toInt()
+                    Fractal.previous.customId = insert(Fractal.previous.toDatabaseEntity()).toInt()
                     act.previousFractalId = Fractal.previous.customId
                     val edit = act.getSharedPreferences(SHARED_PREFERENCES, Context.MODE_PRIVATE).edit()
                     edit.putInt(PREV_FRACTAL_ID, Fractal.previous.customId)
@@ -189,19 +188,13 @@ class PositionFragment : MenuFragment() {
 
                 getAll().forEach {
 
-                    val shapeParams = if (listOfNotNull(it.julia, it.seed, it.p1, it.p2, it.p3, it.p4).isNotEmpty()) Shape.ParamSetPreset(
-                        listOfNotNull(it.p1, it.p2, it.p3, it.p4).map { p -> if (p.isComplex) ComplexParam(p) else RealParam(p) },
-                        julia = if (it.julia != null) ComplexParam(it.julia) else null,
-                        seed = if (it.seed != null) ComplexParam(it.seed) else null
+                    val shapeParams = if (listOfNotNull(it.julia, it.seed, it.p1, it.p2, it.p3, it.p4).isNotEmpty()) Shape.ParamSet(
+                        ArrayList(listOfNotNull(it.p1, it.p2, it.p3, it.p4).map { p -> if (p.isComplex) ComplexParam(p) else RealParam(p) }),
+                        julia = if (it.julia != null) ComplexParam(it.julia) else ComplexParam(),
+                        seed = if (it.seed != null) ComplexParam(it.seed) else ComplexParam()
                     ) else null
 
-                    val textureParams = if (listOfNotNull(it.q1, it.q2, it.q3, it.q4).isNotEmpty()) Texture.ParamListPreset(
-                        listOf(it.q1, it.q2, it.q3, it.q4).map { q ->
-                            if (q != null) {
-                                if (q.isComplex) ComplexParam(q) else RealParam(q)
-                            } else null
-                        }
-                    ) else null
+                    val textureParams = null
 
                     val thumbnail = try {
                         val inputStream = requireContext().openFileInput(it.thumbnailPath)
@@ -225,13 +218,11 @@ class PositionFragment : MenuFragment() {
 
                         shapeId = it.shapeId,
                         juliaMode = it.juliaMode,
-                        maxIter = it.maxIter,
                         shapeParams = shapeParams,
                         position = if (it.position != null) Position(it.position) else null,
 
                         textureId = it.textureId,
-                        textureMode = TextureMode.values()[it.textureMode],
-                        radius = it.radius,
+                        textureRegion = TextureRegion.values()[it.textureMode],
                         textureMin = it.textureMin,
                         textureMax = it.textureMax,
                         textureParams = textureParams,
@@ -239,11 +230,13 @@ class PositionFragment : MenuFragment() {
                         imageId = Texture.defaultImages.getOrNull(it.imageId) ?: -1,
 
                         paletteId = it.paletteId,
-                        frequency = it.frequency,
-                        phase = it.phase,
-                        density = it.density,
-                        accent1 = it.solidFillColor,
-                        accent2 = it.accent2
+                        color = ColorConfig(
+                            frequency = it.frequency.toDouble(),
+                            phase = it.phase.toDouble(),
+                            density = it.density.toDouble(),
+                            fillColor = it.solidFillColor,
+                            outlineColor = it.accent2
+                        )
 
                     )
                     if (it.id == act.previousFractalId) {
@@ -264,19 +257,13 @@ class PositionFragment : MenuFragment() {
             Fractal.all.forEach { listItems.add(
                 ListItem(
                     it,
-                    if (it.hasCustomId || it == Fractal.emptyCustom) ListHeader.CUSTOM else ListHeader.DEFAULT,
+                    if (it.hasCustomId || it == Fractal.emptyCustom) ListItemType.CUSTOM else ListItemType.DEFAULT,
                     R.layout.other_list_item
-                ).apply {
-                    if (it.isFavorite) {
-                        val favorite = ListItem(it, ListHeader.FAVORITE, R.layout.other_list_item, compliment = this)
-                        compliment = favorite
-                        listItems.add(favorite)
-                    }
-                })
+                ))
             }
             if (Fractal.all.none { it.isFavorite }) listItems.add(emptyFavorite)
             if (Fractal.bookmarks.isEmpty()) listItems.add(emptyCustom)
-            listItems.sortBy { it.header.type }
+
             val bookmarkListAdapter = ListAdapter(
                 listItems,
                 onEditCustomBookmark,
@@ -285,11 +272,11 @@ class PositionFragment : MenuFragment() {
                 emptyFavorite,
                 emptyCustom
             )
-            b.bookmarkListLayout.list.apply {
+            b.bookmarkListLayout.defaultList.apply {
                 adapter = bookmarkListAdapter
                 setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
                     val firstVisiblePos = listLayoutManager.findFirstCompletelyVisibleItemPosition()
-                    highlightListHeader(
+                    highlightListItemType(
                         bookmarkListAdapter, when {
                         firstVisiblePos < bookmarkListAdapter.getGlobalPositionOf(bookmarkListAdapter.headerItems[1]) -> 0
                         firstVisiblePos < bookmarkListAdapter.getGlobalPositionOf(bookmarkListAdapter.headerItems[2]) -> 1
@@ -305,8 +292,6 @@ class PositionFragment : MenuFragment() {
 
                     val firstVisiblePos = listLayoutManager.findFirstCompletelyVisibleItemPosition()
                     val lastVisiblePos = listLayoutManager.findLastCompletelyVisibleItemPosition()
-                    if (position + 1 > lastVisiblePos) b.bookmarkListLayout.list.smoothSnapToPosition(position + 1, LinearSmoothScroller.SNAP_TO_END)
-                    else if (position - 1 < firstVisiblePos) b.bookmarkListLayout.list.smoothSnapToPosition(position - 1)
 
                     if (position != bookmarkListAdapter.activatedPos) bookmarkListAdapter.setActivatedPositionNoToggle(position)
                     val bookmark: Fractal = try {
@@ -323,7 +308,7 @@ class PositionFragment : MenuFragment() {
 
                         if (fsv.r.isRendering) fsv.r.interruptRender = true
 
-                        fsv.r.checkThresholdCross(showMsg = false) {
+                        fsv.r.checkThresholdCross {
 
                             // restore state
                             if (firstBookmarkSelection) firstBookmarkSelection = false
@@ -337,7 +322,7 @@ class PositionFragment : MenuFragment() {
                         }
 
                         fsv.r.renderShaderChanged = true
-                        if (sc.autofitColorRange && f.density == 0f && !f.texture.hasRawOutput) {
+                        if (sc.autofitColorRange && f.color.density == 0.0 && !f.texture.hasRawOutput) {
                             fsv.r.autofitColorSelected = true
                             fsv.r.calcNewTextureSpan = true
                         }
@@ -352,17 +337,7 @@ class PositionFragment : MenuFragment() {
                 else false
 
             }
-            b.bookmarkListLayout.apply {
-                listFavoritesButton.setOnClickListener {
-                    list.smoothSnapToPosition(bookmarkListAdapter.getGlobalPositionOf(bookmarkListAdapter.headerItems[0]))
-                }
-                listCustomButton.setOnClickListener {
-                    list.smoothSnapToPosition(bookmarkListAdapter.getGlobalPositionOf(bookmarkListAdapter.headerItems[1]))
-                }
-                listDefaultButton.setOnClickListener {
-                    list.smoothSnapToPosition(bookmarkListAdapter.getGlobalPositionOf(bookmarkListAdapter.headerItems[2]))
-                }
-            }
+
 
             Log.e("POSITION", "bookmark load successful!")
 
@@ -388,7 +363,6 @@ class PositionFragment : MenuFragment() {
 
                     currentAspect = card
                     updateResolutionText(sc.resolution, sc.aspectRatio)
-                    act.onAspectRatioChanged()
 
                 }
 
@@ -434,7 +408,6 @@ class PositionFragment : MenuFragment() {
         }
 
 
-
 //        b.resolutionButton.setOnClickListener(subMenuButtonListener(b.resolutionLayout, b.resolutionButton))
 //        b.aspectRatioButton.setOnClickListener(subMenuButtonListener(b.aspectRatioLayout, b.aspectRatioButton, UiLayoutHeight.MED))
 
@@ -456,11 +429,10 @@ class PositionFragment : MenuFragment() {
             b.randomizeButton.hide()
             setCurrentLayout(b.zoomLayout)
             setCurrentButton(b.zoomButton)
-            b.positionMenuButtons.show()
-            act.uiSetHeight(UiLayoutHeight.SHORT)
+//            b.positionMenuButtons.show()
             act.updateFragmentLayouts()
 
-            fsv.r.reaction = Reaction.POSITION
+            sc.editMode = EditMode.POSITION
 
         }
         b.bookmarkListCancelButton.setOnClickListener {
@@ -473,8 +445,7 @@ class PositionFragment : MenuFragment() {
             b.imageNavButtons.hide()
             setCurrentLayout(b.zoomLayout)
             setCurrentButton(b.zoomButton)
-            b.positionMenuButtons.show()
-            act.uiSetHeight(UiLayoutHeight.SHORT)
+//            b.positionMenuButtons.show()
 
 
             handler.postDelayed({
@@ -515,12 +486,10 @@ class PositionFragment : MenuFragment() {
 
 
 
-        b.positionLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
         b.resetPositionButton.setOnClickListener {
 
             fsv.r.checkThresholdCross { f.shape.position.reset() }
-            act.updatePositionLayout()
             fsv.r.calcNewTextureSpan = true
             fsv.r.renderToTex = true
             if (fsv.r.isRendering) fsv.r.interruptRender = true
@@ -530,11 +499,9 @@ class PositionFragment : MenuFragment() {
 
         b.shiftHorizontalButton.setOnClickListener{
             subMenuButtonListener(b.xLayout, b.shiftHorizontalButton).onClick(it)
-            b.shiftHorizontalSensitivity.sensitivityButton.setImageResource(sc.shiftSensitivity.iconId)
         }
         b.shiftVerticalButton.setOnClickListener {
             subMenuButtonListener(b.yLayout, b.shiftVerticalButton).onClick(it)
-            b.shiftVerticalSensitivity.sensitivityButton.setImageResource(sc.shiftSensitivity.iconId)
         }
         b.zoomButton.setOnClickListener(subMenuButtonListener(b.zoomLayout, b.zoomButton))
         b.rotateButton.setOnClickListener(subMenuButtonListener(b.rotationLayout, b.rotateButton))
@@ -555,30 +522,8 @@ class PositionFragment : MenuFragment() {
         })
         b.shiftHorizontalSensitivity.sensitivityButton.apply {
             setOnClickListener {
-                sc.shiftSensitivity = sc.shiftSensitivity.next()
-                setImageResource(sc.shiftSensitivity.iconId)
             }
         }
-        b.shiftLeftButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal = { f.shape.position.translate(-sc.shiftSensitivity.shiftDiscrete, 0f) },
-                transformQuad = { fsv.r.translate(-2f*sc.shiftSensitivity.shiftDiscrete, 0f) },
-                updateLayout = { updateShiftValues() }
-        ))
-        b.shiftLeftButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal = { f.shape.position.translate(-sc.shiftSensitivity.shiftContinuous, 0f) },
-                transformQuad = { fsv.r.translate(-2f*sc.shiftSensitivity.shiftContinuous, 0f) },
-                updateLayout = { updateShiftValues() }
-        ))
-        b.shiftRightButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal = { f.shape.position.translate(sc.shiftSensitivity.shiftDiscrete, 0f) },
-                transformQuad = { fsv.r.translate(2f*sc.shiftSensitivity.shiftDiscrete, 0f) },
-                updateLayout = { updateShiftValues() }
-        ))
-        b.shiftRightButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal = { f.shape.position.translate(sc.shiftSensitivity.shiftContinuous, 0f) },
-                transformQuad = { fsv.r.translate(2f*sc.shiftSensitivity.shiftContinuous, 0f) },
-                updateLayout = { updateShiftValues() }
-        ))
 
 
 
@@ -592,32 +537,8 @@ class PositionFragment : MenuFragment() {
             }
             w.text = "%.17f".format(f.shape.position.y)
         })
-        b.shiftVerticalSensitivity.sensitivityButton.apply {
-            setOnClickListener {
-                sc.shiftSensitivity = sc.shiftSensitivity.next()
-                setImageResource(sc.shiftSensitivity.iconId)
-            }
-        }
-        b.shiftUpButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal = { f.shape.position.translate(0f, -sc.shiftSensitivity.shiftDiscrete) },
-                transformQuad = { fsv.r.translate(0f, 2f*sc.shiftSensitivity.shiftDiscrete) },
-                updateLayout = { updateShiftValues() }
-        ))
-        b.shiftUpButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal = { f.shape.position.translate(0f, -sc.shiftSensitivity.shiftContinuous) },
-                transformQuad = { fsv.r.translate(0f, 2f*sc.shiftSensitivity.shiftContinuous) },
-                updateLayout = { updateShiftValues() }
-        ))
-        b.shiftDownButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal = { f.shape.position.translate(0f, sc.shiftSensitivity.shiftDiscrete) },
-                transformQuad = { fsv.r.translate(0f, -2f*sc.shiftSensitivity.shiftDiscrete) },
-                updateLayout = { updateShiftValues() }
-        ))
-        b.shiftDownButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal = { f.shape.position.translate(0f, sc.shiftSensitivity.shiftContinuous) },
-                transformQuad = { fsv.r.translate(0f, -2f*sc.shiftSensitivity.shiftContinuous) },
-                updateLayout = { updateShiftValues() }
-        ))
+        b.shiftVerticalSensitivity.sensitivityButton.apply {}
+
 
 
 
@@ -670,32 +591,7 @@ class PositionFragment : MenuFragment() {
                     w.text = "%d".format(scaleStrings[1].toInt())
 
                 })
-        b.zoomSensitivity.sensitivityButton.apply {
-            setOnClickListener {
-                sc.zoomSensitivity = sc.zoomSensitivity.next()
-                setImageResource(sc.zoomSensitivity.iconId)
-            }
-        }
-        b.zoomInButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(sc.zoomSensitivity.zoomDiscrete) } },
-                transformQuad     = { fsv.r.zoom(sc.zoomSensitivity.zoomDiscrete) },
-                updateLayout      = { updateZoomValues() }
-        ))
-        b.zoomInButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(sc.zoomSensitivity.zoomContinuous) } },
-                transformQuad     = { fsv.r.zoom(sc.zoomSensitivity.zoomContinuous) },
-                updateLayout      = { updateZoomValues() }
-        ))
-        b.zoomOutButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(1f/sc.zoomSensitivity.zoomDiscrete) } },
-                transformQuad     = { fsv.r.zoom(1f/sc.zoomSensitivity.zoomDiscrete) },
-                updateLayout      = { updateZoomValues() }
-        ))
-        b.zoomOutButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal  = { fsv.r.checkThresholdCross { f.shape.position.zoom(1f/sc.zoomSensitivity.zoomContinuous) } },
-                transformQuad     = { fsv.r.zoom(1f/sc.zoomSensitivity.zoomContinuous) },
-                updateLayout      = { updateZoomValues() }
-        ))
+
 
 
         // ROTATION LAYOUT
@@ -709,35 +605,10 @@ class PositionFragment : MenuFragment() {
                     }
                     w.text = "%.1f".format(f.shape.position.rotation.inDegrees())
                 })
-        b.rotationLock.setOnClickListener {
-            f.shape.position.rotationLocked = b.rotationLock.isChecked
-        }
-        b.rotationSensitivity.sensitivityButton.apply {
-            setOnClickListener {
-                sc.rotationSensitivity = sc.rotationSensitivity.next()
-                setImageResource(sc.rotationSensitivity.iconId)
-            }
-        }
-        b.rotateLeftButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal = { f.shape.position.rotate(sc.rotationSensitivity.rotationDiscrete) },
-                transformQuad = { fsv.r.rotate(sc.rotationSensitivity.rotationDiscrete) },
-                updateLayout = { updateRotationValues() }
-        ))
-        b.rotateLeftButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal = { f.shape.position.rotate(sc.rotationSensitivity.rotationContinuous) },
-                transformQuad = { fsv.r.rotate(sc.rotationSensitivity.rotationContinuous) },
-                updateLayout = { updateRotationValues() }
-        ))
-        b.rotateRightButton.setOnClickListener(PositionChangeOnClickListener(fsv,
-                transformFractal = { f.shape.position.rotate(-sc.rotationSensitivity.rotationDiscrete) },
-                transformQuad = { fsv.r.rotate(-sc.rotationSensitivity.rotationDiscrete) },
-                updateLayout = { updateRotationValues() }
-        ))
-        b.rotateRightButton.setOnLongClickListener(PositionChangeOnLongClickListener(fsv,
-                transformFractal = { f.shape.position.rotate(-sc.rotationSensitivity.rotationContinuous) },
-                transformQuad = { fsv.r.rotate(-sc.rotationSensitivity.rotationContinuous) },
-                updateLayout = { updateRotationValues() }
-        ))
+//        b.rotationLock.setOnClickListener {
+//            f.shape.position.rotationLocked = b.rotationLock.isChecked
+//        }
+
 
 
 
@@ -776,7 +647,7 @@ class PositionFragment : MenuFragment() {
 
     override fun onGoldEnabled() {
 
-        b.bookmarkListLayout.list.adapter?.notifyDataSetChanged()
+        b.bookmarkListLayout.defaultList.adapter?.notifyDataSetChanged()
         b.resolutionBar.showGradient = false
         listOf(
             b.aspect45Button,
@@ -792,18 +663,18 @@ class PositionFragment : MenuFragment() {
     }
 
     fun getBookmarkListAdapter() : ListAdapter<Fractal>? {
-        return b.bookmarkListLayout.list.adapter as? ListAdapter<Fractal>
+        return b.bookmarkListLayout.defaultList.adapter as? ListAdapter<Fractal>
     }
 
     fun openBookmarksList() {
 
         crashlytics().updateLastAction(Action.BOOKMARK_LOAD)
 
-        fsv.r.reaction = Reaction.NONE
+        sc.editMode = EditMode.NONE
 
         setCurrentLayout(b.bookmarkListLayout.root)
         b.randomizeButton.hide()
-        b.positionMenuButtons.hide()
+//        b.positionMenuButtons.hide()
         b.imageNavButtons.show()
         b.bookmarkListCancelButton.show()
 
@@ -813,7 +684,6 @@ class PositionFragment : MenuFragment() {
             hideMenuToggleButton()
             hideCategoryButtons()
             hideHeaderButtons()
-            uiSetHeight(UiLayoutHeight.TALL)
         }
 
     }
@@ -822,11 +692,11 @@ class PositionFragment : MenuFragment() {
 
         crashlytics().updateLastAction(Action.RANDOMIZE)
 
-        fsv.r.reaction = Reaction.COLOR
+        sc.editMode = EditMode.COLOR
 
         setCurrentLayout(b.randomizerLayout)
         b.bookmarkListCancelButton.hide()
-        b.positionMenuButtons.hide()
+//        b.positionMenuButtons.hide()
         b.imageNavButtons.show()
         b.randomizeButton.show()
 
@@ -834,7 +704,6 @@ class PositionFragment : MenuFragment() {
             hideMenuToggleButton()
             hideCategoryButtons()
             hideHeaderButtons()
-            uiSetHeight(UiLayoutHeight.CLOSED_MED)
         }
 
     }
@@ -843,18 +712,17 @@ class PositionFragment : MenuFragment() {
 
         crashlytics().updateLastAction(Action.RESOLUTION_CHANGE)
 
-        fsv.r.reaction = Reaction.NONE
+        sc.editMode = EditMode.NONE
 
         setCurrentLayout(b.resolutionLayout)
         b.bookmarkListCancelButton.hide()
-        b.positionMenuButtons.hide()
+//        b.positionMenuButtons.hide()
         b.imageNavButtons.show()
 
         act.apply {
             hideMenuToggleButton()
             hideCategoryButtons()
             hideHeaderButtons()
-            uiSetHeight(UiLayoutHeight.CLOSED_MED)
         }
 
     }
@@ -863,18 +731,17 @@ class PositionFragment : MenuFragment() {
 
         crashlytics().updateLastAction(Action.ASPECT_CHANGE)
 
-        fsv.r.reaction = Reaction.NONE
+        sc.editMode = EditMode.NONE
 
         setCurrentLayout(b.aspectRatioLayout)
         b.bookmarkListCancelButton.hide()
-        b.positionMenuButtons.hide()
+//        b.positionMenuButtons.hide()
         b.imageNavButtons.show()
 
         act.apply {
             hideMenuToggleButton()
             hideCategoryButtons()
             hideHeaderButtons()
-            uiSetHeight(UiLayoutHeight.CLOSED_MED)
         }
 
     }
@@ -901,9 +768,10 @@ class PositionFragment : MenuFragment() {
         else if (ratio.r < AspectRatio.RATIO_SCREEN.r) dims.y = (dims.x * ratio.r).toInt()
 
         b.resolutionValue.text = "${dims.x} x ${dims.y}"
+
     }
 
-    fun highlightListHeader(adapter: ListAdapter<Fractal>, index: Int) {
+    fun highlightListItemType(adapter: ListAdapter<Fractal>, index: Int) {
         adapter.apply {
             listOf(
                 b.bookmarkListLayout.listFavoritesButton,

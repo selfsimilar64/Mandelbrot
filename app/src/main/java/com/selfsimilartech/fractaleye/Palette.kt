@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.Log
 import java.lang.Math.random
+import kotlin.math.sin
 import kotlin.math.floor
 
 
@@ -64,7 +65,7 @@ class Palette (
         oscillate               : Boolean = true,
         override var isFavorite : Boolean = false
 
-) : Customizable, Goldable {
+) : Customizable {
 
 
     companion object {
@@ -213,12 +214,32 @@ class Palette (
                     random().toFloat()
             ))})
         }
-        fun generateHighlightColors(n: Int) : ArrayList<Int> {
-            return ArrayList(List(n) { i -> Color.HSVToColor(floatArrayOf(
-                    360*random().toFloat(),
-                    (i+2).toFloat()/(n+5).toFloat(),
-                    i.toFloat()/n.toFloat()
-            ))})
+        fun generateSequentialColors(n: Int) : ArrayList<Int> {
+
+            val hueStart = 360f*randomf()
+            val hueSize = 180f*randomf() + 90f
+
+            val s = randomi(2)
+            val satSize = 0.5f*randomf() + 0.5f
+            val satOffset = randomf()*(1f - satSize)
+
+            val valueSize = 0.75f + 0.25f*randomf()
+            val valueOffset = randomf()*(1f - valueSize)
+
+            Log.d("PALETTE", "hue: ($hueStart, $hueSize), sat: ($satSize, $satOffset)")
+
+            return ArrayList(List(n) { i ->
+                val d = i.toFloat() / (n - 1).toFloat()
+                Color.HSVToColor(floatArrayOf(
+                    (hueStart + d*hueSize) % 360f,
+                    when (s) {
+                        0 -> satSize*0.5f*(sin(Math.PI*(2f*d - 0.5f)) + 1f).toFloat() + satOffset
+                        1 -> satSize*0.5f*(sin(Math.PI*(d + 0.5f)) + 1f).toFloat() + satOffset
+                        else -> 1f
+                    },
+                    valueSize*d + valueOffset
+                ))
+            })
         }
 
 
@@ -356,7 +377,7 @@ class Palette (
 
     override fun hashCode(): Int { return name.hashCode() }
 
-    override fun isCustom() : Boolean = hasCustomId
+    override fun isCustom() : Boolean = hasCustomId || id == -1
 
     fun clone(res: Resources) : Palette {
         return Palette(
@@ -368,6 +389,12 @@ class Palette (
 
     fun generateStarredKey(usResources: Resources) : String {
         return "Palette${usResources.getString(nameId).replace(" ", "")}Starred"
+    }
+
+    override fun toString(): String {
+        return "$name\n${colors.joinToString("\n") { c -> 
+            "%4d%4d%4d".format(c.hue().toInt(), (100f*c.sat()).toInt(), (100f*c.value()).toInt())
+        }}"
     }
 
 }

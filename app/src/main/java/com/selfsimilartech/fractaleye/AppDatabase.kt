@@ -1,10 +1,7 @@
 package com.selfsimilartech.fractaleye
 
 import android.content.Context
-import androidx.room.AutoMigration
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -16,9 +13,10 @@ const val DATABASE_NAME = "custom"
     entities = [ColorPaletteEntity::class, ShapeEntity::class, FractalEntity::class],
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 11, to = 12)
-                     ],
-    version = 12
+        AutoMigration(from = 11, to = 12),
+        AutoMigration(from = 12, to = 13)
+    ],
+    version = 13
 
 )
 abstract class AppDatabase : RoomDatabase() {

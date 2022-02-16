@@ -10,5 +10,4 @@
     android:layout_marginBottom="2dp"
     android:background="@drawable/shape_key"
     android:padding="4dp"
-    app:srcCompat="@drawable/key_cube"
-    app:tint="@color/highlight" />
+    app:srcCompat="@drawable/key_cube" />

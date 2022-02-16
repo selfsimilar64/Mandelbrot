@@ -4,60 +4,73 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/listLayout"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/uiComponentHeightTall"
+    android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@color/menuDarkSecondary"
+    android:background="@drawable/ui_component_bg"
     android:orientation="vertical"
-    tools:showIn="@layout/color_fragment">
+    android:padding="8dp">
 
-    <LinearLayout
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:background="@color/menuDarkPrimary"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        app:cardBackgroundColor="@color/transparent"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp">
 
-        <Button
-            android:id="@+id/listFavoritesButton"
-            style="@style/ListCategoryButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/header_favorites"
-            android:textColor="@color/colorDarkText"
-            android:textSize="12sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/listCustomButton"
-            style="@style/ListCategoryButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/header_custom"
-            android:textColor="@color/colorDarkText"
-            android:textSize="12sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/listDefaultButton"
-            style="@style/ListCategoryButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/header_default"
-            android:textColor="@color/colorDarkText"
-            android:textSize="12sp" />
-    </LinearLayout>
+                <Button
+                    android:id="@+id/listFavoritesButton"
+                    style="@style/ListCategoryButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/header_favorites"
+                    android:textColor="@color/colorDarkText"
+                    android:textSize="12sp" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list"
-        android:layout_width="match_parent"
-        android:layout_height="144dp"
-        android:orientation="horizontal"
-        android:scrollbarThumbHorizontal="@color/divider"
-        android:scrollbars="horizontal"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:spanCount="3"
-        tools:itemCount="6"
-        tools:listitem="@layout/palette_list_item" />
+                <Button
+                    android:id="@+id/listCustomButton"
+                    style="@style/ListCategoryButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/header_custom"
+                    android:textColor="@color/colorDarkText"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/listDefaultButton"
+                    style="@style/ListCategoryButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/header_default"
+                    android:textColor="@color/colorDarkText"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/defaultList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:scrollIndicators="start|end"
+                android:scrollbars="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:itemCount="6"
+                tools:listitem="@layout/other_list_item" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 
 </LinearLayout>

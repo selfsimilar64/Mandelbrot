@@ -1,5 +1,6 @@
 package com.selfsimilartech.fractaleye
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
@@ -15,8 +16,11 @@ import android.util.Range
 import android.view.*
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -28,19 +32,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import eu.davidea.flexibleadapter.FlexibleAdapter
 import org.apfloat.Apcomplex
 import org.apfloat.Apfloat
 import org.apfloat.ApfloatMath
+import java.io.Serializable
 import java.util.ArrayList
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sign
-import kotlin.math.sqrt
-
+import kotlin.math.*
 
 
 /* INTERFACES / CLASSES */
@@ -48,7 +46,7 @@ import kotlin.math.sqrt
 interface Goldable {
     val goldFeature : Boolean
 }
-interface Customizable {
+interface Customizable : Goldable {
 
     var name : String
     var thumbnail : Bitmap?
@@ -63,7 +61,30 @@ interface ClickListener {
     fun onClick(view: View, position: Int)
     fun onLongClick(view: View, position: Int)
 }
+interface Toggleable {
+    var isChecked : Boolean
+}
 
+enum class EditMode(val icon: Int, val alwaysDisplayParam: Boolean) {
+
+    POSITION(R.drawable.position, false),
+    COLOR(R.drawable.color, false),
+    SHAPE(R.drawable.shape, true),
+    TEXTURE(R.drawable.texture, true),
+    NONE(R.drawable.cancel, false);
+
+    var paramMenuLayout : ViewGroup? = null
+    var paramDisplayLayout : ViewGroup? = null
+    var listLayout      : ViewGroup? = null
+    var utilityButtons  : ViewGroup? = null
+    var listNavButtons     : ArrayList<Button> = arrayListOf()
+    var customNavButtons   : ArrayList<Button> = arrayListOf()
+
+    var updateDisplay : () -> Unit = {}
+    var updateLayout: () -> Unit = {}
+    var updateAdjust: () -> Unit = {}
+
+}
 enum class GpuPrecision(val bits: Int, val threshold: Double) {
     SINGLE(23, 5e-4), DUAL(46, 1e-12)
 }
@@ -78,24 +99,18 @@ enum class ChunkProfile(val fgSingle: Int, val bgSingle: Int, val fgDual: Int, v
     MED(20, 5, 50, 15, 1, 1),
     HIGH(40, 10, 100, 20, 1, 1)
 }
-enum class TextureMode { OUT, IN, BOTH }
+enum class TextureRegion(val iconId: Int) {
+    OUT(R.drawable.texture_region_out),
+    IN(R.drawable.texture_region_in),
+    BOTH(R.drawable.texture_region_both)
+}
 enum class ListLayoutType { GRID, LINEAR }
-enum class Sensitivity(
 
-    val iconId: Int,
-    val zoomDiscrete: Float,
-    val zoomContinuous: Float,
-    val rotationDiscrete: Float,
-    val rotationContinuous: Float,
-    val shiftDiscrete: Float,
-    val shiftContinuous: Float,
-    val param: Float
+enum class Sensitivity(val iconId: Int) {
 
-) {
-
-    LOW(R.drawable.sensitivity_low, 1.01f, 1.0065f, Math.PI.toFloat() / 256f, Math.PI.toFloat() / 512f, 1 / 256f, 1 / 512f, 0.01f),
-    MED(R.drawable.sensitivity_med, 1.1f, 1.035f, Math.PI.toFloat() / 16f, Math.PI.toFloat() / 128f, 1 / 32f, 1 / 128f, 2f),
-    HIGH(R.drawable.sensitivity_high, 1.35f, 1.125f, Math.PI.toFloat() / 2f, Math.PI.toFloat() / 64f, 1 / 4f, 1 / 32f, 10f);
+    LOW(  R.drawable.sensitivity_low  ),
+    MED(  R.drawable.sensitivity_med  ),
+    HIGH( R.drawable.sensitivity_high );
 
     fun next() : Sensitivity = when (this) {
         LOW -> MED
@@ -118,6 +133,160 @@ enum class UiLayoutHeight(private val dimenId: Int, val closed: Boolean = false)
     fun initialize(res: Resources) {
         dimen = res.getDimension(dimenId)
     }
+
+}
+enum class UiState {
+
+    HOME,
+    EDITMODE_LIST,
+    BOOKMARK_LIST,
+    CUSTOM_PALETTE,
+    CUSTOM_SHAPE,
+    RANDOMIZER,
+    VIDEO
+
+}
+
+interface Sensitive {
+    var sensitivity : Sensitivity
+}
+class PositionParam(
+    val nameId: Int,
+    val decreaseIconId: Int,
+    val increaseIconId: Int,
+    private val discreteDeltas: List<Double>,
+    private val continuousDeltas: List<Double>,
+    val toDisplayFormat: (Position) -> String,
+    val fromDislayFormat: (Position, Double) -> Unit
+) : Sensitive {
+
+    var onDecreaseClick        : View.OnClickListener?      = null
+    var onDecreaseLongClick    : View.OnLongClickListener?  = null
+    var onIncreaseClick        : View.OnClickListener?      = null
+    var onIncreaseLongClick    : View.OnLongClickListener?  = null
+
+    var discreteDelta = discreteDeltas[1]
+    var continuousDelta = continuousDeltas[1]
+    override var sensitivity: Sensitivity = Sensitivity.MED
+        set (value) {
+            field = value
+            discreteDelta   = discreteDeltas[value.ordinal]
+            continuousDelta = continuousDeltas[value.ordinal]
+        }
+
+    companion object {
+
+        val ZOOM = PositionParam(
+            R.string.zoom, R.drawable.zoom_out, R.drawable.zoom_in,
+            listOf( 1.01,   1.1,   1.35  ),
+            listOf( 1.0065, 1.025, 1.075 ),
+            { pos -> (0.5 - log10(pos.zoom)).format(3) },
+            { pos, result -> pos.zoom = 10.0.pow(0.5 - result) }
+        )
+
+        val ROTATION = PositionParam(
+            R.string.rotation, R.drawable.rotate_left, R.drawable.rotate_right,
+            listOf( Math.PI/512.0,  Math.PI/32.0,  Math.PI/4.0  ),
+            listOf( Math.PI/1024.0, Math.PI/256.0, Math.PI/64.0 ),
+            { pos -> "%.1f".format(pos.rotation.inDegrees()) },
+            { pos, result -> pos.rotation = result.inRadians() }
+        )
+
+        val SHIFT_HORIZONTAL = PositionParam(
+            R.string.x, R.drawable.shift_left, R.drawable.shift_right,
+            listOf( 1.0/256.0, 1.0/32.0,  1.0/4.0  ),
+            listOf( 1.0/512.0, 1.0/128.0, 1.0/32.0 ),
+            { pos -> pos.x.format(15) },
+            { pos, result -> pos.x = result }
+        )
+
+        val SHIFT_VERTICAL = PositionParam(
+            R.string.y, R.drawable.shift_down, R.drawable.shift_up,
+            SHIFT_HORIZONTAL.discreteDeltas,
+            SHIFT_HORIZONTAL.continuousDeltas,
+            { pos -> pos.y.format(15) },
+            { pos, result -> pos.y = result }
+        )
+
+    }
+
+}
+
+open class ColorParam(val nameId: Int, val iconId: Int)
+class ColorRealParam(
+
+    nameId: Int,
+    iconId: Int,
+    private val discreteDeltas: List<Double>,
+    private val continuousDeltas: List<Double>,
+    val toDisplayFormat: (ColorConfig) -> String,
+    val fromDislayFormat: (ColorConfig, Double) -> Unit,
+    val toProgress: (ColorConfig) -> Double,
+    val fromProgress: (ColorConfig, Double) -> Unit
+
+) : ColorParam(nameId, iconId), Sensitive {
+
+    var onDecreaseClick        : View.OnClickListener? = null
+    var onDecreaseLongClick    : View.OnLongClickListener? = null
+    var onIncreaseClick        : View.OnClickListener? = null
+    var onIncreaseLongClick    : View.OnLongClickListener? = null
+
+    var discreteDelta = discreteDeltas[1]
+    var continuousDelta = continuousDeltas[1]
+    override var sensitivity: Sensitivity = Sensitivity.MED
+        set(value) {
+            field = value
+            discreteDelta = discreteDeltas[value.ordinal]
+            continuousDelta = continuousDeltas[value.ordinal]
+        }
+
+    companion object {
+
+        val FREQUENCY = ColorRealParam(
+            R.string.frequency,
+            R.drawable.frequency2,
+            listOf(1.025, 1.05, 1.1),
+            listOf(1.005, 1.025, 1.075),
+            { config -> log2(config.frequency + 1.0).format(3) },
+            { config, result -> config.frequency = 2.0.pow(result) - 1.0 },
+            { config -> log2(config.frequency + 1.0)/5.0 },
+            { config, progress -> config.frequency = 2.0.pow(progress*5.0) - 1.0 }
+        )
+
+        val PHASE = ColorRealParam(
+            R.string.phase,
+            R.drawable.phase,
+            listOf(0.005, 0.025, 0.05),
+            listOf(0.0025, 0.01, 0.035),
+            { config -> config.phase.format(4) },
+            { config, result -> config.phase = result },
+            { config -> config.phase },
+            { config, progress -> config.phase = progress }
+        )
+
+        val DENSITY = ColorRealParam(
+            R.string.density,
+            R.drawable.density,
+            listOf(0.005, 0.025, 0.05),
+            listOf(0.0025, 0.01, 0.035),
+            { config -> config.density.format(3) },
+            { config, result -> config.density = result.clamp(0.0, 5.0) },
+            { config -> config.density/5.0 },
+            { config, progress -> config.density = progress*5.0 }
+        )
+
+    }
+
+}
+class ColorAccent(nameId: Int, iconId: Int) : ColorParam(nameId, iconId) {
+
+    companion object {
+        val FILL = ColorAccent(R.string.solid_fill, R.drawable.fill_color)
+        val OUTLINE = ColorAccent(R.string.outline, R.drawable.outline_color)
+    }
+
+    lateinit var color : () -> Int
+    lateinit var updateColor : (c: Int) -> Unit
 
 }
 
@@ -174,7 +343,7 @@ class NoScrollViewPager : ViewPager {
     }
 
 }
-class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
+class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     private val fragmentList = ArrayList<Fragment>()
 
@@ -221,9 +390,13 @@ fun FirebaseCrashlytics.updateLastAction(action: Action) {
     setCustomKey(CRASH_KEY_LAST_ACTION, action.name)
 }
 
-fun now() = System.currentTimeMillis()
+fun currentTimeMs() = System.currentTimeMillis()
+fun currentTimeNs() = System.nanoTime()
 fun androidVersionAtLeast(version : Int) : Boolean {
     return Build.VERSION.SDK_INT >= version
+}
+fun hideKeyboard(window: Window, root: View) {
+    WindowCompat.getInsetsController(window, root)?.hide(WindowInsetsCompat.Type.ime())
 }
 fun hideSystemBars(window: Window, root: View) {
     if (androidVersionAtLeast(Build.VERSION_CODES.R)) {
@@ -240,6 +413,12 @@ fun hideSystemBars(window: Window, root: View) {
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
+//        if (androidVersionAtLeast(Build.VERSION_CODES.P)) {
+//            window.attributes?.run {
+//                layoutInDisplayCutoutMode =
+//                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+//            }
+//        }
     }
 }
 fun showSystemBars(window: Window, root: View) {
@@ -281,12 +460,37 @@ fun AlertDialog.showImmersive(root: View) {
     }
 }
 
+fun ProgressBar.reset() { progress = 0 }
+fun ProgressBar.setProgress(a: Int, b: Int) {
+    progress = (a.toFloat()/b.toFloat() * max).toInt()
+}
+
+fun ViewGroup.setOnLayoutTransitionEndListener(targetType: Int = LayoutTransition.CHANGE_APPEARING, sticky: Boolean = false, action: () -> Unit) {
+    layoutTransition?.addTransitionListener(object : LayoutTransition.TransitionListener {
+        override fun startTransition(transition: LayoutTransition?, container: ViewGroup?, view: View?, transitionType: Int) {}
+        override fun endTransition(transition: LayoutTransition?, container: ViewGroup?, view: View?, transitionType: Int) {
+            Log.d("TRANSITION", "transition type: ${transitionString(transitionType)}")
+            if (transitionType == targetType) {
+                if (!sticky) layoutTransition?.removeTransitionListener(this)
+                action()
+            }
+        }
+        fun transitionString(type: Int) : String {
+            return when (type) {
+                LayoutTransition.CHANGING -> "CHANGING"
+                LayoutTransition.APPEARING -> "APPEARING"
+                LayoutTransition.DISAPPEARING -> "DISAPPEARING"
+                LayoutTransition.CHANGE_APPEARING -> "CHANGE_APPEARING"
+                LayoutTransition.CHANGE_DISAPPEARING -> "CHANGE_DISAPPEARING"
+                else -> "other"
+            }
+        }
+    })
+}
+
 
 
 /* VIEWS */
-
-fun TabLayout.currentEditMode() : MainActivity.EditMode = MainActivity.EditMode.values()[selectedTabPosition]
-fun TabLayout.getTabAt(editMode: MainActivity.EditMode) : TabLayout.Tab = getTabAt(editMode.ordinal) as TabLayout.Tab
 
 fun TextView?.showAndSetText(id: Int) {
     if (this != null) {
@@ -305,8 +509,8 @@ fun View.isVisible() : Boolean { return visibility == View.VISIBLE}
 fun View.isInvisible() : Boolean { return visibility == View.INVISIBLE }
 fun View.isHidden() : Boolean { return visibility == View.GONE}
 
-fun ImageButton.disable() {
-    foregroundTintList = ColorStateList.valueOf(Color.GRAY)
+fun ImageButton.disable(tint: Boolean = false) {
+    if (tint) foregroundTintList = ColorStateList.valueOf(Color.GRAY)
     isClickable = false
     isFocusable = false
 }
@@ -327,23 +531,83 @@ fun Button.enable() {
     isFocusable = true
 }
 
-fun RecyclerView.smoothSnapToPosition(targetPos: Int, snapMode: Int = LinearSmoothScroller.SNAP_TO_START) {
+fun ViewGroup.disable(toggleAlpha: Boolean = false) {
+    isClickable = false
+    isFocusable = false
+    if (toggleAlpha) alpha = 0.35f
+}
+fun ViewGroup.enable() {
+    isClickable = true
+    isFocusable = true
+    alpha = 1f
+}
+
+fun ConstraintLayout.connectBottomToTop(a: Int, b: Int, margin: Int? = null) {
+    ConstraintSet().let { set ->
+        set.clone(this)
+        set.clear(a, ConstraintSet.TOP)
+        set.connect(a, ConstraintSet.BOTTOM, b, ConstraintSet.TOP, margin ?: 8.dp(context))
+        set.connect(a, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        set.connect(a, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+        set.applyTo(this)
+    }
+}
+fun ConstraintLayout.connectTopToBottom(a: Int, b: Int, margin: Int? = null) {
+    ConstraintSet().let { set ->
+        set.clone(this)
+        set.clear(a, ConstraintSet.BOTTOM)
+        set.connect(a, ConstraintSet.TOP, b, ConstraintSet.BOTTOM, margin ?: 8.dp(context))
+        set.connect(a, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        set.connect(a, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+        set.applyTo(this)
+    }
+}
+fun ConstraintLayout.connectEndToStart(a: Int, b: Int) {
+    ConstraintSet().let { set ->
+        set.clone(this)
+        set.connect(a, ConstraintSet.END, b, ConstraintSet.START)
+        set.applyTo(this)
+    }
+}
+fun ConstraintLayout.link(a: Int, b: Int) {
+    ConstraintSet().let { set ->
+        set.clone(this)
+        set.connect( a, ConstraintSet.END,    b, ConstraintSet.START  )
+        set.connect( a, ConstraintSet.TOP,    b, ConstraintSet.TOP    )
+        set.connect( a, ConstraintSet.BOTTOM, b, ConstraintSet.BOTTOM )
+        set.applyTo(this)
+    }
+}
+
+fun RecyclerView.smoothSnapToPosition(position: Int, max: Int) {
+
+
+    val firstVisiblePos = (layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+    val lastVisiblePos = (layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition()
+
+    val targetPos : Int
+    val snapMode : Int
+
+    if (position < max - 1 && position + 1 > lastVisiblePos) {
+        targetPos = position + 1
+        snapMode = LinearSmoothScroller.SNAP_TO_END
+    }
+    else if (position > 0 && position - 1 < firstVisiblePos) {
+        targetPos = position - 1
+        snapMode = LinearSmoothScroller.SNAP_TO_START
+    } else {
+        targetPos = position
+        snapMode = LinearSmoothScroller.SNAP_TO_END
+    }
 
     val smoothScroller = object : LinearSmoothScroller(this.context) {
         override fun calculateSpeedPerPixel(displayMetrics: DisplayMetrics?): Float {
-            return super.calculateSpeedPerPixel(displayMetrics)
+            return 1f/3f
         }
         override fun getVerticalSnapPreference() : Int = snapMode
         override fun getHorizontalSnapPreference() : Int = snapMode
     }
 
-    val firstVisiblePos = (layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
-    (adapter as FlexibleAdapter<*>).apply {
-        val distance = targetPos - firstVisiblePos
-        if (abs(distance) > 12) {
-            scrollToPosition(targetPos - sign(distance.toDouble()).toInt() * 12)
-        }
-    }
     smoothScroller.targetPosition = targetPos
     layoutManager?.startSmoothScroll(smoothScroller)
 
@@ -393,9 +657,18 @@ infix fun MutableList<Texture>.without(texture: Texture) : MutableList<Texture> 
 
 }
 
+enum class ListItemType : Serializable { DEFAULT, CUSTOM, FAVORITE }
+
 
 
 /* DATA */
+
+fun Int.dp(ctx: Context) : Int {
+    val density = ctx.resources.displayMetrics?.density ?: 7f
+    return (this*density + 0.5f).toInt()
+}
+fun randomf() : Float = Math.random().toFloat()
+fun randomi(n: Int) : Int = (n*Math.random()).toInt()
 
 fun Int.clamp(low: Int, high: Int) : Int {
     return maxOf(minOf(this, high), low)
@@ -405,6 +678,10 @@ fun Float.clamp(low: Float, high: Float) : Float {
 }
 fun Double.clamp(low: Double, high: Double) : Double {
     return maxOf(minOf(this, high), low)
+}
+
+fun Double.round(s: Int) : Int {
+    return s*(this/s.toDouble()).roundToInt()
 }
 
 fun Float.inRadians() : Float = this*Math.PI.toFloat()/180f
@@ -448,6 +725,14 @@ fun Double.splitToPointF() : PointF {
     val hi = this.toFloat()
     val lo = (this - hi.toDouble()).toFloat()
     return PointF(hi, lo)
+}
+fun scurve(t: Double, c: Double) : Double {
+    return when {
+        t < c         -> t*t/(2.0*c*(1.0 - c))
+        t <= 1.0 - c  -> (t - 0.5*c)/(1.0 - c)
+        t <= 1.0      -> (t*(1.0 - 0.5*t) - 0.5)/(c*(1.0 - c)) + 1.0
+        else          -> 0.0
+    }
 }
 
 fun DoubleArray.mult(s: Double) : DoubleArray {

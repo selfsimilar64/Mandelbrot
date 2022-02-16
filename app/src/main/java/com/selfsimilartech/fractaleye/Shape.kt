@@ -2,7 +2,10 @@ package com.selfsimilartech.fractaleye
 
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.util.Log
 import android.util.Range
+import kotlin.math.log2
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 
@@ -26,12 +29,11 @@ class Shape(
     val hasAnalyticDelta        : Boolean           = false,
     compatTextures              : List<Texture>     = Texture.divergent,
     val positions               : PositionList      = PositionList(),
-    val params                  : ParamSet          = ParamSet(),
+    val params                  : ParamSet          = ParamSet(listOf()),
     val randomConfigs           : List<Config>      = listOf(),
     juliaMode                   : Boolean           = false,
     val juliaSeed               : Boolean           = false,
-    var maxIter                 : Int               = 256,
-    radius                      : Float             = 1e6f,
+    radius                      : Float             = 2e20f,
     val power                   : Float             = 2f,
     val hasDynamicPower         : Boolean           = false,
     val isConvergent            : Boolean           = false,
@@ -46,42 +48,71 @@ class Shape(
     override var isFavorite     : Boolean           = false,
     var iterateNative           : (d: ScriptField_IterateData) -> FloatArray = { _ -> floatArrayOf() }
 
-) : Customizable, Goldable {
+) : Customizable {
 
 
-    class ParamSetPreset(
-        val list: List<RealParam> = listOf(),
-        val julia: ComplexParam? = null,
-        val seed: ComplexParam? = null
-    )
+    class ParamSet {
 
-    class ParamSet(
-        val list: List<RealParam> = listOf(),
-        val julia: ComplexParam = ComplexParam(),
-        val seed: ComplexParam = ComplexParam()
-    ) {
+        val list   : ArrayList<RealParam> = arrayListOf()
+        val seed   : ComplexParam
+        val julia  : ComplexParam
+        val detail : RealParam
 
-        val size = list.size
-        var active: RealParam = julia
+        var active : RealParam
+
+        constructor(list: List<RealParam>) : this(list, seed = Complex.ZERO)
+
+        constructor(
+            list: List<RealParam> = listOf(),
+            seed : Complex = Complex.ZERO,
+            julia : Complex = Complex.ZERO,
+            detail : Double = 256.0
+        ) {
+            this.list.addAll(list)
+            this.seed = ComplexParam(R.string.seed, R.drawable.seed, seed.x, seed.y)
+            this.julia = ComplexParam(R.string.julia, R.drawable.julia, julia.x, julia.y)
+            this.detail = RealParam(
+                R.string.detail,
+                R.drawable.detail,
+                detail,
+                Range(2.0.pow(ITER_MIN_POW), 2.0.pow(ITER_MAX_POW) - 1.0),
+                scale = RealParam.Scale.EXP_SQRT,
+                isDiscrete = true,
+                restrictValue = true
+            )
+            active = this.detail
+        }
+
+        constructor(
+            list: List<RealParam> = listOf(),
+            seed: ComplexParam = ComplexParam(),
+            julia: ComplexParam = ComplexParam(),
+            detail: RealParam = RealParam()
+        ) {
+            this.list.addAll(list)
+            this.seed = seed
+            this.julia = julia
+            this.detail = detail
+            active = this.detail
+        }
+
+        fun initialize(res: Resources) {
+            julia.name = res.getString(R.string.julia)
+            seed.name = res.getString(R.string.seed)
+            detail.name = res.getString(R.string.detail)
+            list.forEachIndexed { i, p ->
+                p.name = if (p.nameId != -1) res.getString(p.nameId) else "${res.getString(R.string.param1)} $i"
+            }
+        }
 
         fun at(index: Int) = list[index]
         fun setFrom(newSet: ParamSet) {
 
             julia.setFrom(newSet.julia)
             seed.setFrom(newSet.seed)
+            detail.setFrom(newSet.detail)
             list.forEachIndexed { i, p ->
-                newSet.list.find { it.nameId == p.nameId }?.let { p.setFrom(it) }
-            }
-
-        }
-
-        fun setFrom(newParams: ParamSetPreset) {
-
-            newParams.julia?.let { julia.setFrom(it) }
-            newParams.seed?.let { seed.setFrom(it) }
-            list.forEachIndexed { i, p ->
-                val newParam = newParams.list.getOrNull(i)
-                if (newParam != null) p.setFrom(newParam)
+                newSet.list.getOrNull(i)?.let { p.setFrom(it) }
             }
 
         }
@@ -91,26 +122,28 @@ class Shape(
             list.forEach { it.reset() }
             julia.reset()
             seed.reset()
+            detail.reset()
 
         }
 
-        fun clone(): ParamSetPreset {
-            return ParamSetPreset(
-                List(list.size) { i -> list[i].clone() },
-                julia = julia.clone(),
-                seed = seed.clone()
+        fun clone() : ParamSet {
+            return ParamSet(
+                ArrayList(List(list.size) { i -> list[i].clone() }),
+                julia  = julia.clone(),
+                seed   = seed.clone(),
+                detail = detail.clone()
             )
         }
 
         fun toConstructorString(): String {
-            return "\n\tParamSetPreset(listOf(${list.joinToString { it.toConstructorString() }}))"
+            return "\n\tParamSetPreset(arrayListOf(${list.joinToString { it.toConstructorString() }}))"
         }
 
     }
 
     class Config(
         val position    : Position?         = null,
-        val params      : ParamSetPreset?   = null,
+        val params      : ParamSet?         = null,
         val juliaMode   : Boolean?          = null
     ) {
         fun isGoldFeature(shape: Shape) : Boolean {
@@ -119,6 +152,7 @@ class Shape(
             return false
         }
     }
+
 
 
     companion object {
@@ -153,7 +187,7 @@ class Shape(
                 loop = CUSTOM_LOOP,
                 customLoopSingle = "csqr(z) + c",
                 customLoopDual = "cadd(csqr(z), c)",
-                positions = PositionList(Position(zoom = 5e0)),
+                positions = PositionList(Position(zoom = 5e0, rotation = 0.5*Math.PI)),
                 hasDualFloat = true
             )
         }
@@ -167,9 +201,10 @@ class Shape(
             delta1 = "mandelbrot_delta1(alpha, z1)",
             deltaJulia1 = "mandelbrot_julia_delta1(alpha, z1)",
             hasAnalyticDelta = true,
+            params = ParamSet(detail = 512.0),
             compatTextures = Texture.mandelbrot.minus(Texture.triangleIneqAvgFloat),
-            positions = PositionList(main = Position(x = -0.75, zoom = 3.5)),
-            randomConfigs = listOf(
+            positions = PositionList(main = Position(x = -0.75, zoom = sqrt(10.0), rotation = 0.5*Math.PI)),
+            randomConfigs = arrayListOf(
                 Config(Position(x = 0.3229090457868484,    y = 0.44956410983655004,  zoom = 2.48e-11)),
                 Config(Position(x = 0.0650067337017734,    y = -0.6358224558588296,  zoom = 5.12e-11)),
                 Config(Position(x = -0.22868757498633432,  y = -0.6984316911776989,  zoom = 1.56e-11)),
@@ -197,7 +232,6 @@ class Shape(
                 Config(Position(x = -1.7687911339372593,   y = 0.004424679892528449, zoom = 2.83e-10)),
                 Config(Position(x = -0.5291375239727468,   y = 0.5931785250849431,   zoom = 6.77e-11)),
             ),
-            maxIter = 512,
             hasPerturbation = true
         )
         val mandelbrotCubic = Shape(
@@ -209,9 +243,10 @@ class Shape(
             delta1 = mandelbrot.delta1,
             deltaJulia1 = mandelbrot.deltaJulia1,
             hasAnalyticDelta = true,
+            params = ParamSet(detail = 512.0),
             compatTextures = Texture.mandelbrot.minus(Texture.triangleIneqAvgFloat),
-            positions = PositionList(main = Position(zoom = 3.5)),
-            randomConfigs = listOf(
+            positions = PositionList(main = Position(zoom = sqrt(10.0), rotation = 0.5*Math.PI)),
+            randomConfigs = arrayListOf(
                 Config(Position(x = -0.3623718400568671, y = -0.7013147644724544, zoom = 1.301599e-10)),
                 Config(Position(x = -0.3623721870976059, y = -0.7013149241898085, zoom = 9.728895e-12)),
                 Config(Position(x = -0.5807851581128071, y = 0.7196315078312107, zoom = 1.219373e-11)),
@@ -224,7 +259,6 @@ class Shape(
                 Config(Position(x = 0.627330220806341, y = 0.319005706477124, zoom = 2.157418e-12))
             ),
             power = 3f,
-            maxIter = 512,
             goldFeature = true
         )
         val mandelbrotQuartic = Shape(
@@ -236,9 +270,10 @@ class Shape(
             delta1 = mandelbrot.delta1,
             deltaJulia1 = mandelbrot.deltaJulia1,
             hasAnalyticDelta = true,
+            params = ParamSet(detail = 512.0),
             compatTextures = Texture.mandelbrot.minus(Texture.triangleIneqAvgFloat),
-            positions = PositionList(main = Position(x = -0.175, zoom = 3.5)),
-            randomConfigs = listOf(
+            positions = PositionList(main = Position(x = -0.175, zoom = sqrt(10.0), rotation = 0.5*Math.PI)),
+            randomConfigs = arrayListOf(
                 Config(Position(x = -1.1202783562484184, y = -0.010682352518338574, zoom = 4.280648e-12)),
                 Config(Position(x = -0.710683297225126, y = -0.4909333025435377, zoom = 4.206267e-11)),
                 Config(Position(x = 0.5489286638086789, y = -0.0416709252246268, zoom = 6.182704e-12)),
@@ -251,7 +286,6 @@ class Shape(
                 Config(Position(x = -0.09366512020301405, y = -0.7637558112360573, zoom = 1.175214e-11))
             ),
             power = 4f,
-            maxIter = 512,
             goldFeature = true
         )
         val mandelbrotQuintic = Shape(
@@ -263,9 +297,10 @@ class Shape(
             delta1 = mandelbrot.delta1,
             deltaJulia1 = mandelbrot.deltaJulia1,
             hasAnalyticDelta = true,
+            params = ParamSet(detail = 512.0),
             compatTextures = Texture.mandelbrot.minus(Texture.triangleIneqAvgFloat),
-            positions = PositionList(main = Position(zoom = 3.5)),
-            randomConfigs = listOf(
+            positions = PositionList(main = Position(zoom = sqrt(10.0), rotation = 0.5*Math.PI)),
+            randomConfigs = arrayListOf(
                 Config(Position(x = -0.004226475185236266,  y = -0.5569756486518741,    zoom = 9.999999e-12)),
                 Config(Position(x = -0.2909621321796368,    y = -0.7794268216344981,    zoom = 1.203149e-11)),
                 Config(Position(x = -0.5835603719035269,    y =  0.8751228627316919,    zoom = 2.451157e-11)),
@@ -278,7 +313,6 @@ class Shape(
                 Config(Position(x =  0.6113432793184647,    y = -0.5337772830467558,    zoom = 1.023339e-11))
             ),
             power = 5f,
-            maxIter = 512,
             goldFeature = true
         )
         val mandelbrotSextic = Shape(
@@ -290,9 +324,10 @@ class Shape(
             delta1 = mandelbrot.delta1,
             deltaJulia1 = mandelbrot.deltaJulia1,
             hasAnalyticDelta = true,
+            params = ParamSet(detail = 512.0),
             compatTextures = Texture.mandelbrot.minus(Texture.triangleIneqAvgFloat),
-            positions = PositionList(main = Position(zoom = 3.5)),
-            randomConfigs = listOf(
+            positions = PositionList(main = Position(zoom = sqrt(10.0), rotation = 0.5*Math.PI)),
+            randomConfigs = arrayListOf(
                 Config(Position(x = -0.5173643233402634, y = -0.4514428308629387, zoom = 2.297199e-11)),
                 Config(Position(x = 0.7170050067433724, y = -0.7480764548216035, zoom = 2.857234e-12)),
                 Config(Position(x = -1.0612067329303374, y = -0.07097398354340238, zoom = 2.838096e-12)),
@@ -305,7 +340,6 @@ class Shape(
                 Config(Position(x = -0.7958595031311616, y = -0.30923062834753196, zoom = 4.403475e-12))
             ),
             power = 6f,
-            maxIter = 512,
             goldFeature = true
         )
         val mandelbrotPow = Shape(
@@ -313,9 +347,9 @@ class Shape(
             nameId = R.string.mandelbrot_anypow,
             thumbnailId = R.drawable.mandelbrotanypow_icon,
             loop = "mandelbrot_power(z1, c)",
-            compatTextures = Texture.mandelbrot.minus(Texture.triangleIneqAvgFloat),
-            positions = PositionList(Position(x = -0.55, y = 0.5, zoom = 5.0)),
-            params = ParamSet(listOf(ComplexParam(R.string.power, u = 16.0, v = 4.0))),
+            compatTextures = Texture.mandelbrot.minus(listOf(Texture.triangleIneqAvgFloat, Texture.distanceEstimation, Texture.escapeWithOutline).toSet()),
+            positions = PositionList(Position(x = -0.55, y = 0.5, zoom = 5.0, rotation = 0.5*Math.PI)),
+            params = ParamSet(listOf(ComplexParam(R.string.exponent, iconId = R.drawable.exponent, u = 16.0, v = 4.0))),
             hasDynamicPower = true,
             slowDualFloat = true,
             goldFeature = true
@@ -329,10 +363,10 @@ class Shape(
             compatTextures = Texture.divergent.minus(Texture.fieldLines),
             positions = PositionList(Position(zoom = 2.0, rotation = 45.0.inRadians())),
             params = ParamSet(
-                listOf(RealParam(R.string.power, 2.0, Range(2.0, 6.0), discrete = true)),
-                seed = ComplexParam(u = 1.0)
+                listOf(RealParam(R.string.exponent, R.drawable.exponent, 2.0, Range(2.0, 6.0), isDiscrete = true)),
+                seed = Complex.ONE
             ),
-            randomConfigs = listOf(
+            randomConfigs = arrayListOf(
                 Config(Position(x = -0.31933804043540587,   y = -0.49530850362822876,   zoom = 1.200353e-10)),
                 Config(Position(x =  0.007207687119137132,  y =  0.589361725239222,     zoom = 2.243560e-11)),
                 Config(Position(x = -0.3918606992290505,    y = -0.5134288391783682,    zoom = 1.240732e-11)),
@@ -342,18 +376,18 @@ class Shape(
                 Config(Position(x =  0.32261916779913746,   y = -0.058779002664543174,  zoom = 7.563537e-11)),
                 Config(Position(x = -6.990839315860789E-4,  y = -0.0029691034535613103, zoom = 6.878362e-12)),
                 Config(Position(x =  0.5560806373146088,    y = -0.1509273275100025,    zoom = 3.867315e-12)),
-                Config(Position(x =  0.15161668902359127,   y = -0.2625967032054415,    zoom = 5.903969e-12),   ParamSetPreset(listOf(RealParam(u = 3.0)))),
-                Config(Position(x = -0.5444641602894895,    y = -0.03416478201660765,   zoom = 5.225113e-12),   ParamSetPreset(listOf(RealParam(u = 3.0)))),
-                Config(Position(x =  0.3339179011875168,    y = -0.1928507505572662,    zoom = 4.146764e-12),   ParamSetPreset(listOf(RealParam(u = 3.0)))),
-                Config(Position(x = -0.25439295549261903,   y =  1.1710315351436239E-4, zoom = 1.152527e-12),   ParamSetPreset(listOf(RealParam(u = 3.0)))),
-                Config(Position(x = -0.41736632224624454,   y = -0.024472860184392792,  zoom = 3.299817e-12),   ParamSetPreset(listOf(RealParam(u = 3.0)))),
-                Config(Position(x = -0.10341979334881096,   y = -0.40724334013084373,   zoom = 1.884648e-10),   ParamSetPreset(listOf(RealParam(u = 4.0)))),
-                Config(Position(x = -0.371743692983354,     y =  0.36604122407257883,   zoom = 1.385589e-11),   ParamSetPreset(listOf(RealParam(u = 4.0)))),
-                Config(Position(x =  0.2967985433167444,    y = -0.3010695314852729,    zoom = 3.759974e-12),   ParamSetPreset(listOf(RealParam(u = 4.0)))),
-                Config(Position(x =  0.40834717201170256,   y =  2.3608513195509193E-4, zoom = 2.979418e-11),   ParamSetPreset(listOf(RealParam(u = 4.0)))),
-                Config(Position(x = -0.004344223899713354,  y = -0.5870214786703586,    zoom = 6.808881e-12),   ParamSetPreset(listOf(RealParam(u = 5.0)))),
-                Config(Position(x = -0.36673898327228127,   y = -0.46631234509475317,   zoom = 7.085350e-12),   ParamSetPreset(listOf(RealParam(u = 5.0)))),
-                Config(Position(x = -0.19151773609792244,   y = -0.39270665950437544,   zoom = 4.635963e-12),   ParamSetPreset(listOf(RealParam(u = 7.0)))),
+                Config(Position(x =  0.15161668902359127,   y = -0.2625967032054415,    zoom = 5.903969e-12),   params = ParamSet(arrayListOf(RealParam(u = 3.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.5444641602894895,    y = -0.03416478201660765,   zoom = 5.225113e-12),   params = ParamSet(arrayListOf(RealParam(u = 3.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x =  0.3339179011875168,    y = -0.1928507505572662,    zoom = 4.146764e-12),   params = ParamSet(arrayListOf(RealParam(u = 3.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.25439295549261903,   y =  1.1710315351436239E-4, zoom = 1.152527e-12),   params = ParamSet(arrayListOf(RealParam(u = 3.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.41736632224624454,   y = -0.024472860184392792,  zoom = 3.299817e-12),   params = ParamSet(arrayListOf(RealParam(u = 3.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.10341979334881096,   y = -0.40724334013084373,   zoom = 1.884648e-10),   params = ParamSet(arrayListOf(RealParam(u = 4.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.371743692983354,     y =  0.36604122407257883,   zoom = 1.385589e-11),   params = ParamSet(arrayListOf(RealParam(u = 4.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x =  0.2967985433167444,    y = -0.3010695314852729,    zoom = 3.759974e-12),   params = ParamSet(arrayListOf(RealParam(u = 4.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x =  0.40834717201170256,   y =  2.3608513195509193E-4, zoom = 2.979418e-11),   params = ParamSet(arrayListOf(RealParam(u = 4.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.004344223899713354,  y = -0.5870214786703586,    zoom = 6.808881e-12),   params = ParamSet(arrayListOf(RealParam(u = 5.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.36673898327228127,   y = -0.46631234509475317,   zoom = 7.085350e-12),   params = ParamSet(arrayListOf(RealParam(u = 5.0)), seed = ComplexParam(u = 1.0))),
+                Config(Position(x = -0.19151773609792244,   y = -0.39270665950437544,   zoom = 4.635963e-12),   params = ParamSet(arrayListOf(RealParam(u = 7.0)), seed = ComplexParam(u = 1.0))),
 
             )
         )
@@ -365,47 +399,47 @@ class Shape(
             positions = PositionList(Position(zoom = 6.5)),
             params = ParamSet(
                 listOf(
-                    ComplexParam(u = -2.66421354),
-                    RealParam(R.string.scale, u = 1.0, uRange = Range(0.0, 5.0)),
-                    RealParam(R.string.power, u = 1.0, uRange = Range(1.0, 6.0), discrete = true)
+                    ComplexParam(R.string.mix, iconId = R.drawable.mix, u = -2.66421354),
+                    RealParam(R.string.spread, iconId = R.drawable.spread, u = 1.0, uRange = Range(0.0, 5.0)),
+                    RealParam(R.string.exponent, iconId = R.drawable.exponent, u = 1.0, uRange = Range(1.0, 6.0), isDiscrete = true)
                 )
             ),
             radius = 5f,
-            randomConfigs = listOf(
+            randomConfigs = arrayListOf(
                 Config(Position(x = -0.33368561433746113, y = 0.169207321179211, zoom = 8.801870e-12)),
                 Config(Position(x = -1.8704399407121168, y = 0.023991760638451754, zoom = 7.305231e-12)),
                 Config(Position(x = -2.5935127718754394E-8, y = -0.6323158576024894, zoom = 5.420517e-12)),
                 Config(
                     Position(x = -2.250116641061081, y = -1.4811927091651675, zoom = 4.227127e-11),
-                    ParamSetPreset(listOf(ComplexParam(5.28828876114008, 2.7496482620263096), RealParam(0.5221432579888244), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(5.28828876114008, 2.7496482620263096), RealParam(0.5221432579888244), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = -3.1885698857039517, y = -3.164467655664685, zoom = 1.649809e-08),
-                    ParamSetPreset(listOf(ComplexParam(0.0, 2.44555756403729), RealParam(1.0409924643380302), RealParam(3.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.0, 2.44555756403729), RealParam(1.0409924643380302), RealParam(3.0)))
                 ),
                 Config(
                     Position(x = 2.3150593649406366, y = 1.7719250074239616, zoom = 7.287470e-12),
-                    ParamSetPreset(listOf(ComplexParam(-2.544941202875759, 1.923812325863271), RealParam(1.3473268236432745), RealParam(1.01)))
+                    params = ParamSet(arrayListOf(ComplexParam(-2.544941202875759, 1.923812325863271), RealParam(1.3473268236432745), RealParam(1.01)))
                 ),
                 Config(
                     Position(x = 1.651904710601584, y = 1.7683706839794593, zoom = 3.982938e-12),
-                    ParamSetPreset(listOf(ComplexParam(-2.470534467127885, 2.5419605920763644), RealParam(1.1265164027138352), RealParam(1.01)))
+                    params = ParamSet(arrayListOf(ComplexParam(-2.470534467127885, 2.5419605920763644), RealParam(1.1265164027138352), RealParam(1.01)))
                 ),
                 Config(
                     Position(x = 1.733559272098215, y = -1.951820580838924, zoom = 6.629490e-10),
-                    ParamSetPreset(listOf(ComplexParam(-2.6743775735270114, 0.0), RealParam(1.5995156121632415), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-2.6743775735270114, 0.0), RealParam(1.5995156121632415), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = 2.4595135660039413, y = 2.9977281008817966, zoom = 3.853694e-10),
-                    ParamSetPreset(listOf(ComplexParam(-1.6669078678001072, 0.6417665309769117), RealParam(1.231460056607686), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-1.6669078678001072, 0.6417665309769117), RealParam(1.231460056607686), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = -2.3520638786394796, y = -2.2450915610732767, zoom = 6.392506e-09),
-                    ParamSetPreset(listOf(ComplexParam(-1.6669078678001072, 0.6417665309769117), RealParam(1.231460056607686), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-1.6669078678001072, 0.6417665309769117), RealParam(1.231460056607686), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = 0.07936350342603574, y = -1.8414852632389167, zoom = 5.621737e-12),
-                    ParamSetPreset(listOf(ComplexParam(2.7373813028119054, 0.6758056432891872), RealParam(0.9259045010521297), RealParam(0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(2.7373813028119054, 0.6758056432891872), RealParam(0.9259045010521297), RealParam(0.0)))
                 )
             )
         )
@@ -416,8 +450,9 @@ class Shape(
             loop = "kali(z1, c)",
             juliaMode = true,
             positions = PositionList(julia = Position(zoom = 3.0)),
-            params = ParamSet(julia = ComplexParam(u = -0.33170626, v = -0.18423799)),
-            radius = 4e0f
+            params = ParamSet(julia = Complex(-0.33170626, -0.18423799)),
+            radius = 4e0f,
+//            compatTextures = Texture.kaliCompat
         )
         val burningShip = Shape(
             id = nextId,
@@ -426,14 +461,14 @@ class Shape(
             thumbnailId = R.drawable.burningship_icon,
             loop = "burning_ship(z1, c)",
             positions = PositionList(Position(-0.4, -0.6, 4.0, Math.PI)),
-            randomConfigs = listOf(
-                Config(juliaMode = true, params = ParamSetPreset(julia = ComplexParam(u = -1.5731155523848364,  v = -0.026132025751311724))),
-                Config(juliaMode = true, params = ParamSetPreset(julia = ComplexParam(u = -0.16795426991357956, v = -1.1109184781049337))),
-                Config(juliaMode = true, params = ParamSetPreset(julia = ComplexParam(u = -1.7897574908251732,  v = -0.002678303584761855))),
-                Config(juliaMode = true, params = ParamSetPreset(julia = ComplexParam(u =  0.9301460418835946,  v = -1.6110601734211332))),
-                Config(juliaMode = true, params = ParamSetPreset(julia = ComplexParam(u = -1.3240783187798868,  v = -0.4268772342040869))),
-                Config(juliaMode = true, params = ParamSetPreset(julia = ComplexParam(u =  0.9802220254089256,  v = -1.2147833859402297))),
-                Config(juliaMode = true, params = ParamSetPreset(julia = ComplexParam(u = -1.6695749567421272,  v = -1.3027899283736662E-5))),
+            randomConfigs = arrayListOf(
+                Config(juliaMode = true, params = ParamSet(julia = ComplexParam(u = -1.5731155523848364,  v = -0.026132025751311724))),
+                Config(juliaMode = true, params = ParamSet(julia = ComplexParam(u = -0.16795426991357956, v = -1.1109184781049337))),
+                Config(juliaMode = true, params = ParamSet(julia = ComplexParam(u = -1.7897574908251732,  v = -0.002678303584761855))),
+                Config(juliaMode = true, params = ParamSet(julia = ComplexParam(u =  0.9301460418835946,  v = -1.6110601734211332))),
+                Config(juliaMode = true, params = ParamSet(julia = ComplexParam(u = -1.3240783187798868,  v = -0.4268772342040869))),
+                Config(juliaMode = true, params = ParamSet(julia = ComplexParam(u =  0.9802220254089256,  v = -1.2147833859402297))),
+                Config(juliaMode = true, params = ParamSet(julia = ComplexParam(u = -1.6695749567421272,  v = -1.3027899283736662E-5))),
             )
         )
         val burningShipPow = Shape(
@@ -441,7 +476,7 @@ class Shape(
             nameId = R.string.burning_ship_anypow,
             thumbnailId = R.drawable.burningshipanypow_icon,
             loop = "burning_ship_power(z1, c)",
-            params = ParamSet(listOf(ComplexParam(R.string.power, 6.0, 1.0))),
+            params = ParamSet(listOf(ComplexParam(R.string.exponent, R.drawable.exponent, 6.0, 1.0))),
             positions = PositionList(
                 Position(
                     x = 0.15,
@@ -465,7 +500,9 @@ class Shape(
                     rotation = (-90.0).inRadians()
                 )
             ),
-            params = ParamSet(listOf(ComplexParam(u = 1.0, v = 2.0))),
+            params = ParamSet(arrayListOf(
+                ComplexParam(R.string.mix, R.drawable.mix, 1.0, 2.0)
+            )),
             goldFeature = true
         )
         val magnet2 = Shape(
@@ -480,7 +517,9 @@ class Shape(
                     rotation = (-90.0).inRadians()
                 )
             ),
-            params = ParamSet(listOf(ComplexParam(u = 1.0, v = 2.0))),
+            params = ParamSet(arrayListOf(
+                ComplexParam(R.string.mix, R.drawable.mix, 1.0, 2.0)
+            )),
             goldFeature = true
         )
         val sine = Shape(
@@ -531,13 +570,11 @@ class Shape(
             nameId = R.string.sine2,
             thumbnailId = R.drawable.sine2_icon,
             loop = "sine2(z1, c)",
-            positions = PositionList(Position(zoom = 3.5)),
+            positions = PositionList(Position(zoom = sqrt(10.0))),
             radius = 1e1f,
             params = ParamSet(
-
-                listOf(ComplexParam(u = -0.26282884)),
-                seed = ComplexParam(u = 1.0)
-
+                listOf(ComplexParam(R.string.mix, R.drawable.mix, u = -0.26282884)),
+                seed = Complex.ONE
             ),
             slowDualFloat = true
         )
@@ -549,10 +586,8 @@ class Shape(
             positions = PositionList(Position(x = -0.25, zoom = 6.0, rotation = 90.0.inRadians())),
             radius = 3e2f,
             params = ParamSet(
-
-                listOf(ComplexParam(u = sqrt(2.0))),
-                seed = ComplexParam(u = 1.0)
-
+                arrayListOf(ComplexParam(R.string.mix, R.drawable.mix, u = sqrt(2.0))),
+                seed = Complex.ONE
             ),
             slowDualFloat = true
         )
@@ -562,10 +597,8 @@ class Shape(
             thumbnailId = R.drawable.newton1_icon,
             loop = "necklace(z1, c)",
             params = ParamSet(
-
-                listOf(RealParam(R.string.power, 4.0, Range(3.0, 6.0), discrete = true)),
-                julia = ComplexParam(u = 1.0)
-
+                arrayListOf(RealParam(R.string.exponent, R.drawable.exponent, 4.0, Range(3.0, 6.0), isDiscrete = true)),
+                julia = Complex.ONE
             ),
             juliaMode = true,
             isConvergent = true,
@@ -586,60 +619,75 @@ class Shape(
             juliaMode = true,
             params = ParamSet(
                 listOf(
-                    ComplexParam(u = 2.0, goldFeature = true),
+                    ComplexParam(
+                        R.string.mix,
+                        R.drawable.mix,
+                        u = 2.0,
+                        goldFeature = true
+                    ),
                     RealParam(
+                        R.string.exponent,
+                        R.drawable.exponent,
                         u = 0.0,
                         uRange = Range(0.0, 8.0),
-                        discrete = true,
+                        isDiscrete = true,
                         devFeature = true
                     ),
-                    RealParam(u = 0.0, uRange = Range(0.0, 10.0), devFeature = true),
-                    RealParam(u = 0.0, uRange = Range(0.0, 10.0), devFeature = true)
+                    RealParam(
+                        u = 0.0,
+                        uRange = Range(0.0, 10.0),
+                        devFeature = true
+                    ),
+                    RealParam(
+                        u = 0.0,
+                        uRange = Range(0.0, 10.0),
+                        devFeature = true
+                    )
                 ),
-                julia = ComplexParam(u = 0.0, v = -1.0)
+                julia = Complex(0.0, -1.0),
+                detail = 128.0
             ),
-            maxIter = 128,
             radius = 1e5f,
             compatTextures = Texture.kleinianCompat,
-            randomConfigs = listOf(
+            randomConfigs = arrayListOf(
                 Config(
                     Position(x = -0.4295334290133643, y = 0.38494234879699085, zoom = 5.744420e-06),
-                    ParamSetPreset(listOf(ComplexParam(1.73151, 0.99999)), julia = ComplexParam())
+                    params = ParamSet(arrayListOf(ComplexParam(1.73151, 0.99999)), julia = ComplexParam())
                 ),
                 Config(
                     Position(x = -0.009630036767539457, y = -0.5011858994458488, zoom = 8e-9),
-                    ParamSetPreset(listOf(ComplexParam(1.909995, 0.05262)), julia = ComplexParam(0.514563, 0.899654))
+                    params = ParamSet(arrayListOf(ComplexParam(1.909995, 0.05262)), julia = ComplexParam(0.514563, 0.899654))
                 ),
                 Config(
                     Position(x = -0.40493594951770795, y = 0.20325747432894947, zoom = 3.776192e-11),
-                    ParamSetPreset(listOf(ComplexParam(1.9459072820911796, 0.017073582015094166)), julia = ComplexParam(0.0, 0.0))
+                    params = ParamSet(arrayListOf(ComplexParam(1.9459072820911796, 0.017073582015094166)), julia = ComplexParam(0.0, 0.0))
                 ),
                 Config(
                     Position(x = -1.0200585296639006, y = -0.897182892791748, zoom = 1.333288e-11),
-                    ParamSetPreset(listOf(ComplexParam(1.9779836461344935, -0.007116496722606856)), julia = ComplexParam(0.6343119464506043, 0.3188203189283527))
+                    params = ParamSet(arrayListOf(ComplexParam(1.9779836461344935, -0.007116496722606856)), julia = ComplexParam(0.6343119464506043, 0.3188203189283527))
                 ),
                 Config(
-                    params = ParamSetPreset(listOf(ComplexParam(1.924498781195318, -2.0423778905176144)), julia = ComplexParam(1.0337910391115537, 0.9478327148107198))
+                    params = ParamSet(arrayListOf(ComplexParam(1.924498781195318, -2.0423778905176144)), julia = ComplexParam(1.0337910391115537, 0.9478327148107198))
                 ),
                 Config(
                     Position(x = -0.3459687064927218, y = -0.8608266772314501, zoom = 8.906141e-11),
-                    ParamSetPreset(julia = ComplexParam(0.0, -1.0))
+                    params = ParamSet(julia = ComplexParam(0.0, -1.0))
                 ),
                 Config(
                     Position(x = -0.11196390685029876, y = 2.6055196122704145, zoom = 8.288150e+00),
-                    ParamSetPreset(julia = ComplexParam(-0.022171031104193793, -0.18161116869021693))
+                    params = ParamSet(julia = ComplexParam(-0.022171031104193793, -0.18161116869021693))
                 ),
                 Config(
                     Position(x = -1.4310397278079345, y = 1.316400098773796, zoom = 3.072387e-11),
-                    ParamSetPreset(julia = ComplexParam(0.4800157211367434, 1.3550370479722897))
+                    params = ParamSet(julia = ComplexParam(0.4800157211367434, 1.3550370479722897))
                 ),
                 Config(
                     Position(x = -1.0, y = 1.0, zoom = 1.996500e+00),
-                    ParamSetPreset(julia = ComplexParam(0.0, 0.0))
+                    params = ParamSet(julia = ComplexParam(0.0, 0.0))
                 ),
                 Config(
                     Position(x = 1.8556128238528031, y = -1.3864689025885142, zoom = 2.286093e-03),
-                    ParamSetPreset(julia = ComplexParam(1.1241549801713187, 0.49314517226898524))
+                    params = ParamSet(julia = ComplexParam(1.1241549801713187, 0.49314517226898524))
                 )
             )
         )
@@ -650,10 +698,10 @@ class Shape(
             loop = "nova1(z1, c)",
             positions = PositionList(Position(x = -0.3, zoom = 1.75, rotation = 90.0.inRadians())),
             params = ParamSet(
-                listOf(ComplexParam(u = 1.0, v = 0.0)),
-                seed = ComplexParam(u = 1.0)
+                listOf(ComplexParam(R.string.mix, R.drawable.mix, u = 1.0, v = 0.0)),
+                seed = Complex.ONE
             ),
-            randomConfigs = listOf(
+            randomConfigs = arrayListOf(
                 Config(Position(x = -0.46015983911098746, y = -0.42348638614565837, zoom = 9.796340e-12)),
                 Config(Position(x = -0.21810951603343412, y = -0.37576446076679965, zoom = 2.097003e-12)),
                 Config(Position(x = -0.39908704718654925, y = -0.08744452476394932, zoom = 6.514582e-12)),
@@ -667,43 +715,43 @@ class Shape(
                 Config(Position(x = -0.5803543969710381, y = 3.842453004961987E-10, zoom = 1.142659e-08)),
                 Config(
                     Position(x = -0.8853593891739883, y = -0.01965206654301938, zoom = 2.207739e-11),
-                    ParamSetPreset(listOf(ComplexParam(2.3219006090867054, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(2.3219006090867054, 0.0)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = -0.990709731999416, y = -0.06312351963106129, zoom = 5.303776e-12),
-                    ParamSetPreset(listOf(ComplexParam(2.3219006090867054, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(2.3219006090867054, 0.0)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = 0.4200203999739625, y = -0.8706026346680269, zoom = 5.667863e-12),
-                    ParamSetPreset(listOf(ComplexParam(1.924577601216374, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(1.924577601216374, 0.0)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = -0.702093067881166, y = -1.1600750804641026E-6, zoom = 4.003400e-12),
-                    ParamSetPreset(listOf(ComplexParam(1.958477, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(1.958477, 0.0)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = -0.1392320687216921, y = 0.29233188744620875, zoom = 7.104238e-12),
-                    ParamSetPreset(listOf(ComplexParam(0.5, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.5, 0.0)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = 0.08015295450658448, y = -0.03384646221266222, zoom = 1.571969e-11),
-                    ParamSetPreset(listOf(ComplexParam(0.2447113686689068, 0.45447331019161086)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.2447113686689068, 0.45447331019161086)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = -0.21213081331970926, y = -0.25666467732656684, zoom = 7.002158e-12),
-                    ParamSetPreset(listOf(ComplexParam(0.3292794110573584, 1.045805844418405)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.3292794110573584, 1.045805844418405)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = -0.40418886782002367, y = 0.41521028878801336, zoom = 4.022640e-11),
-                    ParamSetPreset(listOf(ComplexParam(1.4402003412345934, -0.8893612210577939)))
+                    params = ParamSet(arrayListOf(ComplexParam(1.4402003412345934, -0.8893612210577939)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = -0.8324816995748711, y = 0.04580649996758555, zoom = 8.237480e-10),
-                    ParamSetPreset(listOf(ComplexParam(2.374566526477098, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(2.374566526477098, 0.0)), seed = ComplexParam(1.0))
                 ),
                 Config(
                     Position(x = -1.1631843227194907, y = -0.45853092531281286, zoom = 3.098953e-10),
-                    ParamSetPreset(listOf(ComplexParam(1.8311490108502189, -1.9364171637632333)))
+                    params = ParamSet(arrayListOf(ComplexParam(1.8311490108502189, -1.9364171637632333)), seed = ComplexParam(1.0))
                 )
             ),
             isConvergent = true
@@ -741,15 +789,13 @@ class Shape(
             positions = PositionList(Position(zoom = 2e1)),
             params = ParamSet(
                 listOf(
-
-                    RealParam(R.string.angle, 180.0, Range(0.0, 360.0), toRadians = true),
-                    RealParam(R.string.radius, 0.5, Range(0.0, 1.0)),
-                    RealParam(R.string.scale, 2.0, Range(0.0, 5.0)),
-                    RealParam(R.string.linear, 2.0, Range(0.0, 5.0))
-
+                    RealParam(R.string.rotation, R.drawable.rotate_left, 180.0, Range(0.0, 360.0), toRadians = true),
+                    RealParam(R.string.radius, R.drawable.radius, 0.5, Range(0.0, 1.0)),
+                    RealParam(R.string.size, R.drawable.size, 2.0, Range(0.0, 5.0)),
+                    RealParam(R.string.spread, R.drawable.spread, 2.0, Range(0.0, 5.0))
                 )
             ),
-            randomConfigs = listOf(
+            randomConfigs = arrayListOf(
                 Config(Position(x = -6.960287095727557,     y = -6.960286426764271,     zoom = 6.119518e-12)),
                 Config(Position(x = -3.03022322482586,      y =  2.93476256811757,      zoom = 8.378572e-12)),
                 Config(Position(x =  1.4941519031989912,    y = -1.4941323610712551,    zoom = 1.833954e-10)),
@@ -763,45 +809,45 @@ class Shape(
                 Config(Position(x = -4.965710994099813,     y = -3.995034274312582,     zoom = 3.319648e-11)),
                 Config(
                     Position(x = 3.1401307160726186, y = -7.615015172625677, zoom = 1.327730e-11),
-                    ParamSetPreset(listOf(RealParam(90.0), RealParam(0.9004), RealParam(2.6915), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(RealParam(90.0), RealParam(0.9004), RealParam(2.6915), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = -1.8255516708971684, y = -2.6313647622123644, zoom = 3.094190e-11),
-                    ParamSetPreset(listOf(RealParam(180.0), RealParam(0.7368831332155881), RealParam(2.018705489143493), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(RealParam(180.0), RealParam(0.7368831332155881), RealParam(2.018705489143493), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = 3.7855125861787444, y = 4.484628229312334, zoom = 6.097830e-11),
-                    ParamSetPreset(listOf(RealParam(143.71428571428578), RealParam(2.2880172157823715), RealParam(2.018705489143493), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(RealParam(143.71428571428578), RealParam(2.2880172157823715), RealParam(2.018705489143493), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = 11.910201913822725, y = -11.910986698611145, zoom = 1.650693e-11),
-                    ParamSetPreset(listOf(RealParam(0.0), RealParam(0.8994047619047618), RealParam(2.9536414978996155), RealParam(2.0)))
+                    params = ParamSet(arrayListOf(RealParam(0.0), RealParam(0.8994047619047618), RealParam(2.9536414978996155), RealParam(2.0)))
                 ),
                 Config(
                     Position(x = 2.2890042393939845, y = 1.2263527351926713, zoom = 1.135563e-11),
-                    ParamSetPreset(listOf(RealParam(-90.0), RealParam(0.5618673696009275), RealParam(5.001929980628484), RealParam(0.78316461472284)))
+                    params = ParamSet(arrayListOf(RealParam(-90.0), RealParam(0.5618673696009275), RealParam(5.001929980628484), RealParam(0.78316461472284)))
                 ),
                 Config(
                     Position(x = -3.558409996640056, y = -0.7136680009617388, zoom = 5.880083e-10),
-                    ParamSetPreset(listOf(RealParam(-267.62945761373055), RealParam(1.6395304979104122), RealParam(1.981802244310512), RealParam(0.538823324536518)))
+                    params = ParamSet(arrayListOf(RealParam(-267.62945761373055), RealParam(1.6395304979104122), RealParam(1.981802244310512), RealParam(0.538823324536518)))
                 ),
                 Config(
                     Position(x = -2.56822851139012, y = 3.5595011320939465, zoom = 6.354847e-12),
-                    ParamSetPreset(listOf(RealParam(-252.13997614735032), RealParam(2.2680292680595944), RealParam(1.759270668506847), RealParam(1.5250321645585287)))
+                    params = ParamSet(arrayListOf(RealParam(-252.13997614735032), RealParam(2.2680292680595944), RealParam(1.759270668506847), RealParam(1.5250321645585287)))
                 ),
                 Config(
                     Position(x = 0.0, y = 0.0, zoom = 9.342889e+00),
-                    ParamSetPreset(listOf(RealParam(0.0), RealParam(3.465478887287552), RealParam(1.8603078756882687), RealParam(3.74659093221028))),
+                    params = ParamSet(arrayListOf(RealParam(0.0), RealParam(3.465478887287552), RealParam(1.8603078756882687), RealParam(3.74659093221028))),
                     juliaMode = true
                 ),
                 Config(
                     Position(x = -5.581201612433424, y = 2.610737181840405, zoom = 1.547505e-11),
-                    ParamSetPreset(listOf(RealParam(0.0), RealParam(4.411387950134202), RealParam(1.5858546838918683), RealParam(3.353578537229507))),
+                    params = ParamSet(arrayListOf(RealParam(0.0), RealParam(4.411387950134202), RealParam(1.5858546838918683), RealParam(3.353578537229507))),
                     juliaMode = true
                 ),
                 Config(
                     Position(x = 0.4393495033457827, y = -1.2802648302989683, zoom = 1.729945e-11),
-                    ParamSetPreset(listOf(RealParam(75.09077400801611), RealParam(4.411387950134202), RealParam(1.139868685550744), RealParam(6.227592286609469)))
+                    params = ParamSet(arrayListOf(RealParam(75.09077400801611), RealParam(4.411387950134202), RealParam(1.139868685550744), RealParam(6.227592286609469)))
                 )
             ),
             goldFeature = true
@@ -812,7 +858,7 @@ class Shape(
             thumbnailId = R.drawable.cactus_icon,
             loop = "cactus(z1, c)",
             positions = PositionList(Position(rotation = 90.0.inRadians(), zoom = 1.5)),
-            randomConfigs = listOf(
+            randomConfigs = arrayListOf(
                 Config(Position(x = 0.6945093055378344, y = -0.12861845070181296, zoom = 1.858179e-10)),
                 Config(Position(x = 0.006225699131387254, y = -0.2537841462503991, zoom = 4.841887e-12)),
                 Config(Position(x = 0.6655032872777346, y = -0.032189121729864864, zoom = 4.667102e-12)),
@@ -832,10 +878,8 @@ class Shape(
             loop = "sierpinski_tri(z1, c)",
             params = ParamSet(
                 listOf(
-
-                    RealParam(R.string.scale, 1.0, Range(2.0 / 3.0, 2.0)),
-                    RealParam(R.string.rotate, 0.0, Range(0.0, 360.0), toRadians = true)
-
+                    RealParam(R.string.spread, R.drawable.spread, 1.0, Range(2.0 / 3.0, 2.0)),
+                    RealParam(R.string.rotation, R.drawable.rotate_left, 0.0, Range(0.0, 360.0), toRadians = true)
                 )
             ),
             conditional = "escape_tri(z)",
@@ -863,11 +907,9 @@ class Shape(
             positions = PositionList(julia = Position(rotation = Math.PI, zoom = 7.0)),
             params = ParamSet(
                 listOf(
-
-                    RealParam(R.string.center, 0.0, Range(0.0, 1.0)),
-                    RealParam(R.string.scale, 2.618033988, Range(0.0, 10.0)),
-                    RealParam(R.string.rotate, 0.0, Range(0.0, 72.0), toRadians = true)
-
+                    RealParam(R.string.center, R.drawable.parameter, 0.0, Range(0.0, 1.0)),
+                    RealParam(R.string.spread, R.drawable.spread, 2.618033988, Range(0.0, 10.0)),
+                    RealParam(R.string.rotation, R.drawable.rotate_left, 0.0, Range(0.0, 72.0), toRadians = true)
                 )
             ),
             conditional = "escape_pent(z)",
@@ -882,11 +924,9 @@ class Shape(
             juliaMode = true,
             params = ParamSet(
                 listOf(
-
-                    RealParam(R.string.shift, 0.5, Range(0.0, 5.0)),
-                    RealParam(R.string.scale, 2.0, Range(0.0, 5.0)),
-                    RealParam(R.string.rotate, 0.0, Range(0.0, 90.0), toRadians = true)
-
+                    RealParam(R.string.spread, R.drawable.spread, 0.5, Range(0.0, 5.0)),
+                    RealParam(R.string.size, R.drawable.size, 2.0, Range(0.0, 5.0)),
+                    RealParam(R.string.rotation, R.drawable.rotate_left, 0.0, Range(0.0, 90.0), toRadians = true)
                 )
             ),
             conditional = "escape_sqr(z)",
@@ -897,7 +937,7 @@ class Shape(
             id = nextId,
             nameId = R.string.lambert_newton,
             thumbnailId = R.drawable.lambertnewton_icon,
-            positions = PositionList(Position(zoom = 3.5, rotation = 90.0.inRadians())),
+            positions = PositionList(Position(zoom = sqrt(10.0), rotation = 90.0.inRadians())),
             loop = "lambert_newton(z1, c)",
             juliaSeed = true,
             isConvergent = true,
@@ -925,7 +965,7 @@ class Shape(
                     rotation = 90.0.inRadians()
                 )
             ),
-            params = ParamSet(julia = ComplexParam(u = -0.56767345)),
+            params = ParamSet(julia = Complex(-0.56767345, 0.0)),
             juliaMode = true,
             goldFeature = true
         )
@@ -934,9 +974,9 @@ class Shape(
             nameId = R.string.angelbrot,
             thumbnailId = R.drawable.angelbrot_icon,
             loop = "ballfold1(z1, c)",
-            positions = PositionList(Position(x = 1.0, zoom = 3.5, rotation = 0.5 * Math.PI)),
-            params = ParamSet(listOf(ComplexParam(u = -0.5 * Math.PI))),
-            randomConfigs = listOf(
+            positions = PositionList(Position(x = 1.0, zoom = sqrt(10.0), rotation = 0.5 * Math.PI)),
+            params = ParamSet(listOf(ComplexParam(R.string.mix, R.drawable.mix, u = -0.5 * Math.PI))),
+            randomConfigs = arrayListOf(
                 Config(Position(x = 2.017162690560745, y = -0.4786537794853822, zoom = 1.322218e-11)),
                 Config(Position(x = 0.9773544838002148, y = -0.6614610320348585, zoom = 3.759445e-10)),
                 Config(Position(x = 0.9253201188114154, y = 0.6015059128438148, zoom = 2.108921e-09)),
@@ -950,59 +990,59 @@ class Shape(
                 Config(Position(x = 1.7292746158477477, y = -0.6714264832178357, zoom = 3.466081e-11)),
                 Config(
                     Position(x = 0.05580714015205857, y = -4.137837271872851E-4, zoom = 1.337604e-12),
-                    ParamSetPreset(listOf(ComplexParam(-1.0, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-1.0, 0.0)))
                 ),
                 Config(
                     Position(x = 1.7731364788030715, y = -0.1427640221234471, zoom = 1.803921e-11),
-                    ParamSetPreset(listOf(ComplexParam(-1.0, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-1.0, 0.0)))
                 ),
                 Config(
                     Position(x = 0.5767410302936397, y = -0.8604288090685704, zoom = 2.528129e-12),
-                    ParamSetPreset(listOf(ComplexParam(-1.0, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-1.0, 0.0)))
                 ),
                 Config(
                     Position(x = 1.2560238239734647, y = 0.04260627689908989, zoom = 7.338126e-12),
-                    ParamSetPreset(listOf(ComplexParam(-0.28899446662017886, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-0.28899446662017886, 0.0)))
                 ),
                 Config(
                     Position(x = 0.5389487234416973, y = 0.16244658338464807, zoom = 6.100112e-08),
-                    ParamSetPreset(listOf(ComplexParam(-0.28899446662017886, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-0.28899446662017886, 0.0)))
                 ),
                 Config(
                     Position(x = 1.5259379858094588, y = -0.015740730520604703, zoom = 8.070515e-11),
-                    ParamSetPreset(listOf(ComplexParam(-2.897128864888243, 0.0)))
+                    params = ParamSet(arrayListOf(ComplexParam(-2.897128864888243, 0.0)))
                 ),
                 Config(
                     Position(x = 0.36720587790287806, y = -2.057492661805755, zoom = 1.438541e-12),
-                    ParamSetPreset(listOf(ComplexParam(0.0, 1.694288314693541)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.0, 1.694288314693541)))
                 ),
                 Config(
                     Position(x = 0.10568264520889685, y = -0.4848264941427876, zoom = 2.811789e-12),
-                    ParamSetPreset(listOf(ComplexParam(0.0, 0.7917091697036017)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.0, 0.7917091697036017)))
                 ),
                 Config(
                     Position(x = -0.3170184710060186, y = -1.7994409853452795, zoom = 1.003468e-11),
-                    ParamSetPreset(listOf(ComplexParam(-0.1379855383865396, 1.2276263480016616)))
+                    params = ParamSet(arrayListOf(ComplexParam(-0.1379855383865396, 1.2276263480016616)))
                 ),
                 Config(
                     Position(x = -1.3727436870035985, y = -0.9750377677932686, zoom = 4.777768e-11),
-                    ParamSetPreset(listOf(ComplexParam(0.5989173546643259, 0.866786877963904)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.5989173546643259, 0.866786877963904)))
                 ),
                 Config(
                     Position(x = -1.1344499412310234, y = -0.07618975730758917, zoom = 7.582583e-11),
-                    ParamSetPreset(listOf(ComplexParam(0.5989173546643259, 0.866786877963904)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.5989173546643259, 0.866786877963904)))
                 ),
                 Config(
                     Position(x = -1.319783225122982, y = -0.9039508491696058, zoom = 2.234039e-12),
-                    ParamSetPreset(listOf(ComplexParam(0.546985470508824, 1.1364850268845008)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.546985470508824, 1.1364850268845008)))
                 ),
                 Config(
                     Position(x = -0.5111833240882112, y = -1.8796876409380947, zoom = 1.750683e-09),
-                    ParamSetPreset(listOf(ComplexParam(0.14232607775513614, 0.332473051890901)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.14232607775513614, 0.332473051890901)))
                 ),
                 Config(
                     Position(x = 0.32351046993017474, y = 0.6503777490962057, zoom = 6.256495e-12),
-                    ParamSetPreset(listOf(ComplexParam(0.14232607775513606, -0.736086576656812)))
+                    params = ParamSet(arrayListOf(ComplexParam(0.14232607775513606, -0.736086576656812)))
                 )
             )
         )
@@ -1070,7 +1110,7 @@ class Shape(
             R.string.empty,
             latexId = R.string.logistic_katex,
             loop = "",
-            positions = PositionList(Position(zoom = 3.5))
+            positions = PositionList(Position(zoom = sqrt(10.0)))
             // seed = Complex(0.5, 0.0)
         )
         val bessel = Shape(
@@ -1085,7 +1125,7 @@ class Shape(
         val newton2 = Shape(
             R.string.empty,
             loop = "",
-            positions = PositionList(julia = Position(zoom = 3.5)),
+            positions = PositionList(julia = Position(zoom = sqrt(10.0))),
             juliaMode = true,
             params = ParamSet(
                 listOf(
@@ -1106,7 +1146,6 @@ class Shape(
         )
         val persianRug = Shape(
             R.string.empty,
-            latexId = R.string.persianrug_katex,
             loop = "",
             juliaSeed = true,
             positions = PositionList(Position(zoom = 1.5)),
@@ -1118,9 +1157,9 @@ class Shape(
             R.string.empty,
             latexId = R.string.sine3_katex,
             loop = "",
-            positions = PositionList(Position(zoom = 3.5)),
+            positions = PositionList(Position(zoom = sqrt(10.0))),
             params = ParamSet(
-                listOf(ComplexParam(u = 0.31960705187983646, vLocked = true)),
+                arrayListOf(ComplexParam(u = 0.31960705187983646, vLocked = true)),
                 seed = ComplexParam(u = 1.0)
             ),
             radius = 1e1f,
@@ -1137,11 +1176,7 @@ class Shape(
             nameId = R.string.heighway_dragon,
             loop = "dragon(z1, c)",
             params = ParamSet(
-                listOf(
-
-                    ComplexParam(u = 0.5, v = sqrt(2.0))
-
-                )
+                listOf(ComplexParam(u = 0.5, v = sqrt(2.0)))
             ),
             conditional = "n == maxIter - 1u && z.y < z.x && z.y < 1.0 - z.x && z.y > 0.0",
             goldFeature = true
@@ -1156,9 +1191,9 @@ class Shape(
             nameId = R.string.shape_name,
             loop = "phoenix(z1, z2, c)",
             params = ParamSet(
-                listOf(
-                    RealParam(u = 2.0, uRange = Range(-6.0, 6.0), discrete = true),
-                    RealParam(u = 0.0, uRange = Range(-6.0, 6.0), discrete = true),
+                arrayListOf(
+                    RealParam(u = 2.0, uRange = Range(-6.0, 6.0), isDiscrete = true),
+                    RealParam(u = 0.0, uRange = Range(-6.0, 6.0), isDiscrete = true),
                     ComplexParam(u = 1.0)
                 )
             ),
@@ -1205,29 +1240,40 @@ class Shape(
             nova2,
             tree,
             tree2,
-            harriss
         ).filter { BuildConfig.DEV_VERSION || !it.devFeature }
         val all = ArrayList(default)
 
     }
 
+//    val params = ParamSet().also { set ->
+//        if (params != null) {
+//            set.list.addAll(params.list)
+//            set.julia.setFrom(params.julia)
+//            set.seed.setFrom(params.seed)
+//            set.detail.setFrom(params.detail)
+//        }
+//    }
 
     var position = if (juliaMode) positions.julia else positions.main
 
     val conditional = if (isConvergent) CONVERGE else conditional
-    val radius = if (isConvergent) 1e-8f else radius
+
+    val minRadius = if (isConvergent) 2.0.pow(-30.0).toFloat() else radius
+
     val compatTextures = if (isConvergent) Texture.convergent else compatTextures
 
     val juliaModeInit = juliaMode
     var juliaMode = juliaModeInit
         set(value) {
             field = value
-            numParamsInUse = params.size + if (juliaMode) 1 else 0
+//            numParamsInUse = params.size + if (juliaMode) 1 else 0
             if (hasAnalyticDelta) alphaSeed = if (juliaMode) Complex.ONE else Complex.ZERO
             position = if (value) positions.julia else positions.main
         }
 
-    var numParamsInUse = params.size + if (juliaMode) 1 else 0
+//    var numParamsInUse = params.size + if (juliaMode) 1 else 0
+
+
 
     init {
         if (!hasAnalyticDelta) {
@@ -1242,6 +1288,8 @@ class Shape(
         if (!hasCustomId && id != -1) id = Integer.MAX_VALUE - id
     }
 
+
+
     fun initialize(res: Resources) {
 
         when {
@@ -1253,9 +1301,7 @@ class Shape(
             }
         }
 
-        params.list.forEach { p ->
-            if (p.nameId != -1) p.name = res.getString(p.nameId)
-        }
+        params.initialize(res)
 
         if (hasCustomId) {
             thumbnail = Bitmap.createBitmap(
@@ -1279,9 +1325,18 @@ class Shape(
     }
 
     fun setFrom(config: Config) {
-        config.juliaMode?.let { juliaMode = it }
-        config.position?.let { position.setFrom(it) }
-        config.params?.let { params.setFrom(it) }
+        config.juliaMode?.let {
+            Log.d("SHAPE", "config has juliaMode")
+            juliaMode = it
+        }
+        config.position?.let {
+            Log.d("SHAPE", "config has position")
+            position.setFrom(it)
+        }
+        config.params?.let {
+            Log.d("SHAPE", "config has params, seed = ${it.seed}")
+            params.setFrom(it)
+        }
     }
 
     fun clone(res: Resources): Shape {
@@ -1299,11 +1354,10 @@ class Shape(
             alphaSeed = alphaSeed,
             compatTextures = compatTextures.toMutableList(),
             positions = positions.clone(),
-            params = params, // clone?
+            params = params.clone(), // clone?
             juliaMode = juliaMode,
             juliaSeed = juliaSeed,
-            maxIter = maxIter,
-            radius = radius
+            radius = minRadius
         )
     }
 
@@ -1337,11 +1391,13 @@ class Shape(
             juliaSeed,
             params.seed.u,
             params.seed.v,
-            maxIter,
-            radius,
+            params.detail.scaledValue.toInt(),
+            minRadius,
             isConvergent,
             hasDualFloat,
-            isFavorite
+            isFavorite,
+            params.julia.u,
+            params.julia.v
         )
     }
 
@@ -1357,6 +1413,6 @@ class Shape(
         return name.hashCode()
     }
 
-    override fun isCustom(): Boolean = hasCustomId
+    override fun isCustom(): Boolean = id == -1 || hasCustomId
 
 }

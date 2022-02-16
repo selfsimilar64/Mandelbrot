@@ -19,32 +19,33 @@ open class GradientButton : AppCompatButton {
         }
 
     private val rectPaint = Paint()
-    private val rect = Rect(
-            0, 0,
-            resources.getDimension(R.dimen.menuButtonWidth).toInt(),
-            resources.getDimension(R.dimen.menuButtonHeight).toInt()
-    )
+    private val rect = Rect()
     private val goldColors = intArrayOf(
             R.color.gold1,
             R.color.gold1,
             R.color.gold2,
             R.color.gold3,
             R.color.gold4,
-            R.color.gold5,
             R.color.gold5
-    ).map{ resources.getColor(it, null) }.toIntArray()
-    private val gradient = LinearGradient(
+    ).map { resources.getColor(it, null) }.toIntArray()
+
+    private lateinit var gradient : LinearGradient
+    private lateinit var bmp : Bitmap
+    private lateinit var buffer : Canvas
+    private lateinit var bmpShader : BitmapShader
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        rect.set(0, 0, w, h)
+        gradient = LinearGradient(
             0f, 0f, rect.width().toFloat(), rect.height().toFloat()/5f,
             goldColors, null, Shader.TileMode.CLAMP
-    )
-    private val bmp = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
-    private val buffer = Canvas(bmp)
-    private val bmpShader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-
-    init {
-
+        )
+        bmp = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
+        buffer = Canvas(bmp)
+        bmpShader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
         rectPaint.shader = ComposeShader(gradient, bmpShader, PorterDuff.Mode.MULTIPLY)
-
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas?) {

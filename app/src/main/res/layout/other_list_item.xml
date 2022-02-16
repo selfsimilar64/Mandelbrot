@@ -1,37 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/listItemLayout"
-    android:layout_width="100dp"
-    android:layout_height="match_parent"
-    android:background="?attr/selectableItemBackground"
-    android:backgroundTint="@color/highlight"
-    android:backgroundTintMode="multiply">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground">
 
     <LinearLayout
         android:id="@+id/listItemContentLayout"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingStart="@dimen/previewGridPaddingHorizontal"
-        android:paddingTop="@dimen/previewGridPaddingVertical"
-        android:paddingEnd="@dimen/previewGridPaddingHorizontal"
-        android:paddingBottom="@dimen/previewGridPaddingVertical">
+        android:padding="@dimen/listItemPadding">
 
         <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="@color/black"
-            app:cardCornerRadius="10dp">
+            app:cardCornerRadius="@dimen/listItemCornerRadius">
 
             <com.selfsimilartech.fractaleye.GradientImageView
                 android:id="@+id/listItemImage"
                 android:layout_width="@dimen/textureShapePreviewSize"
                 android:layout_height="@dimen/textureShapePreviewSize"
-                android:tintMode="screen"
-                app:srcCompat="@drawable/mandelbrot_icon" />
+                app:srcCompat="@drawable/escapetime_icon" />
 
         </androidx.cardview.widget.CardView>
 
@@ -39,7 +32,7 @@
         <com.selfsimilartech.fractaleye.GradientTextView
             android:id="@+id/listItemName"
             style="@style/TextDark"
-            android:layout_width="wrap_content"
+            android:layout_width="82dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp"
             android:gravity="center_horizontal"

@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/imageOptions"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:background="@color/settingsBackground"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:elevation="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <TextView
+            android:id="@+id/textView23"
+            style="@style/TextHeaderDark"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/settings"
+            android:textAllCaps="false"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_weight="1"
+        app:cardBackgroundColor="@color/transparent"
+        app:cardCornerRadius="30dp">
+
+        <ScrollView
+            android:id="@+id/displayOptionsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fadeScrollbars="false">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/settings_group_background"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        style="@style/SettingsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/textView5"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/continuous_render"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/continuousRenderSwitch"
+                            style="@style/SwitchDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@+id/textView5" />
+
+                        <TextView
+                            android:id="@+id/continuousRenderHint"
+                            style="@style/SettingsHint"
+                            android:layout_height="wrap_content"
+                            android:text="@string/continuous_render_hint"
+                            app:layout_constraintEnd_toStartOf="@+id/continuousRenderSwitch"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView5" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <View
+                        android:id="@+id/divider"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:background="@color/divider" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/renderBackgroundLayout"
+                        style="@style/SettingsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/textView6"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/render_background"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/renderBackgroundSwitch"
+                            style="@style/SwitchDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="@+id/textView6"
+                            app:track="@drawable/switch_track_custom" />
+
+                        <TextView
+                            android:id="@+id/renderBackgroundHint"
+                            style="@style/SettingsHint"
+                            android:layout_height="wrap_content"
+                            android:text="@string/render_background_hint"
+                            app:layout_constraintEnd_toStartOf="@+id/renderBackgroundSwitch"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView6" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <View
+                        android:id="@+id/divider9"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:background="@color/divider" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/splitTypeLayout"
+                        style="@style/SettingsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/splitTypeSwitch"
+                            style="@style/SwitchDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:showText="false"
+                            android:splitTrack="false"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/textView12"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/split_type"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/splitTypeHint"
+                            style="@style/SettingsHint"
+                            android:layout_height="wrap_content"
+                            android:text="@string/split_type_hint"
+                            app:layout_constraintEnd_toStartOf="@+id/splitTypeSwitch"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView12" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <View
+                        android:id="@+id/divider27"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:background="@color/divider" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/targetFramerateLayout"
+                        style="@style/SettingsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/targetFramerateValue"
+                            style="@style/EditNumberDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:minWidth="48dp"
+                            android:text="60"
+                            android:textSize="18sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/textView15"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/target_framerate"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/targetFramerateHint"
+                            style="@style/SettingsHint"
+                            android:layout_height="wrap_content"
+                            android:text="@string/target_framerate_hint"
+                            app:layout_constraintEnd_toStartOf="@+id/targetFramerateValue"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/textView15" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <View
+                        android:id="@+id/divider18"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:background="@color/divider" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        style="@style/SettingsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/textView8"
+                            style="@style/TextDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/hide_nav_bar"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/hideNavBarSwtich"
+                            style="@style/SwitchDark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:showText="false"
+                            android:splitTrack="false"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/advancedSettingsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="16dp"
+                    android:animateLayoutChanges="true"
+                    android:background="@drawable/settings_group_background"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/advanced_settings_switch"
+                        style="@style/SwitchDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:padding="2dp"
+                        android:text="@string/advanced"
+                        android:textSize="20sp"
+                        android:track="@drawable/switch_track_custom"
+                        android:splitTrack="false"/>
+
+                    <LinearLayout
+                        android:id="@+id/advancedSettingsLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical">
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/allowSlowRendersLayout"
+                            style="@style/SettingsItem"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/allowSlowRendersSwitch"
+                                style="@style/SwitchDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:showText="false"
+                                android:splitTrack="false"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/textView14"
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/allow_slow_renders"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/allowSlowRendersHint"
+                                style="@style/SettingsHint"
+                                android:layout_height="wrap_content"
+                                android:text="@string/allow_slow_renders_hint"
+                                app:layout_constraintEnd_toStartOf="@+id/allowSlowRendersSwitch"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/textView14" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <View
+                            android:id="@+id/divider3"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@color/divider" />
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/allowOutOfRangeValuesLayout"
+                            style="@style/SettingsItem"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/unrestrictedParamsSwitch"
+                                style="@style/SwitchDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:showText="false"
+                                android:splitTrack="false"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/textView65"
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/unrestricted_params"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/unrestrictedParamsHint"
+                                style="@style/SettingsHint"
+                                android:layout_height="wrap_content"
+                                android:text="@string/unrestricted_params_hint"
+                                app:layout_constraintEnd_toStartOf="@+id/unrestrictedParamsSwitch"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/textView65" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <View
+                            android:id="@+id/divider34"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@color/divider" />
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/ultra_high_res_layout"
+                            style="@style/SettingsItem"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/ultra_high_res_switch"
+                                style="@style/SwitchDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:showText="false"
+                                android:splitTrack="false"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/textView66"
+                                style="@style/TextDark"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/ultra_high_res"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/ultra_high_res_hint"
+                                style="@style/SettingsHint"
+                                android:layout_height="wrap_content"
+                                android:text="@string/ultra_high_res_hint"
+                                app:layout_constraintEnd_toStartOf="@+id/ultra_high_res_switch"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/textView66" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!--            <View-->
+                <!--                android:id="@+id/divider3"-->
+                <!--                android:layout_width="match_parent"-->
+                <!--                android:layout_height="1dp"-->
+                <!--                android:layout_marginTop="10dp"-->
+                <!--                android:layout_marginBottom="10dp"-->
+                <!--                android:background="@color/menuDark7" />-->
+
+                <!--            <androidx.constraintlayout.widget.ConstraintLayout-->
+                <!--                android:layout_width="match_parent"-->
+                <!--                android:layout_height="match_parent">-->
+
+                <!--                <TextView-->
+                <!--                    android:id="@+id/textView9"-->
+                <!--                    style="@style/TextDark"-->
+                <!--                    android:layout_width="wrap_content"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:text="@string/fit_viewport"-->
+                <!--                    app:layout_constraintStart_toStartOf="parent"-->
+                <!--                    app:layout_constraintTop_toTopOf="parent" />-->
+
+                <!--                <TextView-->
+                <!--                    android:id="@+id/fitViewportHint"-->
+                <!--                    style="@style/TextDescriptionDark"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:text="@string/fit_viewport_hint"-->
+                <!--                    app:layout_constraintEnd_toStartOf="@+id/fitToViewportSwitch"-->
+                <!--                    app:layout_constraintStart_toStartOf="parent"-->
+                <!--                    app:layout_constraintTop_toBottomOf="@+id/textView9" />-->
+
+                <!--                <androidx.appcompat.widget.SwitchCompat-->
+                <!--                    android:id="@+id/fitToViewportSwitch"-->
+                <!--                    style="@style/SwitchDark"-->
+                <!--                    android:layout_width="wrap_content"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    app:layout_constraintBottom_toBottomOf="parent"-->
+                <!--                    app:layout_constraintEnd_toEndOf="parent"-->
+                <!--                    app:layout_constraintTop_toTopOf="@+id/textView9" />-->
+                <!--            </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+
+            </LinearLayout>
+        </ScrollView>
+    </androidx.cardview.widget.CardView>
+
+    <LinearLayout
+        android:id="@+id/settingsDoneButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:elevation="10dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textView25"
+            style="@style/TextDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@android:string/ok"
+            android:textAppearance="@android:style/TextAppearance.Material.Button"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/imageView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            app:srcCompat="@drawable/done" />
+    </LinearLayout>
+
+    <!--
+    <Button
+        android:id="@+id/restartActivityButton"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="restart activity"
+        tools:visibility="gone" />
+
+    <Button
+        android:id="@+id/sendNotificationButton"
+        style="@style/FragmentItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="send notification"
+        tools:visibility="gone" />
+        -->
+
+</LinearLayout>

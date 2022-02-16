@@ -9,16 +9,16 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/textureImageCard"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:cardBackgroundColor="@color/transparent"
-        app:cardCornerRadius="5dp"
+        app:cardCornerRadius="6dp"
         app:cardElevation="0dp">
 
         <com.selfsimilartech.fractaleye.GradientImageView
             android:id="@+id/textureImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:scaleType="centerCrop"
             app:srcCompat="@drawable/flower" />
     </androidx.cardview.widget.CardView>

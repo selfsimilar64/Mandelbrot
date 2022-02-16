@@ -7,6 +7,7 @@ import kotlin.math.pow
 class ComplexParam (
 
         nameId      : Int = -1,
+        iconId      : Int = R.drawable.parameter,
         u           : Double = 0.0,
         v           : Double = 0.0,
         uLocked     : Boolean = false,
@@ -18,13 +19,14 @@ class ComplexParam (
         sensitivity : Double = 50.0,
         goldFeature : Boolean = false
 
-) : RealParam(nameId, u, uRange, uLocked, false, toRadians, goldFeature, sensitivity = sensitivity) {
+) : RealParam(nameId, iconId, u, uRange, uLocked, false, toRadians, goldFeature, sensitivity = sensitivity) {
 
-    constructor(u: Double = 0.0, v: Double = 0.0) : this(-1, u, v)
+    constructor(u: Double = 0.0, v: Double = 0.0) : this(-1, R.drawable.parameter, u, v)
+    constructor(nameId: Int = -1, u: Double = 0.0, v: Double = 0.0) : this(nameId, R.drawable.parameter, u, v)
     constructor(data: Data) : this(u = data.u, v = data.v, sensitivity = data.sensitivity)
 
     companion object {
-        const val SENSITIVITY_EXP_LOW = -5.0
+        const val SENSITIVITY_EXP_LOW = -6.0
         const val SENSITIVITY_EXP_HIGH = 2.0
     }
 
@@ -32,10 +34,10 @@ class ComplexParam (
         set(value) {
             field = value.clamp(1.0, 99.0)
             val t = 0.5 - (field - 1.0)/98.0
-            sensitivityFactor = 0.5*10.0.pow(t*(SENSITIVITY_EXP_LOW - SENSITIVITY_EXP_HIGH)) * 1.75
+            sensitivityFactor = 10.0.pow(t*(SENSITIVITY_EXP_LOW - SENSITIVITY_EXP_HIGH)) * 2.75
         }
 
-    override var sensitivityFactor = 1.75
+    override var sensitivityFactor = 3.5
 
     private val vInit = v
     private val vLockedInit = vLocked
@@ -86,7 +88,23 @@ class ComplexParam (
 
     override fun clone() : ComplexParam {
 
-        return ComplexParam(u = u, v = v, sensitivity = sensitivity)
+        val newParam = ComplexParam(
+                nameId,
+                iconId,
+                uInit,
+                vInit,
+                uLocked,
+                vLocked,
+                uRange,
+                vRange,
+                linked,
+                toRadians,
+                sensitivity,
+                goldFeature
+        )
+        newParam.u = u
+        newParam.v = v
+        return newParam
 
     }
 

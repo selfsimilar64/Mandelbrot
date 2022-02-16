@@ -1,5 +1,6 @@
 package com.selfsimilartech.fractaleye
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -31,6 +32,8 @@ data class ShapeEntity (
         val bailoutRadius   : Float = 1e6f,
         val isConvergent    : Boolean = false,
         val hasDualFloat    : Boolean = true,
-        val isFavorite      : Boolean = false
+        val isFavorite      : Boolean = false,
+        @ColumnInfo(defaultValue = "0.0")  val xJulia          : Double = 0.0,
+        @ColumnInfo(defaultValue = "0.0")  val yJulia          : Double = 0.0
 
 )

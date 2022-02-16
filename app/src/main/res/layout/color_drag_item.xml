@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/customColorLayout"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="@color/white"
-    android:orientation="vertical"
-    android:padding="2dp">
+    android:id="@+id/colorView"
+    android:layout_width="@dimen/customColorLayoutSize"
+    android:layout_height="@dimen/customColorLayoutSize"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    app:cardBackgroundColor="@color/accent2"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="2dp">
 
-    <View
-        android:id="@+id/customColorSquare"
-        android:layout_width="@dimen/customColorLayoutSize"
-        android:layout_height="@dimen/customColorLayoutSize"
-        android:background="#6aa" />
-
-</LinearLayout>
+</androidx.cardview.widget.CardView>

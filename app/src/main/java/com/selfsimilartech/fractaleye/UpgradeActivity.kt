@@ -82,7 +82,7 @@ class UpgradeActivity : AppCompatActivity() {
         })
 
 
-        b.imageLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        b.imageOptions.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
 //        val timer = Timer()
 //
@@ -139,7 +139,7 @@ class UpgradeActivity : AppCompatActivity() {
                     if (shape!!.goldFeature) shape.params.list.size + 1
                     else                    shape.params.list.filter { it.goldFeature }.size + 1
                 } + Texture.all.sumBy { texture ->
-                    if (texture.goldFeature) texture.params.size
+                    if (texture.goldFeature) texture.params.list.size
                     else                     texture.params.list.filter { it.goldFeature }.size
                 }
         )

@@ -1,8 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+
+
     <string name="title_activity_settings">Settings</string>
     <string name="app_name">Fractal Eye</string>
     <string name="fe_abbrev">FE</string>
-
 
 
     <!-- MAIN -->
@@ -28,6 +29,8 @@
     <string name="cancel">cancel</string>
     <string name="delete">Delete</string>
     <string name="list">List</string>
+    <string name="no_favorites">You currently have no favorites. Long press on a default or custom item, then click the star icon to add it to your favorites!</string>
+    <string name="no_custom_items">You currently have no custom items. Click the \'NEW\' button to create one!</string>
     <string name="empty_list_favorite">Long press on an item, then click the star icon to add it to your favorites!</string>
     <string name="empty_list_custom">Press the plus icon at the bottom of the screen to create a custom item!</string>
     <string name="gold_enabled">Upgrade Successful!</string>
@@ -41,8 +44,16 @@
     <string name="bookmarks">Bookmarks</string>
     <string name="fractal">Fractal</string>
     <string name="load_previous_fractal">Load fractal from previous session?</string>
+    <string name="restore_session">Restore Session</string>
     <string name="copy">Copy</string>
     <string name="error">! Error !</string>
+    <string name="save_image">Save Image</string>
+    <string name="param_reset">%s reset</string>
+
+    <string name="fps">FPS</string>
+    <string name="estimated_render_time">est: %d ms</string>
+    <string name="render_time">render: %d ms</string>
+    <string name="name">Name</string>
 
 
     <string name="tutorial">Tutorial</string>
@@ -53,6 +64,45 @@
     <string name="tutorial_finish">Finish</string>
     <string name="tutorial_exit">Exit</string>
     <string name="tutorial_keep_going">Keep going!</string>
+
+    <string name="tutorial_basics_intro">These icons represent the four basic editing modes. Touching the screen in each mode will have a different effect on the fractal!</string>
+    <string name="tutorial_basics_pos">POSITION mode changes which part of the fractal you are viewing.\n\nClick the highlighted button to enter POSITION mode!</string>
+    <string name="tutorial_basics_pos_zoom">Perform a pinch gesture with two fingers to zoom.</string>
+    <string name="tutorial_basics_pos_pan">Swipe in any direction with one finger to pan.</string>
+    <string name="tutorial_basics_pos_task">Zoom in to the highlighted area to continue!</string>
+    <string name="tutorial_basics_pos_reset">You can always reset the position by clicking this button.</string>
+    <string name="tutorial_basics_color">COLOR mode changes how the colors are displayed.\n\nClick the highlighted button to enter COLOR mode!</string>
+    <string name="tutorial_basics_color_freq">Perform a pinch gesture with two fingers to change the color frequency.</string>
+    <string name="tutorial_basics_color_phase">Swipe horizontally with one finger to cycle through the colors.</string>
+    <string name="tutorial_basics_color_task">Increase the color frequency to continue!</string>
+    <string name="tutorial_basics_color_palette">This button will open a list of alternate color palettes.</string>
+    <string name="tutorial_basics_color_auto">This button will toggle automatic coloring.</string>
+    <string name="tutorial_basics_shape">SHAPE mode controls the overall form of the fractal.\n\nClick the highlighted button to enter SHAPE mode!</string>
+    <string name="tutorial_basics_shape_active_param">Touching the screen in this mode will affect the activated shape parameter.</string>
+    <string name="tutorial_basics_shape_real_param">Swipe horizontally with one finger to adjust the parameter\'s value.</string>
+    <string name="tutorial_basics_shape_detail">As you zoom in on a fractal, you can increase the shape\'s DETAIL parameter to refine the image.</string>
+    <string name="tutorial_basics_shape_task">Use the slider to increase the DETAIL parameter to 300!</string>
+    <string name="tutorial_basics_shape_detail_tip">Perfect!\n(Tip: Keep this value lower for faster rendering times)</string>
+    <string name="tutorial_basics_shape_list">This button will open a list of alernate shapes.</string>
+    <string name="tutorial_basics_shape_julia_mode_task">This button will toggle JULIA MODE, which displays the Julia sets of the current shape.\n\nTurn JULIA MODE on to continue!</string>
+    <string name="tutorial_basics_shape_complex_param">The activated parameter will now control the shape of the Julia set.</string>
+    <string name="tutorial_basics_shape_julia_param">This parameter has two numbers. Swipe in any direction with one finger to change their values.</string>
+    <string name="tutorial_basics_sensitivity">Perform a pinch gesture with two fingers to change the parameter\'s sensitivity.</string>
+    <string name="tutorial_basics_shape_julia_param_task">Adjust the parameter to continue!</string>
+    <string name="tutorial_basics_texture">TEXTURE mode controls the style of the space around the fractal.\n\nClick the highlighted button to enter TEXTURE mode!</string>
+    <string name="tutorial_basics_texture_parameter">Textures have parameters too! </string>
+    <string name="tutorial_basics_texture_position">This parameter has two numbers. Swipe with one finger in any direction to change their values.</string>
+    <string name="tutorial_basics_texture_task">Textures have parameters too. Try adjusting this parameter to see its effect!</string>
+    <string name="tutorial_basics_texture_list">This button will open a list of alternate textures.</string>
+    <string name="tutorial_basics_texture_region">This button will change the region of the fractal that the texture is applied to.</string>
+    <string name="tutorial_basics_param_menu">This button will show/hide extra parameters.</string>
+    <string name="tutorial_basics_save_image">This button will save an image of the current fractal to your gallery.</string>
+    <string name="tutorial_basics_toggle_ui">This button will hide the user interface.</string>
+    <string name="tutorial_basics_options_menu">This button will open the options menu.</string>
+    <string name="tutorial_basics_bookmarks">Need inspiration? Load a pre-made fractal from the bookmark list!</string>
+    <string name="tutorial_basics_finish">Contratulations! You have successfully completed the tutorial and have everything you need to start making your own fractals!</string>
+
+
     <string name="tutorial_texure_param_info">This parameter has only one number, and swiping horizontally changes its value. You can also change the value by clicking the adjust buttons, or you can manually enter a number by clicking the value.</string>
     <string name="tutorial_texture_param_next">Click \'next\' to try it out!</string>
     <string name="tutorial_texture_param_interact">Change the value to 230 to continue!</string>
@@ -61,7 +111,7 @@
     <string name="tutorial_shape_param_interact">Move one finger around on the screen to change the parameter!</string>
     <string name="tutorial_welcome">Welcome to %s!</string>
     <string name="tutorial_0_2">Would you like to start the tutorial? You can always access it later in the settings menu.</string>
-    <string name="tutorial_1_1">The primary buttons are highlighted at the bottom of the screen. Clicking one of these buttons will switch the editing mode and allow you to change different qualities of the fractal!</string>
+    <string name="tutorial_1_1">These icons represent the four editing modes. Touching the screen in each mode will have a different effect on the fractal.</string>
     <string name="tutorial_2_00">Position mode determines which part of the fractal is visible. In position mode you can zoom, rotate, and move around!</string>
     <string name="tutorial_2_1">Click the highlighted button to enter position mode.</string>
     <string name="tutorial_2_2">Moving one finger around on the screen will move the fractal in the same direction.</string>
@@ -87,12 +137,20 @@
     <string name="tutorial_complete">You have successfully completed the tutorial and have everything you need to start making your own fractals!</string>
 
 
-
     <!-- EXTRAS -->
     <string name="random_fractal">Randomize</string>
-    <string name="rendering_video">Rendering Video</string>
-    <string name="render_video">Render Video</string>
     <string name="new_bookmark">New Bookmark</string>
+    <string name="new_video">Zoom Video</string>
+    <string name="share">Share Image</string>
+
+
+    <string name="rendering_video">Rendering Video</string>
+    <string name="render_video">Render</string>
+    <string name="video_add_keyframe">Add Keyframe</string>
+    <string name="video_write_keyframe">Write Keyframe</string>
+    <string name="initial_zoom">Initial Zoom</string>
+    <string name="final_zoom">Final Zoom</string>
+    <string name="duration">Duration</string>
 
 
     <!-- UPGRADE ACTIVITY -->
@@ -170,9 +228,12 @@
     <string name="allow_slow_renders_hint">Zoom past 1e-6 on shapes with certain equations like %s. This feature is experimental and may not work on all devices.</string>
     <string name="target_framerate">Target Framerate</string>
     <string name="target_framerate_hint">The resolution will adjust to match this framerate during parameter changes</string>
+    <string name="advanced">Advanced</string>
+    <string name="ultra_high_res">Ultra High Resolutions</string>
+    <string name="ultra_high_res_hint">Save images at resolutions up to %s x %s. Device RAM may limit this feature.</string>
 
 
-    <!-- TEXTURE FRAGMENT -->
+    <!-- TEXTURE -->
     <string name="texture_name" translatable="false">Texture Name</string>
     <string name="texture_param_name" translatable="false">Texture Parameter Name</string>
     <string name="escape_radius">Escape Radius</string>
@@ -186,7 +247,7 @@
     <string name="texture_image_choose_res">Choose a resolution for the image — Higher resolutions will cause image generation to be slower and will use more memory.</string>
 
 
-    <!-- SHAPE FRAGMENT -->
+    <!-- SHAPE -->
     <string name="shape_name" translatable="false">Shape Name</string>
     <string name="dscript_shape_preview">shape preview image</string>
     <string name="u">u</string>
@@ -199,9 +260,6 @@
     <string name="sensitivity">rate</string>
     <string name="max_iter">iterate</string>
     <string name="julia_mode">Julia Mode</string>
-    <string name="max_iter_hint" translatable="false">Determines the maximum number of calculations per pixel.
-        Increasing will make shape more defined but increase render time.</string>
-    <string name="julia_mode_hint" translatable="false">Use a parameter to create each type of shape that can be found within the main shape</string>
     <string name="slower">Slower</string>
     <string name="faster">Faster</string>
     <string name="more_detail">More detail</string>
@@ -218,7 +276,7 @@
     <string name="shapekey_header_trig" translatable="false">Trig</string>
 
 
-    <!-- COLOR FRAGMENT -->
+    <!-- COLOR -->
     <string name="palette">Palette</string>
     <string name="palette_name" translatable="false">Palette Name</string>
     <string name="frequency">frequency</string>
@@ -233,9 +291,11 @@
     <string name="freq_hint" translatable="false">Determines how frequently the colors change. Use pinch gestures to change.</string>
     <string name="accent1">Accent 1</string>
     <string name="accent2">Accent 2</string>
+    <string name="fill">Fill</string>
+    <string name="outline">Outline</string>
 
 
-    <!-- POSITION FRAGMENT -->
+    <!-- POSITION -->
     <string name="x" translatable="false">x</string>
     <string name="y" translatable="false">y</string>
     <string name="xy" translatable="false">xy</string>
@@ -446,7 +506,6 @@
     <string name="importance_gradient_analytic" translatable="false">Analytic</string>
 
 
-
     <!-- PARAM NAMES -->
     <string name="density">Density</string>
     <string name="width">Width</string>
@@ -454,6 +513,7 @@
     <string name="bend">Bend</string>
     <string name="size">Size</string>
     <string name="power">Power</string>
+    <string name="exponent">Exponent</string>
     <string name="angle">Angle</string>
     <string name="scale">Scale</string>
     <string name="linear">Linear</string>
@@ -462,6 +522,10 @@
     <string name="count">Count</string>
     <string name="smooth">Smooth</string>
     <string name="seed">Seed</string>
+    <string name="detail">Detail</string>
+    <string name="spread">Spread</string>
+    <string name="mix">Mix</string>
+
 
 
     <!-- MESSAGES -->
@@ -491,6 +555,7 @@
     <string name="msg_enable_autocolor">Please enable [Color] -> [Auto]</string>
     <string name="msg_bookmark_created">Bookmark created!</string>
     <string name="msg_empty_name">Please enter a name for this item</string>
+    <string name="msg_new_favorite">Added to Favorites!</string>
 
 
     <!-- UTILITY -->
@@ -608,20 +673,6 @@
     <string name="kali_katex" translatable="false">
         $z_{n+1} = \\large\\frac{\\textrm{abs}(z_n)}{|\\textrm{abs}(z_n)|^2} +\\small J$
     </string>
-    <string name="mandelbar_loop_sf" translatable="false">
-        Z = cSqrSF(conjSF(Z1)) + C;
-    </string>
-    <string name="logistic_loop_sf" translatable="false">
-        Z = cDivSF(Z1 - cSqrSF(Z1), C);
-    </string>
-    <string name="logistic_loop_df" translatable="false">
-        vec4 W1 = cSqrDF(X1, Y1);
-        vec2 W2 = addDF(X1, -W1.xy);
-        vec2 W3 = addDF(Y1, -W1.zw);
-        vec4 W4 = cDivDF(W2, W3, A, B);
-        X = W4.xy;
-        Y = W4.zw;
-    </string>
     <string name="logistic_katex" translatable="false">
         $z_{n+1} = \\Large \\frac{z_n - z_n^2}{%s}$
     </string>
@@ -637,23 +688,11 @@
     <string name="sine2_katex" translatable="false">
         $z_{n+1} = \\sin\\Big(\\Large\\frac{z_n^2 + P_1}{%s}\\normalsize\\Big)$
     </string>
-    <string name="sine3_loop_sf" translatable="false">
-        Z = sinSF(cDivSF(cPow3(Z1, P1.x), C));
-    </string>
     <string name="sine3_katex" translatable="false">
         $z_{n+1} = \\sin(\\frac{z_n^{\\operatorname{Re}(P_1)}}{%s})$
     </string>
     <string name="horseshoecrab_katex" translatable="false">
         $z_{n+1} = \\sin\\Big(\\Large\\frac{P_1}{z_n} + \\frac{z_n}{%s}\\normalsize\\Big)$
-    </string>
-    <string name="persianrug_init_sf" translatable="false">
-        Z = C;
-    </string>
-    <string name="persianrug_loop_sf" translatable="false">
-        Z = cMultSF(Z1, sinSF(tanSF(P1 - cDivSF(C, Z1))) + Z1 + tanSF(Z1));
-    </string>
-    <string name="persianrug_katex" translatable="false">
-        $z_{n+1} = z \\cdot \\big(\\sin\\big(\\tan(P1 - \\large\\frac{%s}{z_n}\\normalsize)\\big) + z_n + \\tan(z_n)\\big)$
     </string>
     <string name="newton1_loop_sf" translatable="false">
         Z = Z - cDivSF(cSqrSF(cSqrSF(Z)) - vec2(1.0, 0.0), 4.0*cMultSF(Z, cSqrSF(Z)));

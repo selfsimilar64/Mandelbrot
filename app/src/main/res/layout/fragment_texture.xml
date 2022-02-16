@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/textureLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/textureImageLayout"
+        style="@style/UiComponentMedium"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/textureImageList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/texture_image_list_item" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/textureModeLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/textureModeTabs"
+            style="@style/UiComponentInnerShort"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            app:tabIndicatorColor="@color/menuDarkPrimary">
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/texture_mode_out" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/texture_mode_in" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/texture_mode_both" />
+        </com.google.android.material.tabs.TabLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/radiusLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent">
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imageView15"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                app:srcCompat="@drawable/radius" />
+
+            <com.selfsimilartech.fractaleye.SeekBar2
+                android:id="@+id/radiusBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                android:max="900" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="90dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/radiusSignificandValue"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:gravity="center_vertical|end"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:text="3.54" />
+
+            <TextView
+                style="@style/TextDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:text="e" />
+
+            <EditText
+                android:id="@+id/radiusExponentValue"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:imeOptions="actionDone"
+                android:inputType="numberSigned|number"
+                android:text="-12" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <include
+        android:id="@+id/realTextureParam"
+        layout="@layout/real_param"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/uiComponentHeightShort" />
+
+    <include
+        android:id="@+id/complexTextureParam"
+        layout="@layout/complex_param"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/uiComponentHeightShort" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:background="@color/menuDarkPrimary"
+        android:orientation="vertical">
+
+        <include
+            android:id="@+id/textureListLayout"
+            layout="@layout/list_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/textureSubMenuButtons"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/menuButtonHeight"
+            android:background="@color/menuDarkSecondary"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <HorizontalScrollView
+                android:id="@+id/textureButtonsScroll"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/menuButtonHeight"
+                android:layout_weight="1"
+                android:scrollbarThumbHorizontal="@color/divider">
+
+                <LinearLayout
+                    android:id="@+id/textureButtonsScrollLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+
+                    <com.selfsimilartech.fractaleye.GradientButton
+                        android:id="@+id/textureModeButton"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/mode"
+                        android:text="@string/mode" />
+
+                    <com.selfsimilartech.fractaleye.GradientButton
+                        android:id="@+id/escapeRadiusButton"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/radius"
+                        android:text="@string/radius" />
+
+                    <com.selfsimilartech.fractaleye.GradientButton
+                        android:id="@+id/textureImageButton"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/image2"
+                        android:text="@string/image" />
+
+                    <com.selfsimilartech.fractaleye.GradientButton
+                        android:id="@+id/textureParamButton1"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/parameter"
+                        android:text="@string/param1" />
+
+                    <com.selfsimilartech.fractaleye.GradientButton
+                        android:id="@+id/textureParamButton2"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/parameter"
+                        android:text="@string/param2" />
+
+                    <com.selfsimilartech.fractaleye.GradientButton
+                        android:id="@+id/textureParamButton3"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/parameter"
+                        android:text="@string/param3" />
+
+                    <com.selfsimilartech.fractaleye.GradientButton
+                        android:id="@+id/textureParamButton4"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/parameter"
+                        android:text="@string/param4" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <View
+                android:id="@+id/divider16"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_margin="3dp"
+                android:background="@color/menuDark8" />
+
+            <ImageButton
+                android:id="@+id/textureListButton"
+                android:layout_width="75dp"
+                android:padding="12dp"
+                android:paddingTop="0dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/list_view" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/textureNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/categoryButtonHeight"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/textureListDoneButton"
+            style="@style/NewNavButton"
+            android:src="@drawable/done" />
+    </LinearLayout>
+
+</LinearLayout>

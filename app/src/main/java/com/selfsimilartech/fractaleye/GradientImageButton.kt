@@ -31,7 +31,6 @@ open class GradientImageButton : AppCompatImageButton {
             R.color.gold3,
             R.color.gold4,
             R.color.gold5,
-            R.color.gold5,
             R.color.gold5
     ).map{ resources.getColor(it, null) }.toIntArray()
 
@@ -71,7 +70,7 @@ open class GradientImageButton : AppCompatImageButton {
 
     override fun onDraw(canvas: Canvas?) {
         if (showGradient) {
-            buffer.drawColor(Color.BLACK, PorterDuff.Mode.MULTIPLY)
+            buffer.drawColor(Color.BLACK, PorterDuff.Mode.CLEAR)
             super.onDraw(buffer)
             canvas?.apply {
                 drawRect(rect, rectPaint)

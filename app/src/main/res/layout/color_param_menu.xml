@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/colorParamMenu"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="horizontal">
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/frequencyButton"
+        style="@style/MenuButton"
+        android:src="@drawable/frequency2" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/phaseButton"
+        style="@style/MenuButton"
+        android:src="@drawable/phase" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/density_button"
+        style="@style/MenuButton"
+        android:src="@drawable/density"
+        android:visibility="gone" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/fill_color_button"
+        style="@style/MenuButton"
+        android:src="@drawable/fill_color" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/outline_color_button"
+        style="@style/MenuButton"
+        android:drawableTint="@null"
+        android:src="@drawable/outline_color"
+        android:visibility="gone" />
+
+</LinearLayout>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/shape_param_menu_layout"
+    android:layout_width="@dimen/editModeLayoutWidth"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="horizontal">
+
+    <com.selfsimilartech.fractaleye.GradientImageButton
+        android:id="@+id/detailButton"
+        style="@style/MenuButton"
+        android:drawablePadding="1dp"
+        android:drawableTint="@null"
+        android:src="@drawable/detail"
+        android:text="@string/detail" />
+
+    <com.selfsimilartech.fractaleye.GradientImageButton
+        android:id="@+id/seedParamButton"
+        style="@style/MenuButton"
+        android:src="@drawable/seed"
+        android:text="@string/seed" />
+
+    <com.selfsimilartech.fractaleye.GradientImageButton
+        android:id="@+id/juliaParamButton"
+        style="@style/MenuButton"
+        android:background="?attr/selectableItemBackground"
+        android:src="@drawable/julia"
+        android:text="@string/julia"
+        android:visibility="gone" />
+
+    <com.selfsimilartech.fractaleye.GradientImageButton
+        android:id="@+id/shapeParamButton1"
+        style="@style/MenuButton"
+        android:src="@drawable/parameter"
+        android:text="@string/param1" />
+
+    <com.selfsimilartech.fractaleye.GradientImageButton
+        android:id="@+id/shapeParamButton2"
+        style="@style/MenuButton"
+        android:src="@drawable/parameter"
+        android:text="@string/param2" />
+
+    <com.selfsimilartech.fractaleye.GradientImageButton
+        android:id="@+id/shapeParamButton3"
+        style="@style/MenuButton"
+        android:src="@drawable/parameter"
+        android:text="@string/param3"
+        android:visibility="gone" />
+
+    <com.selfsimilartech.fractaleye.GradientImageButton
+        android:id="@+id/shapeParamButton4"
+        style="@style/MenuButton"
+        android:src="@drawable/parameter"
+        android:text="@string/param4"
+        android:visibility="gone" />
+
+</LinearLayout>

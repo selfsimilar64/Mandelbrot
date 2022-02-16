@@ -88,6 +88,6 @@
 
     </LinearLayout>
 
-    <include layout="@layout/color_picker2" />
+    <include layout="@layout/color_accent_edit" />
 
 </LinearLayout>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/alertDialogBackground"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="15dp">
+
+    <Button
+        android:id="@+id/r360"
+        style="@style/ResolutionButton2"
+        android:text="360  x  780" />
+
+    <Button
+        android:id="@+id/button2"
+        style="@style/ResolutionButton2"
+        android:text="480  x  1040" />
+
+    <Button
+        android:id="@+id/button4"
+        style="@style/ResolutionButton2"
+        android:text="720  x  1560" />
+
+    <Button
+        android:id="@+id/button5"
+        style="@style/ResolutionButton2"
+        android:text="1080  x  2340" />
+
+    <Button
+        android:id="@+id/button6"
+        style="@style/ResolutionButton2"
+        android:drawableTint="@null"
+        android:text="1440  x  3120" />
+
+    <Button
+        android:id="@+id/button7"
+        style="@style/ResolutionButton2"
+        android:text="2160  x  4680" />
+
+    <Button
+        android:id="@+id/button8"
+        style="@style/ResolutionButton2"
+        android:text="2880  x  6240" />
+
+    <Button
+        android:id="@+id/button9"
+        style="@style/ResolutionButton2"
+        android:text="3600  x  7800"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/button10"
+        style="@style/ResolutionButton2"
+        android:text="4320  x  9360"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/button11"
+        style="@style/ResolutionButton2"
+        android:text="5040  x  10920"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/button12"
+        style="@style/ResolutionButton2"
+        android:text="5760  x  12480"
+        android:visibility="gone" />
+</LinearLayout>

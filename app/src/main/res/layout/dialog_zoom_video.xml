@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textView"
+            style="@style/TextDark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/initial_zoom" />
+
+        <TextView
+            android:id="@+id/textView2"
+            style="@style/TextDark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/final_zoom"
+            tools:layout_editor_absoluteY="22dp" />
+
+        <TextView
+            android:id="@+id/textView7"
+            style="@style/TextDark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/duration"
+            tools:layout_editor_absoluteY="22dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/initial_zoom_value"
+            style="@style/EditNumberDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical|end"
+            android:imeOptions="actionNext"
+            android:inputType="number"
+            android:minEms="5"
+            android:text="-0.5"
+            tools:layout_editor_absoluteX="85dp" />
+
+        <EditText
+            android:id="@+id/final_zoom_value"
+            style="@style/EditNumberDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical|end"
+            android:imeOptions="actionNext"
+            android:inputType="number"
+            android:minEms="5"
+            android:text="12.0"
+            tools:layout_editor_absoluteX="85dp"
+            tools:layout_editor_absoluteY="21dp" />
+
+        <EditText
+            android:id="@+id/duration_value"
+            style="@style/EditNumberDark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical|end"
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:minEms="5"
+            android:text="60"
+            tools:layout_editor_absoluteX="85dp"
+            tools:layout_editor_absoluteY="21dp" />
+    </LinearLayout>
+
+</LinearLayout>

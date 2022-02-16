@@ -155,7 +155,7 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <com.selfsimilartech.fractaleye.NoScrollViewPager
-                android:id="@+id/categoryPager"
+                android:id="@+id/editModePager"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
@@ -169,8 +169,7 @@
                 android:layout_height="@dimen/categoryButtonHeight"
                 android:layout_marginStart="3dp"
                 android:layout_marginEnd="3dp"
-                app:tabIndicator="@null"
-                app:tabTextAppearance="@style/TabText" />
+                app:tabIndicator="@null" />
         </LinearLayout>
 
 

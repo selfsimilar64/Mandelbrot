@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="10dp"
+    android:background="@drawable/ui_component_bg"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp">
+
+    <com.selfsimilartech.fractaleye.VerticalSeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:max="1000" />
+</FrameLayout>

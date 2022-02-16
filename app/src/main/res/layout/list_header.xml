@@ -20,6 +20,6 @@
         android:padding="6dp"
         android:scaleType="fitCenter"
         app:srcCompat="@drawable/custom"
-        app:tint="@color/highlight"/>
+        app:tint="@color/white" />
 
 </LinearLayout>

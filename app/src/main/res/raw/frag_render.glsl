@@ -1357,8 +1357,7 @@ vec4 csqrt(vec4 z) {
 }
 
 vec2 cexp(vec2 w) {
-    if (w.y == 0.0) return complex(exp(w.x));
-    else return exp(w.x)*vec2(cos(w.y), sin(w.y));
+    return exp(w.x)*vec2(cos(w.y), sin(w.y));
 }
 vec4 cexp(vec4 w) {
     vec2 t = expd(w.xy);
@@ -1532,17 +1531,7 @@ vec4 cpow(vec4 z, int n) {
 }
 
 vec2 cpow(vec2 z, float p) {
-    if (p == 1.0) return z;
-    else if (p == 2.0) return csqr(z);
-    else if (p == 3.0) return ccube(z);
-    else if (p == 4.0) return cquad(z);
-    else if (p == 5.0) return cquint(z);
-    else if (p == -1.0) return cinv(z);
-    else if (p == -2.0) return cinv(csqr(z));
-    else if (p == -3.0) return cinv(ccube(z));
-    else if (p == -4.0) return cinv(cquad(z));
-    else if (p == -5.0) return cinv(cquint(z));
-    else return cexp(p*clog(z));
+    return cexp(p*clog(z));
 }
 vec4 cpow(vec4 z, float p) {
     return cexp(cmult(p, clog(z)));
@@ -1553,13 +1542,6 @@ vec2 cpow(vec2 z, vec2 s) {
     return cexp(cmult(s, clog(z)));
 }
 vec4 cpow(vec4 z, vec4 s) {
-    if (s.zw == _0) {
-        if (s.xy == vec2(2.0, 0.0)) return csqr(z);
-        else if (s.xy == vec2(3.0, 0.0)) return ccube(z);
-        else if (s.xy == vec2(4.0, 0.0)) return cquad(z);
-        else if (s.xy == vec2(5.0, 0.0)) return cquint(z);
-        else return cexp(cmult(complex(s.xy), clog(z)));
-    }
     return cexp(cmult(s, clog(z)));
 }
 vec4 cpow(vec4 z, vec2 s) {
@@ -2654,21 +2636,21 @@ vec4 sierpinski_tri(vec4 z, vec4 c) {
 
     if (z.zw == _0 || z.z > 0.0 || (z.z == 0.0 && z.w > 0.0)) {
         w.zw = add(w.zw, _double(-h));
-        w = rotate(w, _double(2.0*vec2(0.0, h)), p1.x);
+        w = rotate(w, _double(2.0*vec2(0.0, h)), p2.x);
     }
     else {
         if (gtd(z.xy, 0.0)) {
-            w = rotate(w, _double(2.0*vec2(q, -h)), p1.x);
+            w = rotate(w, _double(2.0*vec2(q, -h)), p2.x);
             w.xy = add(w.xy, _double(-q));
         }
         else {
-            w = rotate(w, _double(2.0*vec2(-q, -h)), p1.x);
+            w = rotate(w, _double(2.0*vec2(-q, -h)), p2.x);
             w.xy = add(w.xy, _double(q));
         }
         w.zw = add(w.zw, _double(h));
     }
 
-    return cadd(cmult(2.0*p1.y, w), c);
+    return cadd(cmult(2.0*p1.x, w), c);
 
 }
 

@@ -67,10 +67,9 @@ open class GradientTextView : androidx.appcompat.widget.AppCompatTextView {
 
     override fun onDraw(canvas: Canvas?) {
         if (showGradient) {
-            buffer.drawColor(Color.BLACK, PorterDuff.Mode.MULTIPLY)
+            buffer.drawColor(Color.BLACK, PorterDuff.Mode.CLEAR)
             super.onDraw(buffer)
             canvas?.apply {
-                // drawColor(Color.TRANSPARENT)
                 drawRect(rect, rectPaint)
             }
         }

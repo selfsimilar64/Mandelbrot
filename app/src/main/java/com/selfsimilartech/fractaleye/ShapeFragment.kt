@@ -17,8 +17,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.LinearSmoothScroller
-import com.selfsimilartech.fractaleye.databinding.ShapeFragmentBinding
+import com.selfsimilartech.fractaleye.databinding.FragmentShapeBinding
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.SelectableAdapter
 import kotlinx.coroutines.launch
@@ -32,7 +31,7 @@ import kotlin.math.pow
 
 class ShapeFragment : MenuFragment() {
 
-    lateinit var b : ShapeFragmentBinding
+    lateinit var b : FragmentShapeBinding
     
     lateinit var db : AppDatabase
 
@@ -50,7 +49,7 @@ class ShapeFragment : MenuFragment() {
     // Inflate the view for the fragment based on layout XML
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 
-        b = ShapeFragmentBinding.inflate(inflater, container, false)
+        b = FragmentShapeBinding.inflate(inflater, container, false)
         return b.root
         // return inflater.inflate(R.layout.shape_fragment, container, false)
 
@@ -123,26 +122,25 @@ class ShapeFragment : MenuFragment() {
                     b.juliaParamButton.show()
                     b.juliaParamButton.performClick()
 
-                    if (f.shape.numParamsInUse == 1) {
-                        fsv.r.reaction = Reaction.SHAPE
-                    }
+//                    if (f.shape.numParamsInUse == 1) {
+//                        sc.editMode = EditMode.SHAPE
+//                    }
 
                 } else {
 
-                    if (button == b.juliaParamButton) {
-                        if (f.shape.numParamsInUse > 0) b.shapeParamButton1.performClick()
-                        else {
-                            b.maxIterButton.performClick()
-                            // shapeResetButton.hide()
-                        }
-                    }
+//                    if (button == b.juliaParamButton) {
+//                        if (f.shape.numParamsInUse > 0) b.shapeParamButton1.performClick()
+//                        else {
+//                            b.detailButton.performClick()
+//                            // shapeResetButton.hide()
+//                        }
+//                    }
                     if (f.shape.juliaSeed) b.seedParamButton.hide() else b.seedParamButton.show()
                     b.juliaParamButton.hide()
 
                 }
 
                 loadActiveParam()
-                act.updatePositionLayout()
 
                 fsv.r.renderShaderChanged = true
                 fsv.r.renderToTex = true
@@ -156,7 +154,7 @@ class ShapeFragment : MenuFragment() {
             //customShape.katex = customShape.katex.replace(cursor, expr.katex)
             Log.e("SHAPE", "expr: ${expr.latex}")
             b.shapeMathQuill.enterExpr(expr)
-            b.shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+            b.shapeMathQuill.getLatex(customShape)
 
         }}
         val resetListener = View.OnClickListener {
@@ -179,8 +177,7 @@ class ShapeFragment : MenuFragment() {
             setSupportZoom(true)
             defaultTextEncodingName = "utf-8"
         }
-        val mathQuillHtml = readHtml("mathquill.html")
-        b.shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", mathQuillHtml, "text/html", "UTF-8", null)
+        b.shapeMathQuill.loadDataWithBaseURL("file:///android_asset/", readHtml("mathquill.html"), "text/html", "UTF-8", null)
         b.shapeMathQuill.setBackgroundColor(Color.TRANSPARENT)
         // shapeMathQuill.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null)
 
@@ -266,13 +263,13 @@ class ShapeFragment : MenuFragment() {
                 val p = (seekBar.progress.toDouble() / b.maxIterBar.max).pow(0.75)
                 val iter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt()
                 // if (iter > 5000) iterWarningIcon.show() else iterWarningIcon.invisible()
-                f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
+                f.shape.params.detail.u = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW) - 1.0
                 b.maxIterValue.setText("%d".format(iter))
                 if (fromUser && fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
                     fsv.r.renderToTex = true
                     fsv.requestRender()
                 }
-                if (fsv.doingTutorial && f.shape.maxIter > 499) onTutorialReqMet()
+                if (fsv.tutorialInProgress && f.shape.params.detail.u.toInt() > 499) onTutorialReqMet()
 
             }
             override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -282,8 +279,8 @@ class ShapeFragment : MenuFragment() {
                 fsv.r.renderProfile = RenderProfile.CONTINUOUS
 
                 val p = (seekBar.progress.toDouble() / b.maxIterBar.max).pow(0.75)
-                f.shape.maxIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
-                b.maxIterValue.setText("%d".format(f.shape.maxIter))
+                f.shape.params.detail.u = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW) - 1.0
+                b.maxIterValue.setText("%d".format(f.shape.params.detail.u.toInt()))
 
             }
             override fun onStopTrackingTouch(seekBar: SeekBar) {
@@ -293,30 +290,30 @@ class ShapeFragment : MenuFragment() {
                 fsv.requestRender()
 
                 val p = (seekBar.progress.toDouble() / b.maxIterBar.max).pow(0.75)
-                val newIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW).toInt() - 1
+                val newIter = 2.0.pow(p*ITER_MAX_POW + (1.0 - p)*ITER_MIN_POW) - 1.0
 
                 // save state on iteration increase
-                if (newIter > f.shape.maxIter) act.bookmarkAsPreviousFractal()
+                if (newIter > f.shape.params.detail.u.toInt()) act.bookmarkAsPreviousFractal()
 
-                f.shape.maxIter = newIter
-                crashlytics().setCustomKey(CRASH_KEY_MAX_ITER, f.shape.maxIter)
-                b.maxIterValue.setText("%d".format(f.shape.maxIter))
+                f.shape.params.detail.u = newIter
+                crashlytics().setCustomKey(CRASH_KEY_MAX_ITER, f.shape.params.detail.u.toInt())
+                b.maxIterValue.setText("%d".format(f.shape.params.detail.u.toInt()))
 
-                // Log.d("FRACTAL EDIT FRAGMENT", "maxIter: ${f.shape.maxIter}")
+                // Log.d("FRACTAL EDIT FRAGMENT", "maxIter: ${f.shape.params.detail.u.toInt()}")
 
             }
 
         })
-        b.maxIterBar.progress = (((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)).pow(4.0/3.0)*b.maxIterBar.max).toInt()
-        b.maxIterValue.setText("%d".format(f.shape.maxIter))
+        b.maxIterBar.progress = (((log(f.shape.params.detail.u.toInt().toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)).pow(4.0/3.0)*b.maxIterBar.max).toInt()
+        b.maxIterValue.setText("%d".format(f.shape.params.detail.u.toInt()))
         b.maxIterValue.setOnEditorActionListener(editListener(null) {
-            val result = "${it.text}".formatToDouble()?.toInt()
+            val result = "${it.text}".formatToDouble()
             if (result != null) {
-                f.shape.maxIter = result
+                f.shape.params.detail.u = result
                 fsv.r.renderToTex = true
             }
-            b.maxIterValue.setText("%d".format(f.shape.maxIter))
-            b.maxIterBar.progress = ((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*b.maxIterBar.max).toInt()
+            b.maxIterValue.setText("%d".format(f.shape.params.detail.u.toInt()))
+            b.maxIterBar.progress = ((log(f.shape.params.detail.u.toInt().toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)*b.maxIterBar.max).toInt()
         })
         b.maxIterBar.showWarning = true
         // iterWarningIcon.invisible()
@@ -356,9 +353,8 @@ class ShapeFragment : MenuFragment() {
             b.customShapeLayout.show()
             b.eqnErrorIndicator.makeInvisible()
             loadNavButtons(customShapeNavButtons)
-            act.uiSetHeight(UiLayoutHeight.TALLER)
             fsv.r.renderProfile = RenderProfile.DISCRETE
-            fsv.r.reaction = Reaction.COLOR
+            sc.editMode = EditMode.COLOR
 
             // save values in case of cancel
             item.t.apply {
@@ -437,9 +433,7 @@ class ShapeFragment : MenuFragment() {
                     }
 
                     adapter.apply {
-                        setActivatedPosition(
-                                getGlobalPositionOf(getFavoriteItems().getOrNull(0) ?: getDefaultItems()[1])
-                        )
+                        setActivatedPosition(0)
                         f.shape = getItem(activatedPos)!!.t
                     }
                     Shape.all.remove(item.t)
@@ -460,11 +454,10 @@ class ShapeFragment : MenuFragment() {
             if (!sc.goldEnabled) act.showUpgradeScreen()
             else {
 
-                act.uiSetHeight(UiLayoutHeight.TALLER)
                 b.shapeListLayout.root.hide()
                 b.customShapeLayout.show()
                 loadNavButtons(customShapeNavButtons)
-                fsv.r.reaction = Reaction.COLOR
+                sc.editMode = EditMode.COLOR
                 fsv.r.renderProfile = RenderProfile.DISCRETE
 
                 customShape = item.t.clone(resources)
@@ -486,8 +479,8 @@ class ShapeFragment : MenuFragment() {
         }
 
 
-        val emptyFavorite = ListItem(Shape.emptyFavorite, ListHeader.FAVORITE, R.layout.list_item_linear_empty_favorite)
-        val emptyCustom = ListItem(Shape.emptyCustom, ListHeader.CUSTOM, R.layout.list_item_linear_empty_custom)
+        val emptyFavorite = ListItem(Shape.emptyFavorite, ListItemType.FAVORITE, R.layout.list_item_linear_empty_favorite)
+        val emptyCustom = ListItem(Shape.emptyCustom, ListItemType.CUSTOM, R.layout.list_item_linear_empty_custom)
         val listItems = arrayListOf<ListItem<Shape>>()
 
 
@@ -523,7 +516,6 @@ class ShapeFragment : MenuFragment() {
                         juliaMode = it.juliaMode,
                         juliaSeed = it.juliaSeed,
                         params = Shape.ParamSet(seed = ComplexParam(it.xSeed, it.ySeed)),
-                        maxIter = it.maxIter,
                         radius = it.bailoutRadius,
                         isConvergent = it.isConvergent,
                         hasDualFloat = it.hasDualFloat,
@@ -542,28 +534,14 @@ class ShapeFragment : MenuFragment() {
 
                 ListItem(
                     it,
-                    if (it.hasCustomId || it == Shape.emptyCustom) ListHeader.CUSTOM else ListHeader.DEFAULT,
+                    if (it.hasCustomId || it == Shape.emptyCustom) ListItemType.CUSTOM else ListItemType.DEFAULT,
                     R.layout.other_list_item
 
-                ).apply {
-
-                    if (it.isFavorite) {
-                        val favorite = ListItem(
-                            it,
-                            ListHeader.FAVORITE,
-                            R.layout.other_list_item,
-                            compliment = this
-                        )
-                        compliment = favorite
-                        listItems.add(favorite)
-                    }
-
-                })
+                ))
 
             }
             if (Shape.all.none { it.isFavorite }) listItems.add(emptyFavorite)
             if (Shape.custom.isEmpty()) listItems.add(emptyCustom)
-            listItems.sortBy { it.header.type }
 
             val shapeListAdapter = ListAdapter(
                 listItems,
@@ -573,11 +551,11 @@ class ShapeFragment : MenuFragment() {
                 emptyFavorite,
                 emptyCustom
             )
-            b.shapeListLayout.list.apply {
+            b.shapeListLayout.defaultList.apply {
                 adapter = shapeListAdapter
                 setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
                     val firstVisiblePos = shapeListLayoutManager.findFirstCompletelyVisibleItemPosition()
-                    highlightListHeader(shapeListAdapter, when {
+                    highlightListItemType(shapeListAdapter, when {
                         firstVisiblePos < shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[1]) -> 0
                         firstVisiblePos < shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[2]) -> 1
                         else -> 2
@@ -592,8 +570,6 @@ class ShapeFragment : MenuFragment() {
 
                         val firstVisiblePos = shapeListLayoutManager.findFirstCompletelyVisibleItemPosition()
                         val lastVisiblePos = shapeListLayoutManager.findLastCompletelyVisibleItemPosition()
-                        if (position + 1 > lastVisiblePos) b.shapeListLayout.list.smoothSnapToPosition(position + 1, LinearSmoothScroller.SNAP_TO_END)
-                        else if (position - 1 < firstVisiblePos) b.shapeListLayout.list.smoothSnapToPosition(position - 1)
 
                         val prevActivatedPosition = shapeListAdapter.activatedPos
                         if (position != shapeListAdapter.activatedPos) shapeListAdapter.setActivatedPosition(position)
@@ -616,7 +592,6 @@ class ShapeFragment : MenuFragment() {
                                 // reset texture if not compatible with new shape
                                 if (!newShape.compatTextures.contains(f.texture)) {
                                     f.texture = if (newShape == Shape.kleinian) Texture.escape else { if (newShape.isConvergent) Texture.converge else Texture.escapeSmooth }
-                                    act.onTextureChanged()
                                 }
 
                                 fsv.r.checkThresholdCross { f.shape = newShape }
@@ -625,8 +600,6 @@ class ShapeFragment : MenuFragment() {
                                 fsv.r.renderToTex = true
                                 fsv.requestRender()
 
-                                act.updateTextureParam()
-                                act.updatePositionLayout()
                                 act.updateCrashKeys()
 
                             }
@@ -642,17 +615,6 @@ class ShapeFragment : MenuFragment() {
                 showAllHeaders()
             }
 
-            b.shapeListLayout.apply {
-                listFavoritesButton.setOnClickListener {
-                    list.smoothSnapToPosition(shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[0]))
-                }
-                listCustomButton.setOnClickListener {
-                    list.smoothSnapToPosition(shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[1]))
-                }
-                listDefaultButton.setOnClickListener {
-                    list.smoothSnapToPosition(shapeListAdapter.getGlobalPositionOf(shapeListAdapter.headerItems[2]))
-                }
-            }
 
             Log.e("SHAPE", "shape load successful!")
 
@@ -673,7 +635,7 @@ class ShapeFragment : MenuFragment() {
             setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
                 val firstVisiblePos = shapeKeyListLayoutManager.findFirstCompletelyVisibleItemPosition()
                 shapeKeyListAdapter.let { adapter ->
-                    highlightKeyListHeader(adapter, adapter.headerItems.indexOf(adapter.getSectionHeader(firstVisiblePos)) ?: 0)
+                    highlightKeyListItemType(adapter, adapter.headerItems.indexOf(adapter.getSectionHeader(firstVisiblePos)) ?: 0)
                 }
             }
             layoutManager = shapeKeyListLayoutManager
@@ -683,7 +645,7 @@ class ShapeFragment : MenuFragment() {
             if (shapeKeyListAdapter.getItemViewType(position) !in nonClickableViewTypes) {
                 val expr = shapeKeyListAdapter.getItem(position)?.expr ?: Expr.z
                 b.shapeMathQuill.enterExpr(expr)
-                b.shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+                b.shapeMathQuill.getLatex(customShape)
                 true
             } else false
 
@@ -701,7 +663,6 @@ class ShapeFragment : MenuFragment() {
             b.keyboardBasicButton,
             b.keyboardTrigButton
         ).forEachIndexed { i, button ->
-            button.setOnClickListener { b.shapeKeyList.smoothSnapToPosition(shapeKeyListAdapter.getGlobalPositionOf(shapeKeyListAdapter.headerItems[i])) }
         }
 
 
@@ -727,7 +688,7 @@ class ShapeFragment : MenuFragment() {
 
                 if (button.showGradient && !sc.goldEnabled) act.showUpgradeScreen()
                 else {
-                    fsv.r.reaction = Reaction.SHAPE
+                    sc.editMode = EditMode.SHAPE
                     f.shape.params.active = f.shape.params.list[paramIndex]
                     setCurrentLayout(if (f.shape.params.list[paramIndex] is ComplexParam) b.complexShapeParam.root else b.realShapeParam.root)
                     // shapeResetButton.show()
@@ -751,14 +712,14 @@ class ShapeFragment : MenuFragment() {
 
                     // render custom shape thumbnails
                     fsv.r.renderProfile = RenderProfile.SHAPE_THUMB
-                    fsv.r.renderThumbnails = true
+                    fsv.r.renderAllThumbnails = true
                     fsv.requestRender()
 
                 }, BUTTON_CLICK_DELAY_MED)
             }
 
             setCurrentLayout(b.shapeListLayout.root)
-            fsv.r.reaction = Reaction.NONE
+            sc.editMode = EditMode.NONE
 
             b.shapeSubMenuButtons.hide()
             act.apply {
@@ -776,22 +737,19 @@ class ShapeFragment : MenuFragment() {
                 }
             }
 
-            act.uiSetHeight(UiLayoutHeight.TALL)
-
         }
 
-        b.maxIterButton.setOnClickListener {
-            subMenuButtonListener(b.maxIterLayout, b.maxIterButton).onClick(it)
-            fsv.r.reaction = Reaction.NONE
+        b.detailButton.setOnClickListener {
+            subMenuButtonListener(b.maxIterLayout, b.detailButton).onClick(it)
+            sc.editMode = EditMode.NONE
         }
-        // maxIterButton.setOnClickListener(subMenuButtonListener(maxIterLayout, maxIterButton))
+        // detailButton.setOnClickListener(subMenuButtonListener(maxIterLayout, detailButton))
         // sensitivityButton.setOnClickListener(subMenuButtonListener(sensitivityLayout, sensitivityButton))
 
         b.shapeListDoneButton.setOnClickListener {
 
             if (fsv.r.isRendering) fsv.r.pauseRender = true
 
-            act.uiSetHeight(UiLayoutHeight.SHORT)
 
             b.shapeListButton.setImageBitmap(f.shape.thumbnail)
 
@@ -804,7 +762,7 @@ class ShapeFragment : MenuFragment() {
                 updateRadius()
                 showHeaderButtons()
             }
-            b.maxIterButton.performClick()
+            b.detailButton.performClick()
 
             updateLayout()
 
@@ -814,11 +772,10 @@ class ShapeFragment : MenuFragment() {
 
             crashlytics().updateLastAction(Action.SHAPE_CREATE)
 
-            act.uiSetHeight(UiLayoutHeight.TALLER)
             b.shapeListLayout.root.hide()
             b.customShapeLayout.show()
             loadNavButtons(customShapeNavButtons)
-            fsv.r.reaction = Reaction.COLOR
+            sc.editMode = EditMode.COLOR
             fsv.r.renderProfile = RenderProfile.DISCRETE
 
             customShape = Shape.createNewCustom(resources)
@@ -850,7 +807,7 @@ class ShapeFragment : MenuFragment() {
                 // customShape.release()
                 f.shape = Shape.all.getOrNull(prevSelectedShapeIndex) ?: Shape.mandelbrot
             }
-            fsv.r.reaction = Reaction.NONE
+            sc.editMode = EditMode.NONE
             fsv.r.renderShaderChanged = true
             fsv.r.renderToTex = true
             fsv.requestRender()
@@ -858,7 +815,6 @@ class ShapeFragment : MenuFragment() {
             b.customShapeLayout.hide()
             b.shapeListLayout.root.show()
             loadNavButtons(previewListNavButtons)
-            act.uiSetHeight(UiLayoutHeight.TALL)
             //act.showCategoryButtons()
 
         }
@@ -910,7 +866,7 @@ class ShapeFragment : MenuFragment() {
 
                                 // add item to list adapter and select
                                 getShapeListAdapter()?.apply {
-                                    val item = ListItem(customShape, ListHeader.CUSTOM, R.layout.other_list_item)
+                                    val item = ListItem(customShape, ListItemType.CUSTOM, R.layout.other_list_item)
                                     setActivatedPosition(addItemToCustom(item, 0))
                                 }
 
@@ -922,15 +878,14 @@ class ShapeFragment : MenuFragment() {
                         }
 
 
-                        fsv.r.reaction = Reaction.NONE
+                        sc.editMode = EditMode.NONE
 
                         // update ui
-                        b.shapeMathQuill.getLatex { customShape.latex = it }
+                        // b.shapeMathQuill.getLatex { customShape.latex = it }
 
                         b.customShapeLayout.hide()
                         b.shapeListLayout.root.show()
                         loadNavButtons(previewListNavButtons)
-                        act.uiSetHeight(UiLayoutHeight.TALL)
 
                         // b.shapeListLayout.list.adapter?.notifyDataSetChanged()
 
@@ -947,7 +902,7 @@ class ShapeFragment : MenuFragment() {
         b.nextKey.setOnClickListener { b.shapeMathQuill.enterKeystroke(Keystroke.RIGHT) }
         b.deleteKey.setOnClickListener {
             b.shapeMathQuill.enterKeystroke(Keystroke.BACKSPACE)
-            b.shapeMathQuill.getLatex { setCustomLoop(it, customShape) }
+            b.shapeMathQuill.getLatex(customShape)
         }
         b.leftParenKey.setOnClickListener(keyListener(Expr.leftParen))
         b.rightParenKey.setOnClickListener(keyListener(Expr.rightParen))
@@ -958,7 +913,7 @@ class ShapeFragment : MenuFragment() {
             setCurrentButton(b.juliaParamButton)
             // shapeResetButton.show()
             f.shape.params.active = f.shape.params.julia
-            fsv.r.reaction = Reaction.SHAPE
+            sc.editMode = EditMode.SHAPE
             loadActiveParam()
             val r = Rect()
             b.juliaParamButton.getGlobalVisibleRect(r)
@@ -969,7 +924,7 @@ class ShapeFragment : MenuFragment() {
             setCurrentButton(b.seedParamButton)
             // shapeResetButton.show()
             f.shape.params.active = f.shape.params.seed
-            fsv.r.reaction = Reaction.SHAPE
+            sc.editMode = EditMode.SHAPE
             loadActiveParam()
         }
         shapeParamButtonList.forEachIndexed { index, button ->
@@ -990,9 +945,9 @@ class ShapeFragment : MenuFragment() {
 
 
         layout = b.maxIterLayout
-        button = b.maxIterButton
+        button = b.detailButton
         setCurrentLayout(b.maxIterLayout)
-        setCurrentButton(b.maxIterButton)
+        setCurrentButton(b.detailButton)
 
         updateLayout()
         crashlytics().setCustomKey(CRASH_KEY_FRAG_SHAPE_CREATED, true)
@@ -1047,8 +1002,8 @@ class ShapeFragment : MenuFragment() {
         }
         if (f.shape.juliaMode || f.shape.juliaSeed) b.seedParamButton.hide() else b.seedParamButton.show()
 
-        b.maxIterValue.setText("%d".format(f.shape.maxIter))
-        b.maxIterBar.progress = (((log(f.shape.maxIter.toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)).pow(4.0/3.0)*b.maxIterBar.max).toInt()
+        b.maxIterValue.setText("%d".format(f.shape.params.detail.u.toInt()))
+        b.maxIterBar.progress = (((log(f.shape.params.detail.u.toInt().toDouble(), 2.0) - ITER_MIN_POW)/(ITER_MAX_POW - ITER_MIN_POW)).pow(4.0/3.0)*b.maxIterBar.max).toInt()
 
         updateValues()
 
@@ -1105,7 +1060,7 @@ class ShapeFragment : MenuFragment() {
         }
     }
 
-    fun highlightListHeader(adapter: ListAdapter<Shape>, index: Int) {
+    fun highlightListItemType(adapter: ListAdapter<Shape>, index: Int) {
         adapter.apply {
             listOf(
                 b.shapeListLayout.listFavoritesButton,
@@ -1117,7 +1072,7 @@ class ShapeFragment : MenuFragment() {
         }
     }
 
-    fun highlightKeyListHeader(adapter: FlexibleAdapter<*>, index: Int) {
+    fun highlightKeyListItemType(adapter: FlexibleAdapter<*>, index: Int) {
         adapter.apply {
             listOf(
                     // keyboardVariablesButton,
@@ -1131,8 +1086,9 @@ class ShapeFragment : MenuFragment() {
     }
 
     fun getShapeListAdapter() : ListAdapter<Shape>? {
-        return b.shapeListLayout.list.adapter as? ListAdapter<Shape>
+        return b.shapeListLayout.defaultList.adapter as? ListAdapter<Shape>
     }
+
 
     private fun setCustomLoop(latex: String, shape: Shape) {
         val parsed = parseEquation(latex)

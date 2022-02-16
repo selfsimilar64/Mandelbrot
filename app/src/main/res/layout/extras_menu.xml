@@ -1,260 +1,462 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.selfsimilartech.fractaleye.InterceptableLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/extrasPopup"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@color/menuDarkSecondary"
+    android:animateLayoutChanges="true"
+    android:background="@drawable/ui_component_bg"
+    android:gravity="end"
     android:orientation="vertical">
 
 
     <LinearLayout
-        android:id="@+id/logisticsLayout"
-        android:layout_width="match_parent"
+        android:id="@+id/aspectRatioLayout"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:visibility="gone">
 
-        <LinearLayout
-            android:id="@+id/settingsButton"
-            style="@style/ExtrasMenuItem">
+        <Button
+            android:id="@+id/aspectDefault"
+            style="@style/AspectRatioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/header_default"
+            android:textSize="14sp" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/settings"
-                app:tint="@color/highlight" />
+        <Button
+            android:id="@+id/aspect11"
+            style="@style/AspectRatioButton"
+            android:text="1:1" />
 
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/settings" />
-        </LinearLayout>
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/aspect45"
+            style="@style/AspectRatioButton"
+            android:text="4:5" />
 
-        <LinearLayout
-            android:id="@+id/upgradeButton"
-            style="@style/ExtrasMenuItem">
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/aspect57"
+            style="@style/AspectRatioButton"
+            android:text="5:7" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/upgrade"
-                app:tint="@color/highlight" />
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/aspect23"
+            style="@style/AspectRatioButton"
+            android:text="2:3" />
 
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/upgrade" />
-        </LinearLayout>
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/aspect916"
+            style="@style/AspectRatioButton"
+            android:text="9:16" />
 
-        <LinearLayout
-            android:id="@+id/tutorialButton"
-            style="@style/ExtrasMenuItem">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/tutorial"
-                app:tint="@color/highlight" />
-
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/tutorial" />
-        </LinearLayout>
-
-<!--        <LinearLayout-->
-<!--            android:id="@+id/changelogButton"-->
-<!--            style="@style/ExtrasMenuItem">-->
-
-<!--            <ImageView-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:scaleType="centerInside"-->
-<!--                app:srcCompat="@drawable/changelog"-->
-<!--                app:tint="@color/highlight" />-->
-
-<!--            <TextView-->
-<!--                style="@style/ExtrasMenu.Text"-->
-<!--                android:layout_width="0dp"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:text="@string/version_history" />-->
-<!--        </LinearLayout>-->
-
-        <LinearLayout
-            android:id="@+id/aboutButton"
-            style="@style/ExtrasMenuItem">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/info2"
-                app:tint="@color/highlight" />
-
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/about" />
-        </LinearLayout>
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/aspect12"
+            style="@style/AspectRatioButton"
+            android:text="1:2" />
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
-        android:background="@color/divider"
-        android:orientation="horizontal"></LinearLayout>
+        android:id="@+id/resolutionLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:id="@+id/bookmarksButton"
-            style="@style/ExtrasMenuItem">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/bookmarks_folder" />
-
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/bookmarks" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/newBookmarkButton"
-            style="@style/ExtrasMenuItem"
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/rCustomScreen"
+            style="@style/ResolutionButton2"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:text="1234 x 5678"
+            android:visibility="gone" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/new_bookmark" />
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r360"
+            style="@style/ResolutionButton2"
+            android:text="360 x 780" />
 
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/new_bookmark" />
-        </LinearLayout>
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r480"
+            style="@style/ResolutionButton2"
+            android:text="480 x 1040" />
 
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r720"
+            style="@style/ResolutionButton2"
+            android:text="720 x 1560" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r1080"
+            style="@style/ResolutionButton2"
+            android:text="1080 x 2340" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r1440"
+            style="@style/ResolutionButton2"
+            android:drawableTint="@null"
+            android:text="1440 x 3120" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r2160"
+            style="@style/ResolutionButton2"
+            android:text="2160 x 4680" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r2880"
+            style="@style/ResolutionButton2"
+            android:text="2880 x 6240" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r3600"
+            style="@style/ResolutionButton2"
+            android:text="3600 x 7800"
+            android:visibility="gone" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r4320"
+            style="@style/ResolutionButton2"
+            android:text="4320 x 9360"
+            android:visibility="gone" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r5040"
+            style="@style/ResolutionButton2"
+            android:text="5040 x 10920"
+            android:visibility="gone" />
+
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/r5760"
+            style="@style/ResolutionButton2"
+            android:text="5760 x 12480"
+            android:visibility="gone" />
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
-        android:background="@color/divider"
-        android:orientation="horizontal"></LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/imageLayout"
-        android:layout_width="match_parent"
+        android:id="@+id/optionsLayout"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="6dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="8dp">
 
         <LinearLayout
-            android:id="@+id/randomizerButton"
-            style="@style/ExtrasMenuItem"
+            android:id="@+id/logisticsOptions"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/random"
-                app:tint="@color/highlight" />
+            <LinearLayout
+                android:id="@+id/settingsButton"
+                style="@style/ExtrasMenuItem">
 
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/random_fractal" />
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/settings" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/upgradeButton"
+                style="@style/ExtrasMenuItem">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/upgrade" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/upgrade" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tutorialButton"
+                style="@style/ExtrasMenuItem">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/tutorial" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/tutorial" />
+            </LinearLayout>
+
+            <!--        <LinearLayout-->
+            <!--            android:id="@+id/changelogButton"-->
+            <!--            style="@style/ExtrasMenuItem">-->
+
+            <!--            <ImageView-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:scaleType="centerInside"-->
+            <!--                app:srcCompat="@drawable/changelog"-->
+            <!--                app:tint="@color/highlight" />-->
+
+            <!--            <TextView-->
+            <!--                style="@style/ExtrasMenu.Text"-->
+            <!--                android:layout_width="0dp"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_weight="1"-->
+            <!--                android:text="@string/version_history" />-->
+            <!--        </LinearLayout>-->
+
+            <LinearLayout
+                android:id="@+id/aboutButton"
+                style="@style/ExtrasMenuItem">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/info2" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/about" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/shareButton"
+                style="@style/ExtrasMenuItem">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/share" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/share" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/renderVideoButton"
-            style="@style/ExtrasMenuItem">
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="2dp"
+            android:background="@color/divider"
+            android:orientation="horizontal"></LinearLayout>
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/video"
-                app:tint="@color/highlight" />
+        <LinearLayout
+            android:id="@+id/bookmarkOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/render_video" />
+            <LinearLayout
+                android:id="@+id/bookmark_list_button"
+                style="@style/ExtrasMenuItem">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/bookmarks_folder" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/bookmarks" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/newBookmarkButton"
+                style="@style/ExtrasMenuItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/new_bookmark" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/new_bookmark" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/aspectRatioButton"
-            style="@style/ExtrasMenuItem">
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="2dp"
+            android:background="@color/divider"
+            android:orientation="horizontal"
+            android:visibility="gone">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/aspect_ratio"
-                app:tint="@color/highlight" />
-
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/aspect_ratio" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/resolutionButton"
-            style="@style/ExtrasMenuItem">
+            android:id="@+id/videoOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                app:srcCompat="@drawable/resolution"
-                app:tint="@color/highlight" />
+            <LinearLayout
+                android:id="@+id/new_video_button"
+                style="@style/ExtrasMenuItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <TextView
-                style="@style/ExtrasMenu.Text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/resolution" />
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/video" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/new_video" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/videoWriteKeyframeButton"
+                style="@style/ExtrasMenuItem"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/video_write_keyframe" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/video_write_keyframe" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="2dp"
+            android:background="@color/divider"
+            android:orientation="horizontal"></LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/imageOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/randomizerButton"
+                style="@style/ExtrasMenuItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/random" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/random_fractal" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/aspectRatioButton"
+                style="@style/ExtrasMenuItem">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/aspect_ratio" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/aspect_ratio" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/resolutionButton"
+                style="@style/ExtrasMenuItem">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/resolution" />
+
+                <TextView
+                    style="@style/ExtrasMenu.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/resolution" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
 
-</LinearLayout>
+</com.selfsimilartech.fractaleye.InterceptableLinearLayout>

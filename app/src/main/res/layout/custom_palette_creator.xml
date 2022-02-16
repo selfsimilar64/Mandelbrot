@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/customPaletteLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@null"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/customPaletteName"
+            style="@style/EditTextDark"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:imeOptions="actionDone"
+            android:inputType="text|textCapSentences"
+            android:text="@string/palette_name" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:cardBackgroundColor="@color/transparent"
+            app:cardCornerRadius="0dp">
+
+            <com.woxthebox.draglistview.DragListView
+                android:id="@+id/colorList"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/customColorLayoutSizeWithPadding"
+                android:layout_weight="1"
+                android:fadeScrollbars="false">
+
+            </com.woxthebox.draglistview.DragListView>
+        </androidx.cardview.widget.CardView>
+
+        <ImageButton
+            android:id="@+id/removeColorButton"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:scaleType="fitCenter"
+            android:src="@drawable/param_decrease" />
+
+        <com.selfsimilartech.fractaleye.GradientImageButton
+            android:id="@+id/addColorButton"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:scaleType="fitCenter"
+            android:src="@drawable/param_increase" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        tools:showIn="@layout/fragment_color">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="5dp"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/customColorComponent1"
+                style="@style/TextDark"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="H:" />
+
+            <TextView
+                android:id="@+id/customColorComponent2"
+                style="@style/TextDark"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="S:" />
+
+            <TextView
+                android:id="@+id/customColorComponent3"
+                style="@style/TextDark"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="V:" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="35dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:gravity="center_vertical|end"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/customColorHueEdit"
+                style="@style/EditNumberDark"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:imeOptions="actionNext">
+
+            </EditText>
+
+            <EditText
+                android:id="@+id/customColorSaturationEdit"
+                style="@style/EditNumberDark"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:imeOptions="actionNext">
+
+            </EditText>
+
+            <EditText
+                android:id="@+id/customColorValueEdit"
+                style="@style/EditNumberDark"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:imeOptions="actionDone">
+
+            </EditText>
+
+        </LinearLayout>
+
+        <include
+            android:id="@+id/colorSelector"
+            layout="@layout/color_accent_edit" />
+
+    </LinearLayout>
+
+
+</LinearLayout>

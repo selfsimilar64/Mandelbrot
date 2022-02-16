@@ -8,6 +8,8 @@ import android.view.MotionEvent
 import android.view.View
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 class SatValueSelectorView : View {
 
@@ -20,15 +22,14 @@ class SatValueSelectorView : View {
     }
 
 
-    var onUpdateActiveColor: (newColor: Int) -> Unit = {}
+    lateinit var hueSelector : HueSelector
+
+    private val cornerRadius = 18.dp(context).toFloat()
+    private val rectOffset = 1.35f*cornerRadius*(1f - sqrt(2f)/2f)
+    var onUpdateLinkedColor: (newColor: Int) -> Unit = {}
 
     var hue = 0f
-        set(value) {
-            field = value
-            updateRectShader()
-            updateActiveColor()
-        }
-    var activeColorIndex = 0
+    var linkedColorIndex = 0
 
     private val rectPaint = Paint()
     private val selectorPaint1 = Paint().apply {
@@ -47,10 +48,10 @@ class SatValueSelectorView : View {
         style = Paint.Style.FILL
         color = Color.WHITE
     }
-    private val rect = Rect(
-            0, 0,
-            resources.getDimension(R.dimen.satValueSelectorLayoutWidth).toInt(),
-            resources.getDimension(R.dimen.satValueSelectorLayoutHeight).toInt()
+    private val rect = RectF(
+            0f, 0f,
+            resources.getDimension(R.dimen.satValueSelectorLayoutWidth),
+            resources.getDimension(R.dimen.satValueSelectorLayoutHeight)
     )
     private val selectorPos = Point(0, 0)
     private val selectorRadius = resources.getDimension(R.dimen.satValueSelectorRadius)
@@ -58,41 +59,67 @@ class SatValueSelectorView : View {
 
 
 
-    fun sat() : Float = selectorPos.x / rect.width().toFloat()
-    fun value() : Float = 1f - (selectorPos.y / rect.height().toFloat())
-    fun loadFrom(color: Int, invalidate: Boolean = false, update: Boolean = false) {
+    var sat = 0f
+    var value  = 1f
+    private val color = { Color.HSVToColor(floatArrayOf(hue, sat, value)) }
 
-        Log.d("SATVAL", "loading color: $color")
+    fun setHue(newHue: Float, updateLinkedColor: Boolean = true) {
+        hue = newHue
+        selectorPaint4.color = color()
+        updateRectShader()
+        if (updateLinkedColor) onUpdateLinkedColor(color())
+    }
 
-        selectorPos.set(
-                (color.sat()*rect.width()).toInt(),
-                ((1f - color.value())*rect.height()).toInt()
-        )
+    fun setSat(newSat: Float, updateLinkedColor: Boolean = true) {
+        sat = newSat
+        selectorPaint4.color = color()
+        updateRectShader()
+        updateSelectorPos()
+        if (updateLinkedColor) onUpdateLinkedColor(color())
+    }
+
+    fun setVal(newVal: Float, updateLinkedColor: Boolean = true) {
+        value = newVal
+        selectorPaint4.color = color()
+        updateRectShader()
+        updateSelectorPos()
+        if (updateLinkedColor) onUpdateLinkedColor(color())
+    }
+
+    fun setColor(color: Int, updateLinkedColor: Boolean = true) {
+
+        Log.d("SATVAL", "loading color: (${color.hue()}, ${color.sat()}, ${color.value()})")
+
+        hueSelector.setHue(color.hue(), updateLinkedColor)
+        sat = color.sat()
+        value = color.value()
+
+        updateSelectorPos()
         Log.d("SATVAL", "selectorPos: (${selectorPos.x}, ${selectorPos.y})")
+
         selectorPaint4.color = color
-        if (invalidate) invalidate()
-        if (update) updateActiveColor()
+        if (updateLinkedColor) onUpdateLinkedColor(color)
 
     }
 
-    private fun updateActiveColor() {
 
-        val newColor = Color.HSVToColor(floatArrayOf(hue, sat(), value()))
 
-        selectorPaint4.color = newColor
-        onUpdateActiveColor(newColor)
-
+    private fun updateSelectorPos() {
+        selectorPos.set(
+            ((1f - sat)*rectOffset + sat*(rect.width() - rectOffset)).toInt(),
+            (value*rectOffset + (1f - value)*(rect.height() - rectOffset)).toInt()
+        )
     }
 
     private fun updateRectShader() {
 
         val valueGradient = LinearGradient(
-                0f, 0f, 0f, rect.height().toFloat(),
+                rectOffset, rectOffset, rectOffset, rect.height() - rectOffset,
                 Color.WHITE, Color.BLACK,
                 Shader.TileMode.CLAMP
         )
         val satGradient = LinearGradient(
-                0f, 0f, rect.width().toFloat(), 0f,
+                rectOffset, rectOffset, rect.width() - rectOffset, rectOffset,
                 Color.WHITE, Color.HSVToColor(floatArrayOf(hue, 1f, 1f)),
                 Shader.TileMode.CLAMP
         )
@@ -105,14 +132,15 @@ class SatValueSelectorView : View {
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         // Log.e("SATVAL SELECTOR", "size changed")
         super.onSizeChanged(w, h, oldw, oldh)
-        rect.set(0, 0, w, h)
+        rect.set(0f, 0f, w.toFloat(), h.toFloat())
         updateRectShader()
+        updateSelectorPos()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.apply {
-            drawRect(rect, rectPaint)
+            drawRoundRect(rect, cornerRadius, cornerRadius, rectPaint)
             drawCircle(
                     selectorPos.x.toFloat(),
                     selectorPos.y.toFloat(),
@@ -147,17 +175,19 @@ class SatValueSelectorView : View {
         when (event?.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
 
-                parent.requestDisallowInterceptTouchEvent(true)
-                val clippedX = min(max(event.x, 0f), rect.width().toFloat())
-                val clippedY = min(max(event.y, 0f), rect.height().toFloat())
-                selectorPos.set(clippedX.toInt(), clippedY.toInt())
+                val clippedX = min(max(event.x, rectOffset), rect.width() - rectOffset)
+                val clippedY = min(max(event.y, rectOffset), rect.height() - rectOffset)
+                selectorPos.set(clippedX.roundToInt(), clippedY.roundToInt())
                 Log.d("SATVAL", "selectorPos: (${selectorPos.x}, ${selectorPos.y})")
-                updateActiveColor()
 
-            }
-            MotionEvent.ACTION_CANCEL -> {
+                sat = (clippedX - rectOffset) / (rect.width() - 2f*rectOffset)
+                value = 1f - ((clippedY - rectOffset) / (rect.height() - 2f*rectOffset))
+                Log.d("SATVAL", "color: ($hue, $sat, $value)")
 
-                parent.requestDisallowInterceptTouchEvent(false)
+                val newColor = color()
+                selectorPaint4.color = newColor
+                onUpdateLinkedColor(newColor)
+                invalidate()
 
             }
         }

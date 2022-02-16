@@ -19,12 +19,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.LinearSmoothScroller
 import com.google.android.material.tabs.TabLayout
-import com.selfsimilartech.fractaleye.databinding.TextureFragmentBinding
+import com.selfsimilartech.fractaleye.databinding.FragmentTextureBinding
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.SelectableAdapter
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.*
@@ -34,7 +32,7 @@ const val MAX_RADIUS_EXPONENT = 12.0
 
 class TextureFragment : MenuFragment() {
 
-    lateinit var b : TextureFragmentBinding
+    lateinit var b : FragmentTextureBinding
 
     val resultContract = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         result?.data?.data?.let {
@@ -48,7 +46,7 @@ class TextureFragment : MenuFragment() {
             val minWidth = 180
             if (options.outWidth >= minWidth*2) {  // give resolution options
 
-                val v = layoutInflater.inflate(R.layout.alert_dialog_resolution, null, false)
+                val v = layoutInflater.inflate(R.layout.alert_dialog_texture_image_resolution, null, false)
                 val textureImageResBar = v.findViewById<SeekBar>(R.id.alertResolutionSeekBar)
                 val textureImageResText = v.findViewById<TextView>(R.id.alertResolutionText)
 
@@ -99,7 +97,7 @@ class TextureFragment : MenuFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        b = TextureFragmentBinding.inflate(inflater, container, false)
+        b = FragmentTextureBinding.inflate(inflater, container, false)
         return b.root
         // return inflater.inflate(R.layout.texture_fragment, container, false)
 
@@ -116,7 +114,7 @@ class TextureFragment : MenuFragment() {
 
         val lockListener = { j: Int -> View.OnClickListener {
             val lock = it as android.widget.ToggleButton
-            val param = f.texture.activeParam
+            val param = f.texture.params.active
             if (j == 0) param.uLocked = lock.isChecked
             else if (j == 1 && param is ComplexParam) {
                 param.vLocked = lock.isChecked
@@ -127,7 +125,7 @@ class TextureFragment : MenuFragment() {
             link.foregroundTintList = ColorStateList.valueOf(resources.getColor(
                     if (link.isChecked) R.color.white else R.color.colorDarkSelected, null
             ))
-            val param = f.texture.activeParam
+            val param = f.texture.params.active
             if (param is ComplexParam) param.linked = link.isChecked
             if (link.isChecked) {
                 loadActiveParam()
@@ -137,7 +135,7 @@ class TextureFragment : MenuFragment() {
         }
 
         val resetListener = View.OnClickListener {
-            f.texture.activeParam.reset()
+            f.texture.params.active.reset()
             loadActiveParam()
             fsv.r.renderToTex = true
             fsv.requestRender()
@@ -151,7 +149,7 @@ class TextureFragment : MenuFragment() {
         )
 
 
-        val previewListWidth = Resolution.SCREEN.w - 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) - resources.getDimension(R.dimen.navButtonSize)
+        val previewListWidth = Resolution.SCREEN.w - 2*resources.getDimension(R.dimen.categoryPagerMarginHorizontal) - resources.getDimension(R.dimen.navButtonHeight)
         val previewGridWidth = resources.getDimension(R.dimen.textureShapePreviewSize) + 2*resources.getDimension(R.dimen.previewGridPaddingHorizontal)
         //Log.e("COLOR FRAGMENT", "texturePreviewListWidth: $previewListWidth")
         //Log.e("COLOR FRAGMENT", "texturePreviewGridWidth: $previewGridWidth")
@@ -170,7 +168,7 @@ class TextureFragment : MenuFragment() {
 
             uValue2.setOnEditorActionListener(editListener(null) { w: TextView ->
 
-                val param = f.texture.activeParam
+                val param = f.texture.params.active
                 val result = w.text.toString().formatToDouble()
                 if (result != null) {
                     param.u = if (sc.restrictParams) param.clamp(result) else result
@@ -182,26 +180,26 @@ class TextureFragment : MenuFragment() {
             realParamResetButton.setOnClickListener(resetListener)
             realParamSensitivity.sensitivityValue.setOnEditorActionListener(editListener(null) { w: TextView ->
                 
-                val param = f.texture.activeParam
+                val param = f.texture.params.active
                 val result = w.text.toString().formatToDouble()
                 if (result != null) param.sensitivity = result
                 w.text = "%d".format(param.sensitivity.toInt())
             
             })
             paramAdjustLeftButton.setOnClickListener(ParamChangeOnClickListener(fsv,
-                    transformFractal = { f.texture.activeParam.apply { u -= sensitivityFactor/RealParam.ADJUST_DISCRETE } },
+                    transformFractal = { f.texture.params.active.apply { u -= sensitivityFactor/RealParam.ADJUST_DISCRETE } },
                     updateLayout = { updateParamText() }
             ))
             paramAdjustLeftButton.setOnLongClickListener(ParamChangeOnLongClickListener(fsv,
-                    transformFractal = { f.texture.activeParam.apply { u -= sensitivityFactor/RealParam.ADJUST_CONTINUOUS } },
+                    transformFractal = { f.texture.params.active.apply { u -= sensitivityFactor/RealParam.ADJUST_CONTINUOUS } },
                     updateLayout = { updateParamText() }
             ))
             paramAdjustRightButton.setOnClickListener(ParamChangeOnClickListener(fsv,
-                    transformFractal = { f.texture.activeParam.apply { u += sensitivityFactor/RealParam.ADJUST_DISCRETE } },
+                    transformFractal = { f.texture.params.active.apply { u += sensitivityFactor/RealParam.ADJUST_DISCRETE } },
                     updateLayout = { updateParamText() }
             ))
             paramAdjustRightButton.setOnLongClickListener(ParamChangeOnLongClickListener(fsv,
-                    transformFractal = { f.texture.activeParam.apply { u += sensitivityFactor/RealParam.ADJUST_CONTINUOUS } },
+                    transformFractal = { f.texture.params.active.apply { u += sensitivityFactor/RealParam.ADJUST_CONTINUOUS } },
                     updateLayout = { updateParamText() }
             ))
 
@@ -210,7 +208,7 @@ class TextureFragment : MenuFragment() {
 
             uValue.setOnEditorActionListener(editListener(vValue) { w: TextView ->
                 val result = "${w.text}".formatToDouble()
-                val param = f.texture.activeParam
+                val param = f.texture.params.active
                 if (result != null) {
                     param.u = result
                     fsv.r.renderToTex = true
@@ -219,7 +217,7 @@ class TextureFragment : MenuFragment() {
             })
             vValue.setOnEditorActionListener(editListener(null) { w: TextView ->
                 val result = "${w.text}".formatToDouble()
-                val param = f.texture.activeParam
+                val param = f.texture.params.active
                 if (param is ComplexParam) {
                     if (result != null) {
                         param.v = result
@@ -233,7 +231,7 @@ class TextureFragment : MenuFragment() {
             complexParamResetButton.setOnClickListener(resetListener)
             complexParamSensitivity.sensitivityValue.setOnEditorActionListener(editListener(null) { w: TextView ->
 
-                val param = f.texture.activeParam
+                val param = f.texture.params.active
                 val result = w.text.toString().formatToDouble()
                 if (result != null) param.sensitivity = result
                 w.text = "%d".format(param.sensitivity.toInt())
@@ -249,8 +247,8 @@ class TextureFragment : MenuFragment() {
         val onDeleteCustomTexture = { adapter: ListAdapter<Texture>, item: ListItem<Texture> -> }
         val onDuplicateTexture = { adapter: ListAdapter<Texture>, item: ListItem<Texture> -> }
 
-        val emptyFavorite = TextureListItem(Texture.emptyFavorite, ListHeader.FAVORITE, R.layout.list_item_linear_empty_favorite)
-        val emptyCustom = TextureListItem(Texture.emptyCustom, ListHeader.CUSTOM, R.layout.list_item_linear_empty_custom)
+        val emptyFavorite = ListItem<Texture>(Texture.emptyFavorite, ListItemType.FAVORITE, R.layout.list_item_linear_empty_favorite)
+        val emptyCustom = ListItem<Texture>(Texture.emptyCustom, ListItemType.CUSTOM, R.layout.list_item_linear_empty_custom)
         val listItems = getTextureListItems()
 
 
@@ -263,11 +261,11 @@ class TextureFragment : MenuFragment() {
                 emptyFavorite,
                 emptyCustom
         )
-        b.textureListLayout.list.apply {
+        b.textureListLayout.defaultList.apply {
             adapter = textureListAdapter
             setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
                 val firstVisiblePos = listLayoutManager.findFirstCompletelyVisibleItemPosition()
-                highlightListHeader(textureListAdapter, when {
+                highlightListItemType(textureListAdapter, when {
                     firstVisiblePos < textureListAdapter.getGlobalPositionOf(textureListAdapter.headerItems[1]) -> 0
                     else -> 1
                 })
@@ -287,8 +285,6 @@ class TextureFragment : MenuFragment() {
 
                 val firstVisiblePos = listLayoutManager.findFirstCompletelyVisibleItemPosition()
                 val lastVisiblePos = listLayoutManager.findLastCompletelyVisibleItemPosition()
-                if (position + 1 > lastVisiblePos) b.textureListLayout.list.smoothSnapToPosition(position + 1, LinearSmoothScroller.SNAP_TO_END)
-                else if (position - 1 < firstVisiblePos) b.textureListLayout.list.smoothSnapToPosition(position - 1)
 
                 val prevActivatedPosition = textureListAdapter.activatedPos
                 if (position != textureListAdapter.activatedPos) textureListAdapter.setActivatedPosition(position)
@@ -312,7 +308,6 @@ class TextureFragment : MenuFragment() {
                         if (newTexture.hasRawOutput != f.texture.hasRawOutput) fsv.r.loadTextureImage = true
                         f.texture = newTexture
                         act.updateCrashKeys()
-                        act.onTextureChanged()
 
                         if (sc.autofitColorRange) fsv.r.calcNewTextureSpan = true
 
@@ -427,13 +422,12 @@ class TextureFragment : MenuFragment() {
                         if (result3.isInfinite() || result3.isNaN()) {
                             act.showMessage(resources.getString(R.string.msg_num_out_range))
                         } else {
-                            f.radius = result3
                             fsv.r.renderToTex = true
                         }
                     } else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
-                    val radiusStrings = "%e".format(Locale.US, f.radius).split("e")
+                    val radiusStrings = "%e".format(Locale.US, f.texture.params.radius.u).split("e")
                     w.text = "%.2f".format(radiusStrings[0].toFloat())
                     b.radiusExponentValue.setText("%d".format(radiusStrings[1].toInt()))
                 })
@@ -446,13 +440,12 @@ class TextureFragment : MenuFragment() {
                         if (result3.isInfinite() || result3.isNaN()) {
                             act.showMessage(resources.getString(R.string.msg_num_out_range))
                         } else {
-                            f.radius = result3
                             fsv.r.renderToTex = true
                         }
                     } else {
                         act.showMessage(resources.getString(R.string.msg_invalid_format))
                     }
-                    val radiusStrings = "%e".format(Locale.US, f.radius).split("e")
+                    val radiusStrings = "%e".format(Locale.US, f.texture.params.radius.u).split("e")
                     b.radiusSignificandValue.setText("%.2f".format(radiusStrings[0].toFloat()))
                     w.text = "%d".format(radiusStrings[1].toInt())
                 })
@@ -474,7 +467,7 @@ class TextureFragment : MenuFragment() {
 //                    if (result2.isInfinite() || result2.isNaN()) {
 //                        act.showMessage(resources.getString(R.string.msg_num_out_range))
 //                    } else {
-//                        f.radius = result2
+//                        f.texture.params.radius.u = result2
 //                        if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
 //                            fsv.r.renderToTex = true
 //                            fsv.requestRender()
@@ -483,7 +476,7 @@ class TextureFragment : MenuFragment() {
 //                } else {
 //                    act.showMessage(resources.getString(R.string.msg_invalid_format))
 //                }
-//                val bailoutStrings = "%e".format(Locale.US, f.radius).split("e")
+//                val bailoutStrings = "%e".format(Locale.US, f.texture.params.radius.u).split("e")
                 //bailoutSignificandEdit.setText("%.5f".format(bailoutStrings[0].toFloat()))
 
                 if (fromUser) {
@@ -498,7 +491,6 @@ class TextureFragment : MenuFragment() {
                     val radiusStrings = "%e".format(Locale.US, newRadius).split("e")
                     b.radiusSignificandValue.setText("%.2f".format(newSignificand))
                     b.radiusExponentValue.setText("%d".format(newExponent))
-                    f.radius = newRadius.toFloat()
                     if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
                         fsv.r.renderToTex = true
                         fsv.requestRender()
@@ -534,7 +526,7 @@ class TextureFragment : MenuFragment() {
 //                    if (result2.isInfinite() || result2.isNaN()) {
 //                        act.showMessage(resources.getString(R.string.msg_num_out_range))
 //                    } else {
-//                        f.radius = result2
+//                        f.texture.params.radius.u = result2
 //                        if (fsv.r.renderProfile == RenderProfile.CONTINUOUS) {
 //                            fsv.r.renderToTex = true
 //                            fsv.requestRender()
@@ -543,7 +535,7 @@ class TextureFragment : MenuFragment() {
 //                } else {
 //                    act.showMessage(resources.getString(R.string.msg_invalid_format))
 //                }
-//                val bailoutStrings = "%e".format(Locale.US, f.radius).split("e")
+//                val bailoutStrings = "%e".format(Locale.US, f.texture.params.radius.u).split("e")
 //                //bailoutSignificandEdit.setText("%.5f".format(bailoutStrings[0].toFloat()))
 //                radiusExponentEdit.setText("%d".format(bailoutStrings[1].toInt()))
 //
@@ -569,7 +561,7 @@ class TextureFragment : MenuFragment() {
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabSelected(tab: TabLayout.Tab) {
 
-                f.textureMode = TextureMode.values()[tab.position]
+                f.textureRegion = TextureRegion.values()[tab.position]
                 fsv.requestRender()
 
             }
@@ -590,17 +582,6 @@ class TextureFragment : MenuFragment() {
 
         // CLICK LISTENERS
 
-        b.textureListLayout.apply {
-            listFavoritesButton.setOnClickListener {
-                list.smoothSnapToPosition(textureListAdapter.getGlobalPositionOf(textureListAdapter.headerItems[0]))
-            }
-//            listCustomButton.setOnClickListener {
-//                list.smoothSnapToPosition(textureListAdapter.getGlobalPositionOf(textureListAdapter.headerItems[1]))
-//            }
-            listDefaultButton.setOnClickListener {
-                list.smoothSnapToPosition(textureListAdapter.getGlobalPositionOf(textureListAdapter.headerItems[1]))
-            }
-        }
 
         b.textureListButton.setOnClickListener {
 
@@ -609,23 +590,9 @@ class TextureFragment : MenuFragment() {
             // save state on texture thumb render
             act.bookmarkAsPreviousFractal()
 
-            with(b.textureListLayout.list.adapter as ListAdapter<Texture>) {
+            with(b.textureListLayout.defaultList.adapter as ListAdapter<Texture>) {
                 removeRange(0, itemCount)
                 addItems(0, getTextureListItems())
-                getDefaultItems().apply {
-                    forEach {
-                        if ((it as TextureListItem).disabled) {
-                            moveItem(getGlobalPositionOf(it), getGlobalPositionOf(last()))
-                        }
-                    }
-                }
-                getFavoriteItems().apply {
-                    forEach {
-                        if ((it as TextureListItem).disabled) {
-                            moveItem(getGlobalPositionOf(it), getGlobalPositionOf(last()))
-                        }
-                    }
-                }
                 if (selectedPositions.isEmpty()) {
                     getFirstPositionOf(f.texture).let {
                         setActivatedPosition(it)
@@ -644,17 +611,16 @@ class TextureFragment : MenuFragment() {
 
             setCurrentLayout(b.textureListLayout.root)
             b.textureNavBar.show()
-            act.uiSetHeight(UiLayoutHeight.TALL)
 
             // texture thumbnail render
             handler.postDelayed({
 
-                if (sc.textureListViewType == ListLayoutType.GRID && !fsv.r.textureThumbsRendered) {
+                if (sc.textureListViewType == ListLayoutType.GRID && !fsv.r.validTextureThumbs) {
 
                     act.showThumbnailRenderDialog()
 
                     fsv.r.renderProfile = RenderProfile.TEXTURE_THUMB
-                    fsv.r.renderThumbnails = true
+                    fsv.r.renderAllThumbnails = true
                     fsv.requestRender()
 
                 }
@@ -695,7 +661,6 @@ class TextureFragment : MenuFragment() {
                 showCategoryButtons()
                 showMenuToggleButton()
                 showHeaderButtons()
-                uiSetHeight(UiLayoutHeight.SHORT)
             }
 
             b.textureSubMenuButtons.show()
@@ -714,14 +679,13 @@ class TextureFragment : MenuFragment() {
                 if (button.showGradient && !sc.goldEnabled) act.showUpgradeScreen()
                 else {
                     // act.showTouchIcon()
-                    fsv.r.reaction = Reaction.TEXTURE
+                    sc.editMode = EditMode.TEXTURE
                     val param = f.texture.params.list.getOrNull(paramIndex)
                     if (param != null) {
-                        f.texture.activeParam = param
-                        setCurrentLayout(if (f.texture.activeParam is ComplexParam) b.complexTextureParam.root else b.realTextureParam.root)
+                        f.texture.params.active = param
+                        setCurrentLayout(if (f.texture.params.active is ComplexParam) b.complexTextureParam.root else b.realTextureParam.root)
                         if (!button.showGradient) setCurrentButton(button)
                         loadActiveParam()
-                        act.uiSetHeight(UiLayoutHeight.SHORT)
                     }
                 }
             }
@@ -739,8 +703,8 @@ class TextureFragment : MenuFragment() {
 
 //        binsButton.setOnClickListener {
 //
-//            fsv.r.reaction = Reaction.TEXTURE
-//            f.texture.activeParam = f.texture.bins
+//            sc.editMode = EditMode.TEXTURE
+//            f.texture.params.active = f.texture.bins
 //            showLayout(realTextureParam)
 //            //shapeResetButton.show()
 //            alphaButton(binsButton)
@@ -785,43 +749,29 @@ class TextureFragment : MenuFragment() {
         ).forEach { it.showGradient = false }
     }
 
-    private fun getTextureListItems() : MutableList<ListItem<Texture>> {
+    private fun getTextureListItems() : ArrayList<ListItem<Texture>> {
 
-        val listItems = mutableListOf<ListItem<Texture>>()
-        val emptyFavorite = TextureListItem(Texture.emptyFavorite, ListHeader.FAVORITE, R.layout.list_item_linear_empty_favorite)
-        val emptyCustom = TextureListItem(Texture.emptyCustom, ListHeader.CUSTOM, R.layout.list_item_linear_empty_custom)
+        val listItems = arrayListOf<ListItem<Texture>>()
+        val emptyFavorite = ListItem(Texture.emptyFavorite, ListItemType.FAVORITE, R.layout.list_item_linear_empty_favorite)
+        val emptyCustom = ListItem(Texture.emptyCustom, ListItemType.CUSTOM, R.layout.list_item_linear_empty_custom)
 
         f.shape.compatTextures.forEach { listItems.add(
 
-                TextureListItem(
-                        it, ListHeader.DEFAULT,
+                ListItem(
+                        it, ListItemType.DEFAULT,
                         R.layout.other_list_item
                         // disabled = !f.shape.compatTextures.contains(it)
-                ).apply {
-
-                    if (it.isFavorite) {
-                        val favorite = TextureListItem(
-                                it, ListHeader.FAVORITE,
-                                R.layout.other_list_item,
-                                compliment = this,
-                                // disabled = !f.shape.compatTextures.contains(it)
-                        )
-                        compliment = favorite
-                        listItems.add(favorite)
-                    }
-
-                }
+                )
 
         )}
         if (f.shape.compatTextures.none { it.isFavorite }) listItems.add(emptyFavorite)
         // if (Shape.custom.isEmpty()) listItems.add(emptyCustom)
-        listItems.sortBy { it.header.type }
 
         return listItems
 
     }
 
-    fun highlightListHeader(adapter: ListAdapter<Texture>, index: Int) {
+    fun highlightListItemType(adapter: ListAdapter<Texture>, index: Int) {
         adapter.apply {
             listOf(
                 b.textureListLayout.listFavoritesButton,
@@ -874,7 +824,7 @@ class TextureFragment : MenuFragment() {
 
     fun loadRadius(updateProgress: Boolean = true) {
 
-        val radiusStrings = "%e".format(Locale.US, f.radius).split("e")
+        val radiusStrings = "%e".format(Locale.US, f.texture.params.radius.u).split("e")
         val significand = radiusStrings.getOrNull(0)?.toFloat() ?: 1f
         val exponent = radiusStrings.getOrNull(1)?.toInt() ?: 2
         b.radiusSignificandValue.setText("%.2f".format(significand))
@@ -888,7 +838,7 @@ class TextureFragment : MenuFragment() {
     }
 
     fun updateParamText() {
-        val param = f.texture.activeParam
+        val param = f.texture.params.active
         if (param is ComplexParam) {
             b.complexTextureParam.apply {
                 uValue.setText(param.u.format(COMPLEX_PARAM_DIGITS))
@@ -903,7 +853,7 @@ class TextureFragment : MenuFragment() {
     }
 
     fun loadActiveParam() {
-        val param = f.texture.activeParam
+        val param = f.texture.params.active
         if (param is ComplexParam) {
             b.complexTextureParam.apply {
                 uValue.setText(param.u.format(COMPLEX_PARAM_DIGITS))

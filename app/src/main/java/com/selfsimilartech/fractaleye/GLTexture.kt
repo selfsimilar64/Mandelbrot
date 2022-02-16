@@ -12,7 +12,7 @@ class GLTexture (
         private val interpolation   : Int,
         private val internalFormat  : Int,
         val index                   : Int,
-        var chunks                  : Int = 8
+        val name                    : String
 ) {
 
     val id : Int
@@ -25,6 +25,7 @@ class GLTexture (
     var floatBuffer : FloatBuffer?
 
     var pixelsPerChunk = 0
+    var internalFormatStr = ""
 
     init {
 
@@ -47,7 +48,7 @@ class GLTexture (
             else -> 0
         }
         bytesPerTexel = numComponents*bytesPerComponent
-        val internalFormatStr = when(internalFormat) {
+        internalFormatStr = when(internalFormat) {
             GL_RGBA8 -> "GL_RGBA8"
             GL_R16UI -> "GL_R16UI"
             GL_R32UI -> "GL_R32UI"
@@ -55,7 +56,6 @@ class GLTexture (
             GL_RG32UI -> "GL_RG32UI"
             else -> "not what u wanted"
         }
-        Log.d("RENDERER", "id: $id, res: (${res.w}, ${res.h}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.w*res.h*bytesPerTexel}, chunks: $chunks")
 
         // bind and set texture parameters
         glActiveTexture(GL_TEXTURE0 + index)
@@ -130,6 +130,10 @@ class GLTexture (
         byteBuffer = null
         floatBuffer = null
         // System.gc()
+    }
+
+    override fun toString(): String {
+        return "$name -- id: $id, res: (${res.w}, ${res.h}), internalFormat: $internalFormatStr, index: $index, bytesPerTexel: $bytesPerTexel, totalBytes: ${res.w*res.h*bytesPerTexel}"
     }
 
 }

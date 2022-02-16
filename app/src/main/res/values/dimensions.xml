@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="menuButtonWidth">60dp</dimen>
-    <dimen name="menuButtonHeight">50dp</dimen>
+    <dimen name="paramMenuCornerRadius">26dp</dimen>
+    <dimen name="editModeButtonCornerRadius">45dp</dimen>
+    <dimen name="editModeLayoutWidth">290dp</dimen> <!-- 4 times editModeButtonWidth -->
+    <dimen name="editModeButtonSize">58dp</dimen>
+    <dimen name="editModeButtonWidth">74dp</dimen>
+    <dimen name="editModeButtonHeight">@dimen/floatingButtonSize</dimen>
+    <dimen name="menuHeight">50dp</dimen>
+
+    <dimen name="floatingButtonSize">52dp</dimen>
+    <dimen name="floatingButtonRadius">26dp</dimen>
+
+    <dimen name="editButtonSize">46dp</dimen>
+    <dimen name="listItemCornerRadius">14dp</dimen>
+    <dimen name="listItemPadding">6dp</dimen>
+    <dimen name="menuItemMarginInner">4dp</dimen>
+    <dimen name="menuItemMarginOuter">8dp</dimen>
+
+    <dimen name="equationLayoutHeightMin">@dimen/floatingButtonSize</dimen>
+    <dimen name="equationLayoutHeightMax">128dp</dimen>
+
+    <dimen name="colorEditorWidth">180dp</dimen>
+    <dimen name="colorEditorHeight">20dp</dimen>
+
+    <dimen name="menuButtonWidth">54dp</dimen>
+    <dimen name="menuButtonHeight">@dimen/floatingButtonSize</dimen>
     <dimen name="categoryButtonHeight">50dp</dimen>
     <dimen name="uiComponentMargin">3dp</dimen>
 
@@ -31,17 +54,18 @@
     <dimen name="recyclerViewDividerSize">1dp</dimen>
 
     <dimen name="shapeKeyHeaderMargin">2dp</dimen>
+    <dimen name="shapeKeyRadius">6dp</dimen>
 
     <dimen name="proIndicatorThickness">15dp</dimen>
     <dimen name="upgradeButtonHeight">36dp</dimen>
     <dimen name="upgradeButtonCornerRadius">18dp</dimen>
 
     <dimen name="paletteListItemHeightLinear">48dp</dimen>
-    <dimen name="paletteListItemHeightGrid">145dp</dimen>
+    <dimen name="paletteListItemHeightGrid">135dp</dimen>
 
 
     <dimen name="previewHeight">145dp</dimen>
-    <dimen name="doneButtonSize">@dimen/navButtonSize</dimen>
+    <dimen name="doneButtonSize">@dimen/navButtonHeight</dimen>
     <dimen name="toastMargin">15dp</dimen>
     <dimen name="fragmentLayoutMargin">3dp</dimen>
     <dimen name="fragmentItemCornerRadius">11dp</dimen>
@@ -54,10 +78,10 @@
     <dimen name="previewGridPaddingHorizontal">5dp</dimen>
     <dimen name="previewGridPaddingVertical">7dp</dimen>
     <dimen name="textureShapePreviewSize">85dp</dimen>
-    <dimen name="colorPreviewSize">70dp</dimen>
+    <dimen name="colorPreviewSize">74dp</dimen>
     <dimen name="colorPreviewGradientCornerRadius">10dp</dimen>
 
-    <dimen name="navButtonSize">@dimen/menuButtonHeight</dimen>
+    <dimen name="navButtonHeight">40dp</dimen>
     <dimen name="colorPreviewListMarginEnd">7dp</dimen>
     <dimen name="categoryPagerMarginHorizontal">7dp</dimen>
     <dimen name="listButtonMarginHorizontal">10dp</dimen>

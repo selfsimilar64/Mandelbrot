@@ -38,8 +38,8 @@ class ParamChangeOnClickListener(
                 }
             }
             fsv.requestRender()
-            act.runOnUiThread { updateLayout() }
         }
+        updateLayout()
     }
 
 }

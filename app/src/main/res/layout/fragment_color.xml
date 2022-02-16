@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/colorLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/miniColorPickerLayout"
+        style="@style/UiComponentMedium"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/fragmentItemHeight"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/accentColorBg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="0dp"
+            app:contentPadding="1dp">
+
+            <View
+                android:id="@+id/accentColor"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@color/menuDark7" />
+        </androidx.cardview.widget.CardView>
+
+        <include
+            android:id="@+id/accentColorPicker"
+            layout="@layout/color_accent_edit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="5dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/densityLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imageView9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                app:srcCompat="@drawable/density" />
+
+            <com.selfsimilartech.fractaleye.SeekBar2
+                android:id="@+id/densitySeekBar"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                android:max="500"
+                android:progress="0" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/densityValue"
+                style="@style/EditNumberDark"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="1.05" />
+        </LinearLayout>
+
+        <!--        <EditText-->
+        <!--            android:id="@+id/densityEdit"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:imeOptions="actionDone"-->
+        <!--            android:selectAllOnFocus="true" />-->
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/frequencyLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imageView10"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/frequency2" />
+
+            <com.selfsimilartech.fractaleye.SeekBar2
+                android:id="@+id/frequencySeekBar"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                android:max="500"
+                android:progress="0" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/frequencyValue"
+                style="@style/EditNumberDark"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="1.05" />
+        </LinearLayout>
+
+        <!--        <EditText-->
+        <!--            android:id="@+id/densityEdit"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:imeOptions="actionDone"-->
+        <!--            android:selectAllOnFocus="true" />-->
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/phaseLayout"
+        style="@style/UiComponentShort"
+        android:layout_width="match_parent"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imageView11"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                app:srcCompat="@drawable/phase" />
+
+            <com.selfsimilartech.fractaleye.SeekBar2
+                android:id="@+id/phaseSeekBar"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                android:max="500"
+                android:progress="0" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/UiComponentInnerShort"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="0dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/phaseValue"
+                style="@style/EditNumberDark"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="1.05" />
+        </LinearLayout>
+
+        <!--        <EditText-->
+        <!--            android:id="@+id/densityEdit"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:imeOptions="actionDone"-->
+        <!--            android:selectAllOnFocus="true" />-->
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:background="@color/menuDarkSecondary"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/customPaletteLayout"
+            style="@style/UiComponent"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/uiComponentHeightTall"
+            android:background="@null"
+            android:orientation="vertical"
+            android:padding="0dp"
+            android:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@color/menuDarkPrimary"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/customPaletteName"
+                    style="@style/EditTextDark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:imeOptions="actionDone"
+                    android:inputType="text|textCapSentences"
+                    android:text="@string/palette_name" />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/transparent"
+                    app:cardCornerRadius="0dp">
+
+                    <com.woxthebox.draglistview.DragListView
+                        android:id="@+id/colorList"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/customColorLayoutSizeWithPadding"
+                        android:layout_weight="1"
+                        android:fadeScrollbars="false">
+
+                    </com.woxthebox.draglistview.DragListView>
+                </androidx.cardview.widget.CardView>
+
+                <ImageButton
+                    android:id="@+id/removeColorButton"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/color_remove" />
+
+                <com.selfsimilartech.fractaleye.GradientImageButton
+                    android:id="@+id/addColorButton"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/color_add" />
+
+            </LinearLayout>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/customPaletteGradient"
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:visibility="gone"
+                app:cardCornerRadius="13dp">
+
+            </androidx.cardview.widget.CardView>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="8dp"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                tools:showIn="@layout/color_fragment">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="5dp"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/customColorComponent1"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="H:" />
+
+                    <TextView
+                        android:id="@+id/customColorComponent2"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="S:" />
+
+                    <TextView
+                        android:id="@+id/customColorComponent3"
+                        style="@style/TextDark"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="V:" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="35dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:gravity="center_vertical|end"
+                    android:orientation="vertical">
+
+                    <EditText
+                        android:id="@+id/customColorHueEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="match_parent"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext">
+
+                    </EditText>
+
+                    <EditText
+                        android:id="@+id/customColorSaturationEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="match_parent"
+                        android:layout_weight="1"
+                        android:imeOptions="actionNext">
+
+                    </EditText>
+
+                    <EditText
+                        android:id="@+id/customColorValueEdit"
+                        style="@style/EditNumberDark"
+                        android:layout_width="match_parent"
+                        android:layout_weight="1"
+                        android:imeOptions="actionDone">
+
+                    </EditText>
+
+                </LinearLayout>
+
+                <include
+                    android:id="@+id/colorSelector"
+                    layout="@layout/color_accent_edit" />
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+        <include
+            android:id="@+id/paletteListLayout"
+            layout="@layout/list_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/colorSubMenuButtons"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/menuButtonHeight"
+            android:background="@color/menuDarkSecondary"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <HorizontalScrollView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.selfsimilartech.fractaleye.AlphaToggleButton
+                        android:id="@+id/colorAutofitButton"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/autofit"
+                        android:text="@string/autofit" />
+
+                    <Button
+                        android:id="@+id/densityButton"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/density"
+                        android:text="@string/density" />
+
+                    <Button
+                        android:id="@+id/phaseButton"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/phase"
+                        android:text="@string/phase" />
+
+                    <Button
+                        android:id="@+id/frequencyButton"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/frequency2"
+                        android:text="@string/frequency" />
+
+                    <Button
+                        android:id="@+id/fill_color_button"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/accent_color"
+                        android:drawableTint="@null"
+                        android:text="@string/accent1" />
+
+                    <Button
+                        android:id="@+id/outline_color_button"
+                        style="@style/MenuButton"
+                        android:layout_height="wrap_content"
+                        android:drawableTop="@drawable/accent_color"
+                        android:drawableTint="@null"
+                        android:text="@string/accent2" />
+
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <View
+                android:id="@+id/divider35"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_margin="3dp"
+                android:background="@color/menuDark8" />
+
+            <LinearLayout
+                android:id="@+id/paletteListButton"
+                android:layout_width="75dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/paletteGradient"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    app:cardCornerRadius="18dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/colorNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/categoryButtonHeight"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <com.selfsimilartech.fractaleye.GradientImageButton
+            android:id="@+id/customPaletteNewButton"
+            style="@style/NewNavButton"
+            android:src="@drawable/add" />
+
+        <ImageButton
+            android:id="@+id/paletteListDoneButton"
+            style="@style/NewNavButton"
+            android:src="@drawable/done" />
+
+        <ImageButton
+            android:id="@+id/customPaletteCancelButton"
+            style="@style/NewNavButton"
+            android:src="@drawable/cancel" />
+
+        <ImageButton
+            android:id="@+id/customPaletteRandomizeButton"
+            style="@style/NewNavButton"
+            android:src="@drawable/random" />
+
+        <ImageButton
+            android:id="@+id/customPaletteDoneButton"
+            style="@style/NewNavButton"
+            android:src="@drawable/done" />
+
+    </LinearLayout>
+
+</LinearLayout>

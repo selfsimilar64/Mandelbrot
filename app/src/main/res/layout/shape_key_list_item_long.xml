@@ -2,13 +2,12 @@
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/shapeKeyImage"
-    android:layout_width="60dp"
-    android:layout_height="35dp"
+    style="@style/KeyboardButtonRect"
     android:layout_marginStart="1dp"
     android:layout_marginTop="1dp"
     android:layout_marginEnd="2dp"
     android:layout_marginBottom="2dp"
     android:background="@drawable/shape_key"
-    android:padding="12dp"
+    android:padding="20dp"
     android:scaleType="centerCrop"
-    app:srcCompat="@drawable/key_arccsc" />
+    app:srcCompat="@drawable/key_sin" />

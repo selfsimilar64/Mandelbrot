@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/positionParamMenu"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="horizontal">
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/zoomButton"
+        style="@style/MenuButton"
+        android:src="@drawable/zoom" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/rotateButton"
+        style="@style/MenuButton"
+        android:src="@drawable/rotate_left" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/shiftHorizontalButton"
+        style="@style/MenuButton"
+        android:src="@drawable/shift_horizontal" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/shiftVerticalButton"
+        style="@style/MenuButton"
+        android:src="@drawable/shift_vertical" />
+
+</LinearLayout>

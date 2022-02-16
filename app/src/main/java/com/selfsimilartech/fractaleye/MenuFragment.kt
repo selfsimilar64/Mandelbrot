@@ -56,17 +56,10 @@ abstract class MenuFragment : Fragment() {
                 editText.isSelected = false
                 fsv.requestRender()
             }
-            else -> {
-                Log.d("EQUATION FRAGMENT", "some other action")
-            }
+            else -> {}
         }
 
         editText.clearFocus()
-        act.apply {
-            uiSetHeight()
-            updateFractalLayout()
-            updateSystemBarsVisibility()
-        }
         true
 
     }}
@@ -76,6 +69,8 @@ abstract class MenuFragment : Fragment() {
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        // retainInstance = true
         act = requireActivity() as MainActivity
         fsv = act.fsv
         super.onViewCreated(view, savedInstanceState)
@@ -90,9 +85,14 @@ abstract class MenuFragment : Fragment() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        onCompleteListener.onComplete()
+    }
+
     override fun onResume() {
         super.onResume()
-        onCompleteListener.onComplete()
+        Log.e("MENU", "$this -- fragment resumed")
     }
 
 
@@ -110,7 +110,6 @@ abstract class MenuFragment : Fragment() {
 
     fun subMenuButtonListener(layout: View, button: Button, uiLayoutHeight: UiLayoutHeight = UiLayoutHeight.SHORT) : View.OnClickListener {
         return View.OnClickListener {
-            act.uiSetHeight(uiLayoutHeight)
             setCurrentLayout(layout)
             setCurrentButton(button)
         }

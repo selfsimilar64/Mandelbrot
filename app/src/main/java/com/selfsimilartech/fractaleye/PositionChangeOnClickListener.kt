@@ -1,5 +1,7 @@
 package com.selfsimilartech.fractaleye
 
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 
 class PositionChangeOnClickListener(
@@ -11,37 +13,41 @@ class PositionChangeOnClickListener(
 
 ) : View.OnClickListener {
 
-    override fun onClick(v: View) {
-        fsv.r.apply {
+    val handler = Handler(Looper.getMainLooper())
 
-            if (isRendering) interruptRender = true
+    override fun onClick(v: View) {
+
+            if (fsv.r.isRendering) fsv.r.interruptRender = true
             transformFractal()
 
-            if (sc.continuousPosRender) {
-                renderToTex = true
-                renderProfile = RenderProfile.CONTINUOUS
-                renderFinishedListener = object : RenderFinishedListener {
+            if (SettingsConfig.continuousPosRender) {
+
+                fsv.r.renderProfile = RenderProfile.CONTINUOUS
+                fsv.r.renderToTex = true
+                fsv.r.renderFinishedListener = object : RenderFinishedListener {
                     override fun onRenderFinished(buffer: ByteArray?) {
-                        renderFinishedListener = null
-                        renderProfile = RenderProfile.DISCRETE
-                        renderToTex = true
+                        fsv.r.renderFinishedListener = null
+                        fsv.r.renderProfile = RenderProfile.DISCRETE
+                        fsv.r.renderToTex = true
                         fsv.requestRender()
                     }
                 }
+                fsv.requestRender()
+
             } else {
                 transformQuad()
-                hasZoomed = true
-                renderFinishedListener = object : RenderFinishedListener {
+                fsv.r.hasZoomed = true
+                fsv.r.renderFinishedListener = object : RenderFinishedListener {
                     override fun onRenderFinished(buffer: ByteArray?) {
-                        renderFinishedListener = null
-                        renderToTex = true
+                        fsv.r.renderFinishedListener = null
+                        fsv.r.renderToTex = true
                         fsv.requestRender()
                     }
                 }
+                fsv.requestRender()
             }
-            fsv.requestRender()
-            act.runOnUiThread { updateLayout() }
-        }
+
+        updateLayout()
     }
 
 }

@@ -15,7 +15,7 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.*
-import com.selfsimilartech.fractaleye.databinding.ColorFragmentBinding
+import com.selfsimilartech.fractaleye.databinding.FragmentColorBinding
 import com.woxthebox.draglistview.DragListView
 import com.woxthebox.draglistview.DragListView.DragListListener
 import eu.davidea.flexibleadapter.FlexibleAdapter
@@ -28,7 +28,7 @@ import kotlin.math.*
 
 class ColorFragment : MenuFragment() {
 
-    lateinit var b : ColorFragmentBinding
+    lateinit var b : FragmentColorBinding
     
     lateinit var db : AppDatabase
     
@@ -43,7 +43,7 @@ class ColorFragment : MenuFragment() {
     // Inflate the view for the fragment based on layout XML
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        b = ColorFragmentBinding.inflate(inflater, container, false)
+        b = FragmentColorBinding.inflate(inflater, container, false)
         return b.root
         // return inflater.inflate(R.layout.color_fragment, container, false)
 
@@ -57,7 +57,7 @@ class ColorFragment : MenuFragment() {
         
 
         if (!sc.goldEnabled) {
-            b.customColorAddButton.showGradient = true
+            b.addColorButton.showGradient = true
             if (Palette.custom.size == Palette.MAX_CUSTOM_PALETTES_FREE) {
                 b.customPaletteNewButton.showGradient = true
             }
@@ -82,8 +82,8 @@ class ColorFragment : MenuFragment() {
             b.customPaletteCancelButton,
             b.customPaletteDoneButton,
             b.customPaletteRandomizeButton,
-            b.customColorRemoveButton,
-            b.customColorAddButton
+            b.removeColorButton,
+            b.addColorButton
         )
         val nonClickableViewTypes = listOf(
             R.layout.list_header,
@@ -95,30 +95,29 @@ class ColorFragment : MenuFragment() {
         updateGradient()
 
         b.frequencyValue.setOnEditorActionListener(editListener(null) { w: TextView ->
-            val result = w.text.toString().formatToDouble()?.toFloat()
+            val result = w.text.toString().formatToDouble()
             if (result != null) {
-                f.frequency = result
+                f.color.frequency = result
             }
-            w.text = "%.3f".format(f.frequency)
+            w.text = "%.3f".format(f.color.frequency)
         })
         b.phaseValue.setOnEditorActionListener(editListener(null) { w: TextView ->
-            val result = w.text.toString().formatToDouble()?.toFloat()
+            val result = w.text.toString().formatToDouble()
             if (result != null) {
-                f.phase = result
+                f.color.phase = result
             }
-            w.text = "%.3f".format(f.phase)
+            w.text = "%.3f".format(f.color.phase)
         })
         b.densityValue.setOnEditorActionListener(editListener(null) {w: TextView ->
-            val result = w.text.toString().formatToDouble()?.toFloat()
+            val result = w.text.toString().formatToDouble()
             if (result != null) {
-                f.density = result
+                f.color.density = result
             }
-            w.text = "%.3f".format(f.density)
+            w.text = "%.3f".format(f.color.density)
         })
+
         b.customPaletteName.setOnEditorActionListener(editListener(null) { w: TextView ->
-
             customPalette.name = w.text.toString()
-
         })
 
 
@@ -138,7 +137,7 @@ class ColorFragment : MenuFragment() {
 
             b.paletteListLayout.root.hide()
             b.customPaletteLayout.show()
-            b.customColorAddButton.show()
+            b.addColorButton.show()
             loadNavButtons(customPaletteNavButtons)
             fsv.r.renderProfile = RenderProfile.DISCRETE
 
@@ -152,20 +151,20 @@ class ColorFragment : MenuFragment() {
 
             customPalette = item.t
             customPaletteListIndex = adapter.getGlobalPositionOf(item)
-            val customPaletteAdapter = ColorPaletteDragAdapter(
+            val customPaletteAdapter = CustomColorDragAdapter(
                     customPalette.colors,
                     R.layout.color_drag_item,
-                    R.id.customColorLayout,
+                    R.id.colorView,
                     true
             ) { selectedItemIndex, color ->  // LINK COLOR
-                b.customPaletteColorPicker.apply {
-                    satValueSelector.activeColorIndex = selectedItemIndex
-                    satValueSelector.loadFrom(color, update = true)
-                    hueSelector.progress = color.hue().toInt()
+                b.colorSelector.apply {
+                    satValueSelector.linkedColorIndex = selectedItemIndex
+                    satValueSelector.setColor(color)
+//                    hueSelector.hue = color.hue().toInt()
                 }
             }
 
-            b.customColorsDragList.setAdapter(customPaletteAdapter, true)
+            b.colorList.setAdapter(customPaletteAdapter, true)
             customPaletteAdapter.apply {
                 linkColor(0, itemList[0].second)
             }
@@ -212,9 +211,7 @@ class ColorFragment : MenuFragment() {
                     }
 
                     adapter.apply {
-                        setActivatedPosition(
-                                getGlobalPositionOf(getFavoriteItems().getOrNull(0) ?: getDefaultItems()[1])
-                        )
+                        setActivatedPosition(0)
                         f.palette = (getItem(activatedPos))?.t ?: Palette.eye
                     }
                     Palette.all.remove(item.t)
@@ -237,7 +234,7 @@ class ColorFragment : MenuFragment() {
 
                 b.paletteListLayout.root.hide()
                 b.customPaletteLayout.show()
-                b.customColorAddButton.show()
+                b.addColorButton.show()
                 loadNavButtons(customPaletteNavButtons)
                 fsv.r.renderProfile = RenderProfile.DISCRETE
 
@@ -247,20 +244,20 @@ class ColorFragment : MenuFragment() {
                 fsv.requestRender()
 
 
-                val customPaletteAdapter = ColorPaletteDragAdapter(
+                val customPaletteAdapter = CustomColorDragAdapter(
                         customPalette.colors,
                         R.layout.color_drag_item,
-                        R.id.customColorLayout,
+                        R.id.colorView,
                         true
                 ) { selectedItemIndex, color ->  // LINK COLOR
-                    b.customPaletteColorPicker.apply {
-                        satValueSelector.activeColorIndex = selectedItemIndex
-                        satValueSelector.loadFrom(color, update = true)
-                        hueSelector.progress = color.hue().toInt()
+                    b.colorSelector.apply {
+                        satValueSelector.linkedColorIndex = selectedItemIndex
+                        satValueSelector.setColor(color)
+//                        hueSelector.progress = color.hue().toInt()
                     }
                 }
 
-                b.customColorsDragList.setAdapter(customPaletteAdapter, true)
+                b.colorList.setAdapter(customPaletteAdapter, true)
                 customPaletteAdapter.apply {
                     linkColor(0, itemList[0].second)
                 }
@@ -270,11 +267,9 @@ class ColorFragment : MenuFragment() {
 
         }
 
-        val emptyFavorite = ListItem(Palette.emptyFavorite, ListHeader.FAVORITE, R.layout.list_item_linear_empty_favorite)
-        val emptyCustom = ListItem(Palette.emptyCustom, ListHeader.CUSTOM, R.layout.list_item_linear_empty_custom)
+        val emptyFavorite = ListItem(Palette.emptyFavorite, ListItemType.FAVORITE, R.layout.list_item_linear_empty_favorite)
+        val emptyCustom = ListItem(Palette.emptyCustom, ListItemType.CUSTOM, R.layout.list_item_linear_empty_custom)
         val listItems = arrayListOf<ListItem<Palette>>()
-
-
 
         viewLifecycleOwner.lifecycleScope.launch {
 
@@ -312,25 +307,13 @@ class ColorFragment : MenuFragment() {
 
                 ListItem(
                     it,
-                    if (it.hasCustomId || it == Palette.emptyCustom) ListHeader.CUSTOM else ListHeader.DEFAULT,
+                    if (it.hasCustomId || it == Palette.emptyCustom) ListItemType.CUSTOM else ListItemType.DEFAULT,
                     R.layout.palette_list_item,
 
-                    ).apply {
-                    if (it.isFavorite) {
-                        val favorite = ListItem(
-                            it,
-                            ListHeader.FAVORITE,
-                            R.layout.palette_list_item,
-                            compliment = this
-                        )
-                        compliment = favorite
-                        listItems.add(favorite)
-                    }
-                })
+                    ))
             }
             if (Palette.all.none { it.isFavorite }) listItems.add(emptyFavorite)
             if (Palette.custom.isEmpty()) listItems.add(emptyCustom)
-            listItems.sortBy { it.header.type }
 
             val paletteListAdapter = ListAdapter(
                 listItems,
@@ -341,17 +324,17 @@ class ColorFragment : MenuFragment() {
                 emptyCustom
             )
             b.paletteListLayout.apply {
-                list.adapter = paletteListAdapter
-                list.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+                defaultList.adapter = paletteListAdapter
+                defaultList.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
                     val firstVisiblePos = paletteListLayoutManager.findFirstCompletelyVisibleItemPosition()
-                    highlightListHeader(paletteListAdapter, when {
+                    highlightListItemType(paletteListAdapter, when {
                         firstVisiblePos < paletteListAdapter.getGlobalPositionOf(paletteListAdapter.headerItems[1]) -> 0
                         firstVisiblePos < paletteListAdapter.getGlobalPositionOf(paletteListAdapter.headerItems[2]) -> 1
                         else -> 2
                     })
                 }
-                list.layoutManager = paletteListLayoutManager
-                list.setHasFixedSize(true)
+                defaultList.layoutManager = paletteListLayoutManager
+                defaultList.setHasFixedSize(true)
             }
             paletteListAdapter.apply {
                 mItemClickListener = FlexibleAdapter.OnItemClickListener { view, position ->
@@ -360,8 +343,6 @@ class ColorFragment : MenuFragment() {
 
                         val firstVisiblePos = paletteListLayoutManager.findFirstCompletelyVisibleItemPosition()
                         val lastVisiblePos = paletteListLayoutManager.findLastCompletelyVisibleItemPosition()
-                        if (position + 1 > lastVisiblePos) b.paletteListLayout.list.smoothSnapToPosition(position + 1, LinearSmoothScroller.SNAP_TO_END)
-                        else if (position - 1 < firstVisiblePos) b.paletteListLayout.list.smoothSnapToPosition(position - 1)
 
                         if (position != paletteListAdapter.activatedPos) {
                             paletteListAdapter.setActivatedPosition(position)
@@ -390,17 +371,7 @@ class ColorFragment : MenuFragment() {
                 mode = SelectableAdapter.Mode.SINGLE
                 showAllHeaders()
             }
-            b.paletteListLayout.apply {
-                listFavoritesButton.setOnClickListener {
-                    list.smoothSnapToPosition(paletteListAdapter.getGlobalPositionOf(paletteListAdapter.headerItems[0]))
-                }
-                listCustomButton.setOnClickListener {
-                    list.smoothSnapToPosition(paletteListAdapter.getGlobalPositionOf(paletteListAdapter.headerItems[1]))
-                }
-                listDefaultButton.setOnClickListener {
-                    list.smoothSnapToPosition(paletteListAdapter.getGlobalPositionOf(paletteListAdapter.headerItems[2]))
-                }
-            }
+
 
             Log.e("COLOR", "palette load sucessful!")
 
@@ -416,8 +387,8 @@ class ColorFragment : MenuFragment() {
 
 
         // CUSTOM COLORS DRAG LIST
-        val customColorsDragList = v.findViewById<DragListView>(R.id.customColorsDragList)
-        customColorsDragList.setDragListListener(object : DragListListener {
+        val colorList = v.findViewById<DragListView>(R.id.colorList)
+        colorList.setDragListListener(object : DragListListener {
             override fun onItemDragStarted(position: Int) {}
             override fun onItemDragging(itemPosition: Int, x: Float, y: Float) {}
             override fun onItemDragEnded(fromPosition: Int, toPosition: Int) {
@@ -425,7 +396,7 @@ class ColorFragment : MenuFragment() {
 
                     customPalette.colors.add(toPosition, customPalette.colors.removeAt(fromPosition))
                     customPalette.updateFlatPalette()
-                    with (customColorsDragList.adapter as ColorPaletteDragAdapter) {
+                    with (colorList.adapter as CustomColorDragAdapter) {
                         //viewHolderList.add(toPosition, viewHolderList.removeAt(fromPosition))
                         selectedItemIndex = when (selectedItemIndex) {
                             fromPosition -> toPosition
@@ -439,29 +410,29 @@ class ColorFragment : MenuFragment() {
                 }
             }
         })
-        customColorsDragList.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false))
+        colorList.setLayoutManager(LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false))
 
 
 
-        b.customPaletteColorPicker.apply {
+        b.colorSelector.apply {
 
             // SATURATION-VALUE SELECTOR
             satValueSelector.apply {
-                onUpdateActiveColor = { newColor: Int ->  // UPDATE ACTIVE COLOR
+                onUpdateLinkedColor = { newColor: Int ->  // UPDATE ACTIVE COLOR
 
-                    customPalette.colors[activeColorIndex] = newColor
+                    customPalette.colors[linkedColorIndex] = newColor
                     customPalette.updateFlatPalette()
                     // customPaletteGradient.foreground = customPalette.gradientDrawable
-                    (customColorsDragList.adapter as ColorPaletteDragAdapter).updateColor(activeColorIndex, newColor)
+                    (colorList.adapter as CustomColorDragAdapter).updateColor(linkedColorIndex, newColor)
 
                     val hsv = newColor.toHSV()
-                    val h = hue.let { if (it.isNaN()) 0 else it.roundToInt() }
-                    val s = (100f * hsv[1]).let { if (it.isNaN()) 0 else it.roundToInt() }
-                    val value = (100f * hsv[2]).let { if (it.isNaN()) 0 else it.roundToInt()}
+//                    val h = hue.let { if (it.isNaN()) 0 else it.roundToInt() }
+//                    val s = (100f * hsv[1]).let { if (it.isNaN()) 0 else it.roundToInt() }
+//                    val value = (100f * hsv[2]).let { if (it.isNaN()) 0 else it.roundToInt()}
 
-                    b.customColorHueEdit.setText("%d".format(h))
-                    b.customColorSaturationEdit.setText("%d".format(s))
-                    b.customColorValueEdit.setText("%d".format(value))
+//                    b.customColorHueEdit.setText("%d".format(h))
+//                    b.customColorSaturationEdit.setText("%d".format(s))
+//                    b.customColorValueEdit.setText("%d".format(value))
 
                     invalidate()
                     fsv.requestRender()
@@ -470,51 +441,50 @@ class ColorFragment : MenuFragment() {
             }
 
             // HUE SELECTOR
-            hueSelectorBackground.background = GradientDrawable(
-                    GradientDrawable.Orientation.BOTTOM_TOP, resources.getIntArray(R.array.hueslider)
-            )
-            hueSelector.max = 359
-            hueSelector.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    satValueSelector.hue = progress.toFloat()
-                }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-
-            })
+//            hueSelectorBackground.background = GradientDrawable(
+//                    GradientDrawable.Orientation.BOTTOM_TOP, resources.getIntArray(R.array.hueslider)
+//            )
+//            hueSelector.max = 359
+//            hueSelector.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+//                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+//                    satValueSelector.hue = progress.toFloat()
+//                }
+//                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+//                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+//
+//            })
 
             // HSV EDIT TEXTS
             b.customColorHueEdit.setOnEditorActionListener(editListener(b.customColorSaturationEdit) { w: TextView ->
                 val result = w.text.toString().formatToDouble()?.toFloat()
                 if (result != null) {
-                    hueSelector.progress = result.toInt()
+//                    hueSelector.progress = result.toInt()
                 }
-                w.text = "%d".format(satValueSelector.hue.toInt())
+//                w.text = "%d".format(satValueSelector.hue.toInt())
             })
             b.customColorSaturationEdit.setOnEditorActionListener(editListener(b.customColorValueEdit) { w: TextView ->
                 val result = w.text.toString().formatToDouble()?.toFloat()
                 if (result != null) {
-                    satValueSelector.loadFrom(Color.HSVToColor(floatArrayOf(
-                            satValueSelector.hue,
-                            result / 100f,
-                            satValueSelector.value()
-                    )), true, true)
+//                    satValueSelector.setColor(Color.HSVToColor(floatArrayOf(
+//                            satValueSelector.hue,
+//                            result / 100f,
+//                            satValueSelector.value
+//                    )))
                 }
-                val s = (100f * satValueSelector.sat()).let { if (it.isNaN()) 0 else it.roundToInt() }
-                w.text = "%d".format(s)
+//                val s = (100f * satValueSelector.sat).let { if (it.isNaN()) 0 else it.roundToInt() }
+//                w.text = "%d".format(s)
             })
             b.customColorValueEdit.setOnEditorActionListener(editListener(null) { w: TextView ->
                 val result = w.text.toString().formatToDouble()?.toFloat()
                 if (result != null) {
-                    satValueSelector.loadFrom(Color.HSVToColor(floatArrayOf(
-                            satValueSelector.hue,
-                            satValueSelector.sat(),
-                            result / 100f
-                    )), true, true)
+//                    satValueSelector.setColor(Color.HSVToColor(floatArrayOf(
+//                            satValueSelector.hue,
+//                            satValueSelector.sat,
+//                            result / 100f
+//                    )))
                 }
-                val value = (100f * satValueSelector.value()).let { if (it.isNaN()) 0 else it.roundToInt() }
-                w.text = "%d".format(value)
+//                val value = (100f * satValueSelector.value).let { if (it.isNaN()) 0 else it.roundToInt() }
+//                w.text = "%d".format(value)
             })
 
         }
@@ -536,7 +506,6 @@ class ColorFragment : MenuFragment() {
             act.hideMenuToggleButton()
             layout.hide()
             loadNavButtons(previewListNavButtons)
-            act.uiSetHeight(UiLayoutHeight.TALL)
 
             getPaletteListAdapter()?.apply {
                 (if (selectedPositions.isEmpty()) getFirstPositionOf(f.palette) else activatedPos).let {
@@ -550,8 +519,7 @@ class ColorFragment : MenuFragment() {
             handler.postDelayed({
 
                 fsv.r.renderProfile = RenderProfile.COLOR_THUMB
-                fsv.r.renderThumbnails = true
-                if (!fsv.r.colorThumbsRendered) fsv.r.renderToTex = true
+                fsv.r.renderAllThumbnails = true
                 fsv.requestRender()
 
             }, BUTTON_CLICK_DELAY_MED)
@@ -562,8 +530,8 @@ class ColorFragment : MenuFragment() {
         b.frequencySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    val newFreq = (progress.toFloat()/b.frequencySeekBar.max).pow(2f) * 100f
-                    f.frequency = newFreq
+                    val newFreq = (progress.toDouble()/b.frequencySeekBar.max).pow(2.0) * 100.0
+                    f.color.frequency = newFreq
                     Log.e("COLOR", "frequency set to $newFreq")
                     b.frequencyValue.setText("%.3f".format(newFreq))
                     fsv.requestRender()
@@ -580,8 +548,8 @@ class ColorFragment : MenuFragment() {
         b.phaseSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    val newPhase = progress.toFloat() / b.phaseSeekBar.max
-                    f.phase = newPhase
+                    val newPhase = progress.toDouble() / b.phaseSeekBar.max
+                    f.color.phase = newPhase
                     b.phaseValue.setText("%.3f".format(newPhase))
                     fsv.requestRender()
                 }
@@ -597,8 +565,8 @@ class ColorFragment : MenuFragment() {
         b.densitySeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    val newDensity = 3f * progress.toFloat() / b.densitySeekBar.max
-                    f.density = newDensity
+                    val newDensity = 3.0 * progress.toDouble() / b.densitySeekBar.max
+                    f.color.density = newDensity
                     b.densityValue.setText("%.3f".format(newDensity))
                     fsv.requestRender()
                 }
@@ -623,7 +591,7 @@ class ColorFragment : MenuFragment() {
             }
             else {
 
-                f.density = 0f
+                f.color.density = 0.0
                 b.densityButton.hide()
                 b.frequencyButton.performClick()
 
@@ -632,14 +600,14 @@ class ColorFragment : MenuFragment() {
                 val M = fsv.r.textureSpan.max()
                 val m = fsv.r.textureSpan.min()
                 val L = M - m
-                val prevFreq = f.frequency
-                val prevPhase = f.phase
+                val prevFreq = f.color.frequency
+                val prevPhase = f.color.phase
 
                 fsv.r.setTextureSpan(0f, 1f)
 
-                f.frequency = prevFreq/L
-                f.phase = prevPhase - prevFreq*m/L
-                Log.e("COLOR", "frequency set ${f.frequency}")
+                f.color.frequency = prevFreq/L
+                f.color.phase = prevPhase - prevFreq*m/L
+                Log.e("COLOR", "frequency set ${f.color.frequency}")
 
             }
             updateFrequencyLayout()
@@ -651,46 +619,45 @@ class ColorFragment : MenuFragment() {
         if (b.colorAutofitButton.isChecked && f.texture.usesDensity) b.densityButton.show() else b.densityButton.hide()
 
 
-        b.accentColor1Button.setOnClickListener {
-            subMenuButtonListener(b.miniColorPickerLayout, b.accentColor1Button, UiLayoutHeight.MED).onClick(it)
+        b.fillColorButton.setOnClickListener {
+            subMenuButtonListener(b.miniColorPickerLayout, b.fillColorButton, UiLayoutHeight.MED).onClick(it)
             loadAccentColor()
         }
-        b.accentColor2Button.setOnClickListener {
-            subMenuButtonListener(b.miniColorPickerLayout, b.accentColor2Button, UiLayoutHeight.MED).onClick(it)
+        b.outlineColorButton.setOnClickListener {
+            subMenuButtonListener(b.miniColorPickerLayout, b.outlineColorButton, UiLayoutHeight.MED).onClick(it)
             loadAccentColor()
         }
 
-        (b.accentColor1Button.compoundDrawables[1] as? GradientDrawable)?.setColor(f.accent1)
-        (b.accentColor2Button.compoundDrawables[1] as? GradientDrawable)?.setColor(f.accent2)
+        (b.fillColorButton.compoundDrawables[1] as? GradientDrawable)?.setColor(f.color.fillColor)
+        (b.outlineColorButton.compoundDrawables[1] as? GradientDrawable)?.setColor(f.color.outlineColor)
 
         b.accentColorPicker.apply {
-            satValueSelector.onUpdateActiveColor = { c ->
+            satValueSelector.onUpdateLinkedColor = { c ->
                 b.accentColor?.setBackgroundColor(c)
                 when (button) {
-                    b.accentColor1Button -> f.accent1 = c
-                    b.accentColor2Button -> f.accent2 = c
+                    b.fillColorButton -> f.color.fillColor = c
+                    b.outlineColorButton -> f.color.outlineColor = c
                 }
                 satValueSelector.invalidate()
                 (button.compoundDrawables[1] as? GradientDrawable)?.setColor(c)
                 fsv.requestRender()
             }
-            hueSelectorBackground.background = GradientDrawable(
-                    GradientDrawable.Orientation.BOTTOM_TOP, resources.getIntArray(R.array.hueslider)
-            )
-            hueSelector.max = 359
-            hueSelector.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    satValueSelector.hue = progress.toFloat()
-                }
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-            })
+//            hueSelectorBackground.background = GradientDrawable(
+//                    GradientDrawable.Orientation.BOTTOM_TOP, resources.getIntArray(R.array.hueslider)
+//            )
+//            hueSelector.max = 359
+//            hueSelector.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+//                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+//                    satValueSelector.hue = progress.toFloat()
+//                }
+//                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+//                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+//            })
         }
 
         b.paletteListDoneButton.setOnClickListener {
 
             b.paletteGradient.foreground = f.palette.gradientDrawable
-            act.uiSetHeight(UiLayoutHeight.SHORT)
             b.colorSubMenuButtons.show()
             b.colorNavBar.hide()
             b.paletteListLayout.root.hide()
@@ -746,7 +713,7 @@ class ColorFragment : MenuFragment() {
 
                 b.paletteListLayout.root.hide()
                 b.customPaletteLayout.show()
-                b.customColorAddButton.show()
+                b.addColorButton.show()
                 loadNavButtons(customPaletteNavButtons)
                 fsv.r.renderProfile = RenderProfile.DISCRETE
 
@@ -756,7 +723,7 @@ class ColorFragment : MenuFragment() {
                                 resources.getString(R.string.palette),
                                 Palette.nextCustomPaletteNum
                         ),
-                        colors = Palette.generateHighlightColors(if (sc.goldEnabled) 5 else 3)
+                        colors = Palette.generateSequentialColors(if (sc.goldEnabled) 5 else 3)
                 ).apply { initialize(resources) }
 
                 // ColorPalette.all.add(0, customPalette)
@@ -764,22 +731,22 @@ class ColorFragment : MenuFragment() {
                 fsv.requestRender()
 
 
-                val customPaletteAdapter = ColorPaletteDragAdapter(
+                val customPaletteAdapter = CustomColorDragAdapter(
                         customPalette.colors,
                         R.layout.color_drag_item,
-                        R.id.customColorLayout,
+                        R.id.colorView,
                         true
                 ) { selectedItemIndex, color ->  // LINK COLOR
-                    b.customPaletteColorPicker.apply {
-                        satValueSelector.activeColorIndex = selectedItemIndex
-                        satValueSelector.loadFrom(color, update = true)
-                        hueSelector.progress = color.hue().toInt()
+                    b.colorSelector.apply {
+                        satValueSelector.linkedColorIndex = selectedItemIndex
+                        satValueSelector.setColor(color)
+//                        hueSelector.progress = color.hue().toInt()
                     }
                 }
 
 
 
-                customColorsDragList.setAdapter(customPaletteAdapter, true)
+                colorList.setAdapter(customPaletteAdapter, true)
                 customPaletteAdapter.apply {
                     linkColor(0, itemList[0].second)
                 }
@@ -823,7 +790,7 @@ class ColorFragment : MenuFragment() {
                                 customPalette.hasCustomId = true
                             }
                             getPaletteListAdapter()?.apply {
-                                val item = ListItem(customPalette, ListHeader.CUSTOM, R.layout.palette_list_item)
+                                val item = ListItem(customPalette, ListItemType.CUSTOM, R.layout.palette_list_item)
                                 setActivatedPosition(addItemToCustom(item, 0))
                             }
                             Palette.nextCustomPaletteNum++
@@ -834,7 +801,7 @@ class ColorFragment : MenuFragment() {
 
                         if (sc.colorListViewType == ListLayoutType.GRID) {
                             fsv.r.renderProfile = RenderProfile.COLOR_THUMB
-                            fsv.r.renderThumbnails = true
+                            fsv.r.renderAllThumbnails = true
                             fsv.requestRender()
                         }
 
@@ -844,7 +811,6 @@ class ColorFragment : MenuFragment() {
                     if (Palette.custom.size == Palette.MAX_CUSTOM_PALETTES_FREE && !sc.goldEnabled) {
                         b.customPaletteNewButton.showGradient = true
                     }
-                    act.uiSetHeight(UiLayoutHeight.TALL)
 
                     b.customPaletteLayout.hide()
                     b.paletteListLayout.root.show()
@@ -879,7 +845,6 @@ class ColorFragment : MenuFragment() {
             }
             fsv.requestRender()
 
-            act.uiSetHeight(UiLayoutHeight.TALL)
             b.customPaletteLayout.hide()
             b.paletteListLayout.root.show()
             loadNavButtons(previewListNavButtons)
@@ -889,16 +854,16 @@ class ColorFragment : MenuFragment() {
 
         b.customPaletteRandomizeButton.setOnClickListener {
             val newColors = Palette.generateColors(customPalette.colors.size)
-            (customColorsDragList.adapter as ColorPaletteDragAdapter).updateColors(newColors)
+            (colorList.adapter as CustomColorDragAdapter).updateColors(newColors)
             customPalette.colors = newColors
             customPalette.updateFlatPalette()
             b.customPaletteGradient.foreground = customPalette.gradientDrawable
             fsv.requestRender()
         }
-        b.customColorAddButton.setOnClickListener {
+        b.addColorButton.setOnClickListener {
 
             if (customPalette.colors.size == Palette.MAX_CUSTOM_COLORS_FREE && !sc.goldEnabled) act.showUpgradeScreen()
-            else { with(customColorsDragList.adapter as ColorPaletteDragAdapter) {
+            else { with(colorList.adapter as CustomColorDragAdapter) {
                     if (customPalette.colors.size < Palette.MAX_CUSTOM_COLORS_GOLD) {
 
                         val newColor = randomColor()
@@ -913,19 +878,19 @@ class ColorFragment : MenuFragment() {
 
                         when (customPalette.colors.size) {
                             Palette.MAX_CUSTOM_COLORS_FREE -> {
-                                if (!sc.goldEnabled) b.customColorAddButton.showGradient = true
-                                b.customColorRemoveButton.enable()
+                                if (!sc.goldEnabled) b.addColorButton.showGradient = true
+                                b.removeColorButton.enable()
                             }
-                            Palette.MAX_CUSTOM_COLORS_GOLD -> b.customColorAddButton.disable()
+                            Palette.MAX_CUSTOM_COLORS_GOLD -> b.addColorButton.disable()
                         }
 
                     }
                 } }
 
         }
-        b.customColorRemoveButton.setOnClickListener {
+        b.removeColorButton.setOnClickListener {
 
-            with (customColorsDragList.adapter as ColorPaletteDragAdapter) {
+            with (colorList.adapter as CustomColorDragAdapter) {
 
                 customPalette.colors.removeAt(selectedItemIndex)
                 removeItem(selectedItemIndex)
@@ -938,10 +903,10 @@ class ColorFragment : MenuFragment() {
                 fsv.requestRender()
 
                 when (customPalette.colors.size) {
-                    Palette.MAX_CUSTOM_COLORS_GOLD - 1 -> b.customColorAddButton.enable()
+                    Palette.MAX_CUSTOM_COLORS_GOLD - 1 -> b.addColorButton.enable()
                     Palette.MAX_CUSTOM_COLORS_FREE - 1 -> {
-                        if (!sc.goldEnabled) b.customColorAddButton.showGradient = false
-                        b.customColorRemoveButton.disable()
+                        if (!sc.goldEnabled) b.addColorButton.showGradient = false
+                        b.removeColorButton.disable()
                     }
                 }
 
@@ -959,7 +924,7 @@ class ColorFragment : MenuFragment() {
         b.customPaletteLayout.hide()
         b.colorNavBar.hide()
 
-        b.accentColor2Button.hide()
+        b.outlineColorButton.hide()
         b.densityButton.hide()
 
         layout = b.frequencyLayout
@@ -972,6 +937,9 @@ class ColorFragment : MenuFragment() {
 
     }
 
+
+
+
     override fun updateLayout() {
 
         b.colorAutofitButton.isChecked = sc.autofitColorRange
@@ -979,10 +947,10 @@ class ColorFragment : MenuFragment() {
         else b.densityButton.hide()
 
         updateGradient()
-        (b.accentColor1Button.compoundDrawables[1] as? GradientDrawable)?.setColor(f.accent1)
-        (b.accentColor2Button.compoundDrawables[1] as? GradientDrawable)?.setColor(f.accent2)
-        if (f.texture.usesAccent) b.accentColor2Button.show() else b.accentColor2Button.hide()
-        if (button == b.accentColor1Button || button == b.accentColor2Button) loadAccentColor()
+        (b.fillColorButton.compoundDrawables[1] as? GradientDrawable)?.setColor(f.color.fillColor)
+        (b.outlineColorButton.compoundDrawables[1] as? GradientDrawable)?.setColor(f.color.outlineColor)
+        if (f.texture.usesAccent) b.outlineColorButton.show() else b.outlineColorButton.hide()
+        if (button == b.fillColorButton || button == b.outlineColorButton) loadAccentColor()
 
         updateFrequencyLayout()
         updatePhaseLayout()
@@ -991,21 +959,21 @@ class ColorFragment : MenuFragment() {
     }
 
     override fun updateValues() {
-        b.frequencyValue.setText("%.3f".format(f.frequency))
-        b.phaseValue.setText("%.3f".format(f.phase))
-        b.densityValue.setText("%.3f".format(f.density))
+        b.frequencyValue.setText("%.3f".format(f.color.frequency))
+        b.phaseValue.setText("%.3f".format(f.color.phase))
+        b.densityValue.setText("%.3f".format(f.color.density))
     }
 
     override fun onGoldEnabled() {
         b.customPaletteNewButton.showGradient = false
-        b.customColorAddButton.showGradient = false
+        b.addColorButton.showGradient = false
     }
 
     fun getPaletteListAdapter() : ListAdapter<Palette>? {
-        return b.paletteListLayout.list.adapter as? ListAdapter<Palette>
+        return b.paletteListLayout.defaultList.adapter as? ListAdapter<Palette>
     }
 
-    fun highlightListHeader(adapter: ListAdapter<Palette>, index: Int) {
+    fun highlightListItemType(adapter: ListAdapter<Palette>, index: Int) {
         adapter.apply {
             listOf(
                 b.paletteListLayout.listFavoritesButton,
@@ -1020,12 +988,12 @@ class ColorFragment : MenuFragment() {
     fun loadAccentColor() {
         b.accentColorPicker.apply {
             val color = when (button) {
-                b.accentColor1Button -> f.accent1
-                b.accentColor2Button -> f.accent2
+                b.fillColorButton -> f.color.fillColor
+                b.outlineColorButton -> f.color.outlineColor
                 else -> Color.RED
             }
-            satValueSelector.loadFrom(color, update = true)
-            hueSelector.progress = color.hue().toInt()
+            satValueSelector.setColor(color)
+//            hueSelector.progress = color.hue().toInt()
         }
     }
 
@@ -1034,18 +1002,18 @@ class ColorFragment : MenuFragment() {
     }
 
     fun updateFrequencyLayout() {
-        b.frequencySeekBar.progress = ((f.frequency/100f).pow(0.5f)*b.frequencySeekBar.max).toInt()
-        b.frequencyValue.setText("%.3f".format(f.frequency))
+        b.frequencySeekBar.progress = ((f.color.frequency/100.0).pow(0.5)*b.frequencySeekBar.max).toInt()
+        b.frequencyValue.setText("%.3f".format(f.color.frequency))
     }
 
     fun updatePhaseLayout() {
-        b.phaseSeekBar.progress = (f.phase*b.phaseSeekBar.max).toInt()
-        b.phaseValue.setText("%.3f".format(f.phase))
+        b.phaseSeekBar.progress = (f.color.phase*b.phaseSeekBar.max).toInt()
+        b.phaseValue.setText("%.3f".format(f.color.phase))
     }
 
     fun updateDensityLayout() {
-        b.densitySeekBar.progress = (f.density/3.0*b.densitySeekBar.max).toInt()
-        b.densityValue.setText("%.3f".format(f.density))
+        b.densitySeekBar.progress = (f.color.density/3.0*b.densitySeekBar.max).toInt()
+        b.densityValue.setText("%.3f".format(f.color.density))
     }
 
 }

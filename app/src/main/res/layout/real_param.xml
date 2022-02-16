@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/realParamLayout"
+    android:id="@+id/real_param_display"
     style="@style/UiComponentShort"
     android:layout_width="match_parent"
     android:visibility="visible">

@@ -1,5 +1,6 @@
 package com.selfsimilartech.fractaleye
 
+import android.graphics.Matrix
 import org.apfloat.Apfloat
 import kotlin.math.cos
 import kotlin.math.pow
@@ -30,6 +31,8 @@ class   Position(
             val zoom: Double = 1.0,
             val rotation: Double = 0.0
     )
+
+    val matrix = Matrix()
 
     private val xInit = x
     private val yInit = y
@@ -102,10 +105,6 @@ class   Position(
         )
     }
     fun setFrom(newPos: Position) {
-        val xLockedPrev = xLocked
-        val yLockedPrev = yLocked
-        val zoomLockedPrev = zoomLocked
-        val rotationLockedPrev = rotationLocked
         xLocked = false
         yLocked = false
         zoomLocked = false
@@ -114,10 +113,10 @@ class   Position(
         y = newPos.y
         zoom = newPos.zoom
         rotation = newPos.rotation
-        xLocked = xLockedPrev
-        yLocked = yLockedPrev
-        zoomLocked = zoomLockedPrev
-        rotationLocked = rotationLockedPrev
+        xLocked = newPos.xLocked
+        yLocked = newPos.yLocked
+        zoomLocked = newPos.zoomLocked
+        rotationLocked = newPos.rotationLocked
     }
 
     fun translate(dx: Double, dy: Double) {
@@ -245,6 +244,10 @@ class   Position(
     }
 
     fun reset() {
+        xLocked = false
+        yLocked = false
+        rotationLocked = false
+        zoomLocked = false
         x = xInit
         y = yInit
         zoom = zoomInit
