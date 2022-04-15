@@ -20,7 +20,7 @@ abstract class MenuFragment : Fragment() {
     lateinit var onCompleteListener : OnCompleteListener
 
     val f = Fractal.default
-    val sc = SettingsConfig
+    val sc = Settings
 
     lateinit var act : MainActivity
     lateinit var fsv : FractalSurfaceView

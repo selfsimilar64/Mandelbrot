@@ -1,5 +1,62 @@
 <resources>
 
+
+
+    <declare-styleable name="ParamButton">
+        <attr name="android:text" format="string" />
+        <attr name="android:drawable" format="reference"/>
+        <attr name="android:state_activated" format="boolean"/>
+        <attr name="toggleable" format="boolean"/>
+    </declare-styleable>
+
+
+    <declare-styleable name="EditModeButton">
+        <attr name="utility_layout" format="reference"/>
+        <attr name="param_display_layout" format="reference"/>
+        <attr name="param_selector_layout" format="reference"/>
+        <attr name="list_layout" format="reference"/>
+    </declare-styleable>
+
+
+    <declare-styleable name="GradientSeekBar">
+        <attr name="colors" format="reference"/>
+    </declare-styleable>
+
+
+    <declare-styleable name="HSVColorSelector">
+        <attr name="android:color" format="color"/>
+    </declare-styleable>
+
+
+    <declare-styleable name="SaturationValueSelector">
+        <attr name="android:radius" format="dimension"/>
+    </declare-styleable>
+
+
+    <declare-styleable name="AccentButton">
+        <attr name="android:color" format="color"/>
+    </declare-styleable>
+
+
+    <declare-styleable name="EnumSelector">
+        <attr name="options" format="integer"/>
+        <attr name="option1" format="string"/>
+        <attr name="option2" format="string"/>
+        <attr name="option3" format="string"/>
+        <attr name="option4" format="string"/>
+        <attr name="option5" format="string"/>
+        <attr name="selectedPosition" format="integer"/>
+        <attr name="android:title" format="string"/>
+    </declare-styleable>
+
+
+    <declare-styleable name="BetterButton">
+        <attr name="android:text" format="string"/>
+        <attr name="android:icon" format="reference"/>
+    </declare-styleable>
+
+
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="selectableItemBackground">@drawable/selector_item</item>
@@ -60,6 +117,19 @@
         <item name="background">@color/black</item>
     </style>
 
+    <style name="SeekBar" parent="Widget.AppCompat.SeekBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:max">1000</item>
+        <item name="android:progressDrawable">@drawable/seekbar_progress_custom</item>
+        <item name="android:splitTrack">false</item>
+        <item name="android:progress">300</item>
+<!--        <item name="android:paddingBottom">4dp</item>-->
+<!--        <item name="android:thumbOffset">2dp</item>-->
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+    </style>
+
     <style name="TextDark" parent="android:style/Widget.Material.TextView">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -71,8 +141,10 @@
     <style name="ParamLabel" parent="@android:style/TextAppearance.Material.Button">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:padding">6dp</item>
-        <item name="android:layout_gravity">start|center_vertical</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
         <item name="android:textColor">@color/colorDarkText</item>
         <item name="android:textSize">14sp</item>
 <!--        <item name="android:textStyle">bold</item>-->
@@ -101,7 +173,7 @@
 
     <style name="EditNumberDark" parent="android:style/Widget.Material.TextView">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">24dp</item>b
+        <item name="android:layout_height">30dp</item>
         <item name="android:textColor">@color/colorDarkText</item>
         <item name="android:background">@color/transparent</item>
         <item name="android:gravity">center</item>
@@ -206,6 +278,19 @@
         <item name="android:textColor">@color/white</item>
     </style>
 
+    <style name="ContainedButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:drawableTint">@color/white</item>
+        <item name="android:foreground">@drawable/menu_button_ripple</item>
+        <item name="android:background">@drawable/edit_mode_button_highlight</item>
+        <item name="android:backgroundTint">@color/accent2</item>
+        <item name="android:backgroundTintMode">src_over</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
     <style name="KeyboardButtonSquare">
         <item name="android:layout_width">36dp</item>
         <item name="android:layout_height">36dp</item>
@@ -276,6 +361,14 @@
         <item name="srcCompat">@drawable/position</item>
     </style>
 
+    <style name="UtilityItem">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginEnd">0dp</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
     <style name="FloatingButton">
         <item name="android:layout_width">@dimen/floatingButtonSize</item>
         <item name="android:layout_height">@dimen/floatingButtonSize</item>
@@ -284,12 +377,34 @@
 <!--        <item name="android:background">@null</item>-->
     </style>
 
+    <style name="UtilityButton2" parent="">
+        <item name="android:layout_width">90dp</item>
+        <item name="android:layout_height">90dp</item>
+    </style>
+
+    <style name="FloatingButton.W840">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">70dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <style name="FloatingButton.Mini" parent="FloatingButton">
+        <item name="android:layout_width">@dimen/floatingButtonMiniSize</item>
+        <item name="android:layout_height">@dimen/floatingButtonMiniSize</item>
+        <item name="android:layout_marginBottom">0dp</item>
+        <item name="android:layout_marginEnd">0dp</item>
+<!--        <item name="android:layout_marginBottom">@dimen/menuItemMarginInner</item>-->
+<!--        <item name="android:layout_marginEnd">0dp</item>-->
+<!--        <item name="android:padding">12dp</item>-->
+<!--        <item name="android:scaleType">centerCrop</item>-->
+    </style>
+
     <style name="ResolutionButton2">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">44dp</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:background">@null</item>
-        <item name="android:foreground">@drawable/menu_button_ripple</item>
+        <item name="android:background">@drawable/toggleable_highlight_background</item>
         <item name="android:paddingStart">18dp</item>
         <item name="android:paddingEnd">18dp</item>
 <!--        <item name="android:drawableEnd">@drawable/done</item>-->
@@ -301,8 +416,7 @@
         <item name="android:layout_width">75dp</item>
         <item name="android:layout_height">48dp</item>
         <item name="android:textSize">16sp</item>
-        <item name="android:background">@null</item>
-        <item name="android:foreground">@drawable/menu_button_ripple</item>
+        <item name="android:background">@drawable/toggleable_highlight_background</item>
     </style>
 
     <style name="NavigationButton">
@@ -326,6 +440,30 @@
         <item name="android:textColor">@color/white</item>
         <item name="android:textSize">11sp</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="MenuButtonSelected" parent="MenuButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:background">@drawable/edit_mode_button_highlight</item>
+        <item name="android:drawableStart">@drawable/detail</item>
+        <item name="android:drawablePadding">2dp</item>
+        <item name="android:drawableTint">@null</item>
+    </style>
+
+    <style name="MenuButtonUnselected" parent="MenuButton">
+        <item name="android:layout_width">@dimen/menuButtonWidth</item>
+        <item name="android:drawableStart">@drawable/detail</item>
+        <item name="android:drawableTint">@null</item>
+        <item name="android:text"></item>
+    </style>
+
+    <style name="OutlinedButton" parent="ContainedButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">@drawable/texture_image_add_bg</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:gravity">center</item>
+        <item name="android:icon">@drawable/tutorial</item>
     </style>
 
 </resources>

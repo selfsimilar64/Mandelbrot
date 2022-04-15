@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/utilityButtons"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:gravity="center"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/texture_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/texture_list_button"
+            style="@style/FloatingButton.Mini"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/texture" />
+
+        <Space
+            android:layout_width="@dimen/menuItemMarginInner"
+            android:layout_height="@dimen/menuItemMarginInner" />
+
+        <ImageView
+            android:id="@+id/texture_region_button"
+            style="@style/FloatingButton.Mini"
+            android:layout_marginEnd="0dp"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/texture_region_in" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/color_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <com.selfsimilartech.fractaleye.ImageToggleButton
+            android:id="@+id/colorAutofitButton"
+            style="@style/FloatingButton.Mini"
+            android:layout_marginEnd="0dp"
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/auto" />
+
+        <Space
+            android:layout_width="@dimen/menuItemMarginInner"
+            android:layout_height="@dimen/menuItemMarginInner" />
+
+        <FrameLayout
+            android:id="@+id/palette_list_button"
+            style="@style/FloatingButton.Mini"
+            android:layout_width="128dp"
+            android:padding="8dp">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardBackgroundColor="@color/transparent"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp">
+
+                <View
+                    android:id="@+id/palette_list_button_gradient"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/accent2" />
+
+            </androidx.cardview.widget.CardView>
+        </FrameLayout>
+
+        <Space
+            android:layout_width="@dimen/menuItemMarginInner"
+            android:layout_height="@dimen/menuItemMarginInner" />
+
+        <com.selfsimilartech.fractaleye.ImageToggleButton
+            android:id="@+id/color_params_toggle"
+            style="@style/FloatingButton.Mini"
+            app:srcCompat="@drawable/parameter" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/position_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/position_reset_button"
+            style="@style/FloatingButton.Mini"
+            app:srcCompat="@drawable/reset" />
+
+        <Space
+            android:layout_width="@dimen/menuItemMarginInner"
+            android:layout_height="@dimen/menuItemMarginInner" />
+
+        <LinearLayout
+            android:id="@+id/position_adjust_buttons"
+            style="@style/FloatingButton.Mini"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="0dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="@dimen/menuItemMarginInner"
+                android:layout_height="@dimen/menuItemMarginInner" />
+
+            <ImageButton
+                android:id="@+id/position_decrease_button"
+                style="@style/FloatingButton.Mini"
+                android:background="@drawable/menu_button_ripple"
+                app:srcCompat="@drawable/zoom_out" />
+
+            <com.selfsimilartech.fractaleye.SensitivityButton
+                android:id="@+id/position_sensitivity_button"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/sensitivity_button_ripple"
+                app:srcCompat="@drawable/sensitivity_med" />
+
+            <ImageButton
+                android:id="@+id/position_increase_button"
+                style="@style/FloatingButton.Mini"
+                android:background="@drawable/menu_button_ripple"
+                app:srcCompat="@drawable/zoom_in" />
+
+            <Space
+                android:layout_width="@dimen/menuItemMarginInner"
+                android:layout_height="@dimen/menuItemMarginInner" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="@dimen/menuItemMarginInner"
+            android:layout_height="@dimen/menuItemMarginInner" />
+
+        <com.selfsimilartech.fractaleye.ImageToggleButton
+            android:id="@+id/position_params_toggle"
+            style="@style/FloatingButton.Mini"
+            app:srcCompat="@drawable/parameter" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/shape_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:gravity="center|center_horizontal"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/shape_list_button"
+            style="@style/FloatingButton.Mini"
+            android:foreground="@drawable/basic_button_foreground"
+            app:cardBackgroundColor="@color/black"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:contentPadding="4dp">
+
+            <ImageView
+                android:id="@+id/shape_list_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/mandelbrot_icon" />
+        </androidx.cardview.widget.CardView>
+
+        <Space
+            android:layout_width="@dimen/menuItemMarginInner"
+            android:layout_height="@dimen/menuItemMarginInner" />
+
+        <com.selfsimilartech.fractaleye.GradientImageToggleButton
+            android:id="@+id/julia_mode_button"
+            style="@style/FloatingButton.Mini"
+            android:layout_marginEnd="0dp"
+            android:src="@drawable/julia" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,6 +1,6 @@
 package com.selfsimilartech.fractaleye
 
-object SettingsConfig {
+object Settings {
 
         var editMode                    = EditMode.POSITION
         var goldEnabled                 = false
@@ -30,6 +30,7 @@ object SettingsConfig {
         var restrictParams              = true
 
         var fitToViewport               = false
+        var buttonAlignment             = ButtonAlignment.RIGHT
         var colorListViewType           = ListLayoutType.GRID
         var shapeListViewType           = ListLayoutType.GRID
         var textureListViewType         = ListLayoutType.GRID

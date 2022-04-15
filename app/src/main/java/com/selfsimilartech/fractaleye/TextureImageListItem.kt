@@ -1,19 +1,15 @@
 package com.selfsimilartech.fractaleye
 
-import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import android.view.View
-import android.widget.*
 import androidx.cardview.widget.CardView
-import androidx.core.content.res.ResourcesCompat
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import eu.davidea.flexibleadapter.items.IFlexible
 import eu.davidea.viewholders.FlexibleViewHolder
 import kotlin.math.ceil
-import kotlin.math.floor
 
 
 class TextureImageListItem (
@@ -74,7 +70,7 @@ class TextureImageListItem (
         if (id == R.drawable.texture_image_add) {
 
             holder.image?.setImageResource(id)
-            holder.image?.showGradient = !SettingsConfig.goldEnabled
+            holder.image?.showGradient = !Settings.goldEnabled
 
         } else {
 

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="4dp"
+    android:paddingTop="12dp"
+    android:paddingEnd="4dp"
+    android:paddingBottom="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imageView10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/history" />
+
+        <TextView
+            android:id="@+id/textView27"
+            style="@style/TextHeaderDark"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:text="@string/previous_session"
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/textView29"
+            style="@style/TextHeaderDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:text="@string/resume"
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textColor="@color/accent3"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp">
+
+            <ImageView
+                android:id="@+id/imageView4"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:srcCompat="@drawable/alignment_icon" />
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.selfsimilartech.fractaleye.BetterButton
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:icon="@drawable/shape"
+                android:text="@string/mandelbrot_quartic" />
+
+            <com.selfsimilartech.fractaleye.BetterButton
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:icon="@drawable/texture"
+                android:text="@string/triangle_ineq_avg" />
+
+            <com.selfsimilartech.fractaleye.BetterButton
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:icon="@drawable/palette"
+                android:text="custom palette 128">
+
+            </com.selfsimilartech.fractaleye.BetterButton>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

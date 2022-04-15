@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:layout_marginBottom="3dp"
+        android:text="@string/resolution"
+        android:textAppearance="@style/TextAppearance.AppCompat.Button"
+        android:textSize="11sp" />
+
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="@drawable/aspect_item_background"
+        android:backgroundTint="@color/aspectItem"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/optionButton1"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/toggleable_highlight_background"
+            android:backgroundTintMode="src_over"
+            android:text="opt1"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/optionButton2"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/toggleable_highlight_background"
+            android:backgroundTintMode="src_over"
+            android:text="opt2"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/optionButton3"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/toggleable_highlight_background"
+            android:backgroundTintMode="src_over"
+            android:text="opt3"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/optionButton4"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/toggleable_highlight_background"
+            android:backgroundTintMode="src_over"
+            android:text="opt4"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/optionButton5"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/toggleable_highlight_background"
+            android:backgroundTintMode="src_over"
+            android:text="opt4"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

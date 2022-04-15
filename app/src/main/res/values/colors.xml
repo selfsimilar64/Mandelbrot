@@ -52,7 +52,8 @@
     <color name="menuDarkSecondary">#11111A</color>
     <color name="menuDarkTertiary">#0A0A0F</color>"
 
-    <color name="switchTrackOn">#B3B3B3</color>
+<!--    <color name="switchTrackOn">#B3B3B3</color>-->
+    <color name="switchTrackOn">@color/accent2</color>
     <color name="switchTrackOff">#404040</color>
 
     <color name="seekbarProgress1">@color/switchTrackOff</color>
@@ -60,7 +61,7 @@
 
     <color name="accent">#6D68B1</color>
     <color name="accent2">#842DFF</color>
-    <color name="accent3">#C38FFF</color>
+    <color name="accent3">#8F49FF</color>
 
 
     <color name="highlight">#5fff</color>
@@ -70,7 +71,7 @@
     <color name="toggleButtonSelected">#FFF</color>
     <color name="toggleButtonUnselected">#6FFF</color>
 
-    <color name="divider">#5fff</color>
+    <color name="divider">#2fff</color>
 
     <color name="buttonOutline">#B4B4CC</color>
     <color name="uiComponentOutline">#878799</color>

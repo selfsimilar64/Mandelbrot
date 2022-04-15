@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
 import android.util.Range
+import androidx.lifecycle.LifecycleCoroutineScope
 import kotlin.math.pow
 
 class Texture(
@@ -758,7 +759,11 @@ class Texture(
 
     override var thumbnail: Bitmap? = null
 
-
+    override fun edit() {}
+    override fun revert() {}
+    override fun commit(scope: LifecycleCoroutineScope, db: AppDatabase) {}
+    override fun finalize(scope: LifecycleCoroutineScope, db: AppDatabase) {}
+    override fun release() {}
 
     init {
         if (isAverage) this.final = "avg_final(sum, sum1, n, z, z1, textureType)"

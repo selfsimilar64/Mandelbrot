@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <array name="hueslider">
+        <item>#FF0000</item>
+        <item>#FF8000</item>
+        <item>#FFFF00</item>
+        <item>#80FF00</item>
+        <item>#00FF00</item>
+        <item>#00FF80</item>
+        <item>#00FFFF</item>
+        <item>#0080FF</item>
+        <item>#0000FF</item>
+        <item>#8000FF</item>
+        <item>#FF00FF</item>
+        <item>#FF0080</item>
+        <item>#FF0000</item>
+    </array>
+
+    <array name="color_wheel">
+        <item>@color/cyan</item>
+        <item>@color/magenta</item>
+        <item>@color/yellow</item>
+        <item>@color/cyan</item>
+    </array>
+
     <string-array name="changelog_v1.5.1">
         <item>@string/resolution</item>
         <item>@string/aspect_ratio</item>
@@ -58,21 +81,6 @@
         <item>@color/gold3</item>
         <item>@color/gold2</item>
         <item>@color/gold1</item>
-    </array>
-
-    <array name="hueslider">
-        <item>#FF0000</item>
-        <item>#FF8000</item>
-        <item>#FFFF00</item>
-        <item>#80FF00</item>
-        <item>#00FF00</item>
-        <item>#00FF80</item>
-        <item>#00FFFF</item>
-        <item>#0080FF</item>
-        <item>#0000FF</item>
-        <item>#8000FF</item>
-        <item>#FF00FF</item>
-        <item>#FF0080</item>
     </array>
 
     <array name="plasma">

@@ -1,6 +1,7 @@
 package com.selfsimilartech.fractaleye
 
 import android.graphics.Color
+import android.util.Log
 
 class ColorConfig(
 
@@ -24,6 +25,35 @@ class ColorConfig(
             if (rem < 0.0) rem += 1f
             field = rem
         }
+
+
+    fun fitToSpan(span: TextureSpan) {
+
+        val max = span.max.x
+        val min = span.min.x
+        val length = max - min
+        val prevFreq = frequency
+        val prevPhase = phase
+
+        frequency = prevFreq * length
+        phase = prevPhase + prevFreq * min
+        Log.v("COLOR CONFIG", "frequency set $frequency")
+
+    }
+
+    fun unfitFromSpan(span: TextureSpan) {
+
+        val max = span.max.x
+        val min = span.min.x
+        val length = max - min
+        val prevFreq = frequency
+        val prevPhase = phase
+
+        frequency = prevFreq / length
+        phase = prevPhase - prevFreq * min / length
+        Log.v("COLOR CONFIG", "frequency set to $frequency")
+
+    }
 
     fun setFrom(newConfig: ColorConfig) {
 

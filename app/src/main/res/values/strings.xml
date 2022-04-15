@@ -6,6 +6,11 @@
     <string name="fe_abbrev">FE</string>
 
 
+    <string name="previous_session">Previous Session</string>
+    <string name="create_new">Create New</string>
+    <string name="resume">resume</string>
+
+
     <!-- MAIN -->
     <string name="category" translatable="false">category</string>
     <string name="settings">Settings</string>
@@ -144,13 +149,21 @@
     <string name="share">Share Image</string>
 
 
-    <string name="rendering_video">Rendering Video</string>
+    <string name="rendering_video">Rendering…</string>
     <string name="render_video">Render</string>
+    <string name="estimated_file_size">(%.1f MB)</string>
     <string name="video_add_keyframe">Add Keyframe</string>
     <string name="video_write_keyframe">Write Keyframe</string>
     <string name="initial_zoom">Initial Zoom</string>
     <string name="final_zoom">Final Zoom</string>
     <string name="duration">Duration</string>
+    <string name="preview">Preview</string>
+    <string name="rotations">Rotations</string>
+    <string name="msg_invalid_zoom_values">Final zoom must be greater than initial zoom</string>
+    <string name="preprocessing_video">Preprocessing…</string>
+    <string name="estimated_time">(%dm %ds remaining)</string>
+    <string name="framerate">Framerate</string>
+    <string name="quality">Quality</string>
 
 
     <!-- UPGRADE ACTIVITY -->
@@ -231,6 +244,9 @@
     <string name="advanced">Advanced</string>
     <string name="ultra_high_res">Ultra High Resolutions</string>
     <string name="ultra_high_res_hint">Save images at resolutions up to %s x %s. Device RAM may limit this feature.</string>
+    <string name="utility_button_alignment">Button Alignment</string>
+    <string name="left">Left</string>
+    <string name="right">Right</string>
 
 
     <!-- TEXTURE -->
@@ -239,6 +255,7 @@
     <string name="escape_radius">Escape Radius</string>
     <string name="radius">radius</string>
     <string name="mode">mode</string>
+    <string name="region">Region</string>
     <string name="texture_mode">Texture Mode</string>
     <string name="texture_mode_out">out</string>
     <string name="texture_mode_in">in</string>

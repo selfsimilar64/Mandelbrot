@@ -4,12 +4,12 @@ import android.content.Context
 import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.selfsimilartech.fractaleye.databinding.ListLayoutNewBinding
+import com.selfsimilartech.fractaleye.databinding.ListLayoutBinding
 
 class ItemListManager<T>(
 
-    val b             : ListLayoutNewBinding,
-    buttonSelector        : ParamSelector,
+    val b             : ListLayoutBinding,
+    buttonSelector    : ViewSelector,
     defaultItems      : ArrayList<T>,
     customItems       : ArrayList<T>,
     context           : Context

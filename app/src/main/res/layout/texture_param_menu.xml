@@ -1,43 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/colorParamMenu"
-    android:layout_width="@dimen/editModeLayoutWidth"
+    android:id="@+id/texture_param_menu_layout"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
     android:gravity="center_horizontal"
     android:orientation="horizontal">
 
-    <com.selfsimilartech.fractaleye.GradientImageButton
-        android:id="@+id/escapeRadiusButton"
-        style="@style/MenuButton"
-        android:src="@drawable/radius" />
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/escape_radius_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawable="@drawable/radius"
+        android:text="@string/radius" />
 
-    <com.selfsimilartech.fractaleye.GradientImageButton
-        android:id="@+id/textureImageButton"
-        style="@style/MenuButton"
-        android:src="@drawable/image2" />
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/texture_image_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawable="@drawable/image"
+        android:text="@string/image" />
 
-    <com.selfsimilartech.fractaleye.GradientImageButton
-        android:id="@+id/textureParamButton1"
-        style="@style/MenuButton"
-        android:backgroundTintMode="src_over"
-        android:src="@drawable/parameter" />
-
-    <com.selfsimilartech.fractaleye.GradientImageButton
-        android:id="@+id/textureParamButton2"
-        style="@style/MenuButton"
-        android:src="@drawable/parameter" />
-
-    <com.selfsimilartech.fractaleye.GradientImageButton
-        android:id="@+id/textureParamButton3"
-        style="@style/MenuButton"
-        android:src="@drawable/parameter"
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/texture_param_button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <com.selfsimilartech.fractaleye.GradientImageButton
-        android:id="@+id/textureParamButton4"
-        style="@style/MenuButton"
-        android:src="@drawable/parameter"
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/texture_param_button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/texture_param_button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/texture_param_button4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:visibility="gone" />
 
 </LinearLayout>

@@ -3,12 +3,10 @@ package com.selfsimilartech.fractaleye
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 
 class HueSelector : View {
 
@@ -17,7 +15,7 @@ class HueSelector : View {
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
 
 
-    lateinit var satValueSelector : SatValueSelectorView
+    lateinit var saturationValueSelector : SaturationValueSelector
 
     private val cornerRadius = 12.dp(context).toFloat()
 //    private val rectOffset = cornerRadius*(1f - sqrt(2f)/2f)
@@ -48,14 +46,14 @@ class HueSelector : View {
 
     fun setHue(newHue: Float, update: Boolean = true) {
         hue = newHue
-        satValueSelector.setHue(newHue, update)
+        saturationValueSelector.setHue(newHue, update)
         updateRectShader()
         updateSelectorPos()
     }
 
-    fun setSatValueSelectorView(v: SatValueSelectorView) {
-        satValueSelector = v
-        satValueSelector.hueSelector = this
+    fun setSatValueSelectorView(v: SaturationValueSelector) {
+        saturationValueSelector = v
+        // satValueSelector.hueSelector = this
     }
 
     private fun updateSelectorPos() {

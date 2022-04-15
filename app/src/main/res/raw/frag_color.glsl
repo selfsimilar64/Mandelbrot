@@ -68,16 +68,6 @@ void main() {
     } else color.rgb = accent1;
 
 
-    if (convertYUV == 1) {
-
-        ivec3 colorInt = ivec3(255.0*color);
-        int y = ((66*colorInt.r + 129*colorInt.g + 25*colorInt.b + 128) >> 8) + 16;
-        int u = ((-38*colorInt.r - 74*colorInt.g + 112*colorInt.b + 128) >> 8) + 128;
-        int v = ((112*colorInt.r - 94*colorInt.g - 18*colorInt.b + 128) >> 8) + 128;
-        color.rgb = vec3(y, u, v)/255.0;
-
-    }
-
     if (imageTexture == 1 && (textureMode == 2u || textureMode == textureType)) {
 
         uint r = textureValueInt >> 24;
@@ -93,6 +83,17 @@ void main() {
             vec4 bgcolor = vec4(mix(palette[p], palette[p + 1], q), 1.0);
             color += bgcolor*(1.0 - color.a);
         }
+
+    }
+
+
+    if (convertYUV == 1) {
+
+        ivec3 colorInt = ivec3(255.0*color);
+        int y = ((66*colorInt.r + 129*colorInt.g + 25*colorInt.b + 128) >> 8) + 16;
+        int u = ((-38*colorInt.r - 74*colorInt.g + 112*colorInt.b + 128) >> 8) + 128;
+        int v = ((112*colorInt.r - 94*colorInt.g - 18*colorInt.b + 128) >> 8) + 128;
+        color.rgb = vec3(y, u, v)/255.0;
 
     }
 

@@ -5,6 +5,12 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.Log
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import java.lang.Math.random
 import kotlin.math.sin
 import kotlin.math.floor
@@ -52,6 +58,10 @@ fun Int.sat() : Float {
 }
 fun Int.value() : Float {
     return toHSV()[2]
+}
+
+fun Int.luminance() : Float {
+    return (0.299f*red + 0.587f*green + 0.114f*blue)/255f
 }
 
 class Palette (
@@ -258,7 +268,6 @@ class Palette (
         // ids.size + 1
 
     val oscillateInit = oscillate
-
     var oscillate = oscillateInit
 
     override var thumbnail : Bitmap? = null
@@ -267,9 +276,10 @@ class Palette (
         get() = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors.toIntArray())
     var flatPalette = floatArrayOf()
 
-    override fun getName(localizedResource: Resources): String {
-            return if (isCustom()) name else localizedResource.getString(nameId)
-    }
+
+    private var savedName = ""
+    private var savedColors : List<Int> = listOf()
+
 
     fun getColor(t: Float) : Int {
         return when (t) {
@@ -282,14 +292,13 @@ class Palette (
                 val c1 = colorToRGB(colors[n])
                 val c2 = colorToRGB(colors[n + 1])
                 RGBToColor(
-                        m*c1[0] + (1f - m)*c2[0],
-                        m*c1[1] + (1f - m)*c2[1],
-                        m*c1[2] + (1f - m)*c2[2]
+                        (1f - m)*c1[0] + m*c2[0],
+                        (1f - m)*c1[1] + m*c2[1],
+                        (1f - m)*c1[2] + m*c2[2]
                 )
             }
         }
     }
-
     fun getColors(n: Int) : ArrayList<Int> {
         val list = arrayListOf<Int>()
         for (i in 0 until n) list.add(getColor(i.toFloat()/(n - 1)))
@@ -325,16 +334,9 @@ class Palette (
         updateFlatPalette()
 
     }
-
-    fun release() {
-        thumbnail?.recycle()
-        thumbnail = null
-    }
-
     fun reset() {
         oscillate = oscillateInit
     }
-
     fun updateFlatPalette() {
 
         val palette = intArrayToList(
@@ -346,8 +348,51 @@ class Palette (
 
     }
 
+    override fun edit() {
+        savedName = name
+        savedColors = ArrayList(colors)
+    }
+    override fun revert() {
+        name = savedName
+        colors = ArrayList(savedColors)
+        updateFlatPalette()
+        Log.v("COLOR", "cancel edit")
+    }
+    override fun commit(scope: LifecycleCoroutineScope, db: AppDatabase) {
+
+        // update existing palette in database
+        scope.launch {
+            db.colorPaletteDao().update(toDatabaseEntity())
+        }
+
+    }
+    override fun finalize(scope: LifecycleCoroutineScope, db: AppDatabase) {
+
+        // add new palette to database
+        scope.launch {
+            db.colorPaletteDao().run {
+                id = insert(toDatabaseEntity()).toInt()
+                hasCustomId = true
+            }
+        }
+
+        nextCustomPaletteNum++
+
+        all.add(0, this)
+        custom.add(0, this)
+
+    }
+    override fun release() {
+        thumbnail?.recycle()
+        thumbnail = null
+        Log.v("COLOR", "cancel new")
+    }
+
     private fun intArrayToList(C: List<Int>) : List<FloatArray> {
         return List(C.size) { i: Int -> colorToRGB(C[i]) }
+    }
+    fun generateStarredKey(usResources: Resources) : String {
+        return "Palette${usResources.getString(nameId).replace(" ", "")}Starred"
     }
 
     fun toDatabaseEntity() : ColorPaletteEntity {
@@ -370,31 +415,27 @@ class Palette (
                 starred = isFavorite
         )
     }
-
-    override fun equals(other: Any?): Boolean {
-        return other is Palette && other.id == id
-    }
-
-    override fun hashCode(): Int { return name.hashCode() }
-
-    override fun isCustom() : Boolean = hasCustomId || id == -1
-
     fun clone(res: Resources) : Palette {
         return Palette(
-                name = name + " " + res.getString(R.string.copy),
-                arrayId = arrayId,
-                colors = if (hasCustomId || colors.size <= MAX_CUSTOM_COLORS_GOLD) ArrayList(colors) else getColors(MAX_CUSTOM_COLORS_GOLD)
+            name = name + " " + res.getString(R.string.copy),
+            arrayId = arrayId,
+            colors = if (hasCustomId || colors.size <= MAX_CUSTOM_COLORS_GOLD) ArrayList(colors) else getColors(MAX_CUSTOM_COLORS_GOLD)
         ).also { it.initialize(res) }
     }
 
-    fun generateStarredKey(usResources: Resources) : String {
-        return "Palette${usResources.getString(nameId).replace(" ", "")}Starred"
+    override fun getName(localizedResource: Resources): String {
+        return if (isCustom()) name else localizedResource.getString(nameId)
     }
-
+    override fun equals(other: Any?): Boolean {
+        return other is Palette && other.id == id
+    }
+    override fun hashCode(): Int { return name.hashCode() }
+    override fun isCustom() : Boolean = hasCustomId || id == -1
     override fun toString(): String {
-        return "$name\n${colors.joinToString("\n") { c -> 
+        return "$name\n${colors.joinToString("\n") { c ->
             "%4d%4d%4d".format(c.hue().toInt(), (100f*c.sat()).toInt(), (100f*c.value()).toInt())
         }}"
     }
+
 
 }

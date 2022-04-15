@@ -25,6 +25,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         fun updateSystemBarsVisibility()
         fun enableUltraHighRes()
         fun disableUltraHighRes()
+        fun updateButtonAlignment()
 
     }
 
@@ -83,7 +84,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         val act = activity as MainActivity
         val f = Fractal.default
         val fsv = act.fsv
-        val sc = SettingsConfig
+        val sc = Settings
 
 
         DeviceName.init(v.context)
@@ -143,6 +144,36 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             sc.hideSystemBars = isChecked
             listener?.updateSystemBarsVisibility()
 
+        }
+
+
+        val buttonAlignmentSelector = ViewSelector(
+            requireContext(),
+            R.drawable.edit_mode_button_highlight,
+            listOf(b.alignmentLeftButton, b.alignmentCenterButton, b.alignmentRightButton)
+        )
+        buttonAlignmentSelector.select(
+            when (sc.buttonAlignment) {
+                ButtonAlignment.LEFT -> b.alignmentLeftButton
+                ButtonAlignment.CENTER -> b.alignmentCenterButton
+                ButtonAlignment.RIGHT -> b.alignmentRightButton
+            }
+        )
+
+        b.alignmentLeftButton.setOnClickListener {
+            sc.buttonAlignment = ButtonAlignment.LEFT
+            buttonAlignmentSelector.select(it)
+            listener?.updateButtonAlignment()
+        }
+        b.alignmentCenterButton.setOnClickListener {
+            sc.buttonAlignment = ButtonAlignment.CENTER
+            buttonAlignmentSelector.select(it)
+            listener?.updateButtonAlignment()
+        }
+        b.alignmentRightButton.setOnClickListener {
+            sc.buttonAlignment = ButtonAlignment.RIGHT
+            buttonAlignmentSelector.select(it)
+            listener?.updateButtonAlignment()
         }
 
 

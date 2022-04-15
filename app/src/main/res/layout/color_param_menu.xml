@@ -4,35 +4,48 @@
     android:id="@+id/colorParamMenu"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
     android:gravity="center_horizontal"
     android:orientation="horizontal">
 
-    <androidx.appcompat.widget.AppCompatImageButton
+    <com.selfsimilartech.fractaleye.ParamButton
         android:id="@+id/frequencyButton"
-        style="@style/MenuButton"
-        android:src="@drawable/frequency2" />
-
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/phaseButton"
-        style="@style/MenuButton"
-        android:src="@drawable/phase" />
-
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/density_button"
-        style="@style/MenuButton"
-        android:src="@drawable/density"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawable="@drawable/frequency2"
+        android:text="@string/frequency"
         android:visibility="gone" />
 
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/fill_color_button"
-        style="@style/MenuButton"
-        android:src="@drawable/fill_color" />
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/phaseButton"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:drawable="@drawable/phase"
+        android:text="@string/phase"
+        android:visibility="gone" />
 
-    <androidx.appcompat.widget.AppCompatImageButton
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/density_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawable="@drawable/density"
+        android:text="@string/density"
+        android:visibility="gone" />
+
+    <com.selfsimilartech.fractaleye.ParamButton
+        android:id="@+id/fill_color_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawable="@drawable/fill_color"
+        android:text="@string/fill" />
+
+    <com.selfsimilartech.fractaleye.ParamButton
         android:id="@+id/outline_color_button"
-        style="@style/MenuButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawable="@drawable/outline_color"
         android:drawableTint="@null"
-        android:src="@drawable/outline_color"
+        android:text="@string/outline"
         android:visibility="gone" />
 
 </LinearLayout>

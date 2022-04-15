@@ -18,14 +18,14 @@ class ParamChangeOnLongClickListener(
     override fun onLongClick(v: View): Boolean {
 
         if (fsv.r.isRendering) fsv.r.interruptRender = true
-        if (SettingsConfig.continuousParamRender) fsv.r.renderProfile = RenderProfile.CONTINUOUS
+        if (Settings.continuousParamRender) fsv.r.renderProfile = RenderProfile.CONTINUOUS
 
         val timer = Timer()
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 if (v.isPressed) {  // if button still pressed keep zooming
                     transformFractal()
-                    if (SettingsConfig.continuousParamRender) fsv.r.renderToTex = true
+                    if (Settings.continuousParamRender) fsv.r.renderToTex = true
                     handler.post { updateLayout() }
                 } else {  // cancel zoom
                     timer.cancel()

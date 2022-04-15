@@ -16,6 +16,7 @@ import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.Type
 import android.util.Log
+import com.google.firebase.crashlytics.ktx.setCustomKeys
 import org.apfloat.Apcomplex
 import org.apfloat.Apfloat
 import java.io.ByteArrayOutputStream
@@ -76,9 +77,9 @@ const val SHAPE_FUN_DUAL   = "vec4 customshape_loop(vec4 z, vec4 c) { return %s;
 
 
 
-enum class RenderProfile {
+enum class RenderProfile(val showRenderProgress: Boolean = false) {
     CONTINUOUS,
-    DISCRETE,
+    DISCRETE(showRenderProgress = true),
     SAVE_THUMBNAIL,
     SAVE_IMAGE,
     SHARE_IMAGE,
@@ -86,7 +87,7 @@ enum class RenderProfile {
     TEXTURE_THUMB,
     SHAPE_THUMB,
     KEYFRAME_THUMB,
-    VIDEO
+    VIDEO(showRenderProgress = true)
 }
 enum class HardwareProfile { GPU, CPU }
 enum class ColorMode { MANUAL, MINMAX, HISTOGRAM }
@@ -150,7 +151,7 @@ class FractalRenderer(
     }
 
     val f = Fractal.default
-    val sc = SettingsConfig
+    val sc = Settings
 
     var isRenderingVideo = false
     var isPreprocessingVideo = false
@@ -292,7 +293,7 @@ class FractalRenderer(
 
 //    private val vibrate = kotlinx.coroutines.Runnable {
 //
-//        Log.v("RENDERER", "wow u pressed that so long")
+//        Log.v(TAG, "wow u pressed that so long")
 //
 //        // vibrate
 //        val vib = act.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -357,6 +358,9 @@ class FractalRenderer(
 
     private var floatPrecisionBits : Int? = null
     private var gpuRendererName = ""
+    private var gpuVendorName = ""
+    private var openglVersion = ""
+    private var maxTextureSize = -1
 
 
 
@@ -450,6 +454,9 @@ class FractalRenderer(
     private var zoomColorHandle             : Int = 0
     private var adjustWithZoomHandle        : Int = 0
 
+    // minmax program
+    private var minmaxProgram               : Int = 0
+
 
 
     private var texSpanHistSize = if (sc.continuousPosRender) TEX_SPAN_HIST_CONTINUOUS else TEX_SPAN_HIST_DISCRETE
@@ -462,7 +469,6 @@ class FractalRenderer(
     private var numForegroundChunks = sc.chunkProfile.fgSingle
     private var numBackgroundChunks = sc.chunkProfile.bgSingle
 
-    var videoTextureSpans : List<PointF>? = null
 
 
 
@@ -568,7 +574,8 @@ class FractalRenderer(
 
 
     var rgbAllocation : Allocation? = null
-    var yuvAllocation : Allocation? = null
+    var yAllocation : Allocation? = null
+    var uvAllocation : Allocation? = null
 
     var rgbaThumb8888Allocation = Allocation.createTyped(rs, Type.createXY(rs,
             Element.RGBA_8888(rs),
@@ -604,7 +611,7 @@ class FractalRenderer(
         override fun run() {
 //            when (mID) {
 //                0 -> if (!sc.continuousPosRender) act.findViewById<ProgressBar>(R.id.progressBar).progress += 2
-//                1 -> Log.v("RENDERER", "renderscript interrupted!")
+//                1 -> Log.v(TAG, "renderscript interrupted!")
 //            }
         }
     }
@@ -617,35 +624,41 @@ class FractalRenderer(
 
         // get GPU info
         gpuRendererName = gl.glGetString(GL10.GL_RENDERER)
-        Log.v("RENDERER", "GL_RENDERER = " + gl.glGetString(GL10.GL_RENDERER))
-        Log.v("RENDERER", "GL_VENDOR = " + gl.glGetString(GL10.GL_VENDOR))
-        Log.v("RENDERER", "GL_VERSION = " + gl.glGetString(GL10.GL_VERSION))
-        //Log.v("RENDERER", "EXTENSIONS = " + gl.glGetString(GL10.GL_EXTENSIONS).replace(" ", "\n"))
+        gpuVendorName = gl.glGetString(GL10.GL_VENDOR)
+        openglVersion = gl.glGetString(GL10.GL_VERSION)
 
-        // get fragment shader precision
+        val outArray = IntArray(1) { 0 }
+        gl.glGetIntegerv(GL10.GL_MAX_TEXTURE_SIZE, outArray, 0)
+        maxTextureSize = outArray[0]
+
         val fRange = IntBuffer.allocate(2)
         val fPrec = IntBuffer.allocate(1)
         val iRange = IntBuffer.allocate(2)
         val iPrec = IntBuffer.allocate(1)
         glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT, fRange, fPrec)
         glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_INT, iRange, iPrec)
-        Log.v("FSV", "float exponent range: ${fRange[0]}, ${fRange[1]}")
-        Log.v("FSV", "float precision bits: ${fPrec[0]}")
-        Log.v("FSV", "int exponent range: ${iRange[0]}, ${iRange[1]}")
-        Log.v("FSV", "int precision bits: ${iPrec[0]}")
         floatPrecisionBits = fPrec[0]
 
-        // get texture specs
-        // val c = IntBuffer.allocate(1)
-        // val d = IntBuffer.allocate(1)
-        // glGetIntegerv(GL_MAX_TEXTURE_SIZE, c)
-        // glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, d)
-        // Log.v("FSV", "max texture size: ${c[0]}")
-        // Log.v("FSV", "max texture image units: ${d[0]}")
+        Log.v(TAG, "GL_RENDERER: $gpuRendererName")
+        Log.v(TAG, "GL_VENDOR: $gpuVendorName")
+        Log.v(TAG, "GL_VERSION: $openglVersion")
+        Log.v(TAG, "GL_MAX_TEXTURE_SIZE: $maxTextureSize")
+        Log.v(TAG, "FLOAT EXPONENT RANGE: ${fRange[0]}, ${fRange[1]}")
+        Log.v(TAG, "FLOAT PRECISION BITS: ${fPrec[0]}")
+        Log.v(TAG, "INT EXPONENT RANGE: ${iRange[0]}, ${iRange[1]}")
+
+        crashlytics().setCustomKeys {
+            key(CrashKey.GPU_NAME, "$gpuVendorName :: $gpuRendererName")
+            key(CrashKey.GL_MAX_TEXTURE_SIZE, maxTextureSize)
+            key(CrashKey.FLOAT_PRECISION_BITS, fPrec[0])
+        }
+
+        //Log.v(TAG, "EXTENSIONS = " + gl.glGetString(GL10.GL_EXTENSIONS).replace(" ", "\n"))
 
         renderProgram = glCreateProgram()
         colorProgram = glCreateProgram()
         sampleProgram = glCreateProgram()
+//        minmaxProgram = glCreateProgram()
 
         background1 = GLTexture(Resolution.BG, GL_NEAREST, TEX_FORMAT, BG1_INDEX, "background1")
         background2 = GLTexture(Resolution.BG, GL_NEAREST, TEX_FORMAT, BG2_INDEX, "background2")
@@ -718,9 +731,9 @@ class FractalRenderer(
         glAttachShader(renderProgram, fRenderShader)
         glLinkProgram(renderProgram)
 
-//                val q = IntBuffer.allocate(1)
-//                glGetProgramiv(renderProgram, GL_LINK_STATUS, q)
-//                Log.e("RENDERER", "${q[0] == GL_TRUE}")
+//        val q = IntBuffer.allocate(1)
+//        glGetProgramiv(renderProgram, GL_LINK_STATUS, q)
+//        Log.e(TAG, "${q[0] == GL_TRUE}")
 
 
         getRenderUniformLocations()
@@ -762,6 +775,11 @@ class FractalRenderer(
         densityHandle               = glGetUniformLocation(colorProgram, "density")
         zoomColorHandle             = glGetUniformLocation(colorProgram, "zoom")
         adjustWithZoomHandle        = glGetUniformLocation(colorProgram, "adjustWithZoom")
+
+
+//        glAttachShader(minmaxProgram, )
+//        glAttachShader(minmaxProgram, )
+//        glLinkProgram(minmaxProgram)
 
         renderToTex = true
 
@@ -833,18 +851,24 @@ class FractalRenderer(
 
                     } else {
 
-                        if (sc.renderBackground) renderToTexture(bgAuxiliary)
+                        val resGreaterThanScreen = sc.resolution.w > Resolution.SCREEN.w
+                        val bgTarget = if (resGreaterThanScreen) background else bgAuxiliary
+                        val fgTarget = if (resGreaterThanScreen) foreground else fgAuxiliary
+
+                        if (sc.renderBackground) renderToTexture(bgTarget)
                         val bgInterrupt = interruptRender
                         val t = currentTimeNs()
-                        if (!bgInterrupt) renderToTexture(fgAuxiliary)
+                        if (!bgInterrupt) renderToTexture(fgTarget)
                         val duration = (t.toDouble() - currentTimeNs().toDouble()) / 1e9
                         if (!interruptRender) {
                             resetQuad()
                             hasTranslated = false
                             hasZoomed = false
                             hasRotated = false
-                            background = bgAuxiliary.also { bgAuxiliary = background }
-                            foreground = fgAuxiliary.also { fgAuxiliary = foreground }
+                            if (!resGreaterThanScreen) {
+                                background = bgAuxiliary.also { bgAuxiliary = background }
+                                foreground = fgAuxiliary.also { fgAuxiliary = foreground }
+                            }
                             chunkCount = (duration*CHUNKS_PER_SECOND).toInt().clamp(CHUNKS_PER_SECOND, foreground.res.h)
                             validAuxiliary = true
                         }
@@ -883,7 +907,7 @@ class FractalRenderer(
             }
             RenderProfile.SAVE_IMAGE, RenderProfile.SAVE_THUMBNAIL, RenderProfile.SHARE_IMAGE -> {
 
-                // Log.v("RENDERER", "available heap size: ${act.getAvailableHeapMemory()} MB")
+                // Log.v(TAG, "available heap size: ${act.getAvailableHeapMemory()} MB")
                 System.gc()
 
                 // save local copy of bookmark thumb
@@ -978,8 +1002,8 @@ class FractalRenderer(
                     val prevTexture = f.texture
 //                    val prevPosition = f.shape.position.clone()
                     val prevAutoColor = sc.autofitColorRange
-                    val prevTextureMin = textureSpan.min()
-                    val prevTextureMax = textureSpan.max()
+                    val prevTextureMin = textureSpan.min.x
+                    val prevTextureMax = textureSpan.max.x
 //                    val prevDetail = f.shape.params.detail.u
 
 //                    checkThresholdCross { f.shape.position.reset() }
@@ -993,7 +1017,7 @@ class FractalRenderer(
 
                         if (pauseRender) {
                             try {
-                                Log.e("RENDERER", "about to sleep")
+                                Log.e(TAG, "about to sleep")
                                 Thread.sleep(300L)
                             } catch (e: Exception) {
                             }
@@ -1006,7 +1030,7 @@ class FractalRenderer(
                         }
 
                         f.texture = texture
-                        Log.v("RENDERER", "texture: ${f.texture.name}, radius: %e".format(f.texture.params.radius.scaledValue))
+                        Log.v(TAG, "texture: ${f.texture.name}, radius: %e".format(f.texture.params.radius.scaledValue))
 
 //                        val prevColorConfig = f.color.clone()
 //                        f.color.reset()
@@ -1125,7 +1149,7 @@ class FractalRenderer(
             }
             RenderProfile.KEYFRAME_THUMB -> {
 
-                // Log.v("RENDERER", "available heap size: ${act.getAvailableHeapMemory()} MB")
+                // Log.v(TAG, "available heap size: ${act.getAvailableHeapMemory()} MB")
                 System.gc()
 
                 // save local copy of bookmark thumb
@@ -1173,11 +1197,24 @@ class FractalRenderer(
             }
             RenderProfile.VIDEO -> {
 
+                isRendering = true
                 if (renderToTex) {
                     renderToTex = false
-                    renderToTexture(foreground)
+                    renderToTexture(foreground, continuous = isPreprocessingVideo)
+                    resetQuad()
                 }
-                renderFromTexture(foreground)
+                if (isRenderingVideo) { // render in YUV
+                    renderFromTexture(foreground, convertToYUV = true, actualSize = true)
+                }
+
+                // render frame to show user
+                if (isPreprocessingVideo) {
+                    renderFromTexture(
+                        foreground,
+                        continuous = true,
+                        texCoordScale = continuousRes.x.toFloat() / foreground.res.w.toFloat()
+                    )
+                } else renderFromTexture(foreground, blockRenderFinishedListener = true)
 
             }
 
@@ -1202,7 +1239,7 @@ class FractalRenderer(
 
         Log.v(TAG, "TO; $texture, continuous: $continuous")
 
-        if (!isRenderingVideo) handler.updateProgress(0.0)
+        handler.updateProgress(0.0)
         val renderToTexStartTime = currentTimeNs()
         var calcTimeTotal = 0L
 
@@ -1210,9 +1247,9 @@ class FractalRenderer(
             HardwareProfile.GPU -> {
 
 //                when (texture) {
-//                    foreground -> Log.e("RENDERER", "foreground")
-//                    background -> Log.e("RENDERER", "background")
-//                    else -> Log.e("RENDERER", "else")
+//                    foreground -> Log.e(TAG, "foreground")
+//                    background -> Log.e(TAG, "background")
+//                    else -> Log.e(TAG, "else")
 //                }
 
                 // Log.v(TAG, "render to texture")
@@ -1232,7 +1269,7 @@ class FractalRenderer(
                             }
                         }
                         else floatArrayOf(0f, 0f)
-                    // Log.v("RENDERER", "passing p${i+1} in as (${pArray[0]}, ${pArray[1]})")
+                    // Log.v(TAG, "passing p${i+1} in as (${pArray[0]}, ${pArray[1]})")
                     glUniform2fv(mapParamHandles[i], 1, pArray, 0)
                 }
 
@@ -1311,7 +1348,7 @@ class FractalRenderer(
                     texture == fgAuxiliary
                 ) {
 
-                    Log.v("RENDERER", "strict translate")
+                    Log.v(TAG, "strict translate")
 
                     val xIntersectQuadCoords: FloatArray
                     val yIntersectQuadCoords: FloatArray
@@ -1371,7 +1408,7 @@ class FractalRenderer(
                     )
                     glClear(GL_COLOR_BUFFER_BIT)
 
-                    //Log.e("RENDERER", "numChunks: $numChunks")
+                    //Log.e(TAG, "numChunks: $numChunks")
                     val areaA = (xComplementViewCoordsA[1] - xComplementViewCoordsA[0])*(yComplementViewCoordsA[1] - yComplementViewCoordsA[0])
                     val areaB = (xComplementViewCoordsB[1] - xComplementViewCoordsB[0])*(yComplementViewCoordsB[1] - yComplementViewCoordsB[0])
                     val chunksA = splitCoords(texture, xComplementViewCoordsA, yComplementViewCoordsA, (chunkCount*areaA).toInt().clamp(1, 100))
@@ -1382,7 +1419,7 @@ class FractalRenderer(
 
                         if (pauseRender) {
                             try {
-                                Log.e("RENDERER", "about to sleep")
+                                Log.e(TAG, "about to sleep")
                                 Thread.sleep(300L)
                             } catch (e: Exception) {
                             }
@@ -1394,7 +1431,7 @@ class FractalRenderer(
                         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
                         glFinish()
                         chunksRendered++
-                        if (sc.showProgress && renderProfile != RenderProfile.CONTINUOUS) {
+                        if (sc.showProgress && renderProfile.showRenderProgress) {
                             handler.updateProgress(chunksRendered.toDouble()/totalChunks.toDouble())
                         }
 
@@ -1403,7 +1440,7 @@ class FractalRenderer(
 
                         if (pauseRender) {
                             try {
-                                Log.e("RENDERER", "about to sleep")
+                                Log.e(TAG, "about to sleep")
                                 Thread.sleep(300L)
                             } catch (e: Exception) {
                             }
@@ -1415,7 +1452,7 @@ class FractalRenderer(
                         glDrawElements(GL_TRIANGLES, drawOrder.size, GL_UNSIGNED_SHORT, drawListBuffer)
                         glFinish()
                         chunksRendered++
-                        if (sc.showProgress && renderProfile != RenderProfile.CONTINUOUS) {
+                        if (sc.showProgress && renderProfile.showRenderProgress) {
                             handler.updateProgress(chunksRendered.toDouble()/totalChunks.toDouble())
                         }
 
@@ -1490,7 +1527,7 @@ class FractalRenderer(
                     if (continuous) glViewport(0, 0, continuousRes.x, continuousRes.y)
                     else            glViewport(0, 0, texture.res.w, texture.res.h)
 
-                    glUniform1fv(bgScaleHandle, 1, floatArrayOf(if (texture == bgAuxiliary) bgSize else 1f), 0)
+                    glUniform1fv(bgScaleHandle, 1, floatArrayOf(if (texture in listOf(bgAuxiliary, background)) bgSize else 1f), 0)
                     glFramebufferTexture2D(
                         GL_FRAMEBUFFER,             // target
                         GL_COLOR_ATTACHMENT0,       // attachment
@@ -1508,14 +1545,14 @@ class FractalRenderer(
                     //glClear(GL_COLOR_BUFFER_BIT)
 
                     val chunks = splitCoords(texture, floatArrayOf(-1f, 1f), floatArrayOf(-1f, 1f), if (continuous) 1 else chunkCount)
-                    //Log.e("RENDERER", "chunks: ${texture.chunks}")
+                    //Log.e(TAG, "chunks: ${texture.chunks}")
                     val totalChunks = chunks.size
                     var chunksRendered = 0
                     for (viewChunkCoords in chunks) {
 
                         if (pauseRender) {
                             try {
-                                Log.e("RENDERER", "about to sleep")
+                                Log.e(TAG, "about to sleep")
                                 Thread.sleep(300L)
                             } catch (e: Exception) {}
                             pauseRender = false
@@ -1543,7 +1580,7 @@ class FractalRenderer(
                         glFinish()   // force chunk to finish rendering before continuing
 
                         chunksRendered++
-                        if (sc.showProgress && renderProfile == RenderProfile.DISCRETE) {
+                        if (sc.showProgress && renderProfile.showRenderProgress) {
                             handler.updateProgress(chunksRendered.toDouble()/totalChunks.toDouble())
                         }
 
@@ -1554,13 +1591,12 @@ class FractalRenderer(
                 }
 
 
-                if (!interruptRender) {
-                    if (sc.autofitColorRange && !isRenderingVideo) {
+                if (sc.autofitColorRange && !interruptRender) {
+                    if (!isRenderingVideo && !isPreprocessingVideo) {
                         if (
                             continuous ||
                             (texture == foreground && renderProfile != RenderProfile.CONTINUOUS) ||
-                            renderProfile == RenderProfile.TEXTURE_THUMB ||
-                            isPreprocessingVideo
+                            renderProfile == RenderProfile.TEXTURE_THUMB
                         ) {
 
                             val t = currentTimeMs()
@@ -1598,66 +1634,60 @@ class FractalRenderer(
                                 }
                             }
 
-//                            autoBuffer.rewind()
-//                            glReadPixels(0, 0, sample.res.w, sample.res.h, sample.format, sample.type, autoBuffer)
-//                            autoBuffer.rewind()
-//                            while (autoBuffer.hasRemaining()) {
-//
-//                                val sx = autoBuffer.float
-//                                val sy = sx.toBits() and 1
-//
-//                                if (sy == TextureMode.OUT.ordinal) {
-//                                    if (!sx.isInfinite() && !sx.isNaN()) {
-//                                        if (sx < min) min = sx
-//                                        if (sx > max) max = sx
-//                                        outSamples++
-//                                    }
-//                                }
-//
-//                            }
-
-
                             // don't process extreme values
                             if (min != Float.MAX_VALUE && max != Float.MIN_VALUE) {
 
                                 if (calcNewTextureSpan) {
                                     setTextureSpan(min, max)
-//                                    textureSpan.center.set(0.5f * (max + min))
-//                                    textureSpan.size.set(abs(max - min))
-//                                    calcNewTextureSpan = false
                                 } else {
                                     if (texture == foreground) {
                                         val weight = outSamples / (xSamples * ySamples).toFloat()
-                                        textureSpan.center.impulse(0.5f * (max + min), weight)
-                                        textureSpan.size.impulse(abs(max - min), weight)
-                                        // Log.e("RENDERER", "$textureSpan")
+                                        textureSpan.min.impulse(min, weight)
+                                        textureSpan.max.impulse(max, weight)
+                                        // Log.e(TAG, "$textureSpan")
                                     }
                                 }
 
                                 if (autofitColorSelected && !f.texture.hasRawOutput) {
 
-                                    // adjust frequency and phase to match new fit
-
-                                    val M = max
-                                    val m = min
-                                    val L = M - m
-                                    val prevFreq = f.color.frequency
-                                    val prevPhase = f.color.phase
-
-                                    f.color.apply {
-                                        frequency = prevFreq * L
-                                        phase = prevPhase + prevFreq * m
-                                        Log.e("RENDERER", "frequency set $frequency")
-                                    }
-
+                                    f.color.fitToSpan(textureSpan)
                                     autofitColorSelected = false
+
                                 }
 
                             }
 
-                            Log.e("RENDERER", "min: ${textureSpan.min()}, max: ${textureSpan.max()}, t: ${currentTimeMs() - t} ms")
+                            Log.v(TAG, "min: ${textureSpan.min.x}, max: ${textureSpan.max.x}, t: ${currentTimeMs() - t} ms")
 
                         }
+                    }
+                    else if (isPreprocessingVideo) {
+
+                        var min = Float.MAX_VALUE
+                        var max = Float.MIN_VALUE
+
+                        val buffer = ByteBuffer.allocateDirect(continuousRes.x*continuousRes.y*4).order(ByteOrder.nativeOrder())
+                        buffer.rewind()
+
+                        glReadPixels(0, 0, continuousRes.x, continuousRes.y, texture.format, texture.type, buffer)
+                        buffer.rewind()
+
+                        while (buffer.hasRemaining()) {
+
+                            val sx = buffer.float
+                            val sy = sx.toBits() and 1
+
+                            if (sy == TextureRegion.OUT.ordinal) {
+                                if (!sx.isInfinite() && !sx.isNaN()) {
+                                    if (sx < min) min = sx
+                                    if (sx > max) max = sx
+                                }
+                            }
+
+                        }
+
+                        setTextureSpan(min, max)
+
                     }
                 }
 
@@ -1666,7 +1696,7 @@ class FractalRenderer(
             HardwareProfile.CPU -> {
 
                 handler.updateProgress(0.0)
-                //Log.e("RENDERER", "CPU precision: ${sc.cpuPrecision}")
+                //Log.e(TAG, "CPU precision: ${sc.cpuPrecision}")
 
 
                 when (sc.cpuPrecision) {
@@ -1699,7 +1729,7 @@ class FractalRenderer(
                         val glitchedPixels = ShortArray(auxTexture.res.w * auxTexture.res.h * 2) { index ->
                             val q = if (index % 2 == 0) (index / 2 % auxTexture.res.w).toShort() else floor((index / 2.0) / auxTexture.res.w).toInt().toShort()
                             if (q >= 6240) {
-                                Log.v("RENDERER", "${(index / 2.0) / auxTexture.res.w}")
+                                Log.v(TAG, "${(index / 2.0) / auxTexture.res.w}")
                             }
                             q
                         }
@@ -1718,8 +1748,8 @@ class FractalRenderer(
                         val sp = if (f.shape.position.zoom < 1e-100) 1e300 else 1.0
                         val sn = if (f.shape.position.zoom < 1e-100) 1e-300 else 1.0
 
-                        Log.v("RENDERER", "x0: ${z0.real()}")
-                        Log.v("RENDERER", "y0: ${z0.imag()}")
+                        Log.v(TAG, "x0: ${z0.real()}")
+                        Log.v(TAG, "y0: ${z0.imag()}")
 
                         var auxTextureMin = Float.MAX_VALUE
                         var auxTextureMax = Float.MIN_VALUE
@@ -1781,9 +1811,9 @@ class FractalRenderer(
 
                                 val numGlitchedPxlsRemaining = numGlitchedPxls - numGlitchedPxlsRendered
                                 val numChunkPxls = if (numGlitchedPxlsRemaining >= maxPixelsPerChunk) maxPixelsPerChunk else numGlitchedPxlsRemaining
-                                Log.e("RENDERER", "pass ${k + 1}: ${(100.0 * numGlitchedPxlsRendered.toDouble() / numGlitchedPxls).toInt()}%")
-                                //Log.e("RENDERER", "numGlitchedPxlsRemaining: $numGlitchedPxlsRemaining")
-                                //Log.e("RENDERER", "numChunkPxls: $numChunkPxls")
+                                Log.e(TAG, "pass ${k + 1}: ${(100.0 * numGlitchedPxlsRendered.toDouble() / numGlitchedPxls).toInt()}%")
+                                //Log.e(TAG, "numGlitchedPxlsRemaining: $numGlitchedPxlsRemaining")
+                                //Log.e(TAG, "numChunkPxls: $numChunkPxls")
 
 
                                 pixelsInArray = glitchedPixels.sliceArray(2 * numGlitchedPxlsRendered until 2 * (numGlitchedPxlsRendered + numChunkPxls))
@@ -1851,12 +1881,12 @@ class FractalRenderer(
                                     try {
                                         auxTexture.set(px, py, 0, qx)
                                     } catch (e: IndexOutOfBoundsException) {
-                                        Log.e("RENDERER", "p: ($px, $py)")
+                                        Log.e(TAG, "p: ($px, $py)")
                                     }
                                     auxTexture.set(px, py, 1, qy)
                                 }
                                 //if (numGlitchedPixels == 0) break
-                                //Log.e("RENDERER", "total number of glitched pixels: $glitchedPixelsSize")
+                                //Log.e(TAG, "total number of glitched pixels: $glitchedPixelsSize")
 
                                 numGlitchedPxlsRendered += numChunkPxls
 
@@ -1878,7 +1908,7 @@ class FractalRenderer(
                                     numGlitchedPxls++
                                 }
                             }
-                            Log.e("RENDERER", "numGlitchedPxls: $numGlitchedPxls")
+                            Log.e(TAG, "numGlitchedPxls: $numGlitchedPxls")
                             if (numGlitchedPxls == 0) break
 //                    Log.e("RENDER ROUTINE", "there are only $numGlitchedPxls glitched pixels -- clearing indices $numGlitchedPxls until $numGlitchedPxlsRendered")
 //                    for (i in numGlitchedPxls*2 until numGlitchedPxlsRendered*2 - 1) {
@@ -1890,7 +1920,7 @@ class FractalRenderer(
                             val progress = (1.0 - numGlitchedPxls.toDouble() / (auxTexture.res.w * auxTexture.res.h)).pow(5.0)
                             val estRenderTime = 0.1f / progress.toFloat() * (currentTimeMs() - renderToTexStartTime)
 
-                            Log.v("RENDERER",
+                            Log.v(TAG,
                                 "[refIter: ${refData.refIter}], " +
                                         "[skipIter: ${refData.skipIter}], " +
                                         "[refArray full: ${refData.refIter - refData.skipIter + 1 == MAX_REF_ITER}], " +
@@ -1902,8 +1932,8 @@ class FractalRenderer(
 //                            "[cx: ${refData.cx}], " +
 //                            "[cy: ${refData.cy}]"
                             )
-                            //Log.e("RENDERER", "estimated remaining render time: ${estRenderTime - (now() - renderToTexStartTime)/1000f}")
-                            //Log.e("RENDERER", "progress: $progress")
+                            //Log.e(TAG, "estimated remaining render time: ${estRenderTime - (now() - renderToTexStartTime)/1000f}")
+                            //Log.e(TAG, "progress: $progress")
                             handler.updateProgress(progress)
 
 
@@ -1915,7 +1945,7 @@ class FractalRenderer(
 
                                 //glitch = findGlitchMostPixels(imArray, auxTexture.res.w / samplesPerRow, auxTexture.res)
                                 glitch = findGlitchMostPixels(auxTexture, auxTexture.res.w / samplesPerRow, auxTexture.res.run { Point(w, h) })
-                                //Log.e("RENDERER", "largest glitch size (sample rate= $samplesPerRow): ${glitch.size}")
+                                //Log.e(TAG, "largest glitch size (sample rate= $samplesPerRow): ${glitch.size}")
                                 if (glitch.size > minGlitchSize || samplesPerRow == auxTexture.res.w) break
                                 samplesPerRow *= 2
 
@@ -1953,7 +1983,7 @@ class FractalRenderer(
 
 
 
-                        Log.v("RENDERER", "${deadPixels.size} dead pixels")
+                        Log.v(TAG, "${deadPixels.size} dead pixels")
                         for (p in deadPixels) {
                             val neighborX = if (p.x + 1 == auxTexture.res.w) p.x - 1 else p.x + 1
                             auxTexture.set(p.x, p.y, 0, auxTexture.get(neighborX, p.y, 0))
@@ -1969,7 +1999,7 @@ class FractalRenderer(
 
 
                         calcTimeTotal = refCalcTimeTotal + renderTimeTotal + centerCalcTimeTotal
-                        Log.v("RENDERER",
+                        Log.v(TAG,
                             "[total: ${(currentTimeMs() - renderToTexStartTime) / 1000f} sec], " +
                                     "[reference: ${nativeRefCalcTimeTotal / 1000f} sec], " +
                                     "[renderscript: ${renderTimeTotal / 1000f} sec], " +
@@ -1984,14 +2014,14 @@ class FractalRenderer(
                     }
                     CpuPrecision.DOUBLE -> {
 
-                        //Log.e("RENDERER", "CPU double")
+                        //Log.e(TAG, "CPU double")
 
                         val auxTexture = when (texture) {
                             foreground -> if (sc.resolution.w > Resolution.R1440.w) foreground else fgAuxiliary
                             background -> bgAuxiliary
                             thumbnail -> thumbnail
                             else -> {
-                                Log.e("RENDERER", "else")
+                                Log.e(TAG, "else")
                                 fgAuxiliary
                             }
                         }
@@ -2061,7 +2091,7 @@ class FractalRenderer(
 
                             yStart = yEnd
                             yEnd = ((i + 1).toDouble() / numChunks * texture.res.h).toInt()
-                            //Log.e("RENDERER", "y range: ($yStart, $yEnd)")
+                            //Log.e(TAG, "y range: ($yStart, $yEnd)")
 
                             data.set_yStart(0, yStart, true)
                             data.set_yEnd(0, yEnd, true)
@@ -2113,8 +2143,8 @@ class FractalRenderer(
                                 }
                             }
                         }
-                        Log.v("RENDERER", "min-max: ($textureMin, $textureMax)")
-                        Log.e("RENDERER", "minmax calc took ${(currentTimeMs() - t)/1000f} sec")
+                        Log.v(TAG, "min-max: ($textureMin, $textureMax)")
+                        Log.e(TAG, "minmax calc took ${(currentTimeMs() - t)/1000f} sec")
 
                     }
                 }
@@ -2123,12 +2153,12 @@ class FractalRenderer(
         }
 
 
-        //Log.e("RENDERER", "misc operations took ${(now() - renderToTexStartTime - calcTimeTotal)/1000f} sec")
+        //Log.e(TAG, "misc operations took ${(now() - renderToTexStartTime - calcTimeTotal)/1000f} sec")
 
         val renderTime = (currentTimeNs() - renderToTexStartTime).toDouble() / 1e9
-        Log.v("RENDERER", "renderToTexture took $renderTime sec")
+        Log.v(TAG, "renderToTexture took $renderTime sec")
         handler.updateRenderStats(-1.0, renderTime, "")
-        // if (texture == continuous) Log.v("RENDERER", "fps: ${1000f / (now() - renderToTexStartTime)}")
+        // if (texture == continuous) Log.v(TAG, "fps: ${1000f / (now() - renderToTexStartTime)}")
 
     }
 
@@ -2138,6 +2168,7 @@ class FractalRenderer(
         continuous: Boolean = false,
         texCoordScale: Float = 1f,
         texCoordShift: PointF = PointF(0f, 0f),
+        convertToYUV: Boolean = false,
         blockRenderFinishedListener: Boolean = false
     ) {
 
@@ -2155,17 +2186,14 @@ class FractalRenderer(
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
         val viewport = when {
-            isRenderingVideo -> texture.res.videoCompanions!!.first  // companion is target video resolution
+            isRenderingVideo && convertToYUV -> texture.res.videoCompanion!!  // companion is target video resolution
             actualSize -> if (texture.res.w > Resolution.SCREEN.w) texture.res.getBuilder() else texture.res
             else -> Resolution.SCREEN
         }.run { Point(w, h) }
 
-        val yOrient = if (actualSize || isRenderingVideo) -1f else 1f
+        val yOrient = if (actualSize) -1f else 1f
 
-//        if (continuous) glViewport(0, 0, (foreground.res.w*foreground.res.w/continuousRes.x), (foreground.res.h*foreground.res.h/continuousRes.y))
-//        else            glViewport(0, 0, viewport.x, viewport.y)
-
-        Log.v("RENDERER", "viewport: ${viewport.x} x ${viewport.y}")
+        Log.v(TAG, "viewport: ${viewport.x} x ${viewport.y}")
         glViewport(0, 0, viewport.x, viewport.y)
 
         val aspect = aspectRatio.toFloat()
@@ -2250,13 +2278,14 @@ class FractalRenderer(
 //            else {
 //                textureMin = textureMins.average().toFloat()
 //                textureMax = textureMaxs.average().toFloat()
-//                if (isRenderingVideo) Log.e("RENDERER", "min: $textureMin, max: $textureMax")
+//                if (isRenderingVideo) Log.e(TAG, "min: $textureMin, max: $textureMax")
 //            }
 //        }
 
-        glUniform1fv(minHandle, 1, floatArrayOf(textureSpan.min()), 0)
-        glUniform1fv(maxHandle, 1, floatArrayOf(textureSpan.max()), 0)
-        glUniform1iv(convertYUVHandle, 1, intArrayOf(if (isRenderingVideo) 1 else 0), 0)
+        glUniform1fv(minHandle, 1, floatArrayOf(textureSpan.min.x), 0)
+        glUniform1fv(maxHandle, 1, floatArrayOf(textureSpan.max.x), 0)
+
+        glUniform1iv(convertYUVHandle, 1, intArrayOf(if (convertToYUV) 1 else 0), 0)
         glUniform1iv(convert565Handle, 1, intArrayOf(if (texture == thumbnail) 1 else 0), 0)
         glUniform1iv(imageTextureColorHandle, 1, intArrayOf(if (f.texture.hasRawOutput) 1 else 0), 0)
         glUniform1iv(adjustWithZoomHandle, 1, intArrayOf(if (f.texture.auto) 1 else 0), 0)
@@ -2292,11 +2321,11 @@ class FractalRenderer(
         glDisableVertexAttribArray(quadCoordsColorHandle)
 
         if (!isRenderingVideo) handler.updateProgress(0.0)
-        // Log.v("RENDERER", "renderFromTexture took ${System.currentTimeMillis() - t} ms")
+        // Log.v(TAG, "renderFromTexture took ${System.currentTimeMillis() - t} ms")
 
-        if (isRenderingVideo) {
+        if (convertToYUV) {
 
-            val outputResolution = sc.resolution.videoCompanions!!.first
+            val outputResolution = sc.resolution.videoCompanion!!
             val height16x9 = outputResolution.w*16/9
             val skipRows = (outputResolution.h - height16x9)/2
             val bb = ByteBuffer.allocate(outputResolution.n*4)
@@ -2376,11 +2405,11 @@ class FractalRenderer(
             GL_UNSIGNED_BYTE,
             buffer
         )
-        Log.v("RENDERER", "glReadPixels took ${currentTimeMs() - t2} ms")
+        Log.v(TAG, "glReadPixels took ${currentTimeMs() - t2} ms")
 
         //logError()
 
-        Log.v("RENDERER", "bitmap migration took ${currentTimeMs() - t1} ms")
+        Log.v(TAG, "bitmap migration took ${currentTimeMs() - t1} ms")
 
         if (texture == thumbnail) {
 
@@ -2409,7 +2438,7 @@ class FractalRenderer(
         }
         else if (subImageIndex != null) {
 
-            // Log.v("RENDERER", "subImageIndex: $subImageIndex")
+            // Log.v(TAG, "subImageIndex: $subImageIndex")
 
             val builder = sc.resolution.getBuilder()
             var writeWidth = builder.w
@@ -2426,7 +2455,7 @@ class FractalRenderer(
             pixels.apply { forEachIndexed { i, c ->
                 set(i, Color.argb(255, Color.blue(c), Color.green(c), Color.red(c)))
             }}
-            Log.v("RENDERER", "y: ${subImageIndex.y * builder.h}, height: ${builder.h}, bitmap height: ${bitmap.height}")
+            Log.v(TAG, "y: ${subImageIndex.y * builder.h}, height: ${builder.h}, bitmap height: ${bitmap.height}")
             bitmap.setPixels(
                 pixels,
                 0, writeWidth,
@@ -2445,20 +2474,20 @@ class FractalRenderer(
     }
     private fun saveImage(im: Bitmap) {
 
-        // Log.v("RENDERER", "available heap size: ${act.getAvailableHeapMemory()} MB")
+        // Log.v(TAG, "available heap size: ${act.getAvailableHeapMemory()} MB")
 
         // convert bitmap to jpeg
         val bos = ByteArrayOutputStream()
         val compressed = im.compress(Bitmap.CompressFormat.JPEG, 100, bos)
-        if (!compressed) { Log.e("RENDERER", "could not compress image") }
+        if (!compressed) { Log.e(TAG, "could not compress image") }
 
-        // Log.v("RENDERER", "available heap size: ${act.getAvailableHeapMemory()} MB")
+        // Log.v(TAG, "available heap size: ${act.getAvailableHeapMemory()} MB")
 
         if (renderProfile != RenderProfile.SAVE_THUMBNAIL) im.recycle()
 
         // get current date and time
         val c = GregorianCalendar(TimeZone.getDefault())
-        // Log.v("RENDERER", "${c[Calendar.YEAR]}, ${c[Calendar.MONTH]}, ${c[Calendar.DAY_OF_MONTH]}")
+        // Log.v(TAG, "${c[Calendar.YEAR]}, ${c[Calendar.MONTH]}, ${c[Calendar.DAY_OF_MONTH]}")
         val year = c[Calendar.YEAR]
         val month = c[Calendar.MONTH]
         val day = c[Calendar.DAY_OF_MONTH]
@@ -2485,12 +2514,12 @@ class FractalRenderer(
 
                     // create directory if not already created
                     if (!dir.exists()) {
-                        Log.v("RENDERER", "Directory does not exist -- creating...")
+                        Log.v(TAG, "Directory does not exist -- creating...")
                         when {
-                            dir.mkdir() -> Log.v("RENDERER", "Directory created")
-                            dir.mkdirs() -> Log.v("RENDERER", "Directories created")
+                            dir.mkdir() -> Log.v(TAG, "Directory created")
+                            dir.mkdirs() -> Log.v(TAG, "Directories created")
                             else -> {
-                                Log.e("RENDERER", "Directory could not be created")
+                                Log.e(TAG, "Directory could not be created")
                                 handler.showMessage(R.string.msg_error)
                                 return
                             }
@@ -2540,7 +2569,7 @@ class FractalRenderer(
                 fos?.write(bos.toByteArray())
                 fos?.close()
                 Fractal.tempBookmark1.thumbnailPath = "bm_thumb_$imageName.jpg"
-                Log.v("RENDERER", "thumbnailPath: ${Fractal.tempBookmark1.thumbnailPath}")
+                Log.v(TAG, "thumbnailPath: ${Fractal.tempBookmark1.thumbnailPath}")
                 Fractal.tempBookmark1.thumbnail = im
                 handler.showBookmarkDialog()
             }
@@ -2570,8 +2599,8 @@ class FractalRenderer(
         }
         br.close()
 
-        //Log.v("RENDERER", str)
-        //Log.e("RENDERER", "color shader length: ${str.length}")
+        //Log.v(TAG, str)
+        //Log.e(TAG, "color shader length: ${str.length}")
 
         return str
 
@@ -2601,8 +2630,8 @@ class FractalRenderer(
     fun setTextureSpan(min: Float, max: Float) {
         Log.v(TAG, "setting texture span to: ($min, $max)")
         calcNewTextureSpan = false
-        textureSpan.size.set(abs(max - min))
-        textureSpan.center.set(0.5f*(max + min))
+        textureSpan.min.set(min)
+        textureSpan.max.set(max)
     }
 
 
@@ -2733,8 +2762,8 @@ class FractalRenderer(
         shapeFinal    = res.getString(f.shape.final)
         textureFinal  = "textureValueInt = " + (if (f.texture.hasRawOutput) f.texture.final else "floatBitsToUint(excludeSpecial(${f.texture.final}))") + ";"
 
-        // Log.e("RENDERER", textureLoop)
-        // Log.e("RENDERER", textureFinal)
+        // Log.e(TAG, textureLoop)
+        // Log.e(TAG, textureFinal)
 
         renderShader = renderShaderTemplate
                 // .replace( IMAGE_UNIFORM, imageUniform )
@@ -2751,7 +2780,7 @@ class FractalRenderer(
                 .replace(CONDITIONAL, conditional)
 
 //        renderShader.lines().forEach {
-//            Log.e("RENDERER", it)
+//            Log.e(TAG, it)
 //        }
 
         // renderShader = testCode
@@ -2763,7 +2792,7 @@ class FractalRenderer(
         // or a fragment shader type (GL_FRAGMENT_SHADER)
         val shader = glCreateShader(type)
         if (shader == 0 || shader == GL_INVALID_ENUM) {
-            Log.e("RENDERER", "create shader failed")
+            Log.e(TAG, "create shader failed")
             logError()
         }
 
@@ -2774,8 +2803,8 @@ class FractalRenderer(
         val a = IntBuffer.allocate(1)
         glGetShaderiv(shader, GL_COMPILE_STATUS, a)
         if (a[0] == GL_FALSE) {
-            Log.e("RENDERER", "shader compile failed")
-            Log.e("RENDERER", glGetShaderInfoLog(shader))
+            Log.e(TAG, "shader compile failed")
+            Log.e(TAG, glGetShaderInfoLog(shader))
             logError()
         }
 
@@ -2862,7 +2891,7 @@ class FractalRenderer(
 
     private fun onRenderShaderChanged() {
 
-        Log.v("RENDERER", "render shader changed")
+        Log.v(TAG, "render shader changed")
 
 
         updateRenderShader()
@@ -2877,19 +2906,19 @@ class FractalRenderer(
         // check program link success
         val q = IntBuffer.allocate(1)
         glGetProgramiv(renderProgram, GL_LINK_STATUS, q)
-        // Log.e("RENDERER", "program linked: ${q[0] == GL_TRUE}")
+        // Log.e(TAG, "program linked: ${q[0] == GL_TRUE}")
 
         // reassign location handles to avoid bug on Mali GPUs
         getRenderUniformLocations()
 
         renderShaderChanged = false
 
-        //Log.v("RENDERER", "render shader changing done")
+        //Log.v(TAG, "render shader changing done")
 
     }
     private fun onForegroundResolutionChanged() {
 
-        Log.v("RENDERER", "resolution changed -- old res: ${foreground.res}, new res: ${sc.resolution}")
+        Log.v(TAG, "resolution changed -- old res: ${foreground.res}, new res: ${sc.resolution}")
 
         val prevTextureSize = foreground.res.n.toDouble()
         foreground1.delete()
@@ -3014,12 +3043,12 @@ class FractalRenderer(
     }
     fun onContinuousPositionRenderChanged() {
         if (sc.continuousPosRender) {
-            textureSpan.center.delta = MotionValue.DELTA_CONTINUOUS
-            textureSpan.size.delta = MotionValue.DELTA_CONTINUOUS
+            textureSpan.min.delta = MotionValue.DELTA_CONTINUOUS
+            textureSpan.max.delta = MotionValue.DELTA_CONTINUOUS
         }
         else {
-            textureSpan.center.delta = MotionValue.DELTA_DISCRETE
-            textureSpan.size.delta = MotionValue.DELTA_DISCRETE
+            textureSpan.min.delta = MotionValue.DELTA_DISCRETE
+            textureSpan.max.delta = MotionValue.DELTA_DISCRETE
         }
     }
     private fun onLoadTextureImage(firstLoad: Boolean = false) {
@@ -3056,19 +3085,19 @@ class FractalRenderer(
                 }
                 f.imageId != -1   -> BitmapFactory.decodeResource(res, f.imageId, options)
                 else -> {
-                    Log.e("RENDERER", "no image path or id")
+                    Log.e(TAG, "no image path or id")
                     null
                 }
             }
         } catch (e: Exception) {
-            Log.e("RENDERER", "image path invalid")
+            Log.e(TAG, "image path invalid")
             null
         }
 
         val readWidth = options.outWidth
         val readHeight = options.outHeight
 
-        // Log.v("RENDERER", "w: $readWidth, h: $readHeight")
+        // Log.v(TAG, "w: $readWidth, h: $readHeight")
 
         image = GLTexture(Resolution(readWidth, readHeight), GL_LINEAR, GL_RGBA8, IMAGE_INDEX, "image")
         image.byteBuffer?.position(0)
@@ -3084,7 +3113,7 @@ class FractalRenderer(
         updateContinuousRes()
         resetContinuousSize = false
     }
-    private fun updateContinuousRes() {
+    fun updateContinuousRes() {
         continuousRes.x = (continuousSize*Resolution.SCREEN.w).round(10).clamp(30, foreground.res.w)
         continuousRes.y = (continuousRes.x*aspectRatio).roundToInt()
         Log.v(TAG, "continuous res: ${continuousRes.x} x ${continuousRes.y}, ratio: ${continuousRes.x.toFloat() / foreground.res.w.toFloat()}")
@@ -3101,13 +3130,13 @@ class FractalRenderer(
             GL_OUT_OF_MEMORY -> "out of memory"
             else -> "idfk"
         }
-        Log.e("RENDERER", s)
+        Log.e(TAG, s)
 
         var log = glGetProgramInfoLog(renderProgram)
-        Log.e("RENDERER", log)
+        Log.e(TAG, log)
 
         log = glGetShaderInfoLog(fRenderShader)
-        Log.e("RENDERER", log)
+        Log.e(TAG, log)
 
 
 
@@ -3262,12 +3291,12 @@ class FractalRenderer(
             }
         }
 
-        //Log.e("RENDERER", "flood-fill took ${(now() - floodFillTimeStart)/1000f} sec")
-        //Log.e("FSV", "numConnectedComponents: $numConnectedComponents")
-        //Log.e("FSV", "maxComponentSize: $maxComponentSize")
+        //Log.e(TAG, "flood-fill took ${(now() - floodFillTimeStart)/1000f} sec")
+        //Log.e(TAG, "numConnectedComponents: $numConnectedComponents")
+        //Log.e(TAG, "maxComponentSize: $maxComponentSize")
 
-        //Log.e("RENDERER", "glitch size: ${glitch.size}")
-        //Log.e("RENDERER", "largest glitch size: ${largestGlitch.size}")
+        //Log.e(TAG, "glitch size: ${glitch.size}")
+        //Log.e(TAG, "largest glitch size: ${largestGlitch.size}")
         return largestGlitch
 
     }
@@ -3332,11 +3361,11 @@ class FractalRenderer(
 
             }
         }
-        Log.e("RENDERER", "flood-fill took ${(currentTimeMs() - floodFillTimeStart) / 1000f} sec")
-        //Log.e("FSV", "numConnectedComponents: $numConnectedComponents")
-        //Log.e("FSV", "maxComponentSize: $maxComponentSize")
-        //Log.e("RENDERER", "glitch size: ${glitch.size}")
-        //Log.e("RENDERER", "largest glitch size: ${largestGlitch.size}")
+        Log.e(TAG, "flood-fill took ${(currentTimeMs() - floodFillTimeStart) / 1000f} sec")
+        //Log.e(TAG, "numConnectedComponents: $numConnectedComponents")
+        //Log.e(TAG, "maxComponentSize: $maxComponentSize")
+        //Log.e(TAG, "glitch size: ${glitch.size}")
+        //Log.e(TAG, "largest glitch size: ${largestGlitch.size}")
 
 
         if (largestGlitch.size == 1) {
@@ -3360,7 +3389,7 @@ class FractalRenderer(
 
             }
 
-            Log.e("RENDERER", "init bounding box: ($xmin $xmax) ($ymin $ymax)")
+            Log.e(TAG, "init bounding box: ($xmin $xmax) ($ymin $ymax)")
 
             var bbLeft = xmin
             var bbRight = xmax
@@ -3415,7 +3444,7 @@ class FractalRenderer(
 
             }
 
-            Log.e("RENDERER", "bounding box: ($bbLeft, $bbRight) ($bbBottom, $bbTop)")
+            Log.e(TAG, "bounding box: ($bbLeft, $bbRight) ($bbBottom, $bbTop)")
 
             center.x = (bbLeft + bbRight) / 2
             center.y = (bbBottom + bbTop) / 2
@@ -3488,7 +3517,7 @@ class FractalRenderer(
 
                     val area = (xmax - xmin)*(ymax - ymin)
                     if (area > maxArea) {
-                        Log.e("RENDERER", "maxArea = $maxArea")
+                        Log.e(TAG, "maxArea = $maxArea")
                         largestGlitch = ArrayList(glitch)
                         maxArea = area
                     }
@@ -3499,12 +3528,12 @@ class FractalRenderer(
             }
         }
 
-        Log.e("RENDERER", "flood-fill took ${(currentTimeMs() - floodFillTimeStart) / 1000f} sec")
-        //Log.e("FSV", "numConnectedComponents: $numConnectedComponents")
-        //Log.e("FSV", "maxComponentSize: $maxComponentSize")
+        Log.e(TAG, "flood-fill took ${(currentTimeMs() - floodFillTimeStart) / 1000f} sec")
+        //Log.e(TAG, "numConnectedComponents: $numConnectedComponents")
+        //Log.e(TAG, "maxComponentSize: $maxComponentSize")
 
-        //Log.e("RENDERER", "glitch size: ${glitch.size}")
-        //Log.e("RENDERER", "largest glitch size: ${largestGlitch.size}")
+        //Log.e(TAG, "glitch size: ${glitch.size}")
+        //Log.e(TAG, "largest glitch size: ${largestGlitch.size}")
         return largestGlitch
 
     }
@@ -3544,7 +3573,7 @@ class FractalRenderer(
                 (1f / (reciprocalSumHeight / glitch.size)).toInt()
         )
 
-        //Log.e("RENDERER", "harmonic mean: (${harmonicMean.x}, ${harmonicMean.y})")
+        //Log.e(TAG, "harmonic mean: (${harmonicMean.x}, ${harmonicMean.y})")
 
         var minDist = Float.MAX_VALUE
         for (pixel in glitch) {

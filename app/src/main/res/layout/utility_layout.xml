@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/utilityButtons"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/utilityLayoutHeight"
+    android:animateLayoutChanges="true"
+    android:gravity="center_horizontal"
+    android:orientation="horizontal"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
+
+    <LinearLayout
+        android:id="@+id/texture_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/texture_list_button"
+            style="@style/UtilityItem"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:id="@+id/textView18"
+                style="@style/ParamLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="2dp"
+                android:gravity="center"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="@string/texture" />
+
+            <ImageView
+                android:id="@+id/imageView12"
+                android:layout_width="24dp"
+                android:layout_height="match_parent"
+                android:padding="2dp"
+                app:srcCompat="@drawable/open_list" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/texture_region_button"
+            style="@style/UtilityItem"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:id="@+id/textView10"
+                style="@style/ParamLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="@string/region" />
+
+            <ImageView
+                android:id="@+id/imageView5"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="2dp"
+                android:padding="4dp"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/texture_region_in" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/color_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:paddingStart="6dp">
+
+        <LinearLayout
+            android:id="@+id/palette_list_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <TextView
+                android:id="@+id/textView19"
+                style="@style/ParamLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/palette" />
+
+            <FrameLayout
+                android:layout_width="86dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="0dp"
+                android:paddingStart="4dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="4dp"
+                android:paddingBottom="10dp">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:cardBackgroundColor="@color/transparent"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp">
+
+                    <View
+                        android:id="@+id/palette_list_button_gradient"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/accent2" />
+
+                </androidx.cardview.widget.CardView>
+            </FrameLayout>
+        </LinearLayout>
+
+        <com.selfsimilartech.fractaleye.AlphaToggleButton
+            android:id="@+id/colorAutofitButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@null"
+            android:drawableStart="@drawable/auto2"
+            android:drawablePadding="8dp"
+            android:minWidth="30dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:text="@string/autofit" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/position_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/position_reset_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:id="@+id/textView26"
+                style="@style/ParamLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/reset" />
+
+            <ImageButton
+                style="@style/UtilityItem"
+                android:layout_width="24dp"
+                android:layout_height="match_parent"
+                android:padding="2dp"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/reset" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <ImageButton
+                android:id="@+id/position_decrease_button"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_button_ripple"
+                app:srcCompat="@drawable/zoom_out" />
+
+            <com.selfsimilartech.fractaleye.SensitivityButton
+                android:id="@+id/position_sensitivity_button"
+                android:layout_width="26dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/sensitivity_button_ripple"
+                app:srcCompat="@drawable/sensitivity_med" />
+
+            <ImageButton
+                android:id="@+id/position_increase_button"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_button_ripple"
+                app:srcCompat="@drawable/zoom_in" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/shape_utility_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:animateLayoutChanges="true"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/shape_list_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <TextView
+                android:id="@+id/textView24"
+                style="@style/ParamLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/shape" />
+
+            <ImageView
+                android:id="@+id/shape_list_icon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/mandelbrot_icon" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/julia_mode_button"
+            style="@style/SwitchDark"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:text="@string/julia"
+            android:textAppearance="@android:style/TextAppearance.Material.Button"
+            app:switchPadding="10dp" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/position_params_toggle"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/menu_button_ripple"
+        android:visibility="gone"
+        app:srcCompat="@drawable/button_selector"
+        tools:layout_editor_absoluteX="411dp"
+        tools:layout_editor_absoluteY="687dp" />
+
+</LinearLayout>

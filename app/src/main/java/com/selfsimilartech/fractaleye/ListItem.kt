@@ -1,19 +1,15 @@
 package com.selfsimilartech.fractaleye
 
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.*
-import android.widget.ToggleButton
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
-import eu.davidea.flexibleadapter.items.AbstractSectionableItem
 import eu.davidea.flexibleadapter.items.IFilterable
 import eu.davidea.flexibleadapter.items.IFlexible
 import eu.davidea.viewholders.FlexibleViewHolder
-import java.io.Serializable
 
 
 open class ListItem<T> (
@@ -73,7 +69,7 @@ open class ListItem<T> (
 
 
         holder.name?.text = t.name
-        holder.name?.showGradient = t.goldFeature && !SettingsConfig.goldEnabled
+        holder.name?.showGradient = t.goldFeature && !Settings.goldEnabled
         when {
             t is Shape && !t.isCustom() -> holder.image?.setImageResource(t.thumbnailId)
             t is Texture                -> holder.image?.setImageBitmap(t.thumbnail)
@@ -122,7 +118,7 @@ open class ListItem<T> (
         if (t is Fractal || t is Texture || (t is Shape && t.latex == "")) holder.copyButton?.hide()
         else  {
             holder.copyButton?.show()
-            holder.copyButton?.showGradient = !SettingsConfig.goldEnabled
+            holder.copyButton?.showGradient = !Settings.goldEnabled
             holder.copyButton?.setOnClickListener {
                 holder.options?.hide()
                 adapter.onDuplicate(adapter, this)

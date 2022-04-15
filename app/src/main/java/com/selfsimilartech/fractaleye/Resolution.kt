@@ -7,7 +7,12 @@ fun Double.roundEven() : Int {
     return if (f % 2 == 0) f else f + 1
 }
 
-class Resolution(width: Int, private val builders: List<Resolution>? = null, var videoCompanions: Pair<Resolution, Resolution>? = null) {
+class Resolution(
+    width: Int,
+    private val builders: List<Resolution>? = null,
+    var videoCompanion: Resolution? = null,
+    var bitrateCoef : Double = 1.0
+) {
 
     constructor(width: Int, height: Int) : this(width, null) {
         h = height
@@ -34,17 +39,19 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null, var
     companion object {
 
         val SAMPLE = Resolution(4)
+        val R791   = Resolution(791)
         val R1187  = Resolution(1187)
         val R1781  = Resolution(1781)
         val R2374  = Resolution(2374)
+        val R3561  = Resolution(3561)
 
         val R180   = Resolution(180)
         val R360   = Resolution(360)
-        val R480   = Resolution(480)
-        val R720   = Resolution(720,                videoCompanions = Pair(R1187, SAMPLE))
-        val R1080  = Resolution(1080, listOf(R360), videoCompanions = Pair(R1781, SAMPLE))
-        val R1440  = Resolution(1440, listOf(R720), videoCompanions = Pair(R2374, SAMPLE))
-        val R2160  = Resolution(2160, listOf(R720))
+        val R480   = Resolution(480,                videoCompanion = R791,  bitrateCoef = 0.11111111)
+        val R720   = Resolution(720,                videoCompanion = R1187, bitrateCoef = 0.25)
+        val R1080  = Resolution(1080, listOf(R360), videoCompanion = R1781, bitrateCoef = 0.5625)
+        val R1440  = Resolution(1440, listOf(R720), videoCompanion = R2374, bitrateCoef = 1.0)
+        val R2160  = Resolution(2160, listOf(R720), videoCompanion = R3561, bitrateCoef = 0.0)
         val R2880  = Resolution(2880, listOf(R720))
 
         val R3600  = Resolution(3600, listOf(R720),      )
@@ -55,8 +62,8 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null, var
         val ultraHigh = listOf(R3600, R4320, R5040, R5760)
         val all = ArrayList(arrayListOf(
                 SAMPLE, R180, R360, R480, R720, R1080, R1440, R2160, R2880, R3600, R4320, R5040, R5760,
-                R1187, R1781, R2374
-        ).filter { BuildConfig.DEV_VERSION || it.w <= 2880 })
+                R791, R1187, R1781, R2374, R3561
+        ))
         val foregrounds = arrayListOf(R360, R480, R720, R1080, R1440, R2160, R2880, R3600, R4320, R5040, R5760)
 
         fun valueOf(width: Int) : Resolution? {
@@ -79,12 +86,10 @@ class Resolution(width: Int, private val builders: List<Resolution>? = null, var
                 }
             }
 
-            all.forEach { res -> res.n = res.w*res.h }
-
-            R1187.videoCompanions = Pair(R720, SAMPLE)
-            R1781.videoCompanions = Pair(R1080, SAMPLE)
-            R2374.videoCompanions = Pair(R1440, SAMPLE)
-
+            all.forEach { res ->
+                res.n = res.w*res.h
+                if (res.videoCompanion != null) res.videoCompanion?.videoCompanion = res
+            }
 
         }
 

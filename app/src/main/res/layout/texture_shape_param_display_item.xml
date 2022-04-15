@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    tools:showIn="@layout/texture_shape_param_display">
+
+    <LinearLayout
+        android:id="@+id/real_param_display"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:animateLayoutChanges="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/real_param_info"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:orientation="horizontal"
+            android:paddingEnd="6dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/real_param_icon_max"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                app:srcCompat="@drawable/detail" />
+
+            <!--                <TextView-->
+            <!--                    android:id="@+id/real_param_name"-->
+            <!--                    style="@style/ParamLabel"-->
+            <!--                    android:layout_width="0dp"-->
+            <!--                    android:layout_height="match_parent"-->
+            <!--                    android:layout_weight="1"-->
+            <!--                    android:gravity="center_vertical"-->
+            <!--                    android:paddingTop="0dp"-->
+            <!--                    android:paddingBottom="0dp"-->
+            <!--                    android:text="@string/detail" />-->
+
+            <TextView
+                android:id="@+id/real_param_name"
+                style="@style/ParamLabel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:text="@string/detail" />
+
+            <ImageButton
+                android:id="@+id/imageButton2"
+                style="@style/MenuButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:padding="3dp"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/reset" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingTop="2dp"
+            android:paddingEnd="8dp">
+
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekBar"
+                style="@style/SeekBar"
+                android:layout_width="0dp"
+                android:layout_weight="1" />
+
+            <EditText
+                android:id="@+id/real_param_value"
+                style="@style/EditNumberDark"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical|end"
+                android:minWidth="56dp"
+                android:paddingEnd="12dp"
+                android:text="255" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/complex_param_display"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:animateLayoutChanges="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="58dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/complex_param_icon"
+                    android:layout_width="26dp"
+                    android:layout_height="match_parent"
+                    android:padding="3dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    app:srcCompat="@drawable/julia" />
+
+                <TextView
+                    android:id="@+id/complex_param_name"
+                    style="@style/ParamLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center"
+                    android:text="@string/julia" />
+
+                <!--                    <TextView-->
+                <!--                        android:id="@+id/complex_param_name"-->
+                <!--                        style="@style/ParamLabel"-->
+                <!--                        android:layout_width="wrap_content"-->
+                <!--                        android:layout_height="match_parent"-->
+                <!--                        android:layout_gravity="center_horizontal"-->
+                <!--                        android:gravity="center"-->
+                <!--                        android:text="@string/julia" />-->
+
+            </LinearLayout>
+
+            <include
+                android:id="@+id/sensitivity"
+                layout="@layout/continuous_sensitivity_layout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!--                <include-->
+            <!--                    android:id="@+id/sensitivity"-->
+            <!--                    layout="@layout/continuous_sensitivity_layout"-->
+            <!--                    android:layout_width="match_parent"-->
+            <!--                    android:layout_height="0dp"-->
+            <!--                    android:layout_weight="1" />-->
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider22"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:background="@color/divider"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/complex_param_value1"
+                    style="@style/EditNumberDark"
+                    android:layout_width="85dp"
+                    android:imeOptions="actionNext"
+                    android:text="7.192214" />
+
+                <ToggleButton
+                    android:id="@+id/uLock"
+                    style="@style/LockDark"
+                    android:layout_width="26dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="0dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/complex_param_value2"
+                    style="@style/EditNumberDark"
+                    android:layout_width="85dp"
+                    android:text="-0.540185" />
+
+                <ToggleButton
+                    android:id="@+id/vLock"
+                    style="@style/LockDark"
+                    android:layout_width="26dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="0dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

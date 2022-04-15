@@ -11,25 +11,12 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class SatValueSelectorView : View {
+class SaturationValueSelector(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    private val cornerRadius : Float
+    private val rectOffset : Float
 
-    init {
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
-    }
-
-
-    lateinit var hueSelector : HueSelector
-
-    private val cornerRadius = 18.dp(context).toFloat()
-    private val rectOffset = 1.35f*cornerRadius*(1f - sqrt(2f)/2f)
-    var onUpdateLinkedColor: (newColor: Int) -> Unit = {}
-
-    var hue = 0f
-    var linkedColorIndex = 0
+    private var listener: OnColorChangeListener? = null
 
     private val rectPaint = Paint()
     private val selectorPaint1 = Paint().apply {
@@ -48,58 +35,52 @@ class SatValueSelectorView : View {
         style = Paint.Style.FILL
         color = Color.WHITE
     }
-    private val rect = RectF(
-            0f, 0f,
-            resources.getDimension(R.dimen.satValueSelectorLayoutWidth),
-            resources.getDimension(R.dimen.satValueSelectorLayoutHeight)
-    )
+    private val rect = RectF()
     private val selectorPos = Point(0, 0)
     private val selectorRadius = resources.getDimension(R.dimen.satValueSelectorRadius)
     private val selectorRadiusDiff = resources.getDimension(R.dimen.satValueSelectorRadiusDiff)
 
 
+    init {
 
-    var sat = 0f
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SaturationValueSelector)
+
+        cornerRadius = typedArray.getDimension(R.styleable.SaturationValueSelector_android_radius, 0f)
+        rectOffset = 1.35f*cornerRadius*(1f - sqrt(2f)/2f)
+
+        typedArray.recycle()
+
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
+
+
+    }
+
+
+    var hue    = 0f
+    var sat    = 0f
     var value  = 1f
+
     private val color = { Color.HSVToColor(floatArrayOf(hue, sat, value)) }
+
+
+    fun setOnColorChangeListener(l: OnColorChangeListener) {
+        listener = l
+    }
 
     fun setHue(newHue: Float, updateLinkedColor: Boolean = true) {
         hue = newHue
         selectorPaint4.color = color()
         updateRectShader()
-        if (updateLinkedColor) onUpdateLinkedColor(color())
+        if (updateLinkedColor) listener?.onColorChanged(color())
     }
 
-    fun setSat(newSat: Float, updateLinkedColor: Boolean = true) {
+    fun setValues(newSat: Float, newVal: Float) {
         sat = newSat
-        selectorPaint4.color = color()
-        updateRectShader()
-        updateSelectorPos()
-        if (updateLinkedColor) onUpdateLinkedColor(color())
-    }
-
-    fun setVal(newVal: Float, updateLinkedColor: Boolean = true) {
         value = newVal
         selectorPaint4.color = color()
         updateRectShader()
         updateSelectorPos()
-        if (updateLinkedColor) onUpdateLinkedColor(color())
-    }
-
-    fun setColor(color: Int, updateLinkedColor: Boolean = true) {
-
-        Log.d("SATVAL", "loading color: (${color.hue()}, ${color.sat()}, ${color.value()})")
-
-        hueSelector.setHue(color.hue(), updateLinkedColor)
-        sat = color.sat()
-        value = color.value()
-
-        updateSelectorPos()
-        Log.d("SATVAL", "selectorPos: (${selectorPos.x}, ${selectorPos.y})")
-
-        selectorPaint4.color = color
-        if (updateLinkedColor) onUpdateLinkedColor(color)
-
+        listener?.onColorChanged(color())
     }
 
 
@@ -186,7 +167,7 @@ class SatValueSelectorView : View {
 
                 val newColor = color()
                 selectorPaint4.color = newColor
-                onUpdateLinkedColor(newColor)
+                listener?.onColorChanged(newColor)
                 invalidate()
 
             }

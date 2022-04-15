@@ -26,7 +26,7 @@ class VideoFragment : Fragment() {
         val act = activity as MainActivity
         val f = Fractal.default
         val fsv = act.fsv
-        val sc = SettingsConfig
+        val sc = Settings
 
         b.keyframeRecycler.adapter = VideoAdapter(act, fsv, fsv.video)
 
@@ -54,7 +54,7 @@ class VideoFragment : Fragment() {
                             fsv.r.renderToTex = true
                             fsv.requestRender()
                         } else {
-                            fsv.setVideoPosition(t)
+                            fsv.video.setVideoPosition(f, fsv.r, t)
                             fsv.r.renderToTex = true
                             fsv.requestRender()
                             b.videoScrubber.progress = (t*b.videoScrubber.max).toInt()
@@ -71,7 +71,7 @@ class VideoFragment : Fragment() {
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    fsv.setVideoPosition(progress.toDouble() / b.videoScrubber.max.toDouble())
+                    fsv.video.setVideoPosition(f, fsv.r, progress.toDouble() / b.videoScrubber.max.toDouble())
                     fsv.r.renderToTex = true
                     fsv.requestRender()
                 }

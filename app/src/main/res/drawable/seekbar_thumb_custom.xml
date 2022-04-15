@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false">
+        <shape
+            android:shape="ring"
+            android:innerRadius="2dp"
+            android:thickness="2dp"
+            android:useLevel="false"
+            android:tint="?attr/colorControlNormal"
+            android:opticalInsetLeft="3dp"
+            android:opticalInsetRight="3dp">
+            <solid
+                android:color="@color/white" />
+            <size
+                android:width="18dp"
+                android:height="18dp" />
+        </shape>
+    </item>
+
+</animated-selector>

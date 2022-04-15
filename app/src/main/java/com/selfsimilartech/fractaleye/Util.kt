@@ -1,7 +1,9 @@
 package com.selfsimilartech.fractaleye
 
 import android.animation.LayoutTransition
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Bitmap
@@ -9,15 +11,15 @@ import android.graphics.Color
 import android.graphics.PointF
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
+import android.os.Message
 import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Range
 import android.view.*
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -28,16 +30,20 @@ import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewbinding.ViewBinding
 import androidx.viewpager.widget.ViewPager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.selfsimilartech.fractaleye.databinding.UtilityLayout2Binding
 import org.apfloat.Apcomplex
 import org.apfloat.Apfloat
 import org.apfloat.ApfloatMath
 import java.io.Serializable
-import java.util.ArrayList
+import java.text.NumberFormat
+import java.text.ParseException
 import kotlin.math.*
 
 
@@ -52,8 +58,13 @@ interface Customizable : Goldable {
     var thumbnail : Bitmap?
     var isFavorite : Boolean
 
-    fun isCustom() : Boolean
+    fun edit()
+    fun revert()
+    fun commit(scope: LifecycleCoroutineScope, db: AppDatabase)
+    fun finalize(scope: LifecycleCoroutineScope, db: AppDatabase)
+    fun release()
 
+    fun isCustom() : Boolean
     fun getName(localizedResource: Resources) : String
 
 }
@@ -64,25 +75,146 @@ interface ClickListener {
 interface Toggleable {
     var isChecked : Boolean
 }
+interface OnColorChangeListener {
+    fun onColorChanged(newColor: Int)
+}
 
-enum class EditMode(val icon: Int, val alwaysDisplayParam: Boolean) {
+object CrashKey {
 
-    POSITION(R.drawable.position, false),
-    COLOR(R.drawable.color, false),
-    SHAPE(R.drawable.shape, true),
-    TEXTURE(R.drawable.texture, true),
-    NONE(R.drawable.cancel, false);
+    val ACT_MAIN_CREATED = "activity_main_created"
+    val MAX_ITER = "max_iterations"
+    val RESOLUTION = "resolution"
+    val GOLD_ENABLED = "gold_enabled"
+    val SHAPE_NAME = "shape_name"
+    val PALETTE_NAME = "palette_name"
+    val TEXTURE_NAME = "texture_name"
+    val LAST_ACTION = "last_action"
+    val GPU_NAME = "gpu_name"
+    val GL_MAX_TEXTURE_SIZE = "opengles_max_texture_size"
+    val FLOAT_PRECISION_BITS = "float_precision_bits"
+
+}
+object PreferenceKey {
+
+    val GOLD_ENABLED_DIALOG_SHOWN   = "goldEnabledDialogShown"
+    val GOLD_PENDING_DIALOG_SHOWN   = "goldPendingDialogShown"
+    val SHOW_EPILEPSY_DIALOG        = "showEpilepsyDialog"
+    val SHOW_TUTORIAL_OPTION        = "showTutorialOption"
+    val RESOLUTION                  = "resolution"
+    val ASPECT_RATIO                = "aspectRatio"
+    val CONTINUOUS_RENDER           = "continuousRender"
+    val RENDER_BACKGROUND           = "renderBackground"
+    val FIT_TO_VIEWPORT             = "fitToViewport"
+    val HIDE_NAV_BAR                = "hideNavBar"
+    val BUTTON_ALIGNMENT            = "buttonAlignment"
+    val COLOR_LIST_VIEW_TYPE        = "colorListViewType"
+    val SHAPE_LIST_VIEW_TYPE        = "shapeListViewType"
+    val TEXTURE_LIST_VIEW_TYPE      = "textureListViewType"
+    val BOOKMARK_LIST_VIEW_TYPE     = "bookmarkListViewType"
+    val AUTOFIT_COLOR_RANGE         = "autofitColorRange"
+    val PREV_FRACTAL_CREATED        = "previousFractalCreated"
+    val PREV_FRACTAL_ID             = "previousFractalId"
+    val TEX_IMAGE_COUNT             = "texImageCount"
+    val PALETTE                     = "palette"
+    val ACCENT_COLOR1               = "accentColor1"
+    val ACCENT_COLOR2               = "accentColor2"
+    val USE_ALTERNATE_SPLIT         = "useAlternateSplit"
+    val ADVANCED_SETTINGS           = "advancedSettings"
+    val RESTRICT_PARAMS             = "restrictParams"
+    val ALLOW_SLOW_DUALFLOAT        = "allowSlowDualfloat"
+    val ULTRA_HIGH_RES              = "ultraHighRes"
+    val CHUNK_PROFILE               = "chunkProfile"
+    val TARGET_FRAMERATE            = "targetFramerate"
+    val VERSION_CODE_TAG            = "versionCode"
+
+}
+
+fun Context?.asActivity() : Activity? {
+    return if (this == null) null
+    else when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.asActivity()
+        else -> null
+    }
+}
+object EditListener {
+    fun new(setAndFormat: (s: String) -> String) : TextView.OnEditorActionListener {
+        return TextView.OnEditorActionListener { v, actionId, event ->
+
+            when (actionId) {
+                EditorInfo.IME_ACTION_NEXT -> {
+                    v.text = setAndFormat(v.text.toString())
+                }
+                EditorInfo.IME_ACTION_DONE -> {
+                    v.text = setAndFormat(v.text.toString())
+                    val imm = v.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.rootView.windowToken, 0)
+                }
+                else -> {}
+            }
+
+            v.clearFocus()
+            v.isSelected = false
+
+            if (Settings.hideSystemBars) {
+                hideSystemBars(v.context.asActivity()!!.window, v.rootView)
+            } else {
+                showSystemBars(v.context.asActivity()!!.window, v.rootView)
+            }
+            true
+
+        }
+    }
+}
+
+enum class EditMode(val icon: Int, var showParams: Boolean, val hideableParams: Boolean) {
+
+    POSITION(R.drawable.position, false, true),
+    COLOR(R.drawable.color, false, true),
+    SHAPE(R.drawable.shape, true, false),
+    TEXTURE(R.drawable.texture, true, false),
+    NONE(R.drawable.cancel, false, false);
+
+    fun init(
+        paramMenuLayout     : ViewGroup? = null,
+        paramDisplayLayout  : ViewGroup? = null,
+        listLayout          : ViewGroup? = null,
+        utilityButtons      : ((b: UtilityLayout2Binding) -> ViewGroup)? = null,
+        listNavButtons      : Set<Button> = setOf(),
+        customNavButtons    : Set<Button> = setOf(),
+        updateDisplay       : () -> Unit = {},
+        updateLayout        : () -> Unit = {},
+        updateAdjust        : () -> Unit = {},
+        minimize            : () -> Unit = {},
+        maximize            : () -> Unit = {}
+    ) {
+
+        this.paramMenuLayout = paramMenuLayout
+        this.paramDisplayLayout = paramDisplayLayout
+        this.listLayout = listLayout
+        this.utilityButtons = utilityButtons
+        this.listNavButtons.addAll(listNavButtons)
+        this.customNavButtons.addAll(customNavButtons)
+        this.updateDisplay = updateDisplay
+        this.updateLayout = updateLayout
+        this.updateAdjust = updateAdjust
+        this.minimize = minimize
+        this.maximize = maximize
+
+    }
 
     var paramMenuLayout : ViewGroup? = null
     var paramDisplayLayout : ViewGroup? = null
     var listLayout      : ViewGroup? = null
-    var utilityButtons  : ViewGroup? = null
+    var utilityButtons  : ((b: UtilityLayout2Binding) -> ViewGroup)? = null
     var listNavButtons     : ArrayList<Button> = arrayListOf()
     var customNavButtons   : ArrayList<Button> = arrayListOf()
 
     var updateDisplay : () -> Unit = {}
     var updateLayout: () -> Unit = {}
     var updateAdjust: () -> Unit = {}
+    var minimize: () -> Unit = {}
+    var maximize: () -> Unit = {}
 
 }
 enum class GpuPrecision(val bits: Int, val threshold: Double) {
@@ -105,6 +237,72 @@ enum class TextureRegion(val iconId: Int) {
     BOTH(R.drawable.texture_region_both)
 }
 enum class ListLayoutType { GRID, LINEAR }
+enum class ButtonAlignment {
+
+    LEFT {
+        override fun updateLayout(layout: ConstraintLayout, buttons: LinearLayout, paramMenu: LinearLayout, linearLayouts: List<LinearLayout>) {
+            
+            val margin = 8.dp(layout.context)
+            val a = buttons.id
+            
+            linearLayouts.forEach { it.orientation = LinearLayout.VERTICAL }
+            
+            ConstraintSet().let { set ->
+                set.clone(layout)
+                set.clear(a, ConstraintSet.END)
+                set.connect(a, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+                set.connect(a, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                set.setVerticalBias(a, 0.618f)
+                set.connect(a, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, margin)
+                set.applyTo(layout)
+            }
+        }
+    },
+    CENTER {
+        override fun updateLayout(layout: ConstraintLayout, buttons: LinearLayout, paramMenu: LinearLayout, linearLayouts: List<LinearLayout>) {
+            
+            val margin = 4.dp(layout.context)
+            val a = buttons.id
+            val b = paramMenu.id
+
+            linearLayouts.forEach { it.orientation = LinearLayout.HORIZONTAL }
+            
+            ConstraintSet().let { set ->
+                set.clone(layout)
+                set.setVerticalBias(a, 0f)
+                set.clear(a, ConstraintSet.TOP)
+                set.connect(a, ConstraintSet.BOTTOM, b, ConstraintSet.TOP, margin )
+                set.connect(a, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 0)
+                set.connect(a, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 0)
+                set.applyTo(layout)
+            }
+        }
+    },
+    RIGHT {
+        override fun updateLayout(layout: ConstraintLayout, buttons: LinearLayout, paramMenu: LinearLayout, linearLayouts: List<LinearLayout>) {
+            
+            val margin = 8.dp(layout.context)
+            val a = buttons.id
+
+            linearLayouts.forEach { it.orientation = LinearLayout.VERTICAL }
+            
+            ConstraintSet().let { set ->
+                set.clone(layout)
+                set.clear(a, ConstraintSet.START)
+                set.connect(a, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+                set.connect(a, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                set.setVerticalBias(a, 0.618f)
+                set.connect(a, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, margin)
+                set.applyTo(layout)
+            }
+            
+        }
+    };
+
+    abstract fun updateLayout(layout: ConstraintLayout, buttons: LinearLayout, paramMenu: LinearLayout, linearLayouts: List<LinearLayout>)
+
+}
+enum class WindowSizeClass { COMPACT, MEDIUM, EXPANDED }
 
 enum class Sensitivity(val iconId: Int) {
 
@@ -140,11 +338,34 @@ enum class UiState {
     HOME,
     EDITMODE_LIST,
     BOOKMARK_LIST,
+    CUSTOM_ACCENT,
     CUSTOM_PALETTE,
     CUSTOM_SHAPE,
     RANDOMIZER,
-    VIDEO
+    VIDEO_CONFIG,
+    VIDEO_PROGRESS
 
+}
+enum class MessageType(val performAction: (act: MainActivity?, msg: Message) -> Unit) {
+    MSG_UPDATE_COLOR_THUMBNAILS       ({ activity, msg -> activity?.updateColorThumbnails(msg.obj as Boolean) }),
+    MSG_UPDATE_TEXTURE_THUMBNAILS     ({ activity, msg -> activity?.updateTextureThumbnail(msg.arg1) }),
+    MSG_UPDATE_SHAPE_THUMBNAILS       ({ activity, msg -> activity?.updateShapeThumbnail(msg.obj as Shape, msg.arg1) }),
+    MSG_SHOW_MESSAGE_ID               ({ activity, msg -> activity?.showMessage(msg.obj as Int) }),
+    MSG_SHOW_MESSAGE_STRING           ({ activity, msg -> activity?.showMessage(msg.obj as String) }),
+    MSG_SHOW_BOOKMARK_DIALOG          ({ activity, msg -> activity?.showBookmarkDialog(Fractal.tempBookmark1) }),
+    MSG_BOOKMARK_AS_PREVIOUS_FRACTAL  ({ activity, msg -> activity?.bookmarkAsPreviousFractal() }),
+    MSG_ADD_KEYFRAME                  ({ activity, msg -> activity?.addKeyframe() }),
+    MSG_UPDATE_RENDER_STATS           ({ activity, msg -> }),
+    MSG_UPDATE_POS_PARAM              ({ activity, msg -> EditMode.POSITION.updateDisplay() }),
+    MSG_UPDATE_COLOR_PARAM            ({ activity, msg -> activity?.updateColorDisplay() }),
+    MSG_UPDATE_SHAPE_TEX_PARAM        ({ activity, msg -> activity?.updateShapeDisplayValues() }),
+    MSG_UPDATE_PROGRESS               ({ activity, msg -> activity?.b?.progressBar?.apply { progress = ((msg.obj as Double)*max.toDouble()).toInt() } }),
+    MSG_QUERY_TUTORIAL_TASK_COMPLETE  ({ activity, msg -> activity?.queryTutorialTaskComplete() }),
+    MSG_SHARE_IMAGE                   ({ activity, msg -> activity?.shareImage() }),
+    MSG_HIDE_UI                       ({ activity, msg -> activity?.b?.overlay?.hide() }),
+    MSG_SHOW_UI                       ({ activity, msg -> activity?.b?.overlay?.show() }),
+    MSG_SET_UI_STATE                  ({ activity, msg -> activity?.setUiState(msg.obj as UiState) }),
+    MSG_SET_VIDEO_PROGRESS            ({ activity, msg -> activity?.setVideoProgress(msg.obj as Double) })
 }
 
 interface Sensitive {
@@ -370,6 +591,7 @@ class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager,
 /* SYSTEM / UI */
 
 enum class Action {
+
     INIT,
     SETTINGS,
     UPGRADE,
@@ -384,10 +606,11 @@ enum class Action {
     TEXTURE_CHANGE,
     BOOKMARK_LOAD,
     RANDOMIZE
+
 }
 fun crashlytics() : FirebaseCrashlytics = FirebaseCrashlytics.getInstance()
 fun FirebaseCrashlytics.updateLastAction(action: Action) {
-    setCustomKey(CRASH_KEY_LAST_ACTION, action.name)
+    setCustomKey(CrashKey.LAST_ACTION, action.name)
 }
 
 fun currentTimeMs() = System.currentTimeMillis()
@@ -431,7 +654,7 @@ fun showSystemBars(window: Window, root: View) {
     }
 }
 fun AlertDialog.showImmersive(root: View) {
-    if (SettingsConfig.hideSystemBars) {
+    if (Settings.hideSystemBars) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window?.apply {
                 setFlags(
@@ -508,6 +731,8 @@ fun View.makeInvisible() { visibility = View.INVISIBLE }
 fun View.isVisible() : Boolean { return visibility == View.VISIBLE}
 fun View.isInvisible() : Boolean { return visibility == View.INVISIBLE }
 fun View.isHidden() : Boolean { return visibility == View.GONE}
+fun ViewBinding.hide() { root.hide() }
+fun ViewBinding.show() { root.show() }
 
 fun ImageButton.disable(tint: Boolean = false) {
     if (tint) foregroundTintList = ColorStateList.valueOf(Color.GRAY)
@@ -613,12 +838,16 @@ fun RecyclerView.smoothSnapToPosition(position: Int, max: Int) {
 
 }
 
+fun ProgressBar.setProgress(t: Double) {
+    progress = (t*max).roundToInt()
+}
+
 
 
 /* LISTS */
 
 fun <T : Goldable> Collection<T>.filterGold() : Collection<T> {
-    return if (SettingsConfig.goldEnabled) this else filter { !it.goldFeature }
+    return if (Settings.goldEnabled) this else filter { !it.goldFeature }
 }
 
 fun MotionEvent.focalLength() : Float {
@@ -655,6 +884,24 @@ infix fun MutableList<Texture>.without(texture: Texture) : MutableList<Texture> 
     newList.remove(texture)
     return newList
 
+}
+
+fun IntArray.interpolate(t: Float) : Int {
+    return when (t) {
+        0f -> first()
+        1f -> last()
+        else -> {
+            val n = floor(t * (size - 1)).toInt()
+            val m = t * (size - 1) % 1f
+            val c1 = colorToRGB(get(n))
+            val c2 = colorToRGB(get(n + 1))
+            RGBToColor(
+                (1f - m)*c1[0] + m*c2[0],
+                (1f - m)*c1[1] + m*c2[1],
+                (1f - m)*c1[2] + m*c2[2]
+            )
+        }
+    }
 }
 
 enum class ListItemType : Serializable { DEFAULT, CUSTOM, FAVORITE }
@@ -760,3 +1007,15 @@ fun Apcomplex.sqr() : Apcomplex = this.multiply(this)
 fun Apcomplex.cube() : Apcomplex = this.multiply(this).multiply(this)
 fun Apcomplex.mod() : Apfloat = ApfloatMath.sqrt(this.real().sqr().add(this.imag().sqr()))
 fun Apcomplex.modSqr() : Apfloat = this.real().sqr().add(this.imag().sqr())
+
+fun String.formatToDouble(showMsg: Boolean = true) : Double? {
+    val nf = NumberFormat.getInstance()
+    var d : Double? = null
+    try { d = nf.parse(this)?.toDouble() }
+    catch (e: ParseException) {
+        if (showMsg) {
+            // showMessage(resources.getString(R.string.msg_invalid_format))
+        }
+    }
+    return d
+}

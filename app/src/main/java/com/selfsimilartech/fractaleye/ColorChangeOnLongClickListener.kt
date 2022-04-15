@@ -3,7 +3,6 @@ package com.selfsimilartech.fractaleye
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.widget.ImageButton
 import java.util.*
 
 class ColorChangeOnLongClickListener(
@@ -29,7 +28,7 @@ class ColorChangeOnLongClickListener(
                 }
                 fsv.requestRender()
             }
-        }, 0L, (1000.0/SettingsConfig.targetFramerate).toLong())
+        }, 0L, (1000.0/Settings.targetFramerate).toLong())
 
 
         return true

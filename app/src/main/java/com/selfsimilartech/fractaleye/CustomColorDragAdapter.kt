@@ -8,11 +8,13 @@ import com.selfsimilartech.fractaleye.databinding.ColorDragItemBinding
 import com.woxthebox.draglistview.DragItemAdapter
 
 class CustomColorDragAdapter(
+
         colors: ArrayList<Int>,
         private val layoutId: Int,
         private val grabHandleId: Int,
         private val dragOnLongPress: Boolean,
         val linkColor: (activeColorIndex: Int, color: Int) -> Unit
+
 ) : DragItemAdapter<Pair<Long, Int>, CustomColorDragAdapter.ColorPaletteDragHolder>() {
 
     init {

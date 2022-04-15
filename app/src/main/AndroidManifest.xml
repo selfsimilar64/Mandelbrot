@@ -29,11 +29,9 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"
             android:exported="true"
             android:configChanges="orientation|screenSize"
-            android:windowSoftInputMode="adjustPan"
-            tools:ignore="LockedOrientationActivity">
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

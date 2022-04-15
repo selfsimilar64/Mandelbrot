@@ -19,14 +19,14 @@ class PositionChangeOnLongClickListener(
     override fun onLongClick(v: View): Boolean {
 
         if (fsv.r.isRendering) fsv.r.interruptRender = true
-        if (SettingsConfig.continuousPosRender) fsv.r.renderProfile = RenderProfile.CONTINUOUS
+        if (Settings.continuousPosRender) fsv.r.renderProfile = RenderProfile.CONTINUOUS
 
         val timer = Timer()
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 if (v.isPressed) {  // if button still pressed keep zooming
                     fsv.r.checkThresholdCross { transformFractal() }
-                    if (SettingsConfig.continuousPosRender) fsv.r.renderToTex = true
+                    if (Settings.continuousPosRender) fsv.r.renderToTex = true
                     else transformQuad()
                     handler.post { updateLayout() }
                 } else {  // cancel zoom
@@ -36,7 +36,7 @@ class PositionChangeOnLongClickListener(
                 }
                 fsv.requestRender()
             }
-        }, 0L, (1000.0/SettingsConfig.targetFramerate).toLong())
+        }, 0L, (1000.0/Settings.targetFramerate).toLong())
 
         return true
 

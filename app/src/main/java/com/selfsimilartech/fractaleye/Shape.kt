@@ -4,6 +4,8 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
 import android.util.Range
+import androidx.lifecycle.LifecycleCoroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.log2
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -75,7 +77,12 @@ class Shape(
                 R.string.detail,
                 R.drawable.detail,
                 detail,
-                Range(2.0.pow(ITER_MIN_POW), 2.0.pow(ITER_MAX_POW) - 1.0),
+
+                if (BuildConfig.DEV_VERSION)
+                    Range(1.0, 2.0.pow(16.0) - 1.0)
+                else
+                    Range(2.0.pow(ITER_MIN_POW), 2.0.pow(ITER_MAX_POW) - 1.0),
+
                 scale = RealParam.Scale.EXP_SQRT,
                 isDiscrete = true,
                 restrictValue = true
@@ -634,11 +641,15 @@ class Shape(
                         devFeature = true
                     ),
                     RealParam(
+                        R.string.param1,
+                        R.drawable.parameter,
                         u = 0.0,
                         uRange = Range(0.0, 10.0),
                         devFeature = true
                     ),
                     RealParam(
+                        R.string.param2,
+                        R.drawable.parameter,
                         u = 0.0,
                         uRange = Range(0.0, 10.0),
                         devFeature = true
@@ -1271,7 +1282,11 @@ class Shape(
             position = if (value) positions.julia else positions.main
         }
 
-//    var numParamsInUse = params.size + if (juliaMode) 1 else 0
+
+    private var savedCustomShapeName = ""
+    private var savedCustomLatex = ""
+    private var savedCustomLoopSingle = ""
+    private var savedCustomLoopDual = ""
 
 
 
@@ -1314,14 +1329,52 @@ class Shape(
         if (latexId != -1 && latex == "") latex = res.getString(latexId)
 
     }
-
     override fun getName(localizedResource: Resources): String {
         return if (isCustom()) name else localizedResource.getString(nameId)
     }
 
-    fun release() {
+
+    override fun edit() {
+        savedCustomShapeName = name
+        savedCustomLatex = latex
+        savedCustomLoopSingle = customLoopSingle
+        savedCustomLoopDual = customLoopDual
+    }
+    override fun revert() {
+        name = savedCustomShapeName
+        latex = savedCustomLatex
+        customLoopSingle = savedCustomLoopSingle
+        customLoopDual = savedCustomLoopDual
+        Log.v("SHAPE", "cancel edit")
+    }
+    override fun commit(scope: LifecycleCoroutineScope, db: AppDatabase) {
+
+        // update existing shape in database
+        scope.launch {
+            db.shapeDao().update(toDatabaseEntity())
+        }
+
+    }
+    override fun finalize(scope: LifecycleCoroutineScope, db: AppDatabase) {
+
+        // add new shape to database
+        scope.launch {
+            db.shapeDao().run {
+                id = insert(toDatabaseEntity()).toInt()
+                hasCustomId = true
+                Log.e("SHAPE", "new custom id: $id")
+            }
+        }
+
+        all.add(0, this)
+        custom.add(0, this)
+        nextCustomShapeNum++
+
+    }
+    override fun release() {
         thumbnail?.recycle()
         thumbnail = null
+        Log.v("SHAPE", "cancel new")
     }
 
     fun setFrom(config: Config) {
@@ -1338,7 +1391,6 @@ class Shape(
             params.setFrom(it)
         }
     }
-
     fun clone(res: Resources): Shape {
         return Shape(
             name = name + " " + res.getString(R.string.copy),
@@ -1360,7 +1412,6 @@ class Shape(
             radius = minRadius
         )
     }
-
     fun reset() {
 
         params.reset()
@@ -1368,7 +1419,6 @@ class Shape(
         juliaMode = juliaModeInit
 
     }
-
     fun toDatabaseEntity() : ShapeEntity {
         return ShapeEntity(
             if (hasCustomId) id else 0,
@@ -1400,7 +1450,6 @@ class Shape(
             params.julia.v
         )
     }
-
     fun generateStarredKey(usResources: Resources) : String {
         return "Shape${usResources.getString(nameId).replace(" ", "")}Starred"
     }
@@ -1408,11 +1457,9 @@ class Shape(
     override fun equals(other: Any?): Boolean {
         return other is Shape && id == other.id
     }
-
     override fun hashCode(): Int {
         return name.hashCode()
     }
-
     override fun isCustom(): Boolean = id == -1 || hasCustomId
 
 }

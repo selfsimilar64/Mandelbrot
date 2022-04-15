@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="paramMenuCornerRadius">26dp</dimen>
+    <dimen name="paramMenuCornerRadius">24dp</dimen>
     <dimen name="editModeButtonCornerRadius">45dp</dimen>
-    <dimen name="editModeLayoutWidth">290dp</dimen> <!-- 4 times editModeButtonWidth -->
+    <dimen name="editModeLayoutWidth">333dp</dimen> <!-- 4 times editModeButtonWidth -->
     <dimen name="editModeButtonSize">58dp</dimen>
-    <dimen name="editModeButtonWidth">74dp</dimen>
-    <dimen name="editModeButtonHeight">@dimen/floatingButtonSize</dimen>
+    <dimen name="editModeButtonWidth">78dp</dimen>
+    <dimen name="editModeButtonHeight">50dp</dimen>
     <dimen name="menuHeight">50dp</dimen>
 
-    <dimen name="floatingButtonSize">52dp</dimen>
+    <dimen name="maxParamLayoutWidth">290dp</dimen>
+    <dimen name="utilityLayoutHeight">40dp</dimen>
+
+    <dimen name="floatingButtonSize">50dp</dimen>
     <dimen name="floatingButtonRadius">26dp</dimen>
+
+    <dimen name="floatingButtonMiniSize">48dp</dimen>
 
     <dimen name="editButtonSize">46dp</dimen>
     <dimen name="listItemCornerRadius">14dp</dimen>
@@ -24,8 +29,8 @@
     <dimen name="colorEditorWidth">180dp</dimen>
     <dimen name="colorEditorHeight">20dp</dimen>
 
-    <dimen name="menuButtonWidth">54dp</dimen>
-    <dimen name="menuButtonHeight">@dimen/floatingButtonSize</dimen>
+    <dimen name="menuButtonWidth">42dp</dimen>
+    <dimen name="menuButtonHeight">42dp</dimen>
     <dimen name="categoryButtonHeight">50dp</dimen>
     <dimen name="uiComponentMargin">3dp</dimen>
 

@@ -8,54 +8,61 @@
     android:layout_gravity="center_horizontal"
     android:animateLayoutChanges="true"
     android:gravity="center"
-    android:orientation="vertical"
-    android:padding="6dp">
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/param_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:animateLayoutChanges="true"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="2dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="2dp">
 
         <TextView
             android:id="@+id/label"
             style="@style/ParamLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="12dp"
+            android:layout_weight="1"
+            android:gravity="center"
             android:minWidth="30dp"
-            android:text="@string/zoom" />
+            android:text="@string/zoom"
+            android:visibility="gone" />
 
         <EditText
             android:id="@+id/value"
             style="@style/EditNumberDark"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical|end"
-            android:minWidth="65dp"
-            android:paddingEnd="6dp"
-            android:text="11.9" />
+            android:padding="6dp"
+            android:text="1.618" />
 
         <ToggleButton
             android:id="@+id/rotationLock"
             style="@style/LockDark"
             android:layout_width="26dp"
             android:layout_height="match_parent"
-            android:layout_marginStart="0dp"
-            android:visibility="gone" />
+            android:layout_marginStart="0dp" />
+
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <ImageButton
             android:id="@+id/decrease_button"
             style="@style/FloatingButton"
-            android:layout_width="40dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/menuButtonHeight"
+            android:layout_height="42dp"
             android:layout_marginEnd="0dp"
             android:background="@drawable/menu_button_ripple"
             app:srcCompat="@drawable/zoom_out" />
@@ -70,12 +77,11 @@
         <ImageButton
             android:id="@+id/increase_button"
             style="@style/FloatingButton"
-            android:layout_width="40dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/menuButtonHeight"
+            android:layout_height="42dp"
             android:layout_marginEnd="0dp"
             android:background="@drawable/menu_button_ripple"
             app:srcCompat="@drawable/zoom_in" />
-
     </LinearLayout>
 
 </LinearLayout>

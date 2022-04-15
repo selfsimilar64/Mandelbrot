@@ -10,6 +10,18 @@
     android:orientation="vertical"
     tools:context="com.selfsimilartech.fractaleye.MainActivity">
 
+    <com.selfsimilartech.fractaleye.HighlightWindow
+        android:id="@+id/highlightWindow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <com.selfsimilartech.fractaleye.GestureAnimation
+        android:id="@+id/gestureAnimation"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
     <FrameLayout
         android:id="@+id/fractalLayout"
         android:layout_width="match_parent"
@@ -19,8 +31,7 @@
         <com.selfsimilartech.fractaleye.FractalSurfaceView
             android:id="@+id/fractalSurfaceView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        </com.selfsimilartech.fractaleye.FractalSurfaceView>
+            android:layout_height="match_parent" />
 
     </FrameLayout>
 
@@ -38,12 +49,43 @@
         android:gravity="bottom"
         android:orientation="vertical">
 
+        <include
+            android:id="@+id/tutorial_window"
+            layout="@layout/tutorial_window"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/param_menu_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <include
+            android:id="@+id/extras_menu"
+            layout="@layout/extras_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/menuItemMarginInner"
+            android:layout_marginEnd="8dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/extrasMenuButton" />
+
         <View
-            android:id="@+id/divider33"
+            android:id="@+id/gestureInterceptTop"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/menuDark1"
-            app:layout_constraintBottom_toTopOf="@+id/ui"
+            android:layout_height="13dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/gestureInterceptBottom"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -53,133 +95,635 @@
             android:layout_width="match_parent"
             android:layout_height="5dp"
             android:background="#c000"
+            android:padding="0dp"
             android:progressBackgroundTint="@color/transparent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/header" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/header"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/categoryButtonHeight"
-            android:animateLayoutChanges="true"
-            android:background="@color/menuDarkPrimary"
-            android:gravity="center|end"
-            android:orientation="horizontal"
+        <include
+            android:id="@+id/video_config_window"
+            layout="@layout/dialog_zoom_video"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/gestureInterceptBottom"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent" />
 
-<!--            <ImageButton-->
-<!--                android:id="@+id/debugButton"-->
-<!--                style="@style/MenuImageButtonDark"-->
-<!--                android:layout_width="50dp"-->
-<!--                android:layout_height="40dp"-->
-<!--                android:padding="5dp"-->
-<!--                app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                app:layout_constraintStart_toStartOf="parent"-->
-<!--                app:layout_constraintTop_toTopOf="parent"-->
-<!--                app:srcCompat="@drawable/debug" />-->
-
-            <ImageButton
-                android:id="@+id/extrasMenuButton"
-                style="@style/MenuImageButtonDark"
-                android:layout_width="50dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="5dp"
-                android:padding="6dp"
-                android:scaleType="centerInside"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/more" />
-
-            <View
-                android:id="@+id/divider29"
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_margin="5dp"
-                android:background="?android:attr/listDivider"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/saveImageButton"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageButton
-                android:id="@+id/saveImageButton"
-                style="@style/MenuImageButtonDark"
-                android:layout_width="50dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="5dp"
-                android:layout_weight="0"
-                android:scaleType="centerInside"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/divider28"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/save" />
-
-            <View
-                android:id="@+id/divider28"
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_margin="5dp"
-                android:layout_marginEnd="5dp"
-                android:background="?android:attr/listDivider"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/extrasMenuButton"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <ImageButton
-            android:id="@+id/menuToggleButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginEnd="5dp"
-            android:layout_marginBottom="6dp"
-            android:background="@drawable/ui_component_bg"
-            app:layout_constraintBottom_toTopOf="@+id/ui"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/arrow_up" />
-
+        <com.selfsimilartech.fractaleye.GradientButton
+            android:id="@+id/custom_accent_done_button"
+            style="@style/NavigationButton"
+            android:layout_marginBottom="@dimen/menuItemMarginInner"
+            android:drawableStart="@drawable/done"
+            android:text="@string/done"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/param_menu_layout"
+            app:layout_constraintEnd_toEndOf="@+id/param_menu_layout" />
 
         <LinearLayout
-            android:id="@+id/ui"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/uiLayoutHeightClosedShort"
+            android:id="@+id/utilityLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/menuItemMarginInner"
             android:animateLayoutChanges="true"
-            android:background="@color/menuDarkPrimary"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/param_menu_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <LinearLayout
+                android:id="@+id/texture_utility_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/texture_list_button"
+                    style="@style/FloatingButton.Mini"
+                    android:scaleType="centerInside"
+                    app:srcCompat="@drawable/texture" />
+
+                <Space
+                    android:layout_width="@dimen/menuItemMarginInner"
+                    android:layout_height="@dimen/menuItemMarginInner" />
+
+                <ImageView
+                    android:id="@+id/texture_region_button"
+                    style="@style/FloatingButton.Mini"
+                    android:layout_marginEnd="0dp"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/texture_region_in" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/color_utility_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.selfsimilartech.fractaleye.ImageToggleButton
+                    android:id="@+id/colorAutofitButton"
+                    style="@style/FloatingButton.Mini"
+                    android:layout_marginEnd="0dp"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/auto" />
+
+                <Space
+                    android:layout_width="@dimen/menuItemMarginInner"
+                    android:layout_height="@dimen/menuItemMarginInner" />
+
+                <FrameLayout
+                    android:id="@+id/palette_list_button"
+                    style="@style/FloatingButton.Mini"
+                    android:padding="8dp">
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:cardBackgroundColor="@color/transparent"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp">
+
+                        <View
+                            android:id="@+id/palette_list_button_gradient"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@color/accent2" />
+
+                    </androidx.cardview.widget.CardView>
+                </FrameLayout>
+
+                <Space
+                    android:layout_width="@dimen/menuItemMarginInner"
+                    android:layout_height="@dimen/menuItemMarginInner" />
+
+                <com.selfsimilartech.fractaleye.ImageToggleButton
+                    android:id="@+id/color_params_toggle"
+                    style="@style/FloatingButton.Mini"
+                    app:srcCompat="@drawable/parameter" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/position_utility_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/position_reset_button"
+                    style="@style/FloatingButton.Mini"
+                    app:srcCompat="@drawable/reset" />
+
+                <Space
+                    android:layout_width="@dimen/menuItemMarginInner"
+                    android:layout_height="@dimen/menuItemMarginInner" />
+
+                <com.selfsimilartech.fractaleye.ImageToggleButton
+                    android:id="@+id/position_params_toggle"
+                    style="@style/FloatingButton.Mini"
+                    app:srcCompat="@drawable/parameter" />
+
+                <Space
+                    android:layout_width="24dp"
+                    android:layout_height="24dp" />
+
+                <ImageButton
+                    android:id="@+id/position_decrease_button"
+                    style="@style/FloatingButton.Mini"
+                    app:srcCompat="@drawable/zoom_out" />
+
+                <Space
+                    android:layout_width="@dimen/menuItemMarginInner"
+                    android:layout_height="@dimen/menuItemMarginInner" />
+
+                <com.selfsimilartech.fractaleye.SensitivityButton
+                    android:id="@+id/position_sensitivity_button"
+                    style="@style/FloatingButton.Mini"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    app:srcCompat="@drawable/sensitivity_med" />
+
+                <Space
+                    android:layout_width="@dimen/menuItemMarginInner"
+                    android:layout_height="@dimen/menuItemMarginInner" />
+
+                <ImageButton
+                    android:id="@+id/position_increase_button"
+                    style="@style/FloatingButton.Mini"
+                    app:srcCompat="@drawable/zoom_in" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/shape_utility_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:gravity="center|center_horizontal"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/shape_list_button"
+                    style="@style/FloatingButton.Mini"
+                    android:foreground="@drawable/basic_button_foreground"
+                    app:cardBackgroundColor="@color/black"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:contentPadding="4dp">
+
+                    <ImageView
+                        android:id="@+id/shape_list_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"
+                        app:srcCompat="@drawable/mandelbrot_icon" />
+                </androidx.cardview.widget.CardView>
+
+                <Space
+                    android:layout_width="@dimen/menuItemMarginInner"
+                    android:layout_height="@dimen/menuItemMarginInner" />
+
+                <com.selfsimilartech.fractaleye.GradientImageToggleButton
+                    android:id="@+id/julia_mode_button"
+                    style="@style/FloatingButton.Mini"
+                    android:layout_marginEnd="0dp"
+                    android:src="@drawable/julia" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/param_menu_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/menuItemMarginInner"
+            android:animateLayoutChanges="true"
+            android:background="@drawable/ui_component_bg"
+            android:gravity="center"
+            android:maxWidth="@dimen/editModeLayoutWidth"
             android:orientation="vertical"
+            android:padding="6dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/editModeButtonLayout"
+            app:layout_constraintEnd_toEndOf="@+id/editModeButtonLayout"
+            app:layout_constraintStart_toStartOf="@+id/editModeButtonLayout">
+
+            <FrameLayout
+                android:id="@+id/param_display_frame"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                app:layout_constraintBottom_toTopOf="@+id/param_selector_layout"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <include
+                    android:id="@+id/position_param_display"
+                    layout="@layout/position_param_display"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center" />
+
+                <include
+                    android:id="@+id/color_param_display"
+                    layout="@layout/color_param_display"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+
+                <include
+                    android:id="@+id/texture_shape_param_display"
+                    layout="@layout/texture_shape_param_display"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+
+                <include
+                    android:id="@+id/texture_image_display"
+                    layout="@layout/texture_image_edit"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/param_selector_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:animateLayoutChanges="true"
+                    tools:layout_editor_absoluteX="8dp"
+                    tools:layout_editor_absoluteY="726dp">
+
+                    <include
+                        android:id="@+id/color_param_menu"
+                        layout="@layout/color_param_menu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
+
+                    <include
+                        android:id="@+id/shape_param_menu"
+                        layout="@layout/shape_param_menu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
+
+                    <include
+                        android:id="@+id/texture_param_menu"
+                        layout="@layout/texture_param_menu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
+
+                    <include
+                        android:id="@+id/position_param_menu"
+                        layout="@layout/position_param_menu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/prev_param_button"
+                android:layout_width="32dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/sensitivity_button_ripple"
+                android:visibility="gone"
+                app:srcCompat="@drawable/param_prev" />
+
+            <ImageButton
+                android:id="@+id/next_param_button"
+                android:layout_width="32dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/sensitivity_button_ripple"
+                android:visibility="gone"
+                app:srcCompat="@drawable/param_next" />
+
+        </LinearLayout>
+
+        <com.selfsimilartech.fractaleye.InterceptableLinearLayout
+            android:id="@+id/editModeButtonLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginStart="@dimen/menuItemMarginOuter"
+            android:layout_marginEnd="@dimen/menuItemMarginOuter"
+            android:layout_marginBottom="@dimen/menuItemMarginOuter"
+            android:animateLayoutChanges="true"
+            android:background="@drawable/ui_component_bg"
+            android:orientation="horizontal"
+            android:padding="6dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
-            <com.selfsimilartech.fractaleye.NoScrollViewPager
-                android:id="@+id/editModePager"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
+            <com.selfsimilartech.fractaleye.EditModeButton
+                android:id="@+id/texture_mode_button"
+                style="@style/EditModeButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="0dp"
                 android:layout_weight="1"
-                android:animateLayoutChanges="true">
+                android:drawable="@drawable/texture"
+                android:scaleType="centerInside"
+                android:src="@drawable/texture"
+                android:text="@string/texture"
+                app:list_layout="@id/texture_list"
+                app:param_display_layout="@id/texture_shape_param_display"
+                app:param_selector_layout="@id/texture_param_menu"
+                app:utility_layout="@+id/texture_utility_buttons" />
 
-            </com.selfsimilartech.fractaleye.NoScrollViewPager>
+            <com.selfsimilartech.fractaleye.EditModeButton
+                android:id="@+id/shape_mode_button"
+                style="@style/EditModeButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:drawable="@drawable/shape"
+                android:scaleType="centerInside"
+                android:src="@drawable/shape"
+                android:text="@string/shape"
+                app:list_layout="@id/shape_list"
+                app:param_display_layout="@id/texture_shape_param_display"
+                app:param_selector_layout="@id/shape_param_menu"
+                app:utility_layout="@+id/shape_utility_buttons" />
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/editModeButtons"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/categoryButtonHeight"
-                android:layout_marginStart="3dp"
-                android:layout_marginEnd="3dp"
-                app:tabIndicator="@null" />
+            <com.selfsimilartech.fractaleye.EditModeButton
+                android:id="@+id/color_mode_button"
+                style="@style/EditModeButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:drawable="@drawable/color"
+                android:scaleType="centerInside"
+                android:src="@drawable/color"
+                android:text="@string/color"
+                app:list_layout="@id/palette_list"
+                app:param_display_layout="@id/color_param_display"
+                app:param_selector_layout="@id/color_param_menu"
+                app:utility_layout="@+id/color_utility_buttons" />
+
+            <com.selfsimilartech.fractaleye.EditModeButton
+                android:id="@+id/position_mode_button"
+                style="@style/EditModeButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:drawable="@drawable/position"
+                android:scaleType="centerInside"
+                android:src="@drawable/position"
+                android:text="@string/position"
+                app:param_display_layout="@id/position_param_display"
+                app:param_selector_layout="@id/position_param_menu"
+                app:utility_layout="@+id/position_utility_buttons" />
+
+        </com.selfsimilartech.fractaleye.InterceptableLinearLayout>
+
+        <LinearLayout
+            android:id="@+id/action_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="5dp"
+            android:animateLayoutChanges="true"
+            android:gravity="end"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/list_holder"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ProgressBar
+                android:id="@+id/thumbnailProgressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="@dimen/navButtonHeight"
+                android:layout_height="@dimen/navButtonHeight"
+                android:layout_marginEnd="@dimen/menuItemMarginInner"
+                android:background="@drawable/ui_component_bg"
+                android:indeterminate="true"
+                android:minWidth="10dp"
+                android:minHeight="10dp"
+                android:padding="6dp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/video_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/action_render"
+                    style="@style/NavigationButton"
+                    android:layout_width="wrap_content"
+                    android:drawableStart="@drawable/render_video"
+                    android:text="@string/render_video" />
+            </LinearLayout>
+
+            <com.selfsimilartech.fractaleye.GradientButton
+                android:id="@+id/action_randomize"
+                style="@style/NavigationButton"
+                android:layout_width="wrap_content"
+                android:drawableStart="@drawable/randomize"
+                android:text="@string/random_fractal"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/action_cancel"
+                style="@style/NavigationButton"
+                android:text="cancel"
+                android:visibility="gone" />
+
+            <com.selfsimilartech.fractaleye.GradientButton
+                android:id="@+id/action_new"
+                style="@style/NavigationButton"
+                android:layout_width="wrap_content"
+                android:drawableStart="@drawable/add"
+                android:text="@string/new_str"
+                android:visibility="gone" />
+
+            <com.selfsimilartech.fractaleye.GradientButton
+                android:id="@+id/action_done"
+                style="@style/NavigationButton"
+                android:layout_width="wrap_content"
+                android:layout_marginEnd="0dp"
+                android:drawableStart="@drawable/done"
+                android:text="@string/done" />
+
+            <!--            <ImageButton-->
+            <!--                android:id="@+id/action_cancel"-->
+            <!--                style="@style/FloatingButton"-->
+            <!--                android:scaleType="centerInside"-->
+            <!--                android:visibility="gone"-->
+            <!--                app:srcCompat="@drawable/cancel" />-->
+
+            <!--            <com.selfsimilartech.fractaleye.GradientImageButton-->
+            <!--                android:id="@+id/action_new"-->
+            <!--                style="@style/FloatingButton"-->
+            <!--                android:scaleType="centerInside"-->
+            <!--                android:visibility="gone"-->
+            <!--                app:srcCompat="@drawable/add" />-->
+
+            <!--            <ImageButton-->
+            <!--                android:id="@+id/action_done"-->
+            <!--                style="@style/FloatingButton"-->
+            <!--                android:layout_marginEnd="0dp"-->
+            <!--                android:scaleType="centerInside"-->
+            <!--                android:visibility="gone"-->
+            <!--                app:srcCompat="@drawable/done" />-->
+
         </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/list_holder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <include
+                android:id="@+id/video_progress_window"
+                layout="@layout/video_progress_window"
+                android:visibility="gone" />
+
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/videoFragmentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
+                android:id="@+id/randomizer"
+                layout="@layout/randomizer_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/palette_list"
+                layout="@layout/list_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/shape_list"
+                layout="@layout/list_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/texture_list"
+                layout="@layout/list_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/bookmark_list"
+                layout="@layout/list_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/custom_palette_creator"
+                layout="@layout/custom_palette_creator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/custom_shape_creator"
+                layout="@layout/custom_shape_creator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <ImageButton
+            android:id="@+id/extrasMenuButton"
+            style="@style/MenuImageButtonDark"
+            android:layout_width="@dimen/floatingButtonSize"
+            android:layout_height="@dimen/floatingButtonSize"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/floating_button_bg"
+            android:padding="6dp"
+            android:scaleType="centerInside"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar"
+            app:srcCompat="@drawable/more" />
+
+        <ImageButton
+            android:id="@+id/ui_toggle_button"
+            style="@style/FloatingButton"
+            android:layout_marginStart="@dimen/menuItemMarginOuter"
+            android:layout_marginTop="@dimen/menuItemMarginOuter"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar"
+            app:srcCompat="@drawable/visible" />
+
+        <ImageButton
+            android:id="@+id/debug_button"
+            style="@style/FloatingButton"
+            android:layout_marginStart="@dimen/menuItemMarginInner"
+            android:layout_marginTop="@dimen/menuItemMarginOuter"
+            app:layout_constraintStart_toEndOf="@+id/ui_toggle_button"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar"
+            app:srcCompat="@drawable/debug" />
+
+        <ImageButton
+            android:id="@+id/saveImageButton"
+            style="@style/MenuImageButtonDark"
+            android:layout_width="@dimen/floatingButtonSize"
+            android:layout_height="@dimen/floatingButtonSize"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="@dimen/menuItemMarginInner"
+            android:layout_weight="0"
+            android:background="@drawable/floating_button_bg"
+            android:scaleType="centerInside"
+            app:layout_constraintEnd_toStartOf="@+id/extrasMenuButton"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar"
+            app:srcCompat="@drawable/save" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <com.selfsimilartech.fractaleye.HighlightWindow
-        android:id="@+id/highlightWindow"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
 
 
 </FrameLayout>

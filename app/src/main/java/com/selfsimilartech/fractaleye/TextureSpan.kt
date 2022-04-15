@@ -1,16 +1,12 @@
 package com.selfsimilartech.fractaleye
 
-class TextureSpan(delta : Float) {
+class TextureSpan(delta : Float = MotionValue.DELTA_CONTINUOUS) {
 
-    var center : MotionValue = MotionValue( 0.5f, delta = delta )
-    var size   : MotionValue = MotionValue(   1f, delta = delta )
-
-    fun min() : Float = center.position - 0.5f*size.position
-
-    fun max() : Float = center.position + 0.5f*size.position
+    var min : MotionValue = MotionValue( 0f, delta = delta )
+    var max : MotionValue = MotionValue( 1f, delta = delta )
 
     override fun toString(): String {
-        return "[center] -- $center, [size] -- $size"
+        return "(min: $min, max: $max)"
     }
 
 }

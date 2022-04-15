@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <com.selfsimilartech.fractaleye.HSVColorSelector
+        android:id="@+id/color_selector"
+        android:layout_width="@dimen/maxParamLayoutWidth"
+        android:layout_height="128dp"
+        android:padding="6dp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/quick_accents"
+        android:layout_width="@dimen/maxParamLayoutWidth"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="6dp">
+
+        <com.selfsimilartech.fractaleye.GradientSeekBar
+            android:id="@+id/palette_seek_bar"
+            style="@style/SeekBar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="0dp"
+            android:progress="0"
+            android:progressDrawable="@drawable/seekbar_progress_palette_gradient"
+            android:thumb="@drawable/gradient_seekbar_thumb"
+            android:thumbOffset="0dp"
+            app:colors="@array/eye" />
+
+        <com.selfsimilartech.fractaleye.AccentButton
+            android:id="@+id/black_accent_button"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@drawable/selector_item"
+            app:srcCompat="@drawable/gradient_seekbar_thumb" />
+
+        <com.selfsimilartech.fractaleye.AccentButton
+            android:id="@+id/white_accent_button"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/selector_item"
+            android:color="@color/white"
+            app:srcCompat="@drawable/gradient_seekbar_thumb" />
+
+        <LinearLayout
+            android:id="@+id/custom_accent_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <com.selfsimilartech.fractaleye.AccentButton
+                android:id="@+id/custom_accent_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/selector_item"
+                android:color="@color/deepred"
+                app:srcCompat="@drawable/gradient_seekbar_thumb" />
+
+            <ImageButton
+                android:id="@+id/edit_custom_accent_button"
+                style="@style/MenuButton"
+                android:layout_width="36dp"
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/edit" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

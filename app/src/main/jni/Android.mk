@@ -30,6 +30,7 @@ LOCAL_PATH := $(JNI_PATH)
 include $(CLEAR_VARS)
 LOCAL_MODULE := native-fractalimage
 LOCAL_SRC_FILES := \
+$(JNI_PATH)/../cpp/native-yuv.cpp \
 $(JNI_PATH)/../cpp/toojpeg.cpp \
 $(JNI_PATH)/../cpp/native-compress.cpp \
 $(JNI_PATH)/../cpp/native-reference.cpp \

@@ -73,7 +73,7 @@ class NewListAdapter<T> (
         holder.itemView.isActivated = selectionEnabled && position == selectedPosition
         holder.itemView.setOnClickListener {
 
-            if (SettingsConfig.goldEnabled || !item.goldFeature) {
+            if (Settings.goldEnabled || !item.goldFeature) {
                 val listPosition = items.indexOf(item)
                 if (listPosition != -1) recycler.smoothSnapToPosition(listPosition, items.size)
                 if (selectionEnabled) setSelectedPosition(listPosition, holder.itemView)
@@ -102,13 +102,13 @@ class NewListAdapter<T> (
 
 
         holder.name?.text = item.name
-        holder.name?.showGradient = item.goldFeature && !SettingsConfig.goldEnabled
+        holder.name?.showGradient = item.goldFeature && !Settings.goldEnabled
         when {
             item is Shape && !item.isCustom() -> holder.image?.setImageResource(item.thumbnailId)
             else                              -> holder.image?.setImageBitmap(item.thumbnail)
         }
         holder.image?.scaleType = ImageView.ScaleType.CENTER_CROP
-        holder.image?.showGradient = item is Shape && item.goldFeature && !SettingsConfig.goldEnabled
+        holder.image?.showGradient = item is Shape && item.goldFeature && !Settings.goldEnabled
 
         holder.favoriteButton?.run {
             uncheckedImageId = R.drawable.unstarred
@@ -142,7 +142,7 @@ class NewListAdapter<T> (
         if (item is Fractal || item is Texture || (item is Shape && item.latex == "")) holder.copyButton?.hide()
         else  {
             holder.copyButton?.show()
-            holder.copyButton?.showGradient = !SettingsConfig.goldEnabled
+            holder.copyButton?.showGradient = !Settings.goldEnabled
             holder.copyButton?.setOnClickListener {
                 holder.options?.hide()
                 onItemActionListener?.onDuplicate(item)

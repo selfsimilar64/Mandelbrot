@@ -11,7 +11,7 @@ class ColorChangeOnClickListener (
 ) : View.OnClickListener {
 
     override fun onClick(v: View) {
-        fsv.r.apply {
+        fsv.r.run {
             transformFractal()
             fsv.requestRender()
         }

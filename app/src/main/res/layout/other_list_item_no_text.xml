@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/listItemLayout"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:background="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:id="@+id/listItemContentLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="@dimen/listItemPadding">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            app:cardBackgroundColor="@color/black"
+            app:cardCornerRadius="@dimen/listItemCornerRadius">
+
+            <com.selfsimilartech.fractaleye.GradientImageView
+                android:id="@+id/listItemImage"
+                android:layout_width="86dp"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/sundial_icon" />
+
+        </androidx.cardview.widget.CardView>
+
+
+    </LinearLayout>
+
+</FrameLayout>

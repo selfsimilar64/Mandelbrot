@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.Log
+import androidx.lifecycle.LifecycleCoroutineScope
 import kotlin.math.pow
 
 inline fun <T> Iterable<T>.random(predicate: (T) -> Boolean): T {
@@ -1625,13 +1626,13 @@ class Fractal(
 
         texture = bookmark.texture
         texture.reset()
-        if (SettingsConfig.autofitColorRange && texture in listOf(
+        if (Settings.autofitColorRange && texture in listOf(
                 Texture.outline,
                 Texture.escapeWithOutline,
                 Texture.kleinianDistance
             )
         ) {
-            SettingsConfig.autofitColorRange = false
+            Settings.autofitColorRange = false
             fsv.r.calcNewTextureSpan = true
         }
         if (bookmark.textureParams != null) texture.params.setFrom(bookmark.textureParams)
@@ -1645,10 +1646,10 @@ class Fractal(
             color.setFrom(config)
             if (config.density == 0.0) {
                 fsv.r.setTextureSpan(0f, 1f)
-                SettingsConfig.autofitColorRange = false
+                Settings.autofitColorRange = false
             } else {
                 fsv.r.setTextureSpan(bookmark.textureMin, bookmark.textureMax)
-                SettingsConfig.autofitColorRange = true
+                Settings.autofitColorRange = true
             }
         }
 
@@ -1703,13 +1704,13 @@ class Fractal(
 
         val rawFreq: Double
         val rawPhase: Double
-        val M = fsv.r.textureSpan.max()
-        val m = fsv.r.textureSpan.min()
+        val M = fsv.r.textureSpan.max.x
+        val m = fsv.r.textureSpan.min.x
         val L = M - m
 
         color.run {
 
-            if (SettingsConfig.autofitColorRange && density == 0.0) {
+            if (Settings.autofitColorRange && density == 0.0) {
 
                 rawFreq = if (texture.hasRawOutput) 1.0 else frequency / L
                 rawPhase = phase - frequency * m / L
@@ -1775,12 +1776,12 @@ class Fractal(
 
                     shape = Shape.default.filter { s ->
                         s.randomConfigs.any { config ->
-                            SettingsConfig.goldEnabled || !config.isGoldFeature(s)
+                            Settings.goldEnabled || !config.isGoldFeature(s)
                         }
                     }.filterGold().random()
 
                     shape.reset()
-                    val config = shape.randomConfigs.filter { SettingsConfig.goldEnabled || !it.isGoldFeature(shape) }.random()
+                    val config = shape.randomConfigs.filter { Settings.goldEnabled || !it.isGoldFeature(shape) }.random()
                     shape.setFrom(config)
                     val t = Math.random()
                     shape.position.apply {
@@ -1800,7 +1801,7 @@ class Fractal(
 //                shape.params.list.forEach { it.randomizePerturb(0.15) }
 //                if (shape.juliaMode) { shape.params.julia.randomizePerturb(1.0 - t) }
 
-            if ((SettingsConfig.goldEnabled || shape == Shape.mandelbrot) && !shape.juliaMode && Math.random() < 0.2) {
+            if ((Settings.goldEnabled || shape == Shape.mandelbrot) && !shape.juliaMode && Math.random() < 0.2) {
                 shape.params.julia.setFrom(
                     ComplexParam(
                         shape.position.x,
@@ -1817,7 +1818,7 @@ class Fractal(
 
         if (randomizeTexture) {
             texture =
-                shape.compatTextures.random { (SettingsConfig.goldEnabled || !it.goldFeature) && !it.devFeature && it != Texture.orbitTrapImageOver }
+                shape.compatTextures.random { (Settings.goldEnabled || !it.goldFeature) && !it.devFeature && it != Texture.orbitTrapImageOver }
             texture.params.list.filterGold().forEach {
                 if (Math.random() < 0.5) it.randomize(1.0)
             }
@@ -1852,7 +1853,7 @@ class Fractal(
             }
         }
 
-        SettingsConfig.autofitColorRange = texture !in listOf(Texture.outline, Texture.escapeWithOutline, Texture.orbitTrapImageUnder)
+        Settings.autofitColorRange = texture !in listOf(Texture.outline, Texture.escapeWithOutline, Texture.orbitTrapImageUnder)
         fsv.r.calcNewTextureSpan = true
 
         updateRadius()
@@ -1866,6 +1867,12 @@ class Fractal(
     override fun equals(other: Any?): Boolean {
         return other is Fractal && other.name == name
     }
+
+    override fun edit() {}
+    override fun revert() {}
+    override fun commit(scope: LifecycleCoroutineScope, db: AppDatabase) {}
+    override fun finalize(scope: LifecycleCoroutineScope, db: AppDatabase) {}
+    override fun release() {}
 
     override fun isCustom(): Boolean = hasCustomId
 

@@ -5,56 +5,48 @@ import android.view.View
 import android.widget.Button
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
+import com.selfsimilartech.fractaleye.databinding.ParamButtonBinding
 
 class ParamSelector(
     val context: Context,
     val backgroundId : Int,
-    val list: List<View>
+    val list: List<ParamButton>
     ) {
 
-    init {
-        applyBackground(list[0])
-    }
+    init { select(list.getOrNull(0)) }
 
     private var selectedPos = 0
-        set (value) {
-            if (field != value) {
-                removeBackground(list.getOrNull(field))
-                applyBackground(list.getOrNull(value))
-                field = value
-            }
-        }
 
-    fun getSelection() : View = list[selectedPos]
+    fun getSelection() : ParamButton = list[selectedPos]
 
-    fun isSelected(v: View) : Boolean {
+    fun isSelected(v: ParamButton) : Boolean {
         return selectedPos == list.indexOf(v)
     }
 
-    fun select(v: View?) {
+    fun select(v: ParamButton?) {
+        list.getOrNull(selectedPos)?.run {
+            background = null
+            hideText()
+        }
         selectedPos = list.indexOf(v)
-    }
-
-    fun prev() {
-        if (list.count { it.isVisible } > 1) {
-            do { selectedPos = (selectedPos - 1).mod(list.size) } while (!list[selectedPos].isVisible)
-            list[selectedPos].performClick()
+        list.getOrNull(selectedPos)?.run {
+            background = ResourcesCompat.getDrawable(context.resources, backgroundId, null)
+            showText()
         }
     }
 
-    fun next() {
-        if (list.count { it.isVisible } > 1) {
-            do { selectedPos = (selectedPos + 1).mod(list.size) } while (!list[selectedPos].isVisible)
-            list[selectedPos].performClick()
-        }
-    }
-
-    private fun applyBackground(v: View?) {
-        v?.background = ResourcesCompat.getDrawable(context.resources, backgroundId, null)
-    }
-
-    private fun removeBackground(v: View?) {
-        v?.background = null
-    }
+//    fun prev() {
+//        if (list.count { it.root.isVisible } > 1) {
+//            do { selectedPos = (selectedPos - 1).mod(list.size) } while (!list[selectedPos].root.isVisible)
+//            list[selectedPos].root.performClick()
+//        }
+//    }
+//
+//    fun next() {
+//        if (list.count { it.root.isVisible } > 1) {
+//            do { selectedPos = (selectedPos + 1).mod(list.size) } while (!list[selectedPos].root.isVisible)
+//            list[selectedPos].root.performClick()
+//        }
+//    }
 
 }

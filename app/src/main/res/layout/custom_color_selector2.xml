@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.selfsimilartech.fractaleye.GradientSeekBar
+        android:id="@+id/valueSelector"
+        style="@style/SeekBar"
+        android:layout_width="match_parent"
+        android:paddingBottom="0dp"
+        android:progress="0"
+        android:progressDrawable="@drawable/seekbar_progress_palette_gradient"
+        android:thumb="@drawable/gradient_seekbar_thumb"
+        app:colors="@array/hueslider" />
+
+    <com.selfsimilartech.fractaleye.GradientSeekBar
+        android:id="@+id/saturationSelector"
+        style="@style/SeekBar"
+        android:layout_width="match_parent"
+        android:paddingBottom="0dp"
+        android:progress="0"
+        android:progressDrawable="@drawable/seekbar_progress_palette_gradient"
+        android:thumb="@drawable/gradient_seekbar_thumb"
+        app:colors="@array/hueslider" />
+
+    <com.selfsimilartech.fractaleye.GradientSeekBar
+        android:id="@+id/hueSelector"
+        style="@style/SeekBar"
+        android:paddingBottom="0dp"
+        android:progress="0"
+        android:progressDrawable="@drawable/seekbar_progress_palette_gradient"
+        android:thumb="@drawable/gradient_seekbar_thumb"
+        app:colors="@array/hueslider" />
+
+</LinearLayout>

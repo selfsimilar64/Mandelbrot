@@ -20,7 +20,7 @@ class PositionChangeOnClickListener(
             if (fsv.r.isRendering) fsv.r.interruptRender = true
             transformFractal()
 
-            if (SettingsConfig.continuousPosRender) {
+            if (Settings.continuousPosRender) {
 
                 fsv.r.renderProfile = RenderProfile.CONTINUOUS
                 fsv.r.renderToTex = true

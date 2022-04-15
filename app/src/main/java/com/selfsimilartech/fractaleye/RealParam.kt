@@ -81,7 +81,7 @@ open class RealParam (
             if (!uLocked) {
                 field = when {
                     toRadians -> value.mod(360.0)
-                    SettingsConfig.restrictParams || restrictValue -> clamp(value)
+                    Settings.restrictParams || restrictValue -> clamp(value)
                     else -> value
                 }
             }
@@ -124,7 +124,6 @@ open class RealParam (
     }
 
     open fun getValueFromProgress(p: Double) : Double {
-        Log.d("REAL PARAM", "range: (${uRange.lower}, ${uRange.upper}, p: $p, new value: ${uRange.lower + p*interval})")
         return uRange.lower + p*interval
     }
 
@@ -149,7 +148,6 @@ open class RealParam (
 
     open fun clone() : RealParam {
 
-        Log.d("REAL PARAM", "range: (${uRange.lower}, ${uRange.upper})")
         val newParam = RealParam(
             nameId,
             iconId,
